@@ -240,8 +240,7 @@ export default function RevealScreen({
       </motion.div>
 
       {/* CTAs */}
-      <div className="flex-1 min-h-2 max-h-6" />
-      <div>
+      <div className="mt-auto pt-2">
         <button
           onClick={onBook}
           className="w-full cursor-pointer"

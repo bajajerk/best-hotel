@@ -47,8 +47,8 @@ export default function LandingScreen({ onUpload }: Props) {
         beatmyrate
       </div>
 
-      {/* Spacer */}
-      <div className="flex-1 min-h-4 max-h-16" />
+      {/* Spacer - pushes content to bottom */}
+      <div className="flex-1" />
 
       {/* Hero */}
       <div className="mb-7">

@@ -203,8 +203,7 @@ export default function BookScreen({ data, onBack }: Props) {
       </div>
 
       {/* CTAs */}
-      <div className="flex-1 min-h-2 max-h-6" />
-      <div>
+      <div className="mt-auto pt-2">
         <button
           onClick={() => window.open("tel:+919876543210")}
           className="w-full cursor-pointer mb-2"

@@ -374,8 +374,7 @@ export default function ConfirmScreen({ data, onBack, onNext, onUpdate }: Props)
             </div>
 
             {/* CTA */}
-            <div className="flex-1 min-h-3 max-h-8" />
-            <div className="pt-2">
+            <div className="mt-auto pt-3">
               <button
                 onClick={onNext}
                 className="w-full cursor-pointer"
