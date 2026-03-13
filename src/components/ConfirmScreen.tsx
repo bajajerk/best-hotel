@@ -181,6 +181,8 @@ export default function ConfirmScreen({ data, onBack, onNext, onUpdate }: Props)
             transition={{ duration: 0.4 }}
             className="flex-1 flex flex-col"
           >
+            {/* Centered content */}
+            <div className="flex-1 flex flex-col justify-center">
             {/* Screenshot thumbnail */}
             <div
               className="flex items-center mb-5"
@@ -373,8 +375,9 @@ export default function ConfirmScreen({ data, onBack, onNext, onUpdate }: Props)
               </div>
             </div>
 
+            </div>
             {/* CTA */}
-            <div className="mt-auto pt-3">
+            <div className="pt-4">
               <button
                 onClick={onNext}
                 className="w-full cursor-pointer"

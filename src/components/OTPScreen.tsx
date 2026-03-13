@@ -136,7 +136,7 @@ export default function OTPScreen({ phone, onBack, onVerified }: Props) {
       <div className="flex-1 flex flex-col justify-center items-center text-center">
         {/* Icon */}
         <div
-          className="flex items-center justify-center mb-5"
+          className="flex items-center justify-center mb-6"
           style={{
             width: 48,
             height: 48,
@@ -164,7 +164,7 @@ export default function OTPScreen({ phone, onBack, onVerified }: Props) {
           style={{
             fontSize: 12,
             color: "var(--white-30)",
-            marginBottom: 32,
+            marginBottom: 36,
             fontWeight: 300,
           }}
         >
@@ -182,7 +182,7 @@ export default function OTPScreen({ phone, onBack, onVerified }: Props) {
         </div>
 
         {/* OTP boxes */}
-        <div className="flex gap-2.5 mb-7" onPaste={handlePaste}>
+        <div className="flex gap-3.5 mb-8" onPaste={handlePaste}>
           {otp.map((digit, i) => (
             <input
               key={i}

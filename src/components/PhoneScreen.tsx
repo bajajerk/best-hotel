@@ -120,7 +120,7 @@ export default function PhoneScreen({ onBack, onSubmit }: Props) {
         </div>
 
         {/* Input group */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-3 mb-5">
           <div
             className="flex items-center justify-center"
             style={{

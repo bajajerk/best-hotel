@@ -240,7 +240,7 @@ export default function RevealScreen({
       </motion.div>
 
       {/* CTAs */}
-      <div className="mt-auto pt-2">
+      <div className="mt-auto pt-4">
         <button
           onClick={onBook}
           className="w-full cursor-pointer"
@@ -260,7 +260,7 @@ export default function RevealScreen({
         </button>
         <button
           onClick={onTryAnother}
-          className="w-full cursor-pointer mt-2"
+          className="w-full cursor-pointer mt-3"
           style={{
             padding: 14,
             background: "transparent",

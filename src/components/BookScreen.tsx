@@ -203,10 +203,10 @@ export default function BookScreen({ data, onBack }: Props) {
       </div>
 
       {/* CTAs */}
-      <div className="mt-auto pt-2">
+      <div className="mt-auto pt-4">
         <button
           onClick={() => window.open("tel:+919876543210")}
-          className="w-full cursor-pointer mb-2"
+          className="w-full cursor-pointer mb-3"
           style={{
             padding: 16,
             background: "var(--gold)",
@@ -243,7 +243,7 @@ export default function BookScreen({ data, onBack }: Props) {
         </button>
 
         <div
-          className="text-center mt-2.5"
+          className="text-center mt-3"
           style={{
             fontSize: 11,
             color: "var(--white-30)",
