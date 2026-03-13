@@ -92,7 +92,7 @@ export default function LandingScreen({ onUpload }: Props) {
             borderRadius: 16,
             padding: "24px 16px",
             background: "var(--white-04)",
-            marginBottom: 12,
+            marginBottom: 20,
           }}
           onClick={() => fileInputRef.current?.click()}
         >
@@ -185,7 +185,7 @@ export default function LandingScreen({ onUpload }: Props) {
 
         <button
           onClick={() => cameraInputRef.current?.click()}
-          className="w-full cursor-pointer mt-2"
+          className="w-full cursor-pointer mt-3"
           style={{
             padding: 14,
             background: "transparent",
