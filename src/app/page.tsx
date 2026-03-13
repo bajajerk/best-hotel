@@ -1,65 +1,197 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useCallback } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import LandingScreen from "@/components/LandingScreen";
+import ConfirmScreen from "@/components/ConfirmScreen";
+import PhoneScreen from "@/components/PhoneScreen";
+import OTPScreen from "@/components/OTPScreen";
+import RevealScreen from "@/components/RevealScreen";
+import BookScreen from "@/components/BookScreen";
+
+export interface BookingData {
+  screenshotUrl: string | null;
+  screenshotName: string;
+  hotel: string;
+  dates: string;
+  room: string;
+  guests: string;
+  originalPrice: number;
+  ourPrice: number;
+  source: string;
+  phone: string;
+  nights: number;
+  savings: number;
+}
+
+const defaultData: BookingData = {
+  screenshotUrl: null,
+  screenshotName: "",
+  hotel: "Taj Lands End",
+  dates: "Mar 15 – Mar 18",
+  room: "Deluxe Sea View",
+  guests: "2 Adults",
+  originalPrice: 8500,
+  ourPrice: 5900,
+  source: "MakeMyTrip",
+  phone: "",
+  nights: 3,
+  savings: 2600,
+};
+
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+};
+
+const pageTransition = {
+  duration: 0.3,
+  ease: [0.4, 0, 0.2, 1] as [number, number, number, number],
+};
 
 export default function Home() {
+  const [step, setStep] = useState(1);
+  const [data, setData] = useState<BookingData>(defaultData);
+
+  const goNext = useCallback(() => {
+    setStep((s) => s + 1);
+  }, []);
+
+  const goBack = useCallback(() => {
+    setStep((s) => Math.max(1, s - 1));
+  }, []);
+
+  const handleScreenshot = useCallback(
+    (file: File) => {
+      const url = URL.createObjectURL(file);
+      setData((d) => ({ ...d, screenshotUrl: url, screenshotName: file.name }));
+      goNext();
+    },
+    [goNext]
+  );
+
+  const handlePhone = useCallback(
+    (phone: string) => {
+      setData((d) => ({ ...d, phone }));
+      goNext();
+    },
+    [goNext]
+  );
+
+  const handleReset = useCallback(() => {
+    setData(defaultData);
+    setStep(1);
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="min-h-dvh flex items-center justify-center bg-[var(--bg-black)]">
+      <div className="w-full max-w-[430px] min-h-dvh relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div
+              key="landing"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+              className="min-h-dvh"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              <LandingScreen onUpload={handleScreenshot} />
+            </motion.div>
+          )}
+
+          {step === 2 && (
+            <motion.div
+              key="confirm"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+              className="min-h-dvh"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+              <ConfirmScreen
+                data={data}
+                onBack={goBack}
+                onNext={goNext}
+                onUpdate={(updates) =>
+                  setData((d) => ({ ...d, ...updates }))
+                }
+              />
+            </motion.div>
+          )}
+
+          {step === 3 && (
+            <motion.div
+              key="phone"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+              className="min-h-dvh"
+            >
+              <PhoneScreen
+                onBack={goBack}
+                onSubmit={handlePhone}
+              />
+            </motion.div>
+          )}
+
+          {step === 4 && (
+            <motion.div
+              key="otp"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+              className="min-h-dvh"
+            >
+              <OTPScreen
+                phone={data.phone}
+                onBack={goBack}
+                onVerified={goNext}
+              />
+            </motion.div>
+          )}
+
+          {step === 5 && (
+            <motion.div
+              key="reveal"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+              className="min-h-dvh"
+            >
+              <RevealScreen
+                data={data}
+                onBack={goBack}
+                onBook={goNext}
+                onTryAnother={handleReset}
+              />
+            </motion.div>
+          )}
+
+          {step === 6 && (
+            <motion.div
+              key="book"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+              className="min-h-dvh"
+            >
+              <BookScreen data={data} onBack={goBack} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
