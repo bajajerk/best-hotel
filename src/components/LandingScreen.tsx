@@ -17,8 +17,8 @@ export default function LandingScreen({ onUpload }: Props) {
 
   return (
     <div
-      className="h-full flex flex-col relative overflow-hidden overflow-y-auto"
-      style={{ background: "var(--bg-black)", padding: "16px 22px 20px" }}
+      className="h-full flex flex-col relative overflow-hidden"
+      style={{ background: "var(--bg-black)", padding: "16px 24px 20px" }}
     >
       {/* Glow effect */}
       <div
@@ -26,10 +26,10 @@ export default function LandingScreen({ onUpload }: Props) {
         style={{
           top: -80,
           right: -80,
-          width: 220,
-          height: 220,
+          width: 260,
+          height: 260,
           background:
-            "radial-gradient(circle, rgba(201,169,98,0.06) 0%, transparent 70%)",
+            "radial-gradient(circle, rgba(201,169,98,0.08) 0%, transparent 70%)",
         }}
       />
 
@@ -47,15 +47,12 @@ export default function LandingScreen({ onUpload }: Props) {
         beatmyrate
       </div>
 
-      {/* Spacer - pushes content to bottom */}
-      <div className="flex-1" />
-
-      {/* Hero */}
-      <div className="mb-7">
+      {/* Hero - vertically centered */}
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-2">
         <h2
           style={{
             fontFamily: "var(--font-instrument-serif)",
-            fontSize: 38,
+            fontSize: 42,
             fontWeight: 400,
             lineHeight: 1.05,
             letterSpacing: -0.5,
@@ -71,12 +68,12 @@ export default function LandingScreen({ onUpload }: Props) {
           </em>
         </h2>
         <p
-          className="mt-3.5"
           style={{
-            fontSize: 13,
+            fontSize: 14,
             color: "var(--white-30)",
             lineHeight: 1.6,
             fontWeight: 300,
+            marginTop: 16,
           }}
         >
           screenshot any hotel price.
@@ -85,137 +82,141 @@ export default function LandingScreen({ onUpload }: Props) {
         </p>
       </div>
 
-      {/* Upload area */}
-      <div
-        className="text-center mb-3.5 cursor-pointer"
-        style={{
-          border: "1px solid var(--border)",
-          borderRadius: 16,
-          padding: "28px 16px",
-          background: "var(--white-04)",
-        }}
-        onClick={() => fileInputRef.current?.click()}
-      >
+      {/* Bottom section */}
+      <div>
+        {/* Upload area */}
         <div
-          className="flex items-center justify-center mx-auto mb-3"
+          className="text-center cursor-pointer"
           style={{
-            width: 40,
-            height: 40,
-            border: "1px solid var(--gold-border)",
-            borderRadius: 12,
-            color: "var(--gold)",
-            fontSize: 18,
+            border: "1px solid var(--border)",
+            borderRadius: 16,
+            padding: "24px 16px",
+            background: "var(--white-04)",
+            marginBottom: 12,
           }}
+          onClick={() => fileInputRef.current?.click()}
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="17 8 12 3 7 8" />
-            <line x1="12" y1="3" x2="12" y2="15" />
-          </svg>
-        </div>
-        <p>
-          <strong
+          <div
+            className="flex items-center justify-center mx-auto mb-2.5"
             style={{
-              color: "var(--white-80)",
-              display: "block",
-              fontSize: 13,
-              fontWeight: 500,
-              marginBottom: 2,
+              width: 40,
+              height: 40,
+              border: "1px solid var(--gold-border)",
+              borderRadius: 12,
+              color: "var(--gold)",
+              fontSize: 18,
             }}
           >
-            drop your screenshot
-          </strong>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
+          <p>
+            <strong
+              style={{
+                color: "var(--white-80)",
+                display: "block",
+                fontSize: 13,
+                fontWeight: 500,
+                marginBottom: 2,
+              }}
+            >
+              drop your screenshot
+            </strong>
+            <span
+              style={{
+                fontSize: 12,
+                color: "var(--white-30)",
+                fontWeight: 300,
+                lineHeight: 1.5,
+              }}
+            >
+              MakeMyTrip, Booking, Agoda — anything.
+            </span>
+          </p>
+        </div>
+
+        {/* Hidden file inputs */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
+        {/* CTA Buttons */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full cursor-pointer"
+          style={{
+            padding: 16,
+            background: "var(--gold)",
+            color: "var(--bg-black)",
+            fontFamily: "var(--font-dm-sans)",
+            fontSize: 14,
+            fontWeight: 500,
+            border: "none",
+            borderRadius: 14,
+            letterSpacing: 0.3,
+          }}
+        >
+          Upload Screenshot
+        </button>
+
+        <button
+          onClick={() => cameraInputRef.current?.click()}
+          className="w-full cursor-pointer mt-2"
+          style={{
+            padding: 14,
+            background: "transparent",
+            color: "var(--white-50)",
+            fontFamily: "var(--font-dm-sans)",
+            fontSize: 13,
+            fontWeight: 400,
+            border: "1px solid var(--border)",
+            borderRadius: 14,
+          }}
+        >
+          Take a Photo
+        </button>
+
+        {/* Social proof */}
+        <div
+          className="text-center mt-3"
+          style={{ fontSize: 11, color: "var(--white-30)", fontWeight: 300 }}
+        >
           <span
             style={{
-              fontSize: 12,
-              color: "var(--white-30)",
-              fontWeight: 300,
-              lineHeight: 1.5,
+              color: "var(--gold)",
+              fontWeight: 500,
+              fontFamily: "var(--font-jetbrains-mono)",
+              fontSize: 11,
             }}
           >
-            MakeMyTrip, Booking, Agoda — anything.
-          </span>
-        </p>
-      </div>
-
-      {/* Hidden file inputs */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-
-      {/* CTA Buttons */}
-      <button
-        onClick={() => fileInputRef.current?.click()}
-        className="w-full cursor-pointer"
-        style={{
-          padding: 16,
-          background: "var(--gold)",
-          color: "var(--bg-black)",
-          fontFamily: "var(--font-dm-sans)",
-          fontSize: 14,
-          fontWeight: 500,
-          border: "none",
-          borderRadius: 14,
-          letterSpacing: 0.3,
-        }}
-      >
-        Upload Screenshot
-      </button>
-
-      <button
-        onClick={() => cameraInputRef.current?.click()}
-        className="w-full cursor-pointer mt-2"
-        style={{
-          padding: 14,
-          background: "transparent",
-          color: "var(--white-50)",
-          fontFamily: "var(--font-dm-sans)",
-          fontSize: 13,
-          fontWeight: 400,
-          border: "1px solid var(--border)",
-          borderRadius: 14,
-        }}
-      >
-        Take a Photo
-      </button>
-
-      {/* Social proof */}
-      <div
-        className="text-center mt-4"
-        style={{ fontSize: 11, color: "var(--white-30)", fontWeight: 300 }}
-      >
-        <span
-          style={{
-            color: "var(--gold)",
-            fontWeight: 500,
-            fontFamily: "var(--font-jetbrains-mono)",
-            fontSize: 11,
-          }}
-        >
-          2,340
-        </span>{" "}
-        travelers already saving
+            2,340
+          </span>{" "}
+          travelers already saving
+        </div>
       </div>
     </div>
   );
