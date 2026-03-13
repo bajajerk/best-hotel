@@ -1,93 +1,63 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import LandingScreen from "@/components/LandingScreen";
-import ConfirmScreen from "@/components/ConfirmScreen";
-import PhoneScreen from "@/components/PhoneScreen";
-import OTPScreen from "@/components/OTPScreen";
-import RevealScreen from "@/components/RevealScreen";
-import BookScreen from "@/components/BookScreen";
+import Tab1Search from "@/components/Tab1Search";
+import Tab2Premium from "@/components/Tab2Premium";
+import Tab3BeatPrice from "@/components/Tab3BeatPrice";
 
-export interface BookingData {
-  screenshotUrl: string | null;
-  screenshotName: string;
-  hotel: string;
-  dates: string;
-  room: string;
-  guests: string;
-  originalPrice: number;
-  ourPrice: number;
-  source: string;
-  phone: string;
-  nights: number;
-  savings: number;
-}
+const tabs = [
+  {
+    id: "search" as const,
+    label: "Search",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+    ),
+  },
+  {
+    id: "premium" as const,
+    label: "Premium",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+    ),
+  },
+  {
+    id: "beat" as const,
+    label: "Beat Price",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+        <polyline points="17 6 23 6 23 12" />
+      </svg>
+    ),
+  },
+];
 
-const defaultData: BookingData = {
-  screenshotUrl: null,
-  screenshotName: "",
-  hotel: "Taj Lands End",
-  dates: "Mar 15 – Mar 18",
-  room: "Deluxe Sea View",
-  guests: "2 Adults",
-  originalPrice: 8500,
-  ourPrice: 5900,
-  source: "MakeMyTrip",
-  phone: "",
-  nights: 3,
-  savings: 2600,
-};
+type TabId = (typeof tabs)[number]["id"];
 
 const pageVariants = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 8 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -10 },
+  exit: { opacity: 0, y: -8 },
 };
 
 const pageTransition = {
-  duration: 0.3,
+  duration: 0.25,
   ease: [0.4, 0, 0.2, 1] as [number, number, number, number],
 };
 
 export default function Home() {
-  const [step, setStep] = useState(1);
-  const [data, setData] = useState<BookingData>(defaultData);
-
-  const goNext = useCallback(() => {
-    setStep((s) => s + 1);
-  }, []);
-
-  const goBack = useCallback(() => {
-    setStep((s) => Math.max(1, s - 1));
-  }, []);
-
-  const handleScreenshot = useCallback(
-    (file: File) => {
-      const url = URL.createObjectURL(file);
-      setData((d) => ({ ...d, screenshotUrl: url, screenshotName: file.name }));
-      goNext();
-    },
-    [goNext]
-  );
-
-  const handlePhone = useCallback(
-    (phone: string) => {
-      setData((d) => ({ ...d, phone }));
-      goNext();
-    },
-    [goNext]
-  );
-
-  const handleReset = useCallback(() => {
-    setData(defaultData);
-    setStep(1);
-  }, []);
+  const [activeTab, setActiveTab] = useState<TabId>("search");
 
   return (
     <div className="min-h-dvh flex items-center justify-center bg-[#050505] md:p-6">
       <div
-        className="w-full max-w-[430px] relative overflow-hidden md:rounded-[40px] md:border md:shadow-[0_40px_80px_rgba(0,0,0,0.5)]"
+        className="w-full max-w-[430px] relative overflow-hidden md:rounded-[40px] md:border md:shadow-[0_40px_80px_rgba(0,0,0,0.5)] flex flex-col"
         style={{
           height: "100dvh",
           maxHeight: "932px",
@@ -95,110 +65,104 @@ export default function Home() {
           borderColor: "rgba(255,255,255,0.08)",
         }}
       >
-        <AnimatePresence mode="wait">
-          {step === 1 && (
-            <motion.div
-              key="landing"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-              className="h-full"
-            >
-              <LandingScreen onUpload={handleScreenshot} />
-            </motion.div>
-          )}
+        {/* Tab content */}
+        <div className="flex-1 overflow-hidden relative">
+          <AnimatePresence mode="wait">
+            {activeTab === "search" && (
+              <motion.div
+                key="search"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pageTransition}
+                className="h-full"
+              >
+                <Tab1Search />
+              </motion.div>
+            )}
+            {activeTab === "premium" && (
+              <motion.div
+                key="premium"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pageTransition}
+                className="h-full"
+              >
+                <Tab2Premium />
+              </motion.div>
+            )}
+            {activeTab === "beat" && (
+              <motion.div
+                key="beat"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pageTransition}
+                className="h-full"
+              >
+                <Tab3BeatPrice />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-          {step === 2 && (
-            <motion.div
-              key="confirm"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-              className="h-full"
-            >
-              <ConfirmScreen
-                data={data}
-                onBack={goBack}
-                onNext={goNext}
-                onUpdate={(updates) =>
-                  setData((d) => ({ ...d, ...updates }))
-                }
-              />
-            </motion.div>
-          )}
-
-          {step === 3 && (
-            <motion.div
-              key="phone"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-              className="h-full"
-            >
-              <PhoneScreen
-                onBack={goBack}
-                onSubmit={handlePhone}
-              />
-            </motion.div>
-          )}
-
-          {step === 4 && (
-            <motion.div
-              key="otp"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-              className="h-full"
-            >
-              <OTPScreen
-                phone={data.phone}
-                onBack={goBack}
-                onVerified={goNext}
-              />
-            </motion.div>
-          )}
-
-          {step === 5 && (
-            <motion.div
-              key="reveal"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-              className="h-full"
-            >
-              <RevealScreen
-                data={data}
-                onBack={goBack}
-                onBook={goNext}
-                onTryAnother={handleReset}
-              />
-            </motion.div>
-          )}
-
-          {step === 6 && (
-            <motion.div
-              key="book"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-              className="h-full"
-            >
-              <BookScreen data={data} onBack={goBack} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Bottom Tab Bar */}
+        <div
+          className="flex items-center justify-around shrink-0"
+          style={{
+            height: 64,
+            background: "var(--bg-card)",
+            borderTop: "1px solid var(--border)",
+          }}
+        >
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors duration-200"
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  color: isActive ? "var(--gold)" : "var(--white-30)",
+                }}
+              >
+                <div className="relative">
+                  {tab.icon}
+                  {isActive && (
+                    <motion.div
+                      layoutId="tab-indicator"
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2"
+                      style={{
+                        width: 4,
+                        height: 4,
+                        borderRadius: "50%",
+                        background: "var(--gold)",
+                      }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                </div>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontFamily: "var(--font-dm-sans)",
+                    fontWeight: isActive ? 500 : 400,
+                    letterSpacing: 0.3,
+                  }}
+                >
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
