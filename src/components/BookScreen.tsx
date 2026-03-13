@@ -33,8 +33,8 @@ export default function BookScreen({ data, onBack }: Props) {
 
   return (
     <div
-      className="min-h-dvh flex flex-col"
-      style={{ background: "var(--bg-black)", padding: "48px 22px 22px" }}
+      className="h-full flex flex-col overflow-y-auto"
+      style={{ background: "var(--bg-black)", padding: "16px 22px 20px" }}
     >
       {/* Nav */}
       <div className="flex justify-between items-center mb-2.5">
@@ -203,7 +203,8 @@ export default function BookScreen({ data, onBack }: Props) {
       </div>
 
       {/* CTAs */}
-      <div className="mt-auto">
+      <div className="flex-1 min-h-2 max-h-6" />
+      <div>
         <button
           onClick={() => window.open("tel:+919876543210")}
           className="w-full cursor-pointer mb-2"

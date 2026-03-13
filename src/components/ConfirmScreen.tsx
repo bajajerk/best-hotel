@@ -42,8 +42,8 @@ export default function ConfirmScreen({ data, onBack, onNext, onUpdate }: Props)
 
   return (
     <div
-      className="min-h-dvh flex flex-col"
-      style={{ background: "var(--bg-black)", padding: "48px 22px 22px" }}
+      className="h-full flex flex-col overflow-y-auto"
+      style={{ background: "var(--bg-black)", padding: "16px 22px 20px" }}
     >
       {/* Nav */}
       <div className="flex justify-between items-center mb-2.5">
@@ -374,7 +374,8 @@ export default function ConfirmScreen({ data, onBack, onNext, onUpdate }: Props)
             </div>
 
             {/* CTA */}
-            <div className="mt-auto pt-3">
+            <div className="flex-1 min-h-3 max-h-8" />
+            <div className="pt-2">
               <button
                 onClick={onNext}
                 className="w-full cursor-pointer"

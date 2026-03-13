@@ -85,8 +85,16 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-[var(--bg-black)]">
-      <div className="w-full max-w-[430px] min-h-dvh relative overflow-hidden">
+    <div className="min-h-dvh flex items-center justify-center bg-[#050505] md:p-6">
+      <div
+        className="w-full max-w-[430px] relative overflow-hidden md:rounded-[40px] md:border md:shadow-[0_40px_80px_rgba(0,0,0,0.5)]"
+        style={{
+          height: "100dvh",
+          maxHeight: "932px",
+          background: "var(--bg-black)",
+          borderColor: "rgba(255,255,255,0.08)",
+        }}
+      >
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
@@ -96,7 +104,7 @@ export default function Home() {
               animate="animate"
               exit="exit"
               transition={pageTransition}
-              className="min-h-dvh"
+              className="h-full"
             >
               <LandingScreen onUpload={handleScreenshot} />
             </motion.div>
@@ -110,7 +118,7 @@ export default function Home() {
               animate="animate"
               exit="exit"
               transition={pageTransition}
-              className="min-h-dvh"
+              className="h-full"
             >
               <ConfirmScreen
                 data={data}
@@ -131,7 +139,7 @@ export default function Home() {
               animate="animate"
               exit="exit"
               transition={pageTransition}
-              className="min-h-dvh"
+              className="h-full"
             >
               <PhoneScreen
                 onBack={goBack}
@@ -148,7 +156,7 @@ export default function Home() {
               animate="animate"
               exit="exit"
               transition={pageTransition}
-              className="min-h-dvh"
+              className="h-full"
             >
               <OTPScreen
                 phone={data.phone}
@@ -166,7 +174,7 @@ export default function Home() {
               animate="animate"
               exit="exit"
               transition={pageTransition}
-              className="min-h-dvh"
+              className="h-full"
             >
               <RevealScreen
                 data={data}
@@ -185,7 +193,7 @@ export default function Home() {
               animate="animate"
               exit="exit"
               transition={pageTransition}
-              className="min-h-dvh"
+              className="h-full"
             >
               <BookScreen data={data} onBack={goBack} />
             </motion.div>

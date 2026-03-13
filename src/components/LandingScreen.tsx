@@ -17,8 +17,8 @@ export default function LandingScreen({ onUpload }: Props) {
 
   return (
     <div
-      className="min-h-dvh flex flex-col relative overflow-hidden"
-      style={{ background: "var(--bg-black)", padding: "48px 22px 22px" }}
+      className="h-full flex flex-col relative overflow-hidden overflow-y-auto"
+      style={{ background: "var(--bg-black)", padding: "16px 22px 20px" }}
     >
       {/* Glow effect */}
       <div
@@ -35,7 +35,6 @@ export default function LandingScreen({ onUpload }: Props) {
 
       {/* Logo */}
       <div
-        className="mb-auto"
         style={{
           fontFamily: "var(--font-instrument-serif)",
           fontSize: 18,
@@ -48,8 +47,11 @@ export default function LandingScreen({ onUpload }: Props) {
         beatmyrate
       </div>
 
+      {/* Spacer */}
+      <div className="flex-1 min-h-4 max-h-16" />
+
       {/* Hero */}
-      <div className="mb-8">
+      <div className="mb-7">
         <h2
           style={{
             fontFamily: "var(--font-instrument-serif)",

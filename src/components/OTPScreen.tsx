@@ -75,8 +75,8 @@ export default function OTPScreen({ phone, onBack, onVerified }: Props) {
 
   return (
     <div
-      className="min-h-dvh flex flex-col"
-      style={{ background: "var(--bg-black)", padding: "48px 22px 22px" }}
+      className="h-full flex flex-col overflow-y-auto"
+      style={{ background: "var(--bg-black)", padding: "16px 22px 20px" }}
     >
       {/* Nav */}
       <div className="flex justify-between items-center mb-2.5">

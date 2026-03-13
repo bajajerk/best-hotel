@@ -29,8 +29,8 @@ export default function RevealScreen({
 
   return (
     <div
-      className="min-h-dvh flex flex-col relative overflow-hidden"
-      style={{ background: "var(--bg-black)", padding: "48px 22px 22px" }}
+      className="h-full flex flex-col relative overflow-hidden overflow-y-auto"
+      style={{ background: "var(--bg-black)", padding: "16px 22px 20px" }}
     >
       {/* Green glow */}
       <div
@@ -240,7 +240,8 @@ export default function RevealScreen({
       </motion.div>
 
       {/* CTAs */}
-      <div className="mt-auto">
+      <div className="flex-1 min-h-2 max-h-6" />
+      <div>
         <button
           onClick={onBook}
           className="w-full cursor-pointer"
