@@ -30,7 +30,7 @@ export default function RevealScreen({
   return (
     <div
       className="h-full flex flex-col relative overflow-hidden overflow-y-auto"
-      style={{ background: "var(--bg-black)", padding: "16px 22px 20px" }}
+      style={{ background: "var(--bg-black)", padding: "16px 24px 32px" }}
     >
       {/* Green glow */}
       <div

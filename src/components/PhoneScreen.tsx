@@ -32,7 +32,7 @@ export default function PhoneScreen({ onBack, onSubmit }: Props) {
   return (
     <div
       className="h-full flex flex-col overflow-y-auto"
-      style={{ background: "var(--bg-black)", padding: "16px 22px 20px" }}
+      style={{ background: "var(--bg-black)", padding: "16px 24px 32px" }}
     >
       {/* Nav */}
       <div className="flex justify-between items-center mb-2.5">
@@ -88,7 +88,7 @@ export default function PhoneScreen({ onBack, onSubmit }: Props) {
         />
       </div>
 
-      {/* Content */}
+      {/* Centered content */}
       <div className="flex-1 flex flex-col justify-center">
         <div
           style={{
@@ -120,7 +120,7 @@ export default function PhoneScreen({ onBack, onSubmit }: Props) {
         </div>
 
         {/* Input group */}
-        <div className="flex gap-3 mb-5">
+        <div className="flex gap-3">
           <div
             className="flex items-center justify-center"
             style={{
@@ -158,8 +158,10 @@ export default function PhoneScreen({ onBack, onSubmit }: Props) {
             }}
           />
         </div>
+      </div>
 
-        {/* CTA */}
+      {/* CTA - pinned to bottom */}
+      <div className="pt-6">
         <button
           onClick={handleSubmit}
           className="w-full cursor-pointer"
@@ -186,7 +188,7 @@ export default function PhoneScreen({ onBack, onSubmit }: Props) {
         </button>
 
         <div
-          className="text-center mt-2.5"
+          className="text-center mt-3"
           style={{
             fontSize: 11,
             color: "var(--white-30)",

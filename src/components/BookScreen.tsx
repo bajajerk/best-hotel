@@ -34,7 +34,7 @@ export default function BookScreen({ data, onBack }: Props) {
   return (
     <div
       className="h-full flex flex-col overflow-y-auto"
-      style={{ background: "var(--bg-black)", padding: "16px 22px 20px" }}
+      style={{ background: "var(--bg-black)", padding: "16px 24px 32px" }}
     >
       {/* Nav */}
       <div className="flex justify-between items-center mb-2.5">

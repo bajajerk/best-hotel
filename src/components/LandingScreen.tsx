@@ -18,7 +18,7 @@ export default function LandingScreen({ onUpload }: Props) {
   return (
     <div
       className="h-full flex flex-col relative overflow-hidden"
-      style={{ background: "var(--bg-black)", padding: "16px 24px 20px" }}
+      style={{ background: "var(--bg-black)", padding: "16px 24px 32px" }}
     >
       {/* Glow effect */}
       <div
