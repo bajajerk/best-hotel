@@ -946,6 +946,102 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════════
           FOOTER
       ═══════════════════════════════════════════════════════════════════ */}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          TESTIMONIALS
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="px-6 md:px-12 lg:px-20 py-20">
+        <div className="mx-auto" style={{ maxWidth: "1200px" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <p
+              className="text-[11px] tracking-[0.3em] uppercase mb-3"
+              style={{ color: "var(--gold)", fontFamily: "var(--font-mono)" }}
+            >
+              What travellers say
+            </p>
+            <h2
+              className="text-3xl md:text-4xl"
+              style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+            >
+              Trusted by smart travellers
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                name: "Priya S.",
+                location: "Mumbai",
+                text: "Saved ₹12,000 on a 3-night stay at Taj Lands End. Same room, same dates — just called BeatMyRate instead of booking on MakeMyTrip.",
+                savings: "Saved 28%",
+              },
+              {
+                name: "David L.",
+                location: "Singapore",
+                text: "Booked Park Hyatt Bangkok for our anniversary. The rate was $135/night vs $195 on Agoda. Incredible service from the team.",
+                savings: "Saved 31%",
+              },
+              {
+                name: "Ananya R.",
+                location: "Delhi",
+                text: "Family trip to Bali — 5 nights at Novotel for the price of 3.5 on Booking.com. My husband didn't believe it until we checked in!",
+                savings: "Saved 30%",
+              },
+            ].map((t, i) => (
+              <motion.div
+                key={t.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="rounded-2xl p-6"
+                style={{
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                {/* Stars */}
+                <div className="flex gap-0.5 mb-3">
+                  {Array.from({ length: 5 }).map((_, j) => (
+                    <svg key={j} width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)" stroke="none">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  ))}
+                </div>
+                <p
+                  className="text-sm leading-relaxed mb-4"
+                  style={{ color: "var(--white-80)" }}
+                >
+                  &ldquo;{t.text}&rdquo;
+                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm" style={{ color: "var(--white)" }}>{t.name}</p>
+                    <p className="text-xs" style={{ color: "var(--white-30)" }}>{t.location}</p>
+                  </div>
+                  <span
+                    className="text-xs px-2.5 py-1 rounded-full"
+                    style={{
+                      background: "var(--green-soft)",
+                      color: "var(--green)",
+                      fontFamily: "var(--font-mono)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {t.savings}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <footer
         className="px-6 md:px-12 lg:px-20 py-16"
         style={{ borderTop: "1px solid var(--border)" }}
