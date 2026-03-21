@@ -77,6 +77,34 @@ function ratingColor(r: number): string {
   return "var(--white-50)";
 }
 
+/** Basic HTML sanitizer — strips all tags except safe inline/block elements and removes event handlers. */
+function sanitizeHtml(html: string): string {
+  const ALLOWED_TAGS = ['p', 'br', 'b', 'strong', 'i', 'em', 'ul', 'ol', 'li', 'a', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+  // Remove script/style tags and their content
+  let clean = html.replace(/<(script|style|iframe|object|embed|form)\b[^>]*>[\s\S]*?<\/\1>/gi, '');
+  // Remove event handler attributes
+  clean = clean.replace(/\s+on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi, '');
+  // Remove javascript: URLs
+  clean = clean.replace(/href\s*=\s*["']javascript:[^"']*["']/gi, 'href="#"');
+  // Strip disallowed tags but keep their content
+  clean = clean.replace(/<\/?([a-z][a-z0-9]*)\b[^>]*>/gi, (match, tag) => {
+    if (ALLOWED_TAGS.includes(tag.toLowerCase())) return match;
+    return '';
+  });
+  return clean;
+}
+
+/** Format price with proper currency symbol */
+function formatCurrency(amount: number, currency?: string): string {
+  const symbols: Record<string, string> = {
+    USD: '$', EUR: '\u20AC', GBP: '\u00A3', INR: '\u20B9',
+    JPY: '\u00A5', AUD: 'A$', SGD: 'S$', THB: '\u0E3F',
+    AED: 'AED ', MYR: 'RM ', IDR: 'Rp ', KRW: '\u20A9',
+  };
+  const sym = currency ? (symbols[currency.toUpperCase()] || `${currency} `) : '$';
+  return `${sym}${Math.round(amount)}`;
+}
+
 /* ────────────────────────── Sub-components ────────────────────────── */
 
 function StarDisplay({ count }: { count: number }) {
@@ -217,6 +245,7 @@ function ReviewCard({ review }: { review: Review }) {
               `https://i.pravatar.cc/48?u=${review.id}`
             }
             alt=""
+            loading="lazy"
             className="w-11 h-11 rounded-full object-cover ring-2"
             style={{ ringColor: "var(--white-08)" } as React.CSSProperties}
             onError={(e) => {
@@ -629,6 +658,7 @@ export default function HotelPage() {
                   <img
                     src={safePhotoUrl(photos[0])}
                     alt={hotel.hotel_name}
+                    loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = FALLBACK_IMG;
@@ -657,6 +687,7 @@ export default function HotelPage() {
                         <img
                           src={safePhotoUrl(photo)}
                           alt=""
+                          loading="lazy"
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = FALLBACK_IMG;
@@ -698,6 +729,7 @@ export default function HotelPage() {
                   <img
                     src={safePhotoUrl(photos[carouselIdx])}
                     alt={hotel.hotel_name}
+                    loading="lazy"
                     className="w-full h-full object-cover cursor-pointer"
                     onClick={() => openLightbox(carouselIdx)}
                     onError={(e) => {
@@ -909,7 +941,7 @@ export default function HotelPage() {
                 <div
                   className="text-sm leading-[1.8] max-w-prose"
                   style={{ color: "var(--white-50)" }}
-                  dangerouslySetInnerHTML={{ __html: hotel.overview }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(hotel.overview) }}
                 />
               </div>
             )}
@@ -1035,7 +1067,7 @@ export default function HotelPage() {
                           color: "var(--green)",
                         }}
                       >
-                        ${Math.round(hotel.rates_from)}
+                        {formatCurrency(hotel.rates_from, hotel.rates_currency)}
                       </span>
                       <span
                         className="text-sm"

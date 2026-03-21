@@ -31,10 +31,19 @@
   --red-border: rgba(248, 113, 113, 0.12);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+img {
+  display: block;
+  max-width: 100%;
 }
 
 body {
@@ -87,4 +96,26 @@ button:focus {
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+/* Line clamp utilities (Tailwind v4 compat) */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

@@ -7,6 +7,38 @@ import { CONTINENTS, CATEGORIES, SAMPLE_CITIES } from "@/lib/constants";
 import { fetchCuratedCities, CuratedCity } from "@/lib/api";
 
 // ---------------------------------------------------------------------------
+// Category SVG Icons (replacing emojis for a professional look)
+// ---------------------------------------------------------------------------
+function CategoryIcon({ type, size = 16 }: { type: string; size?: number }) {
+  switch (type) {
+    case "solo":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      );
+    case "couple":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+        </svg>
+      );
+    case "family":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 00-3-3.87" />
+          <path d="M16 3.13a4 4 0 010 7.75" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Hero background images (cinematic hotel/travel shots)
 // ---------------------------------------------------------------------------
 const HERO_IMAGES = [
@@ -128,6 +160,9 @@ function CityCard({ city }: { city: CuratedCity }) {
             alt={city.city_name}
             className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
             loading="lazy"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+            }}
           />
           {/* Gradient overlay */}
           <div
@@ -474,7 +509,7 @@ export default function Home() {
                 <Link
                   key={key}
                   href="#destinations"
-                  className="px-5 md:px-7 py-3 rounded-full text-sm transition-all duration-300 hover:scale-105"
+                  className="inline-flex items-center gap-2 px-5 md:px-7 py-3 rounded-full text-sm transition-all duration-300 hover:scale-105"
                   style={{
                     background: "rgba(255,255,255,0.06)",
                     backdropFilter: "blur(20px)",
@@ -484,7 +519,7 @@ export default function Home() {
                     fontFamily: "var(--font-sans)",
                   }}
                 >
-                  <span className="mr-2">{cat.icon}</span>
+                  <CategoryIcon type={cat.icon} size={16} />
                   {cat.label}
                 </Link>
               ))}
@@ -874,6 +909,8 @@ export default function Home() {
             </a>
             <a
               href="https://wa.me/919876543210"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-xs transition-colors duration-300"
               style={{
                 color: "var(--white-50)",

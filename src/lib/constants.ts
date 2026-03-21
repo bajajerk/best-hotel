@@ -23,17 +23,17 @@ export type Continent = (typeof CONTINENTS)[number];
 export const CATEGORIES = {
   singles: {
     label: 'Singles',
-    icon: '\u{1F465}',
+    icon: 'solo',
     description: 'Perfect for friends & solo travellers',
   },
   couples: {
     label: 'Couples',
-    icon: '\u{1F491}',
+    icon: 'couple',
     description: 'Romantic getaways & honeymoons',
   },
   families: {
     label: 'Families',
-    icon: '\u{1F468}\u200D\u{1F469}\u200D\u{1F467}\u200D\u{1F466}',
+    icon: 'family',
     description: 'Family-friendly stays with space to spare',
   },
 } as const;

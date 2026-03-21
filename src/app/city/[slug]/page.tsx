@@ -7,6 +7,38 @@ import Link from "next/link";
 import { fetchCityCurations, CuratedHotel } from "@/lib/api";
 import { CATEGORIES } from "@/lib/constants";
 
+// ---------------------------------------------------------------------------
+// Category SVG Icons (replacing emojis for a professional look)
+// ---------------------------------------------------------------------------
+function CategoryIcon({ type, size = 16 }: { type: string; size?: number }) {
+  switch (type) {
+    case "solo":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      );
+    case "couple":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+        </svg>
+      );
+    case "family":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 00-3-3.87" />
+          <path d="M16 3.13a4 4 0 010 7.75" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
 type Category = "singles" | "couples" | "families";
 
 const PLACEHOLDER_IMG =
@@ -24,6 +56,17 @@ function sanitizePhoto(url: string | null): string {
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim();
+}
+
+/** Format price with proper currency symbol */
+function formatCurrency(amount: number, currency?: string | null): string {
+  const symbols: Record<string, string> = {
+    USD: '$', EUR: '\u20AC', GBP: '\u00A3', INR: '\u20B9',
+    JPY: '\u00A5', AUD: 'A$', SGD: 'S$', THB: '\u0E3F',
+    AED: 'AED ', MYR: 'RM ', IDR: 'Rp ', KRW: '\u20A9',
+  };
+  const sym = currency ? (symbols[currency.toUpperCase()] || `${currency} `) : '$';
+  return `${sym}${Math.round(amount)}`;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -223,7 +266,7 @@ function HotelCard({ hotel, index }: { hotel: CuratedHotel; index: number }) {
                         color: "var(--green)",
                       }}
                     >
-                      ${Math.round(hotel.rates_from)}
+                      {formatCurrency(hotel.rates_from, hotel.rates_currency)}
                     </span>
                     <span
                       className="text-xs"
@@ -478,14 +521,14 @@ export default function CityPage() {
                   <button
                     key={key}
                     onClick={() => setActiveCategory(key)}
-                    className="relative px-5 md:px-7 py-2.5 rounded-full text-sm transition-all duration-300"
+                    className="relative inline-flex items-center gap-2 px-5 md:px-7 py-2.5 rounded-full text-sm transition-all duration-300"
                     style={{
                       background: isActive ? "var(--gold)" : "transparent",
                       color: isActive ? "#0A0A0A" : "var(--white-50)",
                       fontWeight: isActive ? 600 : 400,
                     }}
                   >
-                    <span className="mr-2">{cat.icon}</span>
+                    <CategoryIcon type={cat.icon} size={15} />
                     {cat.label}
                   </button>
                 );

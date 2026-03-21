@@ -22,9 +22,15 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BeatMyRate — They Overcharge. We Don't.",
+  title: "BeatMyRate — Hotel Rates You Weren't Supposed to See | Save 20-40%",
   description:
-    "Screenshot any hotel price and we'll find you a better deal. Save up to 30% on hotel bookings.",
+    "Get B2B wholesale hotel rates across 50+ cities worldwide. We negotiate directly with hotels so you save 20-40% on every booking. No markup, no hidden fees.",
+  keywords: ["hotel deals", "B2B hotel rates", "cheap hotels", "wholesale hotel booking", "hotel price comparison", "beatmyrate"],
+  openGraph: {
+    title: "BeatMyRate — Hotel Rates You Weren't Supposed to See",
+    description: "Get B2B wholesale hotel rates across 50+ cities worldwide. Save 20-40% on every booking.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
