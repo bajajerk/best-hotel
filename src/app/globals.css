@@ -355,15 +355,146 @@ nav {
   content: "";
 }
 
-/* ── Mobile spacing overrides for homepage ── */
+/* ── Tablet overrides for homepage (below 1024px) ── */
+@media (max-width: 1024px) {
+  .why-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 32px !important;
+  }
+}
+
+/* ── Mobile responsive overrides for homepage (below 768px) ── */
 @media (max-width: 768px) {
+  /* 1. Nav — hide links on mobile */
+  .nav-links {
+    display: none !important;
+  }
+
+  /* 2. Hero — single column, hide image */
+  .hero-section {
+    grid-template-columns: 1fr !important;
+    min-height: auto !important;
+  }
+  .hero-image {
+    display: none !important;
+  }
   .hero-text-container {
-    padding-left: 24px !important;
-    padding-right: 24px !important;
+    padding: 60px 20px 48px !important;
+  }
+
+  /* 3. Hero search form — stack vertically */
+  .hero-search-form {
+    grid-template-columns: 1fr !important;
+    max-width: 100% !important;
+  }
+  .hero-search-form .search-field {
+    border-right: none !important;
+    border-bottom: 1px solid var(--cream-border) !important;
+  }
+  .hero-search-btn {
+    width: 100% !important;
+    height: 48px !important;
+  }
+
+  /* 4. Hero stats — wrap */
+  .hero-stats {
+    flex-wrap: wrap !important;
+    gap: 24px !important;
+    justify-content: flex-start !important;
+  }
+
+  /* 5. Section padding — reduce horizontal padding */
+  .section-featured,
+  .section-destinations,
+  .section-proof,
+  .section-trust,
+  .section-testimonials {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+  .section-why {
+    padding: 64px 20px !important;
   }
   .dark-section-container {
-    padding-left: 24px !important;
-    padding-right: 24px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* 6. Section header — stack on mobile */
+  .section-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+
+  /* 7. Featured grid — single column */
+  .featured-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+  }
+  .featured-grid > * {
+    grid-row: span 1 !important;
+    min-height: 220px !important;
+  }
+
+  /* 8. Why Voyagr grid — 1 column on mobile */
+  .why-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+
+  /* 9. Destinations grid — single column */
+  .destinations-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 10. Price comparison cards — stack vertically */
+  .price-card {
+    grid-template-columns: 1fr !important;
+  }
+  .price-card > div:first-child {
+    height: 200px !important;
+  }
+  .price-panel {
+    border-left: none !important;
+    border-top: 1px solid var(--cream-border) !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    min-width: 0 !important;
+    padding: 16px 20px !important;
+  }
+
+  /* 11. Trust stats — 2x2 grid */
+  .trust-stats {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 24px !important;
+  }
+  .trust-stats > * {
+    justify-content: center !important;
+  }
+  .trust-divider {
+    display: none !important;
+  }
+  .trust-stats > * > div {
+    padding: 0 16px !important;
+  }
+
+  /* 12. Footer — stack vertically */
+  .site-footer {
+    padding: 40px 20px 60px !important;
+  }
+  .footer-inner {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 20px !important;
+  }
+  .footer-links {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 20px !important;
   }
 }
 
@@ -448,6 +579,18 @@ nav {
   padding: 40px 60px 72px;
 }
 
+/* Gallery grid — default: 3-column grid */
+.hotel-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+/* Gallery items — default height */
+.hotel-gallery-item {
+  height: 180px;
+}
+
 /* Bottom bar — safe area padding */
 .hotel-bottom-bar {
   padding-bottom: max(14px, env(safe-area-inset-bottom));
@@ -488,5 +631,57 @@ nav {
   /* Fix 7: Footer — reduce padding, extra bottom for fixed bar */
   .hotel-footer {
     padding: 32px 20px 80px !important;
+  }
+
+  /* Fix 8: Gallery — horizontal scrollable strip on mobile */
+  .hotel-gallery-grid {
+    display: flex !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    gap: 8px;
+    padding-bottom: 4px;
+  }
+  .hotel-gallery-grid::-webkit-scrollbar {
+    display: none;
+  }
+  .hotel-gallery-item {
+    flex-shrink: 0;
+    width: 220px;
+    height: 150px;
+  }
+}
+
+/* ═══════════════════════════════════════
+   HOME PAGE — mobile overrides
+   ═══════════════════════════════════════ */
+@media (max-width: 767px) {
+  /* Hide nav links on mobile */
+  .nav-links {
+    display: none !important;
+  }
+
+  /* Stack search form vertically */
+  .hero-search-form {
+    grid-template-columns: 1fr !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    gap: 8px !important;
+  }
+  .hero-search-form .search-field {
+    border-right: none !important;
+    border-bottom: 1px solid var(--cream-border) !important;
+    background: var(--white);
+    border: 1px solid var(--cream-border);
+    padding: 14px 16px !important;
+  }
+  .hero-search-form .hero-search-btn {
+    width: 100% !important;
+    height: 48px !important;
+    padding: 14px !important;
   }
 }

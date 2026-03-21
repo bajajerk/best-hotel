@@ -371,7 +371,7 @@ export default function Home() {
               marginBottom: "20px",
             }}
           >
-            Preferred Hotel Rates
+            Best Preferred Hotel Rates
           </motion.p>
 
           <motion.h1

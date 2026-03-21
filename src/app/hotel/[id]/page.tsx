@@ -962,13 +962,12 @@ export default function HotelPage() {
                 <motion.div variants={fadeUp} custom={5} className="mb-10">
                   <SectionLabel>Gallery</SectionLabel>
                   <div
-                    className="grid grid-cols-2 md:grid-cols-3 gap-1.5"
+                    className="hotel-gallery-grid"
                   >
                     {photos.map((photo, i) => (
                       <div
                         key={i}
-                        className="relative cursor-pointer overflow-hidden group"
-                        style={{ height: "180px" }}
+                        className="relative cursor-pointer overflow-hidden group hotel-gallery-item"
                         onClick={() => openLightbox(i)}
                       >
                         <img
