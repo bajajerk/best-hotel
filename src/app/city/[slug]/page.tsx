@@ -101,7 +101,7 @@ function SkeletonCard() {
    HOTEL CARD
    ───────────────────────────────────────────────────────────────────────────── */
 
-function HotelCard({ hotel, index }: { hotel: CuratedHotel; index: number }) {
+function HotelCard({ hotel, index, isTopPick = false }: { hotel: CuratedHotel; index: number; isTopPick?: boolean }) {
   const photo = sanitizePhoto(hotel.photo1);
 
   const ratingColor =
@@ -167,6 +167,20 @@ function HotelCard({ hotel, index }: { hotel: CuratedHotel; index: number }) {
                   "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 40%, transparent 100%)",
               }}
             />
+
+            {/* Top Pick badge */}
+            {isTopPick && (
+              <div
+                className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-wider z-10"
+                style={{
+                  background: "var(--gold)",
+                  color: "#0A0A0A",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
+                Top Pick
+              </div>
+            )}
 
             {/* Rating badge — top right */}
             {hotel.rating_average && hotel.rating_average > 0 && (
@@ -598,6 +612,7 @@ export default function CityPage() {
                         key={hotel.hotel_id}
                         hotel={hotel}
                         index={i}
+                        isTopPick={i === 0}
                       />
                     ))}
                   </div>
