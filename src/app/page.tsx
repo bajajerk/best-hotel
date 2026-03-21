@@ -498,12 +498,53 @@ export default function Home() {
               Save 20-40% on every booking, worldwide.
             </motion.p>
 
+            {/* Search Bar */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.0 }}
+              className="mt-10 mx-auto w-full"
+              style={{ maxWidth: "520px" }}
+            >
+              <div
+                className="flex items-center rounded-full px-5 py-3 gap-3"
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  backdropFilter: "blur(20px)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--white-50)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Where do you want to go? Try Bangkok, Bali, Paris..."
+                  className="flex-1 bg-transparent text-sm outline-none"
+                  style={{
+                    color: "var(--white)",
+                    fontFamily: "var(--font-sans)",
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const val = (e.target as HTMLInputElement).value.trim().toLowerCase();
+                      if (val) {
+                        const slug = val.replace(/\s+/g, "-");
+                        window.location.href = `/city/${slug}`;
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </motion.div>
+
             {/* Category pills */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.2 }}
-              className="flex items-center justify-center gap-3 md:gap-4 mt-10"
+              className="flex items-center justify-center gap-3 md:gap-4 mt-6"
             >
               {Object.entries(CATEGORIES).map(([key, cat]) => (
                 <Link
