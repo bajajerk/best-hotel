@@ -7,56 +7,57 @@
 }
 
 :root {
-  /* Warm darks — NOT pure black, has stone warmth */
-  --bg-deep: #0C0A09;
-  --bg-surface: #1C1917;
-  --bg-elevated: #292524;
-  --bg-input: #1E1B1A;
+  /* ── Voyagr Light Theme ── */
+  --cream: #f5f0e8;
+  --cream-deep: #ede7d9;
+  --cream-border: #ddd5c3;
+  --ink: #1a1710;
+  --ink-mid: #3d3929;
+  --ink-light: #7a7465;
+  --gold: #b8955a;
+  --gold-light: #d4ae78;
+  --gold-pale: #f0e6d0;
+  --white: #fdfaf5;
+  --success: #4a7c59;
+  --error: #8b3a3a;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'DM Sans', sans-serif;
 
-  /* Warm light text — NOT harsh white */
-  --text-primary: #F5F0EB;
-  --text-secondary: rgba(245, 240, 235, 0.7);
-  --text-tertiary: rgba(245, 240, 235, 0.4);
-  --text-ghost: rgba(245, 240, 235, 0.15);
-
-  /* Accent: warm terracotta/amber — NOT generic gold */
-  --accent: #C2703E;
-  --accent-soft: rgba(194, 112, 62, 0.12);
-  --accent-border: rgba(194, 112, 62, 0.3);
-  --accent-hover: #D4834F;
-
-  /* Success: deep emerald — NOT neon green */
-  --success: #2D9B6A;
-  --success-soft: rgba(45, 155, 106, 0.1);
-
-  /* Danger: warm coral */
-  --danger: #E07B6C;
-  --danger-soft: rgba(224, 123, 108, 0.1);
-
-  /* Borders: warm */
-  --border: rgba(245, 240, 235, 0.06);
-  --border-hover: rgba(245, 240, 235, 0.12);
-
-  /* Backward compat aliases — remove after full migration */
-  --bg-black: var(--bg-deep);
-  --bg-card: var(--bg-surface);
-  --white: var(--text-primary);
-  --white-80: var(--text-secondary);
-  --white-50: var(--text-secondary);
-  --white-30: var(--text-tertiary);
-  --white-15: var(--text-ghost);
-  --white-08: rgba(245, 240, 235, 0.08);
-  --white-04: rgba(245, 240, 235, 0.04);
-  --gold: var(--accent);
-  --gold-soft: var(--accent-soft);
+  /* ── Backward compat aliases — remove after full migration ── */
+  --bg-deep: var(--cream);
+  --bg-surface: var(--white);
+  --bg-elevated: var(--cream-deep);
+  --bg-black: var(--cream);
+  --bg-card: var(--white);
+  --bg-input: var(--white);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-mid);
+  --text-tertiary: var(--ink-light);
+  --text-ghost: var(--cream-border);
+  --accent: var(--gold);
+  --accent-soft: var(--gold-pale);
+  --accent-border: rgba(184, 149, 90, 0.3);
+  --accent-hover: var(--gold-light);
+  --border: var(--cream-border);
+  --border-hover: var(--gold);
+  --border-focus: var(--gold);
+  --white-80: var(--ink-mid);
+  --white-50: var(--ink-mid);
+  --white-30: var(--ink-light);
+  --white-15: var(--cream-border);
+  --white-08: var(--cream-deep);
+  --white-04: var(--cream);
+  --gold-soft: var(--gold-pale);
   --gold-border: var(--accent-border);
+  --success-soft: rgba(74, 124, 89, 0.1);
   --green: var(--success);
-  --green-soft: var(--success-soft);
-  --green-border: rgba(45, 155, 106, 0.15);
-  --red: var(--danger);
-  --red-soft: var(--danger-soft);
-  --red-border: rgba(224, 123, 108, 0.12);
-  --border-focus: var(--border-hover);
+  --green-soft: rgba(74, 124, 89, 0.1);
+  --green-border: rgba(74, 124, 89, 0.15);
+  --danger: var(--error);
+  --danger-soft: rgba(139, 58, 58, 0.1);
+  --red: var(--error);
+  --red-soft: rgba(139, 58, 58, 0.1);
+  --red-border: rgba(139, 58, 58, 0.12);
 }
 
 html {
@@ -75,13 +76,15 @@ img {
 }
 
 body {
-  background: var(--bg-deep);
-  color: var(--text-primary);
+  background: var(--cream);
+  color: var(--ink);
   font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Subtle noise texture for depth */
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.015'/%3E%3C/svg%3E");
 }
 
 input:focus,
@@ -89,13 +92,13 @@ button:focus {
   outline: none;
 }
 
-/* Selection color */
+/* ── Selection color ── */
 ::selection {
-  background: rgba(194, 112, 62, 0.35);
-  color: var(--text-primary);
+  background: rgba(184, 149, 90, 0.3);
+  color: var(--ink);
 }
 
-/* Custom scrollbar */
+/* ── Custom scrollbar ── */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -106,15 +109,15 @@ button:focus {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--text-ghost);
+  background: var(--cream-border);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-tertiary);
+  background: var(--ink-light);
 }
 
-/* Hide scrollbar for horizontal scroll sections */
+/* ── Hide scrollbar for horizontal scroll sections ── */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -123,7 +126,7 @@ button:focus {
   scrollbar-width: none;
 }
 
-/* Smooth page transitions */
+/* ── Smooth page transitions ── */
 main {
   animation: fadeIn 0.3s ease-out;
 }
@@ -164,15 +167,151 @@ main {
 .shimmer {
   background: linear-gradient(
     90deg,
-    var(--bg-surface) 25%,
-    var(--bg-elevated) 50%,
-    var(--bg-surface) 75%
+    var(--cream) 25%,
+    var(--cream-deep) 50%,
+    var(--cream) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
-/* Line clamp utilities */
+/* ── Nav (reference styles for components) ── */
+nav {
+  background: rgba(245, 240, 232, 0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--cream-border);
+}
+
+/* ── Buttons ── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--ink);
+  color: var(--cream);
+  border: none;
+  padding: 12px 28px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.btn-primary:hover {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  padding: 11px 28px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.btn-outline:hover {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+.btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--gold);
+  color: var(--ink);
+  border: none;
+  padding: 12px 28px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.btn-gold:hover {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+/* ── Form inputs ── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+}
+.form-input {
+  background: var(--white);
+  border: 1px solid var(--cream-border);
+  padding: 12px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.form-input:focus {
+  border-color: var(--gold);
+}
+
+/* ── Pill tags ── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border: 1px solid var(--cream-border);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-mid);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--white);
+}
+.pill:hover,
+.pill.active {
+  background: var(--ink);
+  color: var(--cream);
+  border-color: var(--ink);
+}
+
+/* ── Divider ── */
+.divider {
+  width: 40px;
+  height: 1px;
+  background: var(--gold);
+  margin: 12px 0;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--cream-border);
+}
+
+/* ── Line clamp utilities ── */
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -194,11 +333,11 @@ main {
   overflow: hidden;
 }
 
-/* Hotel overview prose */
+/* ── Hotel overview prose ── */
 .prose-hotel {
   font-size: 0.875rem;
   line-height: 1.85;
-  color: var(--text-secondary);
+  color: var(--ink-mid);
 }
 
 .prose-hotel p {
@@ -206,7 +345,7 @@ main {
 }
 
 .prose-hotel a {
-  color: var(--accent);
+  color: var(--gold);
   text-decoration: underline;
 }
 

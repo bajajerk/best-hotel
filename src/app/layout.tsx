@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Sora, JetBrains_Mono } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -9,9 +9,9 @@ const cormorant = Cormorant_Garamond({
   variable: "--font-display",
 });
 
-const sora = Sora({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["300", "400", "500"],
   variable: "--font-body",
 });
 
@@ -22,12 +22,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "beatmyrate",
+  title: "Voyagr — Preferred Hotel Rates",
   description:
     "Get B2B wholesale hotel rates across 50+ cities worldwide. We negotiate directly with hotels so you save 20-40% on every booking. No markup, no hidden fees.",
-  keywords: ["hotel deals", "B2B hotel rates", "cheap hotels", "wholesale hotel booking", "hotel price comparison", "beatmyrate"],
+  keywords: ["hotel deals", "B2B hotel rates", "cheap hotels", "wholesale hotel booking", "hotel price comparison", "voyagr"],
   openGraph: {
-    title: "beatmyrate",
+    title: "Voyagr — Preferred Hotel Rates",
     description: "Get B2B wholesale hotel rates across 50+ cities worldwide. Save 20-40% on every booking.",
     type: "website",
   },
@@ -41,13 +41,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${cormorant.variable} ${sora.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${cormorant.variable} ${dmSans.variable} ${jetbrainsMono.variable} antialiased`}
       >
         {children}
 
         {/* Floating WhatsApp Button */}
         <a
-          href="https://wa.me/919876543210?text=Hi%20BeatMyRate%2C%20I%27d%20like%20to%20book%20a%20hotel"
+          href="https://wa.me/919876543210?text=Hi%20Voyagr%2C%20I%27d%20like%20to%20book%20a%20hotel"
           target="_blank"
           rel="noopener noreferrer"
           style={{

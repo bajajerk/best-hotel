@@ -128,6 +128,11 @@ const fadeIn = {
   visible: { opacity: 1, transition: { duration: 0.6 } },
 };
 
+/* ────────────────────────── Tabs ────────────────────────── */
+
+const TABS = ["Overview", "Gallery", "Reviews", "Location"] as const;
+type TabName = (typeof TABS)[number];
+
 /* ────────────────────────── Lightbox ────────────────────────── */
 
 function Lightbox({
@@ -164,13 +169,13 @@ function Lightbox({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
       className="fixed inset-0 z-[100] flex items-center justify-center"
-      style={{ background: "rgba(12,10,9,0.96)", backdropFilter: "blur(32px)" }}
+      style={{ background: "rgba(26,23,16,0.96)", backdropFilter: "blur(32px)" }}
       onClick={onClose}
     >
       <button
         onClick={onClose}
         className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center text-xl"
-        style={{ color: "var(--text-tertiary)" }}
+        style={{ color: "var(--cream)" }}
         aria-label="Close"
       >
         &times;
@@ -180,7 +185,7 @@ function Lightbox({
         <button
           onClick={(e) => { e.stopPropagation(); onPrev(); }}
           className="absolute left-4 md:left-8 w-12 h-12 flex items-center justify-center text-2xl"
-          style={{ color: "var(--text-tertiary)" }}
+          style={{ color: "var(--cream)" }}
           aria-label="Previous"
         >
           &#8249;
@@ -203,7 +208,7 @@ function Lightbox({
         <button
           onClick={(e) => { e.stopPropagation(); onNext(); }}
           className="absolute right-4 md:right-8 w-12 h-12 flex items-center justify-center text-2xl"
-          style={{ color: "var(--text-tertiary)" }}
+          style={{ color: "var(--cream)" }}
           aria-label="Next"
         >
           &#8250;
@@ -212,7 +217,7 @@ function Lightbox({
 
       <span
         className="absolute bottom-6 text-xs tracking-[0.2em]"
-        style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+        style={{ color: "var(--cream-border)", fontFamily: "var(--font-mono)" }}
       >
         {index + 1} / {photos.length}
       </span>
@@ -232,12 +237,14 @@ function ReviewItem({ review }: { review: Review }) {
   };
 
   return (
-    <article style={{ borderBottom: "1px solid var(--border)" }} className="pb-8 mb-8 last:border-0 last:pb-0 last:mb-0">
-      {/* Header */}
+    <article
+      className="pb-8 mb-8 last:border-0 last:pb-0 last:mb-0"
+      style={{ borderBottom: "1px solid var(--cream-border)" }}
+    >
       <div className="flex items-center gap-3 mb-4">
         <div
           className="w-9 h-9 rounded-full overflow-hidden shrink-0"
-          style={{ background: "var(--bg-elevated)" }}
+          style={{ background: "var(--cream-deep)" }}
         >
           <img
             src={review.reviewer_avatar_url || `https://i.pravatar.cc/48?u=${review.id}`}
@@ -250,11 +257,11 @@ function ReviewItem({ review }: { review: Review }) {
           />
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-sm" style={{ color: "var(--text-primary)" }}>
+          <span className="text-sm font-medium" style={{ color: "var(--ink)" }}>
             {review.reviewer_name}
           </span>
           {review.reviewer_country && (
-            <span className="text-xs ml-2" style={{ color: "var(--text-tertiary)" }}>
+            <span className="text-xs ml-2" style={{ color: "var(--ink-light)" }}>
               {review.reviewer_country}
             </span>
           )}
@@ -262,52 +269,44 @@ function ReviewItem({ review }: { review: Review }) {
         <span
           className="shrink-0 px-2.5 py-1 text-xs font-medium"
           style={{
-            background: review.rating >= 8.5 ? "var(--success-soft)" : "var(--accent-soft)",
-            color: review.rating >= 8.5 ? "var(--success)" : "var(--accent)",
+            background: review.rating >= 8.5 ? "rgba(74,124,89,0.1)" : "var(--gold-pale)",
+            color: review.rating >= 8.5 ? "var(--success)" : "var(--gold)",
             fontFamily: "var(--font-mono)",
-            borderRadius: "4px",
           }}
         >
           {review.rating.toFixed(1)}
         </span>
       </div>
 
-      {/* Title */}
       {review.title && (
-        <h4 className="text-[15px] font-semibold mb-3" style={{ color: "var(--text-primary)" }}>
+        <h4
+          className="text-[15px] font-medium mb-3"
+          style={{ color: "var(--ink)", fontFamily: "var(--font-display)", fontSize: "17px" }}
+        >
           {review.title}
         </h4>
       )}
 
-      {/* Positive */}
       {review.positive && (
-        <div
-          className="pl-4 mb-3"
-          style={{ borderLeft: "3px solid var(--success)" }}
-        >
-          <p className="text-sm" style={{ color: "var(--text-secondary)", lineHeight: 1.8 }}>
+        <div className="pl-4 mb-3" style={{ borderLeft: "3px solid var(--success)" }}>
+          <p className="text-sm" style={{ color: "var(--ink-mid)", lineHeight: 1.8 }}>
             {review.positive}
           </p>
         </div>
       )}
 
-      {/* Negative */}
       {review.negative && (
-        <div
-          className="pl-4 mb-3"
-          style={{ borderLeft: "3px solid var(--danger)" }}
-        >
-          <p className="text-sm" style={{ color: "var(--text-tertiary)", lineHeight: 1.8 }}>
+        <div className="pl-4 mb-3" style={{ borderLeft: "3px solid var(--error)" }}>
+          <p className="text-sm" style={{ color: "var(--ink-light)", lineHeight: 1.8 }}>
             {review.negative}
           </p>
         </div>
       )}
 
-      {/* Stay date */}
       {review.stay_date && (
         <p
           className="text-[11px] mt-4"
-          style={{ color: "var(--text-ghost)", fontFamily: "var(--font-mono)" }}
+          style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
         >
           Stayed {review.stay_date}
           {review.trip_type && ` \u00b7 ${tripLabels[review.trip_type] || review.trip_type}`}
@@ -322,11 +321,12 @@ function ReviewItem({ review }: { review: Review }) {
 function SectionLabel({ children }: { children: string }) {
   return (
     <h3
-      className="text-[11px] uppercase mb-6"
+      className="text-[10px] uppercase mb-6"
       style={{
-        fontFamily: "var(--font-mono)",
-        letterSpacing: "0.15em",
-        color: "var(--text-tertiary)",
+        fontFamily: "var(--sans)",
+        fontWeight: 600,
+        letterSpacing: "0.18em",
+        color: "var(--gold)",
       }}
     >
       {children}
@@ -348,7 +348,9 @@ export default function HotelPage() {
   /* Gallery */
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
-  const [carouselIdx, setCarouselIdx] = useState(0);
+
+  /* Tabs */
+  const [activeTab, setActiveTab] = useState<TabName>("Overview");
 
   /* Overview toggle */
   const [overviewExpanded, setOverviewExpanded] = useState(false);
@@ -356,6 +358,12 @@ export default function HotelPage() {
   /* Sticky header */
   const [headerVisible, setHeaderVisible] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
+
+  /* Section refs */
+  const overviewRef = useRef<HTMLDivElement>(null);
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const reviewsRef = useRef<HTMLDivElement>(null);
+  const locationRef = useRef<HTMLDivElement>(null);
 
   /* ── Fetch data ── */
   useEffect(() => {
@@ -376,7 +384,7 @@ export default function HotelPage() {
       .finally(() => setLoading(false));
   }, [hotelId]);
 
-  /* ── Scroll observer ── */
+  /* ── Scroll observer for sticky header ── */
   useEffect(() => {
     if (!heroRef.current) return;
     const observer = new IntersectionObserver(
@@ -408,35 +416,41 @@ export default function HotelPage() {
     [photos.length]
   );
 
+  /* ── Tab click handler ── */
+  const handleTabClick = useCallback((tab: TabName) => {
+    setActiveTab(tab);
+    const refMap: Record<TabName, React.RefObject<HTMLDivElement | null>> = {
+      Overview: overviewRef,
+      Gallery: galleryRef,
+      Reviews: reviewsRef,
+      Location: locationRef,
+    };
+    const ref = refMap[tab];
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
+
   /* ── Loading ── */
   if (loading) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--bg-deep)" }}
+        style={{ background: "var(--cream)" }}
       >
         <div className="text-center">
-          <div className="relative w-12 h-12 mx-auto mb-6">
+          <div className="relative w-10 h-10 mx-auto mb-6">
             <div
               className="absolute inset-0 rounded-full animate-spin"
               style={{
-                border: "2px solid var(--border)",
-                borderTopColor: "var(--accent)",
-              }}
-            />
-            <div
-              className="absolute inset-2 rounded-full animate-spin"
-              style={{
-                border: "2px solid var(--border)",
-                borderTopColor: "var(--accent)",
-                animationDirection: "reverse",
-                animationDuration: "0.8s",
+                border: "2px solid var(--cream-border)",
+                borderTopColor: "var(--gold)",
               }}
             />
           </div>
           <p
-            className="text-sm tracking-[0.15em] uppercase"
-            style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+            className="text-xs tracking-[0.15em] uppercase"
+            style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
           >
             Loading hotel
           </p>
@@ -450,7 +464,7 @@ export default function HotelPage() {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--bg-deep)" }}
+        style={{ background: "var(--cream)" }}
       >
         <div className="text-center max-w-md px-6">
           <div
@@ -458,21 +472,21 @@ export default function HotelPage() {
             style={{
               fontFamily: "var(--font-display)",
               fontStyle: "italic",
-              color: "var(--text-ghost)",
+              color: "var(--cream-border)",
             }}
           >
             404
           </div>
-          <p className="text-lg mb-2" style={{ color: "var(--text-primary)" }}>
+          <p className="text-lg mb-2" style={{ color: "var(--ink)" }}>
             Hotel not found
           </p>
-          <p className="text-sm mb-8" style={{ color: "var(--text-tertiary)" }}>
+          <p className="text-sm mb-8" style={{ color: "var(--ink-light)" }}>
             This property may have been removed or the link is invalid.
           </p>
           <Link
             href="/"
-            className="inline-block px-6 py-3 text-sm font-medium transition-opacity hover:opacity-80"
-            style={{ background: "var(--accent)", color: "var(--bg-deep)" }}
+            className="inline-block px-6 py-3 text-xs font-medium uppercase tracking-[0.1em] transition-opacity hover:opacity-80"
+            style={{ background: "var(--gold)", color: "var(--ink)" }}
           >
             Back to search
           </Link>
@@ -489,6 +503,7 @@ export default function HotelPage() {
   const savePct = otaPrice && hotel.rates_from
     ? Math.round(((otaPrice - hotel.rates_from) / otaPrice) * 100)
     : null;
+  const saveAmount = otaPrice && hotel.rates_from ? otaPrice - hotel.rates_from : null;
 
   const quickFacts = [
     hotel.checkin ? { label: "Check-in", value: hotel.checkin } : null,
@@ -499,8 +514,12 @@ export default function HotelPage() {
     hotel.accommodation_type ? { label: "Type", value: hotel.accommodation_type } : null,
   ].filter(Boolean) as { label: string; value: string }[];
 
+  const starDisplay = hotel.star_rating > 0
+    ? "\u2605".repeat(Math.round(hotel.star_rating))
+    : "";
+
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-deep)", color: "var(--text-primary)" }}>
+    <div className="min-h-screen" style={{ background: "var(--cream)", color: "var(--ink)" }}>
       {/* ═══════════════════ Lightbox ═══════════════════ */}
       <AnimatePresence>
         {lightboxOpen && photos.length > 0 && (
@@ -514,278 +533,270 @@ export default function HotelPage() {
         )}
       </AnimatePresence>
 
-      {/* ═══════════════════ Sticky Header ═══════════════════ */}
-      <header
-        className="fixed top-0 left-0 right-0 z-50 px-5 md:px-10 lg:px-20 py-3.5 flex items-center justify-between transition-all duration-500"
+      {/* ═══════════════════ Sticky Frosted Cream Nav ═══════════════════ */}
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between"
         style={{
-          background: headerVisible ? "rgba(12,10,9,0.92)" : "transparent",
-          backdropFilter: headerVisible ? "blur(24px) saturate(180%)" : "none",
-          borderBottom: headerVisible ? "1px solid var(--border)" : "1px solid transparent",
-          transform: headerVisible ? "translateY(0)" : "translateY(-100%)",
-          opacity: headerVisible ? 1 : 0,
-          pointerEvents: headerVisible ? "auto" : "none",
+          height: "60px",
+          padding: "0 24px",
+          background: "rgba(245, 240, 232, 0.92)",
+          backdropFilter: "blur(16px)",
+          borderBottom: "1px solid var(--cream-border)",
         }}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <Link href="/" className="shrink-0">
-            <span
-              className="text-lg"
-              style={{
-                fontFamily: "var(--font-display)",
-                fontStyle: "italic",
-                color: "var(--accent)",
-              }}
-            >
-              beatmyrate
-            </span>
-          </Link>
-          <span style={{ color: "var(--text-ghost)" }}>/</span>
-          <span className="text-sm truncate" style={{ color: "var(--text-secondary)" }}>
-            {hotel.hotel_name}
-          </span>
-        </div>
-        <a
-          href="tel:+919876543210"
-          className="shrink-0 px-5 py-2 text-sm font-medium transition-all hover:scale-[1.03] active:scale-[0.97]"
-          style={{ background: "var(--accent)", color: "var(--bg-deep)" }}
-        >
-          Book Now
-        </a>
-      </header>
-
-      {/* ═══════════════════ Back Link ═══════════════════ */}
-      <div className="px-4 md:px-10 lg:px-20 pt-5 pb-3">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs transition-colors hover:opacity-70"
-          style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)", letterSpacing: "0.1em" }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          BACK
-        </Link>
-      </div>
-
-      {/* ═══════════════════ Photo Gallery ═══════════════════ */}
-      <section ref={heroRef}>
-        {photos.length > 0 ? (
-          <>
-            {/* Desktop: hero + 4 thumbnails */}
-            <div className="hidden md:block">
-              {/* Hero photo — full bleed */}
-              <div
-                className="relative cursor-pointer overflow-hidden group"
-                style={{ maxHeight: "500px" }}
-                onClick={() => openLightbox(0)}
-              >
-                <motion.img
-                  initial={{ scale: 1.05, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  src={safePhotoUrl(photos[0])}
-                  alt={hotel.hotel_name}
-                  loading="lazy"
-                  className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-                  style={{ height: "500px" }}
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                />
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ background: "linear-gradient(to top, rgba(12,10,9,0.4) 0%, transparent 40%)" }}
-                />
-              </div>
-
-              {/* Thumbnails row */}
-              {photos.length > 1 && (
-                <div
-                  className="grid"
-                  style={{
-                    gridTemplateColumns: `repeat(${Math.min(photos.length - 1, 4)}, 1fr)`,
-                    gap: "2px",
-                    marginTop: "2px",
-                  }}
-                >
-                  {photos.slice(1, 5).map((photo, i) => (
-                    <div
-                      key={i}
-                      className="relative cursor-pointer overflow-hidden group"
-                      style={{ height: "140px" }}
-                      onClick={() => openLightbox(i + 1)}
-                    >
-                      <img
-                        src={safePhotoUrl(photo)}
-                        alt=""
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                      />
-                      <div
-                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        style={{ background: "rgba(12,10,9,0.3)" }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Mobile: single photo with dots */}
-            <div className="md:hidden">
-              <div className="relative overflow-hidden" style={{ height: "300px", maxHeight: "300px" }}>
-                <img
-                  src={safePhotoUrl(photos[carouselIdx])}
-                  alt={hotel.hotel_name}
-                  loading="lazy"
-                  className="w-full h-full object-cover cursor-pointer"
-                  onClick={() => openLightbox(carouselIdx)}
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                />
-
-                {/* Dots */}
-                {photos.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                    {photos.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setCarouselIdx(i)}
-                        className="w-1.5 h-1.5 rounded-full transition-all duration-300"
-                        style={{
-                          background: i === carouselIdx ? "var(--text-primary)" : "var(--text-tertiary)",
-                          transform: i === carouselIdx ? "scale(1.5)" : "scale(1)",
-                        }}
-                        aria-label={`Photo ${i + 1}`}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Swipe hint arrows */}
-                {photos.length > 1 && (
-                  <>
-                    <button
-                      onClick={() => setCarouselIdx((i) => (i - 1 + photos.length) % photos.length)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-lg"
-                      style={{ background: "rgba(12,10,9,0.5)", color: "var(--text-secondary)" }}
-                      aria-label="Previous photo"
-                    >
-                      &#8249;
-                    </button>
-                    <button
-                      onClick={() => setCarouselIdx((i) => (i + 1) % photos.length)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-lg"
-                      style={{ background: "rgba(12,10,9,0.5)", color: "var(--text-secondary)" }}
-                      aria-label="Next photo"
-                    >
-                      &#8250;
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </>
-        ) : (
-          <div
-            className="flex items-center justify-center"
+        <Link href="/" className="no-underline">
+          <span
             style={{
-              height: "320px",
-              background: "linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-elevated) 100%)",
+              fontFamily: "var(--font-display)",
+              fontSize: "22px",
+              fontWeight: 500,
+              letterSpacing: "0.08em",
+              color: "var(--ink)",
+              fontStyle: "italic",
             }}
           >
-            <p className="text-sm" style={{ color: "var(--text-ghost)" }}>
-              No photos available
-            </p>
-          </div>
-        )}
-      </section>
+            Voyag<span style={{ color: "var(--gold)" }}>r</span>
+          </span>
+        </Link>
 
-      {/* ═══════════════════ Hotel Info — 2-Column ═══════════════════ */}
-      <section className="px-4 md:px-10 lg:px-20 py-10 md:py-16">
+        {/* Sticky hotel name + book button appear after scrolling past hero */}
         <div
-          className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16"
+          className="flex items-center gap-4 transition-all duration-500"
+          style={{
+            opacity: headerVisible ? 1 : 0,
+            transform: headerVisible ? "translateY(0)" : "translateY(-8px)",
+            pointerEvents: headerVisible ? "auto" : "none",
+          }}
         >
-          {/* ─── Left Column (65%) ─── */}
-          <motion.div
-            className="lg:col-span-7 xl:col-span-8 min-w-0"
-            initial="hidden"
-            animate="visible"
-            variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+          <span
+            className="text-sm truncate max-w-[200px] hidden md:block"
+            style={{ color: "var(--ink-mid)" }}
           >
-            {/* Star rating as accent dots */}
-            {hotel.star_rating > 0 && (
-              <motion.div variants={fadeUp} custom={0} className="mb-3">
-                <span style={{ color: "var(--accent)", letterSpacing: "0.3em", fontSize: "10px" }}>
-                  {Array.from({ length: Math.round(hotel.star_rating) })
-                    .map(() => "\u2022")
-                    .join(" ")}
-                </span>
-              </motion.div>
-            )}
+            {hotel.hotel_name}
+          </span>
+          <a
+            href="tel:+919876543210"
+            className="shrink-0 text-xs font-medium uppercase tracking-[0.1em] transition-opacity hover:opacity-80"
+            style={{
+              background: "var(--gold)",
+              color: "var(--ink)",
+              padding: "10px 20px",
+            }}
+          >
+            Book Now
+          </a>
+        </div>
+      </nav>
 
-            {/* Hotel name */}
-            <motion.h1
-              variants={fadeUp}
-              custom={1}
-              className="text-4xl md:text-5xl leading-[1.1] mb-4"
-              style={{ fontFamily: "var(--font-display)", fontStyle: "italic" }}
+      {/* ═══════════════════ Hero Image (440px) ═══════════════════ */}
+      <section ref={heroRef} style={{ paddingTop: "60px" }}>
+        <div
+          className="relative overflow-hidden cursor-pointer"
+          style={{ height: "440px" }}
+          onClick={() => photos.length > 0 && openLightbox(0)}
+        >
+          {photos.length > 0 ? (
+            <motion.img
+              initial={{ scale: 1.05, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+              src={safePhotoUrl(photos[0])}
+              alt={hotel.hotel_name}
+              loading="eager"
+              className="w-full h-full object-cover"
+              style={{ filter: "brightness(0.88) saturate(0.85)" }}
+              onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+            />
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center"
+              style={{ background: "var(--cream-deep)" }}
             >
-              {hotel.hotel_name}
-            </motion.h1>
+              <p className="text-sm" style={{ color: "var(--ink-light)" }}>
+                No photos available
+              </p>
+            </div>
+          )}
 
-            {/* Address */}
-            {address && (
-              <motion.p
-                variants={fadeUp}
-                custom={2}
-                className="flex items-center gap-2 text-sm mb-6"
-                style={{ color: "var(--text-tertiary)" }}
-              >
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  className="shrink-0"
+          {/* Dark gradient overlay */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: "linear-gradient(to top, rgba(26,23,16,0.7) 0%, transparent 60%)",
+            }}
+          />
+
+          {/* Hotel name + save badge overlay */}
+          <div
+            className="absolute bottom-0 left-0 right-0 flex items-end justify-between"
+            style={{ padding: "40px 60px", color: "var(--cream)" }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              {starDisplay && (
+                <div
+                  className="mb-2"
+                  style={{
+                    fontSize: "10px",
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    color: "var(--gold)",
+                  }}
                 >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                {address}
-              </motion.p>
-            )}
-
-            {/* Rating */}
-            {hotel.rating_average > 0 && (
-              <motion.div
-                variants={fadeUp}
-                custom={3}
-                className="flex items-center gap-4 mb-2"
+                  {starDisplay} {hotel.city}
+                  {hotel.country ? `, ${hotel.country}` : ""}
+                </div>
+              )}
+              <h1
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "clamp(32px, 4vw, 46px)",
+                  fontWeight: 300,
+                  fontStyle: "italic",
+                  lineHeight: 1.1,
+                  color: "var(--cream)",
+                }}
               >
-                <span
-                  className="text-3xl font-light"
+                {hotel.hotel_name}
+              </h1>
+              {address && (
+                <p
+                  className="mt-1.5"
+                  style={{
+                    fontSize: "13px",
+                    opacity: 0.7,
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  {address}
+                </p>
+              )}
+            </motion.div>
+
+            {/* Save badge */}
+            {saveAmount && saveAmount > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+                className="shrink-0 text-center hidden md:block"
+                style={{
+                  background: "var(--gold)",
+                  color: "var(--ink)",
+                  padding: "10px 20px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 500,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  You save
+                </div>
+                <div
                   style={{
                     fontFamily: "var(--font-display)",
-                    color: "var(--text-primary)",
+                    fontSize: "28px",
+                    fontWeight: 500,
+                  }}
+                >
+                  {formatCurrency(saveAmount, hotel.rates_currency)}
+                </div>
+                <div style={{ fontSize: "10px", opacity: 0.7 }}>per night</div>
+              </motion.div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════ Tabs Bar ═══════════════════ */}
+      <div
+        className="hidden md:flex gap-0 sticky top-[60px] z-40"
+        style={{
+          background: "var(--white)",
+          borderBottom: "1px solid var(--cream-border)",
+          padding: "0 60px",
+        }}
+      >
+        {TABS.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => handleTabClick(tab)}
+            style={{
+              padding: "16px 24px",
+              fontSize: "12px",
+              fontWeight: 500,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: activeTab === tab ? "var(--ink)" : "var(--ink-light)",
+              cursor: "pointer",
+              borderBottom: activeTab === tab ? "2px solid var(--ink)" : "2px solid transparent",
+              background: "transparent",
+              border: "none",
+              borderBottomWidth: "2px",
+              borderBottomStyle: "solid",
+              borderBottomColor: activeTab === tab ? "var(--ink)" : "transparent",
+              transition: "all 0.2s",
+              fontFamily: "var(--font-body)",
+            }}
+            onMouseEnter={(e) => {
+              if (activeTab !== tab) (e.target as HTMLButtonElement).style.color = "var(--ink)";
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== tab) (e.target as HTMLButtonElement).style.color = "var(--ink-light)";
+            }}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* ═══════════════════ Two-Column Content ═══════════════════ */}
+      <div
+        className="flex flex-col lg:grid"
+        style={{
+          gridTemplateColumns: "1fr 340px",
+          gap: 0,
+          flex: 1,
+        }}
+      >
+        {/* ─── Left: Main Content (65%) ─── */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+          style={{ padding: "40px 24px" }}
+          className="lg:!px-[60px]"
+        >
+          {/* ── OVERVIEW Section ── */}
+          <div ref={overviewRef} style={{ scrollMarginTop: "120px" }}>
+            {/* Rating */}
+            {hotel.rating_average > 0 && (
+              <motion.div variants={fadeUp} custom={0} className="flex items-center gap-4 mb-6">
+                <span
+                  className="text-3xl"
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 400,
+                    color: "var(--ink)",
                   }}
                 >
                   {hotel.rating_average.toFixed(1)}
                 </span>
                 <div>
-                  <span
-                    className="text-base"
-                    style={{ color: "var(--text-primary)" }}
-                  >
+                  <span className="text-base font-medium" style={{ color: "var(--ink)" }}>
                     {ratingLabel(hotel.rating_average)}
                   </span>
                   {(hotel.number_of_reviews > 0 || reviewCount > 0) && (
                     <span
                       className="text-xs ml-3"
-                      style={{
-                        color: "var(--text-tertiary)",
-                        fontFamily: "var(--font-mono)",
-                      }}
+                      style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
                     >
                       {(hotel.number_of_reviews || reviewCount).toLocaleString()} reviews
                     </span>
@@ -794,27 +805,26 @@ export default function HotelPage() {
               </motion.div>
             )}
 
-            {/* ── Divider ── */}
+            {/* Divider */}
             <motion.div
               variants={fadeUp}
-              custom={4}
-              className="my-10"
-              style={{
-                height: "1px",
-                background: "linear-gradient(to right, var(--accent-border), transparent 70%)",
-              }}
+              custom={1}
+              className="mb-8"
+              style={{ height: "1px", background: "var(--cream-border)" }}
             />
 
-            {/* ── About ── */}
+            {/* About / Overview */}
             {hotel.overview && (
-              <motion.div variants={fadeUp} custom={5} className="mb-12">
-                <SectionLabel>About</SectionLabel>
+              <motion.div variants={fadeUp} custom={2} className="mb-10">
+                <SectionLabel>About This Property</SectionLabel>
                 <div className="relative">
                   <div
-                    className="prose-hotel"
                     style={{
                       maxHeight: overviewExpanded ? "none" : "200px",
                       overflow: "hidden",
+                      fontSize: "14px",
+                      lineHeight: 1.8,
+                      color: "var(--ink-mid)",
                     }}
                     dangerouslySetInnerHTML={{ __html: sanitizeHtml(hotel.overview) }}
                   />
@@ -826,7 +836,7 @@ export default function HotelPage() {
                         left: 0,
                         right: 0,
                         height: "80px",
-                        background: "linear-gradient(to bottom, transparent, var(--bg-deep))",
+                        background: "linear-gradient(to bottom, transparent, var(--cream))",
                         pointerEvents: "none",
                       }}
                     />
@@ -835,8 +845,8 @@ export default function HotelPage() {
                 {hotel.overview.length > 400 && (
                   <button
                     onClick={() => setOverviewExpanded(!overviewExpanded)}
-                    className="mt-3 text-sm font-medium transition-colors hover:opacity-80"
-                    style={{ color: "var(--accent)" }}
+                    className="mt-3 text-xs font-medium uppercase tracking-[0.08em] transition-colors hover:opacity-80"
+                    style={{ color: "var(--gold)", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)" }}
                   >
                     {overviewExpanded ? "Show less" : "Read more"}
                   </button>
@@ -844,30 +854,29 @@ export default function HotelPage() {
               </motion.div>
             )}
 
-            {/* ── Quick Facts ── */}
+            {/* ── Amenities / Quick Facts ── */}
             {quickFacts.length > 0 && (
-              <motion.div variants={fadeUp} custom={6} className="mb-12">
-                <SectionLabel>Details</SectionLabel>
-                <div style={{ border: "1px solid var(--border)", borderRadius: "2px" }}>
+              <motion.div variants={fadeUp} custom={3} className="mb-10">
+                <SectionLabel>Hotel Details</SectionLabel>
+                <div style={{ border: "1px solid var(--cream-border)", background: "var(--white)" }}>
                   {quickFacts.map((fact, i) => (
                     <div
                       key={fact.label}
                       className="grid grid-cols-2 py-3.5 px-5 text-sm"
                       style={{
-                        borderBottom: i < quickFacts.length - 1 ? "1px solid var(--border)" : "none",
+                        borderBottom: i < quickFacts.length - 1 ? "1px solid var(--cream-border)" : "none",
                       }}
                     >
                       <span
                         style={{
-                          color: "var(--text-tertiary)",
-                          fontFamily: "var(--font-mono)",
+                          color: "var(--ink-light)",
                           fontSize: "12px",
                           letterSpacing: "0.05em",
                         }}
                       >
                         {fact.label}
                       </span>
-                      <span style={{ color: "var(--text-secondary)" }}>
+                      <span style={{ color: "var(--ink-mid)" }}>
                         {fact.value}
                       </span>
                     </div>
@@ -876,72 +885,187 @@ export default function HotelPage() {
               </motion.div>
             )}
 
-            {/* ── Divider ── */}
-            <motion.div
-              variants={fadeUp}
-              custom={7}
-              className="mb-12"
-              style={{
-                height: "1px",
-                background: "linear-gradient(to right, var(--border), transparent)",
-              }}
-            />
+            {/* ── Policies ── */}
+            {(hotel.checkin || hotel.checkout) && (
+              <motion.div variants={fadeUp} custom={4} className="mb-10">
+                <SectionLabel>Policies</SectionLabel>
+                <div
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-px"
+                  style={{ background: "var(--cream-border)" }}
+                >
+                  {hotel.checkin && (
+                    <div className="p-5" style={{ background: "var(--white)" }}>
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          letterSpacing: "0.16em",
+                          textTransform: "uppercase",
+                          color: "var(--ink-light)",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Check-in
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontSize: "20px",
+                          fontWeight: 400,
+                          color: "var(--ink)",
+                        }}
+                      >
+                        {hotel.checkin}
+                      </div>
+                    </div>
+                  )}
+                  {hotel.checkout && (
+                    <div className="p-5" style={{ background: "var(--white)" }}>
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          letterSpacing: "0.16em",
+                          textTransform: "uppercase",
+                          color: "var(--ink-light)",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Check-out
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontSize: "20px",
+                          fontWeight: 400,
+                          color: "var(--ink)",
+                        }}
+                      >
+                        {hotel.checkout}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Chain / Brand ── */}
+            {(hotel.chain_name || hotel.brand_name) && (
+              <motion.div variants={fadeUp} custom={4.5} className="mb-10">
+                <p className="text-xs" style={{ color: "var(--ink-light)" }}>
+                  {[hotel.chain_name, hotel.brand_name].filter(Boolean).join(" \u00b7 ")}
+                </p>
+              </motion.div>
+            )}
+
+            {/* ── GALLERY Section ── */}
+            <div ref={galleryRef} style={{ scrollMarginTop: "120px" }}>
+              {photos.length > 1 && (
+                <motion.div variants={fadeUp} custom={5} className="mb-10">
+                  <SectionLabel>Gallery</SectionLabel>
+                  <div
+                    className="grid grid-cols-2 md:grid-cols-3 gap-0.5"
+                  >
+                    {photos.map((photo, i) => (
+                      <div
+                        key={i}
+                        className="relative cursor-pointer overflow-hidden group"
+                        style={{ height: "180px" }}
+                        onClick={() => openLightbox(i)}
+                      >
+                        <img
+                          src={safePhotoUrl(photo)}
+                          alt={`${hotel.hotel_name} photo ${i + 1}`}
+                          loading="lazy"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          style={{ filter: "saturate(0.88)" }}
+                          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+                        />
+                        <div
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          style={{ background: "rgba(26,23,16,0.2)" }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </div>
 
             {/* ── Mobile Booking Section ── */}
-            <motion.div variants={fadeUp} custom={7} className="lg:hidden mb-12">
+            <motion.div variants={fadeUp} custom={6} className="lg:hidden mb-10">
               <SectionLabel>Pricing</SectionLabel>
               <div
-                className="p-6"
                 style={{
-                  background: "var(--bg-surface)",
-                  borderTop: "2px solid var(--accent)",
+                  background: "var(--white)",
+                  border: "1px solid var(--cream-border)",
+                  padding: "24px",
                 }}
               >
                 {hotel.rates_from ? (
                   <div className="mb-5">
-                    <span
-                      className="text-[11px] uppercase tracking-[0.1em]"
-                      style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        color: "var(--gold)",
+                        letterSpacing: "0.18em",
+                        textTransform: "uppercase",
+                        marginBottom: "8px",
+                      }}
                     >
-                      from
-                    </span>
-                    <div className="flex items-baseline gap-2 mt-1">
+                      Preferred Rate
+                    </div>
+                    {otaPrice && (
+                      <div
+                        className="mb-1"
+                        style={{
+                          fontSize: "13px",
+                          color: "var(--ink-light)",
+                          textDecoration: "line-through",
+                        }}
+                      >
+                        Market rate: {formatCurrency(otaPrice, hotel.rates_currency)}/night
+                      </div>
+                    )}
+                    <div className="flex items-baseline gap-2">
                       <span
-                        className="text-3xl"
-                        style={{ fontFamily: "var(--font-display)", fontStyle: "italic", color: "var(--text-primary)" }}
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontSize: "36px",
+                          fontWeight: 400,
+                          color: "var(--ink)",
+                          lineHeight: 1,
+                        }}
                       >
                         {formatCurrency(hotel.rates_from, hotel.rates_currency)}
                       </span>
-                      <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>
-                        /night
+                      <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>
+                        per night
                       </span>
                     </div>
-                    {otaPrice && savePct && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <span
-                          className="text-sm line-through"
-                          style={{ color: "var(--danger)" }}
-                        >
-                          {formatCurrency(otaPrice, hotel.rates_currency)} on MakeMyTrip
-                        </span>
-                        <span
-                          className="text-[11px] px-2 py-0.5 font-medium"
-                          style={{
-                            background: "var(--success-soft)",
-                            color: "var(--success)",
-                            fontFamily: "var(--font-mono)",
-                          }}
-                        >
-                          Save {savePct}%
-                        </span>
+                    {savePct && savePct > 0 && (
+                      <div
+                        className="mt-2 inline-block"
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--success)",
+                          fontWeight: 500,
+                        }}
+                      >
+                        You save {savePct}% ({saveAmount ? formatCurrency(saveAmount, hotel.rates_currency) : ""}/night)
                       </div>
                     )}
                   </div>
                 ) : (
                   <div className="mb-5">
                     <span
-                      className="text-xl"
-                      style={{ fontFamily: "var(--font-display)", fontStyle: "italic", color: "var(--text-secondary)" }}
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontSize: "22px",
+                        fontWeight: 400,
+                        fontStyle: "italic",
+                        color: "var(--ink-mid)",
+                      }}
                     >
                       Request a quote
                     </span>
@@ -950,227 +1074,357 @@ export default function HotelPage() {
 
                 <a
                   href="tel:+919876543210"
-                  className="flex items-center justify-center gap-2 w-full py-3.5 text-sm font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
-                  style={{ background: "var(--accent)", color: "var(--bg-deep)" }}
+                  className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-medium uppercase tracking-[0.1em] transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={{
+                    background: "var(--gold)",
+                    color: "var(--ink)",
+                    textDecoration: "none",
+                  }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-                  </svg>
-                  Call to Book
+                  Book This Rate
                 </a>
 
                 <a
                   href="https://wa.me/919876543210"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-3.5 text-sm font-medium mt-3 transition-all hover:opacity-90 active:scale-[0.98]"
-                  style={{ border: "1px solid var(--accent-border)", color: "var(--accent)" }}
+                  className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-medium uppercase tracking-[0.1em] mt-3 transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={{
+                    border: "1px solid var(--cream-border)",
+                    color: "var(--ink-mid)",
+                    textDecoration: "none",
+                  }}
                 >
                   WhatsApp
                 </a>
 
-                <p className="text-xs text-center mt-4" style={{ color: "var(--text-tertiary)" }}>
-                  No hidden fees. We confirm availability on call.
+                <p className="text-[11px] text-center mt-4" style={{ color: "var(--ink-light)" }}>
+                  Free cancellation. No hidden fees.
                 </p>
               </div>
             </motion.div>
 
-            {/* ── Guest Reviews ── */}
-            {reviews.length > 0 && (
-              <motion.div variants={fadeUp} custom={8}>
-                <div className="flex items-end justify-between mb-6">
-                  <SectionLabel>Reviews</SectionLabel>
-                  {reviewCount > reviews.length && (
-                    <span
-                      className="text-xs mb-6"
-                      style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
-                    >
-                      Showing {reviews.length} of {reviewCount}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  {reviews.map((review) => (
-                    <ReviewItem key={review.id} review={review} />
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </motion.div>
+            {/* ── REVIEWS Section ── */}
+            <div ref={reviewsRef} style={{ scrollMarginTop: "120px" }}>
+              {reviews.length > 0 && (
+                <motion.div variants={fadeUp} custom={7}>
+                  <div className="flex items-end justify-between mb-6">
+                    <SectionLabel>Guest Reviews</SectionLabel>
+                    {reviewCount > reviews.length && (
+                      <span
+                        className="text-xs mb-6"
+                        style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
+                      >
+                        Showing {reviews.length} of {reviewCount}
+                      </span>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      background: "var(--white)",
+                      border: "1px solid var(--cream-border)",
+                      padding: "24px",
+                    }}
+                  >
+                    {reviews.map((review) => (
+                      <ReviewItem key={review.id} review={review} />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </div>
 
-          {/* ─── Right Column (35%) — Sticky Sidebar ─── */}
-          <div className="lg:col-span-5 xl:col-span-4 hidden lg:block">
+            {/* ── LOCATION Section ── */}
+            <div ref={locationRef} style={{ scrollMarginTop: "120px" }}>
+              {hotel.latitude && hotel.longitude && (
+                <motion.div variants={fadeUp} custom={8} className="mt-10">
+                  <SectionLabel>Location</SectionLabel>
+                  <div
+                    style={{
+                      border: "1px solid var(--cream-border)",
+                      background: "var(--white)",
+                      padding: "24px",
+                    }}
+                  >
+                    <p className="text-sm mb-3" style={{ color: "var(--ink-mid)" }}>
+                      {address}
+                    </p>
+                    <a
+                      href={`https://www.google.com/maps?q=${hotel.latitude},${hotel.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block text-xs font-medium uppercase tracking-[0.08em] transition-opacity hover:opacity-80"
+                      style={{ color: "var(--gold)", textDecoration: "none" }}
+                    >
+                      View on Google Maps &rarr;
+                    </a>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ─── Right Column: Sticky Booking Card (35%) ─── */}
+        <div className="hidden lg:block" style={{ borderLeft: "1px solid var(--cream-border)", background: "var(--cream)" }}>
+          <div style={{ padding: "32px 28px" }}>
             <motion.div
               initial="hidden"
               animate="visible"
               variants={fadeIn}
-              className="sticky top-24"
+              className="sticky"
+              style={{ top: "140px" }}
             >
               <div
                 style={{
-                  background: "var(--bg-surface)",
-                  borderTop: "2px solid var(--accent)",
+                  background: "var(--white)",
+                  border: "1px solid var(--cream-border)",
+                  padding: "24px",
                 }}
               >
-                <div className="p-7">
-                  {/* Price */}
-                  {hotel.rates_from ? (
-                    <div className="mb-7">
-                      <span
-                        className="text-[11px] uppercase tracking-[0.1em]"
-                        style={{ color: "var(--text-tertiary)", fontFamily: "var(--font-mono)" }}
-                      >
-                        from
-                      </span>
-                      <div className="flex items-baseline gap-2 mt-1">
-                        <span
-                          className="text-4xl"
-                          style={{
-                            fontFamily: "var(--font-display)",
-                            fontStyle: "italic",
-                            color: "var(--text-primary)",
-                          }}
-                        >
-                          {formatCurrency(hotel.rates_from, hotel.rates_currency)}
-                        </span>
-                        <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>
-                          /night
-                        </span>
-                      </div>
-
-                      {/* OTA comparison */}
-                      {otaPrice && savePct && (
-                        <div className="flex items-center gap-3 mt-3">
-                          <span
-                            className="text-sm line-through"
-                            style={{ color: "var(--danger)" }}
-                          >
-                            {formatCurrency(otaPrice, hotel.rates_currency)} on MakeMyTrip
-                          </span>
-                          <span
-                            className="text-[11px] px-2 py-0.5 font-medium"
-                            style={{
-                              background: "var(--success-soft)",
-                              color: "var(--success)",
-                              fontFamily: "var(--font-mono)",
-                            }}
-                          >
-                            Save {savePct}%
-                          </span>
-                        </div>
-                      )}
-
-                      <p
-                        className="text-xs mt-3"
-                        style={{ color: "var(--text-tertiary)" }}
-                      >
-                        Prices vary by date. Call for exact quote.
-                      </p>
+                {hotel.rates_from ? (
+                  <>
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        color: "var(--gold)",
+                        letterSpacing: "0.18em",
+                        textTransform: "uppercase",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      Preferred Rate
                     </div>
-                  ) : (
-                    <div className="mb-7">
-                      <span
-                        className="text-2xl"
+
+                    <div
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontSize: "36px",
+                        fontWeight: 400,
+                        color: "var(--ink)",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {formatCurrency(hotel.rates_from, hotel.rates_currency)}
+                    </div>
+                    <div style={{ fontSize: "12px", color: "var(--ink-light)", marginTop: "4px" }}>
+                      per night
+                    </div>
+
+                    {otaPrice && (
+                      <div
                         style={{
-                          fontFamily: "var(--font-display)",
-                          fontStyle: "italic",
-                          color: "var(--text-secondary)",
+                          fontSize: "13px",
+                          color: "var(--ink-light)",
+                          textDecoration: "line-through",
+                          marginTop: "6px",
                         }}
                       >
-                        Request a quote
-                      </span>
-                      <p className="text-xs mt-2" style={{ color: "var(--text-tertiary)" }}>
-                        Call us for the best available rate
-                      </p>
-                    </div>
-                  )}
+                        Market rate: {formatCurrency(otaPrice, hotel.rates_currency)}/night
+                      </div>
+                    )}
 
-                  {/* CTA: Call to Book */}
-                  <a
-                    href="tel:+919876543210"
-                    className="flex items-center justify-center gap-2 w-full py-3.5 text-sm font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
-                    style={{ background: "var(--accent)", color: "var(--bg-deep)" }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-                    </svg>
-                    Call to Book
-                  </a>
+                    {savePct && savePct > 0 && (
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--success)",
+                          fontWeight: 500,
+                          marginBottom: "16px",
+                        }}
+                      >
+                        You save {formatCurrency(saveAmount!, hotel.rates_currency)}/night ({savePct}%)
+                      </div>
+                    )}
 
-                  {/* CTA: WhatsApp */}
-                  <a
-                    href="https://wa.me/919876543210"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3.5 text-sm font-medium mt-3 transition-all hover:opacity-90 active:scale-[0.98]"
-                    style={{ border: "1px solid var(--accent-border)", color: "var(--accent)" }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                    </svg>
-                    WhatsApp
-                  </a>
+                    {/* Save badge */}
+                    {saveAmount && saveAmount > 0 && (
+                      <div
+                        className="text-center mb-4"
+                        style={{
+                          background: "var(--gold-pale)",
+                          border: "1px solid var(--gold-light)",
+                          padding: "12px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: "var(--font-display)",
+                            fontSize: "18px",
+                            color: "var(--success)",
+                          }}
+                        >
+                          Save {formatCurrency(saveAmount, hotel.rates_currency)} per night
+                        </span>
+                      </div>
+                    )}
 
-                  {/* Trust */}
-                  <div className="mt-6 pt-5" style={{ borderTop: "1px solid var(--border)" }}>
-                    <p className="text-xs text-center" style={{ color: "var(--text-tertiary)" }}>
-                      No hidden fees. We confirm availability on call.
+                    <p
+                      className="mb-4"
+                      style={{ fontSize: "11px", color: "var(--ink-light)" }}
+                    >
+                      Prices vary by date. Call for exact quote.
+                    </p>
+                  </>
+                ) : (
+                  <div className="mb-5">
+                    <span
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontSize: "24px",
+                        fontWeight: 400,
+                        fontStyle: "italic",
+                        color: "var(--ink-mid)",
+                      }}
+                    >
+                      Request a quote
+                    </span>
+                    <p className="text-xs mt-2" style={{ color: "var(--ink-light)" }}>
+                      Call us for the best available rate
                     </p>
                   </div>
+                )}
 
-                  {/* Chain / Brand */}
-                  {(hotel.chain_name || hotel.brand_name) && (
-                    <div className="mt-5 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-                      <p className="text-[11px]" style={{ color: "var(--text-ghost)" }}>
-                        {[hotel.chain_name, hotel.brand_name].filter(Boolean).join(" \u00b7 ")}
-                      </p>
-                    </div>
-                  )}
+                {/* Book CTA */}
+                <a
+                  href="tel:+919876543210"
+                  className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-medium uppercase tracking-[0.1em] transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={{
+                    background: "var(--gold)",
+                    color: "var(--ink)",
+                    textDecoration: "none",
+                  }}
+                >
+                  Book This Rate
+                </a>
+
+                {/* WhatsApp */}
+                <a
+                  href="https://wa.me/919876543210"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-medium uppercase tracking-[0.1em] mt-3 transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={{
+                    border: "1px solid var(--cream-border)",
+                    color: "var(--ink-mid)",
+                    textDecoration: "none",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                  </svg>
+                  WhatsApp
+                </a>
+
+                {/* Trust */}
+                <div className="mt-5 pt-4" style={{ borderTop: "1px solid var(--cream-border)" }}>
+                  <p className="text-[11px] text-center" style={{ color: "var(--ink-light)" }}>
+                    Free cancellation &middot; No hidden fees
+                  </p>
                 </div>
               </div>
             </motion.div>
           </div>
         </div>
-      </section>
+      </div>
+
+      {/* ═══════════════════ Footer ═══════════════════ */}
+      <footer
+        style={{
+          borderTop: "1px solid var(--cream-border)",
+          padding: "40px 60px",
+          background: "var(--white)",
+        }}
+      >
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <span
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "18px",
+              fontWeight: 500,
+              fontStyle: "italic",
+              color: "var(--ink)",
+              letterSpacing: "0.08em",
+            }}
+          >
+            Voyag<span style={{ color: "var(--gold)" }}>r</span>
+          </span>
+          <p style={{ fontSize: "11px", color: "var(--ink-light)", letterSpacing: "0.06em" }}>
+            Preferred hotel rates, negotiated for you.
+          </p>
+          <div className="flex gap-6">
+            <Link
+              href="/"
+              className="text-xs uppercase tracking-[0.08em] transition-colors hover:opacity-80"
+              style={{ color: "var(--ink-light)", textDecoration: "none" }}
+            >
+              Home
+            </Link>
+            <a
+              href="https://wa.me/919876543210"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs uppercase tracking-[0.08em] transition-colors hover:opacity-80"
+              style={{ color: "var(--ink-light)", textDecoration: "none" }}
+            >
+              Contact
+            </a>
+          </div>
+        </div>
+      </footer>
 
       {/* ═══════════════════ Mobile Fixed Bottom Bar ═══════════════════ */}
       <div
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden px-4 py-3 flex items-center justify-between"
         style={{
-          background: "rgba(12,10,9,0.95)",
-          backdropFilter: "blur(24px) saturate(180%)",
-          borderTop: "1px solid var(--border)",
+          background: "rgba(245, 240, 232, 0.95)",
+          backdropFilter: "blur(16px)",
+          borderTop: "1px solid var(--cream-border)",
         }}
       >
         <div>
           {hotel.rates_from ? (
             <>
               <p
-                className="text-xl"
-                style={{ fontFamily: "var(--font-display)", fontStyle: "italic", color: "var(--text-primary)" }}
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "22px",
+                  fontWeight: 400,
+                  color: "var(--ink)",
+                  lineHeight: 1,
+                }}
               >
                 {formatCurrency(hotel.rates_from, hotel.rates_currency)}
-                <span className="text-xs font-normal ml-1" style={{ color: "var(--text-tertiary)" }}>
+                <span className="text-xs font-normal ml-1" style={{ color: "var(--ink-light)", fontFamily: "var(--font-body)" }}>
                   /night
                 </span>
               </p>
+              {savePct && savePct > 0 && (
+                <p style={{ fontSize: "11px", color: "var(--success)", fontWeight: 500 }}>
+                  Save {savePct}%
+                </p>
+              )}
             </>
           ) : (
-            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Request quote</p>
+            <p className="text-sm" style={{ color: "var(--ink-mid)" }}>Request quote</p>
           )}
         </div>
         <a
           href="tel:+919876543210"
-          className="px-6 py-2.5 text-sm font-semibold transition-all active:scale-[0.97]"
-          style={{ background: "var(--accent)", color: "var(--bg-deep)" }}
+          className="text-xs font-medium uppercase tracking-[0.1em] transition-all active:scale-[0.97]"
+          style={{
+            background: "var(--gold)",
+            color: "var(--ink)",
+            padding: "10px 20px",
+            textDecoration: "none",
+          }}
         >
           Book
         </a>
       </div>
 
-      {/* Footer spacer */}
-      <div className="h-20 lg:h-20" />
-      <div className="h-16 lg:hidden" />
+      {/* Footer spacer for mobile bottom bar */}
+      <div className="h-16 lg:h-0" />
     </div>
   );
 }
