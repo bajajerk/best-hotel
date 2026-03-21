@@ -672,6 +672,105 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
+          FEATURED DEALS (Top rated hotels across all cities)
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section className="px-6 md:px-12 lg:px-20 py-20">
+        <div className="mx-auto" style={{ maxWidth: "1200px" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <p
+              className="text-[11px] tracking-[0.3em] uppercase mb-3"
+              style={{ color: "var(--gold)", fontFamily: "var(--font-mono)" }}
+            >
+              Why people love us
+            </p>
+            <h2
+              className="text-3xl md:text-4xl mb-4"
+              style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+            >
+              Real savings, real hotels
+            </h2>
+            <p className="text-sm max-w-md mx-auto" style={{ color: "var(--white-50)" }}>
+              Here is what a typical booking looks like. Same hotel, same dates — just a better rate.
+            </p>
+          </motion.div>
+
+          {/* Price comparison example cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { hotel: "Siam Kempinski Bangkok", city: "Bangkok", ota: 285, our: 199, stars: 5, saved: 86 },
+              { hotel: "The Oberoi Mumbai", city: "Mumbai", ota: 320, our: 215, stars: 5, saved: 105 },
+              { hotel: "Park Hyatt Tokyo", city: "Tokyo", ota: 450, our: 315, stars: 5, saved: 135 },
+            ].map((deal, i) => (
+              <motion.div
+                key={deal.hotel}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="rounded-2xl p-6"
+                style={{
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                <div className="flex items-center gap-1 mb-1">
+                  {Array.from({ length: deal.stars }).map((_, j) => (
+                    <svg key={j} width="10" height="10" viewBox="0 0 24 24" fill="var(--gold)" stroke="none">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  ))}
+                </div>
+                <h3
+                  className="text-base mb-0.5"
+                  style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--white)" }}
+                >
+                  {deal.hotel}
+                </h3>
+                <p className="text-xs mb-4" style={{ color: "var(--white-30)" }}>{deal.city}</p>
+
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-[10px] uppercase mb-1" style={{ color: "var(--white-30)", fontFamily: "var(--font-mono)" }}>OTA Price</p>
+                    <p className="text-lg line-through" style={{ color: "var(--red)", fontFamily: "var(--font-mono)" }}>${deal.ota}</p>
+                  </div>
+                  <div className="text-center">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--white-15)" strokeWidth="2">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] uppercase mb-1" style={{ color: "var(--gold)", fontFamily: "var(--font-mono)" }}>Our Rate</p>
+                    <p
+                      className="text-2xl"
+                      style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--green)" }}
+                    >
+                      ${deal.our}
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  className="text-center py-2 rounded-lg text-xs font-medium"
+                  style={{
+                    background: "var(--green-soft)",
+                    color: "var(--green)",
+                    fontFamily: "var(--font-mono)",
+                  }}
+                >
+                  You save ${deal.saved} per night
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
           DESTINATIONS GRID
       ═══════════════════════════════════════════════════════════════════ */}
       <section id="destinations" className="px-6 md:px-12 lg:px-20 py-24 lg:py-32">
