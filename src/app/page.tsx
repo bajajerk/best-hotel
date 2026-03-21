@@ -751,9 +751,9 @@ export default function Home() {
           {/* Price comparison example cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { hotel: "Siam Kempinski Bangkok", city: "Bangkok", ota: 285, our: 199, stars: 5, saved: 86 },
-              { hotel: "The Oberoi Mumbai", city: "Mumbai", ota: 320, our: 215, stars: 5, saved: 105 },
-              { hotel: "Park Hyatt Tokyo", city: "Tokyo", ota: 450, our: 315, stars: 5, saved: 135 },
+              { hotel: "Siam Kempinski Bangkok", city: "Bangkok", ota: 14500, our: 10500, stars: 5, saved: 4000 },
+              { hotel: "The Oberoi Mumbai", city: "Mumbai", ota: 18200, our: 12800, stars: 5, saved: 5400 },
+              { hotel: "Park Hyatt Tokyo", city: "Tokyo", ota: 28000, our: 19500, stars: 5, saved: 8500 },
             ].map((deal, i) => (
               <motion.div
                 key={deal.hotel}
@@ -785,7 +785,7 @@ export default function Home() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-[11px] uppercase mb-1" style={{ color: "var(--white-30)", fontFamily: "var(--font-mono)" }}>OTA Price</p>
-                    <p className="text-xl line-through" style={{ color: "var(--red)", fontFamily: "var(--font-mono)" }}>${deal.ota}</p>
+                    <p className="text-xl line-through" style={{ color: "var(--red)", fontFamily: "var(--font-mono)" }}>&#8377;{deal.ota.toLocaleString('en-IN')}</p>
                   </div>
                   <div className="text-center">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--white-15)" strokeWidth="2">
@@ -798,7 +798,7 @@ export default function Home() {
                       className="text-3xl"
                       style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--green)" }}
                     >
-                      ${deal.our}
+                      &#8377;{deal.our.toLocaleString('en-IN')}
                     </p>
                   </div>
                 </div>
@@ -811,7 +811,7 @@ export default function Home() {
                     fontFamily: "var(--font-mono)",
                   }}
                 >
-                  You save ${deal.saved} per night
+                  You save &#8377;{deal.saved.toLocaleString('en-IN')} per night
                 </div>
               </motion.div>
             ))}
@@ -1032,7 +1032,7 @@ export default function Home() {
               {
                 name: "David L.",
                 location: "Singapore",
-                text: "Booked Park Hyatt Bangkok for our anniversary. The rate was $135/night vs $195 on Agoda. Incredible service from the team.",
+                text: "Booked Park Hyatt Bangkok for our anniversary. The rate was ₹11,200/night vs ₹16,100 on Agoda. Incredible service from the team.",
                 savings: "Saved 31%",
               },
               {
