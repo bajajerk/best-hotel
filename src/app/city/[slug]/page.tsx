@@ -174,6 +174,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
             background: "var(--white)",
             border: "1px solid var(--cream-border)",
             gridTemplateColumns: "240px 1fr auto",
+            gap: "0 20px",
             overflow: "hidden",
             transition: "box-shadow 0.2s",
             cursor: "pointer",
@@ -342,7 +343,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
 
             {/* Voyagr rate */}
             {hotel.rates_from ? (
-              <div style={{ textAlign: "right" }}>
+              <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 4 }}>
                 <div
                   style={{
                     fontSize: 10,
@@ -750,7 +751,7 @@ export default function CityPage() {
           background: "var(--white)",
           borderBottom: "1px solid var(--cream-border)",
         }}
-        className="!px-6 md:!px-[60px]"
+        className="!px-5 md:!px-[60px]"
       >
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <motion.div
@@ -766,7 +767,7 @@ export default function CityPage() {
               style={{
                 fontSize: 12,
                 color: "var(--ink-light)",
-                marginBottom: 16,
+                marginBottom: 24,
               }}
             >
               <Link
@@ -896,7 +897,7 @@ export default function CityPage() {
                         background: "none",
                         border: "none",
                         cursor: "pointer",
-                        paddingBottom: 16,
+                        padding: "8px 16px 16px",
                         borderBottom: isActive ? "2px solid var(--gold)" : "2px solid transparent",
                         transition: "all 0.2s",
                         letterSpacing: "0.02em",
@@ -936,13 +937,13 @@ export default function CityPage() {
           {loading ? (
             <>
               {/* Desktop skeletons */}
-              <div className="hidden md:flex" style={{ flexDirection: "column", gap: 2 }}>
+              <div className="hidden md:flex" style={{ flexDirection: "column", gap: 12 }}>
                 {Array.from({ length: 5 }).map((_, i) => (
                   <CardSkeleton key={i} />
                 ))}
               </div>
               {/* Mobile skeletons */}
-              <div className="md:hidden" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div className="md:hidden" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {Array.from({ length: 4 }).map((_, i) => (
                   <CardSkeletonMobile key={i} />
                 ))}
@@ -978,7 +979,7 @@ export default function CityPage() {
                 </div>
 
                 {hotels.length > 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                     {hotels.map((hotel, i) => (
                       <HotelResultCard
                         key={hotel.hotel_id}
@@ -1088,7 +1089,7 @@ export default function CityPage() {
               flexWrap: "wrap",
               alignItems: "center",
               justifyContent: "center",
-              gap: 12,
+              gap: 16,
             }}
           >
             <a
@@ -1233,7 +1234,7 @@ export default function CityPage() {
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    padding: "8px 18px",
+                    padding: "10px 18px",
                     border: "1px solid var(--cream-border)",
                     fontSize: 13,
                     fontWeight: 400,
@@ -1268,7 +1269,7 @@ export default function CityPage() {
           ================================================================ */}
       <footer
         style={{
-          padding: "40px 60px",
+          padding: "48px 60px",
           background: "var(--cream-deep)",
           borderTop: "1px solid var(--cream-border)",
         }}

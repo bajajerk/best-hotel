@@ -238,10 +238,10 @@ function ReviewItem({ review }: { review: Review }) {
 
   return (
     <article
-      className="pb-8 mb-8 last:border-0 last:pb-0 last:mb-0"
+      className="pb-10 mb-10 last:border-0 last:pb-0 last:mb-0"
       style={{ borderBottom: "1px solid var(--cream-border)" }}
     >
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-4 mb-5">
         <div
           className="w-9 h-9 rounded-full overflow-hidden shrink-0"
           style={{ background: "var(--cream-deep)" }}
@@ -629,7 +629,7 @@ export default function HotelPage() {
           {/* Hotel name + save badge overlay */}
           <div
             className="absolute bottom-0 left-0 right-0 flex items-end justify-between"
-            style={{ padding: "40px 60px", color: "var(--cream)" }}
+            style={{ padding: "40px 60px 48px", color: "var(--cream)" }}
           >
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -717,7 +717,7 @@ export default function HotelPage() {
 
       {/* ═══════════════════ Tabs Bar ═══════════════════ */}
       <div
-        className="hidden md:flex gap-0 sticky top-[60px] z-40"
+        className="hidden md:flex gap-2 sticky top-[60px] z-40"
         style={{
           background: "var(--white)",
           borderBottom: "1px solid var(--cream-border)",
@@ -775,7 +775,7 @@ export default function HotelPage() {
           className="lg:!px-[60px]"
         >
           {/* ── OVERVIEW Section ── */}
-          <div ref={overviewRef} style={{ scrollMarginTop: "120px" }}>
+          <div ref={overviewRef} className="mt-8" style={{ scrollMarginTop: "120px" }}>
             {/* Rating */}
             {hotel.rating_average > 0 && (
               <motion.div variants={fadeUp} custom={0} className="flex items-center gap-4 mb-6">
@@ -862,7 +862,7 @@ export default function HotelPage() {
                   {quickFacts.map((fact, i) => (
                     <div
                       key={fact.label}
-                      className="grid grid-cols-2 py-3.5 px-5 text-sm"
+                      className="grid grid-cols-2 py-4 px-5 text-sm"
                       style={{
                         borderBottom: i < quickFacts.length - 1 ? "1px solid var(--cream-border)" : "none",
                       }}
@@ -964,7 +964,7 @@ export default function HotelPage() {
                 <motion.div variants={fadeUp} custom={5} className="mb-10">
                   <SectionLabel>Gallery</SectionLabel>
                   <div
-                    className="grid grid-cols-2 md:grid-cols-3 gap-0.5"
+                    className="grid grid-cols-2 md:grid-cols-3 gap-1.5"
                   >
                     {photos.map((photo, i) => (
                       <div
@@ -993,7 +993,7 @@ export default function HotelPage() {
             </div>
 
             {/* ── Mobile Booking Section ── */}
-            <motion.div variants={fadeUp} custom={6} className="lg:hidden mb-10">
+            <motion.div variants={fadeUp} custom={6} className="lg:hidden mt-8 mb-10">
               <SectionLabel>Pricing</SectionLabel>
               <div
                 style={{
@@ -1120,10 +1120,10 @@ export default function HotelPage() {
                     )}
                   </div>
                   <div
+                    className="p-6 md:p-6"
                     style={{
                       background: "var(--white)",
                       border: "1px solid var(--cream-border)",
-                      padding: "24px",
                     }}
                   >
                     {reviews.map((review) => (
@@ -1179,7 +1179,7 @@ export default function HotelPage() {
                 style={{
                   background: "var(--white)",
                   border: "1px solid var(--cream-border)",
-                  padding: "24px",
+                  padding: "28px",
                 }}
               >
                 {hotel.rates_from ? (
@@ -1190,7 +1190,7 @@ export default function HotelPage() {
                         color: "var(--gold)",
                         letterSpacing: "0.18em",
                         textTransform: "uppercase",
-                        marginBottom: "12px",
+                        marginBottom: "16px",
                       }}
                     >
                       Preferred Rate
@@ -1207,7 +1207,7 @@ export default function HotelPage() {
                     >
                       {formatCurrency(hotel.rates_from, hotel.rates_currency)}
                     </div>
-                    <div style={{ fontSize: "12px", color: "var(--ink-light)", marginTop: "4px" }}>
+                    <div style={{ fontSize: "12px", color: "var(--ink-light)", marginTop: "6px" }}>
                       per night
                     </div>
 
@@ -1217,7 +1217,7 @@ export default function HotelPage() {
                           fontSize: "13px",
                           color: "var(--ink-light)",
                           textDecoration: "line-through",
-                          marginTop: "6px",
+                          marginTop: "10px",
                         }}
                       >
                         Market rate: {formatCurrency(otaPrice, hotel.rates_currency)}/night
@@ -1230,7 +1230,7 @@ export default function HotelPage() {
                           fontSize: "12px",
                           color: "var(--success)",
                           fontWeight: 500,
-                          marginBottom: "16px",
+                          marginBottom: "20px",
                         }}
                       >
                         You save {formatCurrency(saveAmount!, hotel.rates_currency)}/night ({savePct}%)
@@ -1332,7 +1332,7 @@ export default function HotelPage() {
       <footer
         style={{
           borderTop: "1px solid var(--cream-border)",
-          padding: "40px 60px",
+          padding: "40px 60px 72px",
           background: "var(--white)",
         }}
       >
@@ -1375,7 +1375,7 @@ export default function HotelPage() {
 
       {/* ═══════════════════ Mobile Fixed Bottom Bar ═══════════════════ */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden px-4 py-3 flex items-center justify-between"
+        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden px-5 py-3.5 flex items-center justify-between"
         style={{
           background: "rgba(245, 240, 232, 0.95)",
           backdropFilter: "blur(16px)",

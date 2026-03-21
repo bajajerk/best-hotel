@@ -354,3 +354,15 @@ nav {
   margin-bottom: 0.5rem;
   content: "";
 }
+
+/* ── Mobile spacing overrides for homepage ── */
+@media (max-width: 768px) {
+  .hero-text-container {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+  .dark-section-container {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+}

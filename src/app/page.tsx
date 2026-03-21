@@ -346,6 +346,7 @@ export default function Home() {
       >
         {/* Left side — text content */}
         <motion.div
+          className="hero-text-container"
           variants={orchestrate}
           initial="hidden"
           animate="visible"
@@ -412,7 +413,7 @@ export default function Home() {
             style={{
               background: "var(--white)",
               border: "1px solid var(--cream-border)",
-              padding: "6px",
+              padding: "10px",
               display: "grid",
               gridTemplateColumns: "1fr 1fr 1fr auto",
               gap: 0,
@@ -538,7 +539,7 @@ export default function Home() {
           {/* Hero stats */}
           <motion.div
             variants={fadeUp}
-            style={{ display: "flex", gap: "40px", marginTop: "36px" }}
+            style={{ display: "flex", gap: "40px", marginTop: "48px" }}
           >
             {[
               { num: "50+", label: "Destinations" },
@@ -710,7 +711,7 @@ export default function Home() {
               display: "grid",
               gridTemplateColumns: "2fr 1fr 1fr",
               gridTemplateRows: "260px 260px",
-              gap: "2px",
+              gap: "12px",
             }}>
               {Array.from({ length: 5 }).map((_, i) => (
                 <div
@@ -734,7 +735,7 @@ export default function Home() {
                 display: "grid",
                 gridTemplateColumns: "2fr 1fr 1fr",
                 gridTemplateRows: "auto auto",
-                gap: "2px",
+                gap: "12px",
               }}
             >
               {featured.slice(0, 5).map((city, i) => (
@@ -756,11 +757,11 @@ export default function Home() {
         id="how-it-works"
         style={{
           background: "var(--ink)",
-          padding: "80px 60px",
+          padding: "96px 60px",
           color: "var(--cream)",
         }}
       >
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+        <div className="dark-section-container" style={{ maxWidth: "1400px", margin: "0 auto" }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -976,7 +977,7 @@ export default function Home() {
           </motion.div>
 
           {/* Price comparison cards */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             {[
               {
                 hotel: "Siam Kempinski Bangkok",
@@ -1218,7 +1219,7 @@ export default function Home() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4 }}
                 style={{
-                  marginTop: "32px",
+                  marginTop: "48px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1300,7 +1301,7 @@ export default function Home() {
       ================================================================ */}
       <section
         style={{
-          padding: "60px",
+          padding: "80px 60px",
           borderTop: "1px solid var(--cream-border)",
           borderBottom: "1px solid var(--cream-border)",
           background: "var(--white)",
@@ -1374,7 +1375,7 @@ export default function Home() {
       ================================================================ */}
       <footer
         style={{
-          padding: "60px",
+          padding: "60px 60px 96px",
           background: "var(--cream)",
           borderTop: "1px solid var(--cream-border)",
         }}
@@ -1604,7 +1605,7 @@ function DestinationCard({ city }: { city: CuratedCity }) {
         </div>
 
         {/* Content */}
-        <div style={{ padding: "20px 24px" }}>
+        <div style={{ padding: "20px 24px 28px" }}>
           <h3 style={{
             fontFamily: "var(--font-display)",
             fontStyle: "italic",
