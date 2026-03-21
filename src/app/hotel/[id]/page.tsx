@@ -102,7 +102,11 @@ function formatCurrency(amount: number, currency?: string): string {
     AED: 'AED ', MYR: 'RM ', IDR: 'Rp ', KRW: '\u20A9',
   };
   const sym = currency ? (symbols[currency.toUpperCase()] || `${currency} `) : '$';
-  return `${sym}${Math.round(amount)}`;
+  const rounded = Math.round(amount);
+  const formatted = currency?.toUpperCase() === 'INR'
+    ? rounded.toLocaleString('en-IN')
+    : rounded.toLocaleString('en-US');
+  return `${sym}${formatted}`;
 }
 
 /* ────────────────────────── Sub-components ────────────────────────── */
