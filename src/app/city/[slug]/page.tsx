@@ -781,6 +781,39 @@ export default function CityPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
+          EXPLORE OTHER CITIES
+          ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="px-5 md:px-10 lg:px-16 py-16">
+        <div className="max-w-7xl mx-auto">
+          <h3
+            className="text-xl md:text-2xl mb-6"
+            style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+          >
+            Explore other cities
+          </h3>
+          <div className="flex gap-3 overflow-x-auto pb-4" style={{ scrollbarWidth: "none" }}>
+            {["bangkok", "tokyo", "paris", "london", "dubai", "bali", "singapore", "rome", "barcelona", "seoul", "maldives", "phuket"]
+              .filter((s) => s !== slug)
+              .slice(0, 8)
+              .map((citySlug) => (
+                <Link
+                  key={citySlug}
+                  href={`/city/${citySlug}`}
+                  className="shrink-0 px-5 py-2.5 rounded-full text-sm transition-all hover:scale-105"
+                  style={{
+                    background: "var(--bg-elevated)",
+                    border: "1px solid var(--border)",
+                    color: "var(--white-80)",
+                  }}
+                >
+                  {citySlug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
+                </Link>
+              ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
           FOOTER
           ═══════════════════════════════════════════════════════════════════════ */}
       <footer
