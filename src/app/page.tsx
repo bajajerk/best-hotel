@@ -1,42 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { CONTINENTS, CATEGORIES, SAMPLE_CITIES } from "@/lib/constants";
 import { fetchCuratedCities, CuratedCity } from "@/lib/api";
-
-// ---------------------------------------------------------------------------
-// Category SVG Icons (replacing emojis for a professional look)
-// ---------------------------------------------------------------------------
-function CategoryIcon({ type, size = 16 }: { type: string; size?: number }) {
-  switch (type) {
-    case "solo":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      );
-    case "couple":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-        </svg>
-      );
-    case "family":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 00-3-3.87" />
-          <path d="M16 3.13a4 4 0 010 7.75" />
-        </svg>
-      );
-    default:
-      return null;
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Hero background images (cinematic hotel/travel shots)
@@ -48,7 +16,7 @@ const HERO_IMAGES = [
 ];
 
 // ---------------------------------------------------------------------------
-// City image map (high-quality Unsplash per city)
+// City image map
 // ---------------------------------------------------------------------------
 const cityImages: Record<string, string> = {
   bangkok: "https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=800&q=80",
@@ -110,169 +78,79 @@ function getCityImage(slug: string): string {
   return cityImages[slug] || FALLBACK_IMAGE;
 }
 
-/** Convert Agoda http:// URLs to https:// */
 function safeImageSrc(url: string): string {
   if (url.startsWith("http://")) return url.replace("http://", "https://");
   return url;
 }
 
 // ---------------------------------------------------------------------------
-// Stagger animation variants
+// Editorial images for the "how it works" section
 // ---------------------------------------------------------------------------
-const containerVariants = {
+const EDITORIAL_IMAGES = [
+  "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=900&q=80",
+  "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=900&q=80",
+  "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=900&q=80",
+];
+
+// ---------------------------------------------------------------------------
+// Orchestrated entrance animation
+// ---------------------------------------------------------------------------
+const orchestrate = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 0.06 },
+    transition: { staggerChildren: 0.12, delayChildren: 0.3 },
   },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
+    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   },
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// City Card
-// ═══════════════════════════════════════════════════════════════════════════
-function CityCard({ city }: { city: CuratedCity }) {
-  const img = getCityImage(city.city_slug);
+const fadeSlow = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 1.2, ease: "easeOut" },
+  },
+};
 
-  return (
-    <Link href={`/city/${city.city_slug}`} className="block h-full">
-      <motion.div
-        variants={itemVariants}
-        whileHover={{ y: -6 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-        className="group relative rounded-2xl overflow-hidden cursor-pointer h-full flex flex-col"
-        style={{
-          background: "var(--bg-card)",
-          border: "1px solid var(--border)",
-        }}
-      >
-        {/* Image Container */}
-        <div className="relative overflow-hidden" style={{ height: "200px" }}>
-          <img
-            src={safeImageSrc(img)}
-            alt={city.city_name}
-            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-            loading="lazy"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
-            }}
-          />
-          {/* Gradient overlay */}
-          <div
-            className="absolute inset-0 transition-opacity duration-500"
-            style={{
-              background:
-                "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 40%, transparent 70%)",
-            }}
-          />
-          {/* Hover glow */}
-          <div
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            style={{
-              background:
-                "linear-gradient(to top, rgba(201,169,98,0.15) 0%, transparent 50%)",
-            }}
-          />
-          {/* Country badge */}
-          <div
-            className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] tracking-wider uppercase"
-            style={{
-              background: "rgba(0,0,0,0.5)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              color: "var(--white-80)",
-              fontFamily: "var(--font-mono)",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            {city.country_code}
-          </div>
-          {/* City name on image */}
-          <div className="absolute bottom-4 left-5 right-5">
-            <h3
-              className="text-2xl font-normal leading-tight"
-              style={{
-                fontFamily: "var(--font-serif)",
-                fontStyle: "italic",
-                color: "var(--white)",
-              }}
-            >
-              {city.city_name}
-            </h3>
-            <p
-              className="text-xs mt-1 tracking-wide"
-              style={{
-                color: "var(--white-50)",
-                fontFamily: "var(--font-sans)",
-              }}
-            >
-              {city.country}
-            </p>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-5 flex flex-col flex-1">
-          <p
-            className="text-xs leading-relaxed line-clamp-1"
-            style={{
-              color: "var(--white-50)",
-            }}
-          >
-            {city.tagline}
-          </p>
-          <div className="flex items-center justify-between mt-auto pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-            <span
-              className="text-[11px] px-3 py-1 rounded-full tracking-wide"
-              style={{
-                background: "var(--gold-soft)",
-                color: "var(--gold)",
-                fontFamily: "var(--font-mono)",
-                border: "1px solid var(--gold-border)",
-              }}
-            >
-              {city.hotel_count}+ hotels
-            </span>
-            <span
-              className="text-xs flex items-center gap-1.5 transition-all duration-300 group-hover:gap-2.5"
-              style={{ color: "var(--gold)" }}
-            >
-              Explore
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </span>
-          </div>
-        </div>
-      </motion.div>
-    </Link>
-  );
-}
+// ---------------------------------------------------------------------------
+// Testimonials
+// ---------------------------------------------------------------------------
+const TESTIMONIALS = [
+  {
+    quote: "I booked the same suite I found on Booking.com and saved over four thousand rupees a night. I genuinely did not believe it until I checked in.",
+    name: "Priya Mehta",
+    location: "Mumbai",
+    avatar: "PM",
+  },
+  {
+    quote: "We planned our honeymoon across three cities. BeatMyRate saved us enough to add an extra night in Santorini. That is not an exaggeration.",
+    name: "Arjun & Kavya",
+    location: "Bangalore",
+    avatar: "AK",
+  },
+  {
+    quote: "As a travel agent myself, I was skeptical. These are genuine B2B rates. I now use BeatMyRate for all my personal trips.",
+    name: "Rahul Sharma",
+    location: "Delhi",
+    avatar: "RS",
+  },
+];
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Main Page
 // ═══════════════════════════════════════════════════════════════════════════
 export default function Home() {
   const [cities, setCities] = useState<CuratedCity[]>([]);
-  const [activeContinent, setActiveContinent] = useState("All");
   const [loading, setLoading] = useState(true);
   const [heroIdx, setHeroIdx] = useState(0);
+  const [testimonialIdx, setTestimonialIdx] = useState(0);
   const heroRef = useRef<HTMLElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -307,25 +185,23 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  const filtered =
-    activeContinent === "All"
-      ? cities
-      : cities.filter((c) => c.continent === activeContinent);
+  const featured = cities.slice(0, 6);
+  const totalCities = cities.length;
 
   return (
     <div
       className="min-h-screen"
-      style={{ background: "var(--bg-black)", color: "var(--white)" }}
+      style={{ background: "var(--bg-deep)", color: "var(--text-primary)" }}
     >
       {/* ═══════════════════════════════════════════════════════════════════
-          HERO SECTION — 90vh, cinematic, parallax
+          SECTION 1 — HERO (100vh, full-bleed cinematic)
       ═══════════════════════════════════════════════════════════════════ */}
       <section
         ref={heroRef}
         className="relative overflow-hidden"
-        style={{ height: "90vh", minHeight: "600px", maxHeight: "900px" }}
+        style={{ height: "100vh", minHeight: "700px" }}
       >
-        {/* Parallax background images */}
+        {/* Parallax crossfading backgrounds */}
         <motion.div className="absolute inset-0" style={{ y: heroY }}>
           <AnimatePresence mode="sync">
             {HERO_IMAGES.map((src, i) =>
@@ -333,16 +209,20 @@ export default function Home() {
                 <motion.div
                   key={src}
                   className="absolute inset-0"
-                  initial={{ opacity: 0, scale: 1.08 }}
+                  initial={{ opacity: 0, scale: 1.05 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 1.5, ease: "easeInOut" }}
+                  transition={{ duration: 2, ease: "easeInOut" }}
                 >
                   <img
                     src={src}
                     alt=""
                     className="w-full h-full object-cover"
                     style={{ minHeight: "120%" }}
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+                    }}
                   />
                 </motion.div>
               ) : null
@@ -350,27 +230,18 @@ export default function Home() {
           </AnimatePresence>
         </motion.div>
 
-        {/* Dark gradient overlay */}
+        {/* Gradient overlay — heavy from bottom for text legibility */}
         <div
           className="absolute inset-0 z-[1]"
           style={{
             background: `
               linear-gradient(to bottom,
-                rgba(10,10,10,0.4) 0%,
-                rgba(10,10,10,0.3) 30%,
-                rgba(10,10,10,0.6) 60%,
-                rgba(10,10,10,0.95) 85%,
-                rgba(10,10,10,1) 100%)
+                rgba(12,10,9,0.25) 0%,
+                rgba(12,10,9,0.1) 30%,
+                rgba(12,10,9,0.4) 55%,
+                rgba(12,10,9,0.85) 80%,
+                rgba(12,10,9,1) 100%)
             `,
-          }}
-        />
-
-        {/* Subtle grain texture overlay */}
-        <div
-          className="absolute inset-0 z-[2] pointer-events-none"
-          style={{
-            opacity: 0.03,
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
           }}
         />
 
@@ -378,153 +249,139 @@ export default function Home() {
         <motion.nav
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="relative z-10 flex items-center justify-between px-6 md:px-12 lg:px-20 pt-8"
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="relative z-10 flex items-center justify-between px-6 md:px-12 lg:px-20 pt-8 md:pt-10"
           style={{ opacity: heroOpacity as unknown as number }}
         >
-          <div className="flex items-center gap-3">
-            {/* Logo mark */}
-            <div
-              className="flex items-center justify-center rounded-full"
-              style={{
-                width: "36px",
-                height: "36px",
-                background: "var(--gold)",
-              }}
-            >
-              <span
-                className="text-sm font-bold"
-                style={{ color: "#0A0A0A", fontFamily: "var(--font-serif)", fontStyle: "italic" }}
-              >
-                b
-              </span>
-            </div>
+          <Link href="/" className="flex items-center gap-2">
             <span
-              className="text-2xl tracking-tight"
+              className="text-2xl md:text-3xl tracking-tight"
               style={{
-                fontFamily: "var(--font-serif)",
+                fontFamily: "var(--font-display)",
                 fontStyle: "italic",
-                color: "var(--white)",
+                fontWeight: 300,
+                color: "var(--text-primary)",
               }}
             >
               beatmyrate
             </span>
-          </div>
+          </Link>
           <div className="flex items-center gap-8">
             <Link
               href="#destinations"
-              className="text-sm hidden md:block transition-colors duration-300 hover:opacity-100"
-              style={{ color: "var(--white-50)" }}
+              className="text-sm hidden md:block transition-opacity duration-300 hover:opacity-100"
+              style={{
+                color: "var(--text-tertiary)",
+                fontFamily: "var(--font-body)",
+                fontWeight: 300,
+              }}
             >
               Destinations
             </Link>
             <Link
-              href="#how-it-works"
-              className="text-sm hidden md:block transition-colors duration-300 hover:opacity-100"
-              style={{ color: "var(--white-50)" }}
+              href="#the-proof"
+              className="text-sm hidden md:block transition-opacity duration-300 hover:opacity-100"
+              style={{
+                color: "var(--text-tertiary)",
+                fontFamily: "var(--font-body)",
+                fontWeight: 300,
+              }}
             >
-              How it works
+              Pricing
             </Link>
             <a
               href="tel:+919876543210"
-              className="px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105"
+              className="text-sm transition-opacity duration-300 hover:opacity-80"
               style={{
-                background: "var(--gold)",
-                color: "#0A0A0A",
-                fontFamily: "var(--font-sans)",
+                color: "var(--accent)",
+                fontFamily: "var(--font-mono)",
+                letterSpacing: "0.05em",
               }}
             >
-              Call to Book
+              Call to book
             </a>
           </div>
         </motion.nav>
 
-        {/* Hero Content */}
+        {/* Hero content — centered, dramatic */}
         <motion.div
           className="relative z-10 flex flex-col items-center justify-center px-6"
           style={{ height: "calc(100% - 80px)", opacity: heroOpacity as unknown as number }}
+          variants={orchestrate}
+          initial="hidden"
+          animate="visible"
         >
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="text-center"
-            style={{ maxWidth: "900px" }}
-          >
-            {/* Eyebrow */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="text-[11px] tracking-[0.35em] uppercase mb-6"
+          <div className="text-center" style={{ maxWidth: "1100px" }}>
+            {/* Main headline — the magazine moment */}
+            <motion.h1
+              variants={fadeUp}
+              className="leading-[0.9] tracking-tight"
               style={{
-                color: "var(--gold)",
-                fontFamily: "var(--font-mono)",
-              }}
-            >
-              They overcharge. We don&apos;t.
-            </motion.p>
-
-            {/* Main headline */}
-            <h1
-              className="text-3xl sm:text-5xl md:text-7xl lg:text-[5.5rem] xl:text-[6.5rem] leading-[0.92] tracking-tight"
-              style={{
-                fontFamily: "var(--font-serif)",
+                fontFamily: "var(--font-display)",
                 fontStyle: "italic",
-                color: "var(--white)",
+                fontWeight: 300,
+                color: "var(--text-primary)",
+                fontSize: "clamp(2.5rem, 8vw, 8rem)",
               }}
             >
-              hotels at rates
+              the rates hotels
               <br />
-              <span style={{ color: "var(--gold)" }}>you weren&apos;t</span>
-              <br />
-              supposed to see
-            </h1>
+              <span style={{ color: "var(--accent)" }}>don&apos;t want</span> you to see
+            </motion.h1>
 
-            {/* Subtitle */}
+            {/* Subtitle — small mono, understated */}
             <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 1 }}
-              className="mt-8 text-base md:text-lg lg:text-xl leading-relaxed mx-auto"
+              variants={fadeUp}
+              className="mt-8 md:mt-10 tracking-wide"
               style={{
-                color: "var(--white-50)",
-                maxWidth: "560px",
-                fontFamily: "var(--font-sans)",
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.75rem",
+                letterSpacing: "0.08em",
+                color: "var(--text-tertiary)",
+                maxWidth: "480px",
+                marginLeft: "auto",
+                marginRight: "auto",
               }}
             >
-              We negotiate directly with hotels so you get B2B wholesale rates.
-              Save 20-40% on every booking, worldwide.
+              B2B wholesale pricing on 1,500+ hotels across 50 cities. Save 20&ndash;40% on every booking.
             </motion.p>
 
-            {/* Search Bar */}
+            {/* Search input — frosted glass */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.0 }}
-              className="mt-10 mx-auto w-full"
-              style={{ maxWidth: "520px" }}
+              variants={fadeUp}
+              className="mt-10 md:mt-14 mx-auto w-full"
+              style={{ maxWidth: "560px" }}
             >
               <div
-                className="flex items-center rounded-full px-5 py-3 gap-3"
+                className="flex items-center rounded-full px-6 py-4 gap-4"
                 style={{
-                  background: "rgba(255,255,255,0.08)",
-                  backdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255,255,255,0.35)",
-                  boxShadow: "0 0 20px rgba(255,255,255,0.08), 0 0 40px rgba(255,255,255,0.04)",
+                  background: "rgba(245, 240, 235, 0.06)",
+                  backdropFilter: "blur(24px)",
+                  WebkitBackdropFilter: "blur(24px)",
+                  border: "1px solid rgba(245, 240, 235, 0.1)",
                 }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--white-80)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--text-tertiary)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 <input
                   type="text"
-                  placeholder="Where do you want to go? Try Bangkok, Bali, Paris..."
-                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-white/50"
+                  placeholder="Where to? Try Bangkok, Bali, Paris..."
+                  className="flex-1 bg-transparent text-sm outline-none"
                   style={{
-                    color: "var(--white)",
-                    fontFamily: "var(--font-sans)",
+                    color: "var(--text-primary)",
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 300,
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -538,567 +395,703 @@ export default function Home() {
                 />
               </div>
             </motion.div>
+          </div>
 
-            {/* Category pills */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.2 }}
-              className="flex flex-wrap items-center justify-center gap-3 md:gap-4 mt-6"
-            >
-              {Object.entries(CATEGORIES).map(([key, cat]) => (
-                <Link
-                  key={key}
-                  href="#destinations"
-                  className="inline-flex items-center gap-2 px-5 md:px-7 py-3 rounded-full text-sm transition-all duration-300 hover:scale-105"
-                  style={{
-                    background: "rgba(255,255,255,0.06)",
-                    backdropFilter: "blur(20px)",
-                    WebkitBackdropFilter: "blur(20px)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    color: "var(--white-80)",
-                    fontFamily: "var(--font-sans)",
-                  }}
-                >
-                  <CategoryIcon type={cat.icon} size={16} />
-                  {cat.label}
-                </Link>
-              ))}
-            </motion.div>
-          </motion.div>
-
-          {/* Scroll indicator */}
+          {/* Scroll indicator — thin animated line */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 2 }}
-            className="absolute bottom-10 flex flex-col items-center gap-2"
+            transition={{ delay: 2.5, duration: 1 }}
+            className="absolute bottom-12 flex flex-col items-center"
           >
-            <span
-              className="text-[10px] tracking-[0.3em] uppercase"
-              style={{
-                color: "var(--white-30)",
-                fontFamily: "var(--font-mono)",
-              }}
+            <div
+              className="relative overflow-hidden"
+              style={{ width: "1px", height: "48px", background: "var(--text-ghost)" }}
             >
-              Scroll
-            </span>
-            <motion.div
-              animate={{ y: [0, 6, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="var(--white-30)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </motion.div>
+              <motion.div
+                animate={{ y: ["-100%", "100%"] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "1px",
+                  height: "50%",
+                  background: "var(--accent)",
+                }}
+              />
+            </div>
           </motion.div>
         </motion.div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          HOW IT WORKS — 3 elegant cards
+          SECTION 2 — EDITORIAL STRIP: "How we work differently"
       ═══════════════════════════════════════════════════════════════════ */}
-      <section id="how-it-works" className="px-6 md:px-12 lg:px-20 py-16 md:py-28 lg:py-36 mt-8">
-        <div className="mx-auto" style={{ maxWidth: "1200px" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <p
-              className="text-[11px] tracking-[0.35em] uppercase mb-4"
+      <section
+        id="how-it-works"
+        style={{ paddingTop: "160px", paddingBottom: "160px" }}
+      >
+        {/* Step 1 — Left text, right image */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col lg:flex-row items-center"
+          style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 24px" }}
+        >
+          {/* Text block */}
+          <div className="lg:w-[40%] relative" style={{ padding: "0 24px 0 0" }}>
+            <span
+              className="block absolute"
               style={{
-                color: "var(--gold)",
-                fontFamily: "var(--font-mono)",
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(120px, 15vw, 200px)",
+                fontWeight: 300,
+                color: "var(--accent)",
+                opacity: 0.08,
+                lineHeight: 0.85,
+                top: "-40px",
+                left: "-20px",
+                userSelect: "none",
               }}
             >
-              How it works
-            </p>
-            <h2
-              className="text-3xl md:text-5xl lg:text-[3.5rem]"
-              style={{
-                fontFamily: "var(--font-serif)",
-                fontStyle: "italic",
-                color: "var(--white)",
-              }}
-            >
-              Three steps to better rates
-            </h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            {[
-              {
-                num: "01",
-                title: "Browse curated stays",
-                desc: "Explore handpicked hotels across 50+ cities, thoughtfully filtered for singles, couples, or families.",
-              },
-              {
-                num: "02",
-                title: "See B2B pricing",
-                desc: "We reveal wholesale rates that travel agents pay \u2014 not the inflated prices you see on booking sites.",
-              },
-              {
-                num: "03",
-                title: "Book & save big",
-                desc: "Call or WhatsApp us. We confirm availability in minutes and lock in your B2B rate. Zero booking fees.",
-              },
-            ].map((step, i) => (
-              <motion.div
-                key={step.num}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.6, delay: i * 0.15 }}
-                className="relative p-8 lg:p-10 rounded-2xl group transition-all duration-500"
+              01
+            </span>
+            <div className="relative">
+              <p
+                className="mb-4"
                 style={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.7rem",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  color: "var(--accent)",
                 }}
               >
-                {/* Large number */}
-                <span
-                  className="text-5xl lg:text-6xl font-light block mb-6"
-                  style={{
-                    color: "var(--gold)",
-                    fontFamily: "var(--font-mono)",
-                    lineHeight: 1,
-                  }}
-                >
-                  {step.num}
-                </span>
-                {/* Thin gold accent line */}
-                <div
-                  className="mb-6"
-                  style={{
-                    width: "40px",
-                    height: "1px",
-                    background: "var(--gold-border)",
-                  }}
-                />
-                <h3
-                  className="text-xl lg:text-2xl mb-3"
-                  style={{
-                    color: "var(--white)",
-                    fontFamily: "var(--font-sans)",
-                    fontWeight: 500,
-                  }}
-                >
-                  {step.title}
-                </h3>
-                <p
-                  className="text-sm lg:text-base leading-relaxed"
-                  style={{
-                    color: "var(--white-50)",
-                    fontFamily: "var(--font-sans)",
-                  }}
-                >
-                  {step.desc}
-                </p>
-              </motion.div>
-            ))}
+                Browse
+              </p>
+              <h3
+                className="mb-6"
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontStyle: "italic",
+                  fontWeight: 300,
+                  fontSize: "clamp(1.8rem, 3.5vw, 3rem)",
+                  lineHeight: 1.1,
+                  color: "var(--text-primary)",
+                }}
+              >
+                Handpicked stays across fifty cities
+              </h3>
+              <p
+                className="leading-relaxed"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontWeight: 300,
+                  fontSize: "0.95rem",
+                  color: "var(--text-secondary)",
+                  maxWidth: "380px",
+                }}
+              >
+                Every hotel in our collection has been vetted for quality, location,
+                and value. Filtered for singles, couples, or families — so you never
+                wade through irrelevant options.
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          FEATURED DEALS (Top rated hotels across all cities)
-      ═══════════════════════════════════════════════════════════════════ */}
-      <section className="px-6 md:px-12 lg:px-20 py-16 md:py-24">
-        <div className="mx-auto" style={{ maxWidth: "1200px" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-14"
+          {/* Image block */}
+          <div
+            className="lg:w-[60%] mt-10 lg:mt-0 overflow-hidden rounded-sm"
+            style={{ aspectRatio: "16/10" }}
           >
-            <p
-              className="text-[11px] tracking-[0.3em] uppercase mb-3"
-              style={{ color: "var(--gold)", fontFamily: "var(--font-mono)" }}
-            >
-              Why people love us
-            </p>
-            <h2
-              className="text-3xl md:text-4xl mb-4"
-              style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
-            >
-              Real savings, real hotels
-            </h2>
-            <div
-              className="mx-auto mt-3 mb-5"
-              style={{
-                width: "48px",
-                height: "2px",
-                background: "linear-gradient(90deg, transparent, var(--gold), transparent)",
+            <img
+              src={safeImageSrc(EDITORIAL_IMAGES[0])}
+              alt="Luxury hotel pool at sunset"
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
               }}
             />
-            <p className="text-sm max-w-md mx-auto" style={{ color: "var(--white-50)" }}>
-              Here is what a typical booking looks like. Same hotel, same dates — just a better rate.
-            </p>
-          </motion.div>
+          </div>
+        </motion.div>
 
-          {/* Price comparison example cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { hotel: "Siam Kempinski Bangkok", city: "Bangkok", ota: 14500, our: 10500, stars: 5, saved: 4000 },
-              { hotel: "The Oberoi Mumbai", city: "Mumbai", ota: 18200, our: 12800, stars: 5, saved: 5400 },
-              { hotel: "Park Hyatt Tokyo", city: "Tokyo", ota: 28000, our: 19500, stars: 5, saved: 8500 },
-            ].map((deal, i) => (
-              <motion.div
-                key={deal.hotel}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="rounded-2xl p-7 md:p-8"
+        {/* Step 2 — Reversed: left image, right text */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col lg:flex-row-reverse items-center"
+          style={{
+            maxWidth: "1400px",
+            margin: "0 auto",
+            padding: "0 24px",
+            marginTop: "120px",
+          }}
+        >
+          <div className="lg:w-[40%] relative" style={{ padding: "0 0 0 24px" }}>
+            <span
+              className="block absolute"
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(120px, 15vw, 200px)",
+                fontWeight: 300,
+                color: "var(--accent)",
+                opacity: 0.08,
+                lineHeight: 0.85,
+                top: "-40px",
+                right: "-20px",
+                userSelect: "none",
+              }}
+            >
+              02
+            </span>
+            <div className="relative">
+              <p
+                className="mb-4"
                 style={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.7rem",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  color: "var(--accent)",
                 }}
               >
-                <div className="flex items-center gap-1 mb-2">
-                  {Array.from({ length: deal.stars }).map((_, j) => (
-                    <svg key={j} width="12" height="12" viewBox="0 0 24 24" fill="var(--gold)" stroke="none">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                  ))}
-                </div>
-                <h3
-                  className="text-lg md:text-xl mb-1"
-                  style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--white)" }}
-                >
-                  {deal.hotel}
-                </h3>
-                <p className="text-xs mb-5" style={{ color: "var(--white-30)" }}>{deal.city}</p>
+                Compare
+              </p>
+              <h3
+                className="mb-6"
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontStyle: "italic",
+                  fontWeight: 300,
+                  fontSize: "clamp(1.8rem, 3.5vw, 3rem)",
+                  lineHeight: 1.1,
+                  color: "var(--text-primary)",
+                }}
+              >
+                See the rate travel agents pay
+              </h3>
+              <p
+                className="leading-relaxed"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontWeight: 300,
+                  fontSize: "0.95rem",
+                  color: "var(--text-secondary)",
+                  maxWidth: "380px",
+                }}
+              >
+                We reveal B2B wholesale pricing that is normally hidden behind agency
+                logins. The same room, same dates — just without the 30% markup that
+                OTAs quietly add.
+              </p>
+            </div>
+          </div>
 
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-[11px] uppercase mb-1" style={{ color: "var(--white-30)", fontFamily: "var(--font-mono)" }}>OTA Price</p>
-                    <p className="text-xl line-through" style={{ color: "var(--red)", fontFamily: "var(--font-mono)" }}>&#8377;{deal.ota.toLocaleString('en-IN')}</p>
-                  </div>
-                  <div className="text-center">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--white-15)" strokeWidth="2">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[11px] uppercase mb-1" style={{ color: "var(--gold)", fontFamily: "var(--font-mono)" }}>Our Rate</p>
-                    <p
-                      className="text-3xl"
-                      style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--green)" }}
-                    >
-                      &#8377;{deal.our.toLocaleString('en-IN')}
-                    </p>
-                  </div>
-                </div>
+          <div
+            className="lg:w-[60%] mt-10 lg:mt-0 overflow-hidden rounded-sm"
+            style={{ aspectRatio: "16/10" }}
+          >
+            <img
+              src={safeImageSrc(EDITORIAL_IMAGES[1])}
+              alt="Grand hotel lobby interior"
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+              }}
+            />
+          </div>
+        </motion.div>
 
-                <div
-                  className="text-center py-2.5 rounded-lg text-sm font-medium"
+        {/* Step 3 — Full width */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="relative"
+          style={{
+            maxWidth: "1400px",
+            margin: "0 auto",
+            padding: "0 24px",
+            marginTop: "120px",
+          }}
+        >
+          <div className="relative overflow-hidden rounded-sm" style={{ aspectRatio: "21/9" }}>
+            <img
+              src={safeImageSrc(EDITORIAL_IMAGES[2])}
+              alt="Oceanfront resort at twilight"
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+              }}
+            />
+            {/* Gradient overlay for text */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to right, rgba(12,10,9,0.85) 0%, rgba(12,10,9,0.4) 50%, transparent 100%)",
+              }}
+            />
+            <div
+              className="absolute inset-0 flex flex-col justify-center"
+              style={{ padding: "clamp(32px, 5vw, 80px)" }}
+            >
+              <span
+                className="block absolute"
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "clamp(120px, 15vw, 200px)",
+                  fontWeight: 300,
+                  color: "var(--accent)",
+                  opacity: 0.12,
+                  lineHeight: 0.85,
+                  top: "20px",
+                  left: "40px",
+                  userSelect: "none",
+                }}
+              >
+                03
+              </span>
+              <div className="relative" style={{ maxWidth: "420px" }}>
+                <p
+                  className="mb-4"
                   style={{
-                    background: "var(--green-soft)",
-                    color: "var(--green)",
                     fontFamily: "var(--font-mono)",
+                    fontSize: "0.7rem",
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                    color: "var(--accent)",
                   }}
                 >
-                  You save &#8377;{deal.saved.toLocaleString('en-IN')} per night
-                </div>
-              </motion.div>
-            ))}
+                  Book
+                </p>
+                <h3
+                  className="mb-6"
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontStyle: "italic",
+                    fontWeight: 300,
+                    fontSize: "clamp(1.8rem, 3.5vw, 3rem)",
+                    lineHeight: 1.1,
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  One call, and it&apos;s yours
+                </h3>
+                <p
+                  className="leading-relaxed"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 300,
+                    fontSize: "0.95rem",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  Call or WhatsApp us. We confirm availability in minutes and lock in
+                  your B2B rate. Zero booking fees, zero surprises.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          DESTINATIONS GRID
+          SECTION 3 — FEATURED DESTINATIONS (masonry-ish layout)
       ═══════════════════════════════════════════════════════════════════ */}
-      <section id="destinations" className="px-6 md:px-12 lg:px-20 py-16 md:py-24 lg:py-32">
-        <div className="mx-auto" style={{ maxWidth: "1400px" }}>
-          {/* Section header + filter */}
+      <section
+        id="destinations"
+        style={{ paddingTop: "120px", paddingBottom: "120px" }}
+      >
+        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 24px" }}>
+          {/* Section header */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
-            className="flex flex-col lg:flex-row lg:items-end lg:justify-between mb-12"
+            transition={{ duration: 0.8 }}
+            className="mb-16 md:mb-20"
           >
-            <div>
-              <p
-                className="text-[11px] tracking-[0.35em] uppercase mb-4"
-                style={{
-                  color: "var(--gold)",
-                  fontFamily: "var(--font-mono)",
-                }}
-              >
-                Destinations
-              </p>
-              <h2
-                className="text-3xl md:text-5xl lg:text-[3.5rem]"
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontStyle: "italic",
-                  color: "var(--white)",
-                }}
-              >
-                50 cities, curated for you
-              </h2>
-              <p
-                className="mt-3 text-base"
-                style={{
-                  color: "var(--white-30)",
-                  maxWidth: "480px",
-                }}
-              >
-                From the neon streets of Tokyo to the sun-soaked coasts of Santorini.
-              </p>
-            </div>
-
-            {/* Continent filter pills */}
-            <div className="flex flex-wrap gap-2 mt-6 lg:mt-0">
-              {CONTINENTS.map((continent) => {
-                const isActive = activeContinent === continent;
-                return (
-                  <button
-                    key={continent}
-                    onClick={() => setActiveContinent(continent)}
-                    className="px-4 py-2 rounded-full text-xs transition-all duration-300"
-                    style={{
-                      background: isActive ? "var(--gold)" : "transparent",
-                      color: isActive ? "#0A0A0A" : "var(--white-50)",
-                      border: `1px solid ${isActive ? "var(--gold)" : "var(--border)"}`,
-                      fontFamily: "var(--font-mono)",
-                      fontWeight: isActive ? 600 : 400,
-                    }}
-                  >
-                    {continent}
-                  </button>
-                );
-              })}
-            </div>
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontStyle: "italic",
+                fontWeight: 300,
+                fontSize: "clamp(3rem, 6vw, 5.5rem)",
+                lineHeight: 0.95,
+                color: "var(--text-primary)",
+              }}
+            >
+              destinations
+            </h2>
+            <p
+              className="mt-5"
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.7rem",
+                letterSpacing: "0.1em",
+                color: "var(--text-tertiary)",
+              }}
+            >
+              {totalCities > 0 ? `${totalCities} cities` : "50 cities"} across six continents, curated for you
+            </p>
           </motion.div>
 
-          {/* Grid */}
+          {/* Masonry-ish grid */}
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {Array.from({ length: 8 }).map((_, i) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-2xl overflow-hidden"
+                  className="rounded-sm shimmer"
                   style={{
-                    background: "var(--bg-card)",
-                    border: "1px solid var(--border)",
+                    height: i < 2 ? "400px" : "320px",
+                    gridColumn: i === 0 ? "span 2" : undefined,
                   }}
-                >
-                  <div style={{ height: "240px" }} className="shimmer" />
-                  <div className="p-5">
-                    <div className="h-4 w-28 rounded shimmer mb-3" />
-                    <div className="h-3 w-full rounded shimmer mb-2" />
-                    <div className="h-3 w-2/3 rounded shimmer" />
-                  </div>
-                </div>
+                />
               ))}
             </div>
           ) : (
             <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true, margin: "-50px" }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6"
+              transition={{ duration: 0.6 }}
             >
-              <AnimatePresence mode="popLayout">
-                {filtered.map((city) => (
-                  <CityCard key={city.city_slug} city={city} />
+              {/* Row 1: 1 large (2 cols) + 1 tall (1 col) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                {featured.slice(0, 2).map((city, i) => (
+                  <DestinationCard
+                    key={city.city_slug}
+                    city={city}
+                    tall={i === 1}
+                    wide={i === 0}
+                  />
                 ))}
-              </AnimatePresence>
+              </div>
+              {/* Row 2: 3 equal cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {featured.slice(2, 5).map((city) => (
+                  <DestinationCard
+                    key={city.city_slug}
+                    city={city}
+                  />
+                ))}
+                {featured[5] && (
+                  <DestinationCard
+                    key={featured[5].city_slug}
+                    city={featured[5]}
+                  />
+                )}
+              </div>
             </motion.div>
           )}
 
-          {filtered.length === 0 && !loading && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-20 text-sm"
-              style={{ color: "var(--white-30)" }}
+          {/* View all link */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mt-14 md:mt-16"
+          >
+            <Link
+              href="#destinations"
+              className="inline-flex items-center gap-3 group"
+              style={{
+                fontFamily: "var(--font-body)",
+                fontWeight: 300,
+                fontSize: "0.95rem",
+                color: "var(--text-secondary)",
+              }}
             >
-              No cities found for this continent.
-            </motion.p>
-          )}
+              <span className="transition-colors duration-300 group-hover:text-[var(--accent)]">
+                View all {totalCities || 50} cities
+              </span>
+              <span
+                className="inline-block transition-transform duration-300 group-hover:translate-x-1"
+                style={{ color: "var(--accent)" }}
+              >
+                &rarr;
+              </span>
+            </Link>
+          </motion.div>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          STATS / TRUST BAR
+          SECTION 4 — PRICE COMPARISON: "the proof"
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="px-6 md:px-12 lg:px-20 py-16 md:py-28 lg:py-36">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.7 }}
-          className="mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-6 p-10 md:p-16 lg:p-20 rounded-3xl"
-          style={{
-            maxWidth: "1100px",
-            background: "var(--bg-card)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          {[
-            { value: "50+", label: "Curated cities" },
-            { value: "1,500+", label: "Handpicked hotels" },
-            { value: "20\u201340%", label: "Average savings" },
-            { value: "\u20B90", label: "Booking fee" },
-          ].map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="text-center"
-            >
-              <p
-                className="text-4xl md:text-5xl lg:text-6xl mb-3"
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontStyle: "italic",
-                  color: "var(--gold)",
-                  lineHeight: 1,
-                }}
-              >
-                {stat.value}
-              </p>
-              <p
-                className="text-[11px] md:text-xs tracking-wider uppercase"
-                style={{
-                  color: "var(--white-30)",
-                  fontFamily: "var(--font-mono)",
-                }}
-              >
-                {stat.label}
-              </p>
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          FOOTER
-      ═══════════════════════════════════════════════════════════════════ */}
-
-      {/* ═══════════════════════════════════════════════════════════════════
-          TESTIMONIALS
-      ═══════════════════════════════════════════════════════════════════ */}
-      <section className="px-6 md:px-12 lg:px-20 py-16 md:py-24">
-        <div className="mx-auto" style={{ maxWidth: "1200px" }}>
+      <section
+        id="the-proof"
+        style={{
+          paddingTop: "120px",
+          paddingBottom: "120px",
+          background: "var(--bg-surface)",
+        }}
+      >
+        <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 24px" }}>
+          {/* Header */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-14"
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="mb-16 md:mb-20"
           >
-            <p
-              className="text-[11px] tracking-[0.3em] uppercase mb-3"
-              style={{ color: "var(--gold)", fontFamily: "var(--font-mono)" }}
-            >
-              What travellers say
-            </p>
             <h2
-              className="text-3xl md:text-4xl"
-              style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+              style={{
+                fontFamily: "var(--font-display)",
+                fontStyle: "italic",
+                fontWeight: 300,
+                fontSize: "clamp(3rem, 6vw, 5.5rem)",
+                lineHeight: 0.95,
+                color: "var(--text-primary)",
+              }}
             >
-              Trusted by smart travellers
+              the proof
             </h2>
+            <p
+              className="mt-5"
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.7rem",
+                letterSpacing: "0.1em",
+                color: "var(--text-tertiary)",
+              }}
+            >
+              same hotel, same room, same dates &mdash; just a better rate
+            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                name: "Priya S.",
-                location: "Mumbai",
-                text: "Saved ₹12,000 on a 3-night stay at Taj Lands End. Same room, same dates — just called BeatMyRate instead of booking on MakeMyTrip.",
-                savings: "Saved 28%",
-              },
-              {
-                name: "David L.",
-                location: "Singapore",
-                text: "Booked Park Hyatt Bangkok for our anniversary. The rate was ₹11,200/night vs ₹16,100 on Agoda. Incredible service from the team.",
-                savings: "Saved 31%",
-              },
-              {
-                name: "Ananya R.",
-                location: "Delhi",
-                text: "Family trip to Bali — 5 nights at Novotel for the price of 3.5 on Booking.com. My husband didn't believe it until we checked in!",
-                savings: "Saved 30%",
-              },
-            ].map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="rounded-2xl p-7 md:p-8 relative"
+          {/* Featured comparison — large */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.8 }}
+            className="flex flex-col lg:flex-row gap-0 overflow-hidden rounded-sm"
+            style={{ background: "var(--bg-deep)" }}
+          >
+            {/* Hotel image */}
+            <div className="lg:w-[45%] relative overflow-hidden" style={{ minHeight: "340px" }}>
+              <img
+                src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=900&q=80"
+                alt="Siam Kempinski Bangkok"
+                className="w-full h-full object-cover absolute inset-0"
+                loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+                }}
+              />
+            </div>
+            {/* Price details */}
+            <div
+              className="lg:w-[55%] flex flex-col justify-center"
+              style={{ padding: "clamp(32px, 5vw, 64px)" }}
+            >
+              <p
+                className="mb-2"
                 style={{
-                  background: "var(--bg-card)",
-                  border: "1px solid var(--border)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.65rem",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  color: "var(--text-tertiary)",
                 }}
               >
-                {/* Large decorative quote mark */}
-                <span
-                  className="absolute top-4 right-6 text-6xl leading-none pointer-events-none select-none"
-                  style={{
-                    fontFamily: "Georgia, serif",
-                    color: "var(--gold)",
-                    opacity: 0.15,
-                  }}
-                  aria-hidden="true"
-                >
-                  &ldquo;
-                </span>
-                {/* Stars */}
-                <div className="flex gap-0.5 mb-4">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <svg key={j} width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)" stroke="none">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                  ))}
-                </div>
-                <p
-                  className="text-sm md:text-base leading-relaxed mb-5"
-                  style={{
-                    color: "var(--white-80)",
-                    fontStyle: "italic",
-                  }}
-                >
-                  &ldquo;{t.text}&rdquo;
-                </p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm" style={{ color: "var(--white)" }}>{t.name}</p>
-                    <p className="text-xs" style={{ color: "var(--white-30)" }}>{t.location}</p>
-                  </div>
-                  <span
-                    className="text-xs px-2.5 py-1 rounded-full"
+                Bangkok, Thailand
+              </p>
+              <h3
+                className="mb-10"
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontStyle: "italic",
+                  fontWeight: 300,
+                  fontSize: "clamp(1.5rem, 3vw, 2.5rem)",
+                  lineHeight: 1.15,
+                  color: "var(--text-primary)",
+                }}
+              >
+                Siam Kempinski Bangkok
+              </h3>
+
+              <div className="flex items-end gap-10 mb-8 flex-wrap">
+                <div>
+                  <p
+                    className="mb-2"
                     style={{
-                      background: "var(--green-soft)",
-                      color: "var(--green)",
                       fontFamily: "var(--font-mono)",
-                      fontWeight: 600,
+                      fontSize: "0.6rem",
+                      letterSpacing: "0.15em",
+                      textTransform: "uppercase",
+                      color: "var(--text-tertiary)",
                     }}
                   >
-                    {t.savings}
-                  </span>
+                    OTA price
+                  </p>
+                  <p
+                    className="line-through"
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontWeight: 300,
+                      fontSize: "clamp(1.5rem, 2.5vw, 2.2rem)",
+                      color: "var(--danger)",
+                    }}
+                  >
+                    &#8377;14,500
+                  </p>
+                </div>
+                <div>
+                  <p
+                    className="mb-2"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.6rem",
+                      letterSpacing: "0.15em",
+                      textTransform: "uppercase",
+                      color: "var(--success)",
+                    }}
+                  >
+                    Our rate
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontStyle: "italic",
+                      fontWeight: 300,
+                      fontSize: "clamp(2rem, 4vw, 3.5rem)",
+                      color: "var(--success)",
+                      lineHeight: 1,
+                    }}
+                  >
+                    &#8377;10,500
+                  </p>
+                </div>
+              </div>
+
+              <p
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontWeight: 400,
+                  fontSize: "0.9rem",
+                  color: "var(--accent)",
+                }}
+              >
+                You save &#8377;4,000 per night
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Two smaller comparisons */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {[
+              {
+                hotel: "The Oberoi",
+                city: "Mumbai",
+                ota: 18200,
+                our: 12800,
+                saved: 5400,
+                img: cityImages.mumbai,
+              },
+              {
+                hotel: "Park Hyatt",
+                city: "Tokyo",
+                ota: 28000,
+                our: 19500,
+                saved: 8500,
+                img: cityImages.tokyo,
+              },
+            ].map((deal, i) => (
+              <motion.div
+                key={deal.hotel}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+                className="flex flex-col sm:flex-row overflow-hidden rounded-sm"
+                style={{ background: "var(--bg-deep)" }}
+              >
+                <div className="sm:w-[40%] relative overflow-hidden" style={{ minHeight: "200px" }}>
+                  <img
+                    src={safeImageSrc(deal.img)}
+                    alt={deal.hotel}
+                    className="w-full h-full object-cover absolute inset-0"
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+                    }}
+                  />
+                </div>
+                <div className="sm:w-[60%] p-6 md:p-8 flex flex-col justify-center">
+                  <p
+                    className="mb-1"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.6rem",
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: "var(--text-tertiary)",
+                    }}
+                  >
+                    {deal.city}
+                  </p>
+                  <h4
+                    className="mb-5"
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontStyle: "italic",
+                      fontWeight: 300,
+                      fontSize: "1.3rem",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    {deal.hotel}
+                  </h4>
+                  <div className="flex items-end gap-6 mb-3">
+                    <p
+                      className="line-through"
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontWeight: 300,
+                        fontSize: "1.1rem",
+                        color: "var(--danger)",
+                      }}
+                    >
+                      &#8377;{deal.ota.toLocaleString("en-IN")}
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontStyle: "italic",
+                        fontWeight: 300,
+                        fontSize: "1.6rem",
+                        color: "var(--success)",
+                        lineHeight: 1,
+                      }}
+                    >
+                      &#8377;{deal.our.toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontWeight: 300,
+                      fontSize: "0.8rem",
+                      color: "var(--accent)",
+                    }}
+                  >
+                    Save &#8377;{deal.saved.toLocaleString("en-IN")}/night
+                  </p>
                 </div>
               </motion.div>
             ))}
@@ -1106,91 +1099,398 @@ export default function Home() {
         </div>
       </section>
 
-      <footer
-        className="px-6 md:px-12 lg:px-20 py-16"
-        style={{ borderTop: "1px solid var(--border)" }}
-      >
-        <div
-          className="mx-auto flex flex-col md:flex-row items-center justify-between gap-6"
-          style={{ maxWidth: "1400px" }}
-        >
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div
-              className="flex items-center justify-center rounded-full"
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION 5 — SOCIAL PROOF (single powerful testimonial)
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section style={{ paddingTop: "140px", paddingBottom: "140px" }}>
+        <div style={{ maxWidth: "900px", margin: "0 auto", padding: "0 24px" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.8 }}
+            className="text-center"
+          >
+            {/* Opening quote mark */}
+            <span
+              className="block mb-8"
               style={{
-                width: "28px",
-                height: "28px",
-                background: "var(--gold)",
+                fontFamily: "var(--font-display)",
+                fontSize: "5rem",
+                lineHeight: 0.5,
+                color: "var(--accent)",
+                opacity: 0.3,
               }}
             >
-              <span
-                className="text-xs font-bold"
-                style={{ color: "#0A0A0A", fontFamily: "var(--font-serif)", fontStyle: "italic" }}
+              &ldquo;
+            </span>
+
+            {/* Testimonial text */}
+            <AnimatePresence mode="wait">
+              <motion.blockquote
+                key={testimonialIdx}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.5 }}
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontStyle: "italic",
+                  fontWeight: 300,
+                  fontSize: "clamp(1.3rem, 2.5vw, 1.8rem)",
+                  lineHeight: 1.6,
+                  color: "var(--text-primary)",
+                }}
               >
-                b
-              </span>
+                {TESTIMONIALS[testimonialIdx].quote}
+              </motion.blockquote>
+            </AnimatePresence>
+
+            {/* Attribution */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`attr-${testimonialIdx}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="mt-10 flex items-center justify-center gap-4"
+              >
+                <div
+                  className="flex items-center justify-center rounded-full"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    background: "var(--accent-soft)",
+                    border: "1px solid var(--accent-border)",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.65rem",
+                      color: "var(--accent)",
+                    }}
+                  >
+                    {TESTIMONIALS[testimonialIdx].avatar}
+                  </span>
+                </div>
+                <div className="text-left">
+                  <p
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontWeight: 400,
+                      fontSize: "0.85rem",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    {TESTIMONIALS[testimonialIdx].name}
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.65rem",
+                      color: "var(--text-tertiary)",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    {TESTIMONIALS[testimonialIdx].location}
+                  </p>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Navigation dots */}
+            <div className="flex items-center justify-center gap-3 mt-8">
+              {TESTIMONIALS.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setTestimonialIdx(i)}
+                  className="transition-all duration-300"
+                  style={{
+                    width: i === testimonialIdx ? "24px" : "6px",
+                    height: "6px",
+                    borderRadius: "3px",
+                    background:
+                      i === testimonialIdx
+                        ? "var(--accent)"
+                        : "var(--text-ghost)",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                  aria-label={`View testimonial ${i + 1}`}
+                />
+              ))}
             </div>
-            <span
-              className="text-lg"
+
+            {/* Stat */}
+            <p
+              className="mt-12"
               style={{
-                fontFamily: "var(--font-serif)",
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.7rem",
+                letterSpacing: "0.1em",
+                color: "var(--text-tertiary)",
+              }}
+            >
+              2,340+ happy travellers and counting
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION 6 — TRUST BAR
+      ═══════════════════════════════════════════════════════════════════ */}
+      <section
+        style={{
+          paddingTop: "80px",
+          paddingBottom: "80px",
+          borderTop: "1px solid var(--border)",
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
+        <div
+          style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}
+          className="flex flex-wrap items-center justify-center gap-y-8"
+        >
+          {[
+            { number: "50+", label: "cities" },
+            { number: "1,500+", label: "hotels" },
+            { number: "20-40%", label: "savings" },
+            { number: "0", label: "fees" },
+          ].map((stat, i, arr) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              className="flex items-center"
+            >
+              <div className="text-center px-8 md:px-12">
+                <p
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 300,
+                    fontSize: "clamp(1.8rem, 3vw, 2.8rem)",
+                    color: "var(--text-primary)",
+                    lineHeight: 1,
+                  }}
+                >
+                  {stat.label === "fees" ? (
+                    <>
+                      &#8377;{stat.number}
+                    </>
+                  ) : (
+                    stat.number
+                  )}
+                </p>
+                <p
+                  className="mt-2"
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.6rem",
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                    color: "var(--text-tertiary)",
+                  }}
+                >
+                  {stat.label}
+                </p>
+              </div>
+              {i < arr.length - 1 && (
+                <div
+                  className="hidden md:block"
+                  style={{
+                    width: "1px",
+                    height: "48px",
+                    background: "var(--border)",
+                  }}
+                />
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SECTION 7 — FOOTER
+      ═══════════════════════════════════════════════════════════════════ */}
+      <footer
+        style={{
+          paddingTop: "80px",
+          paddingBottom: "80px",
+        }}
+      >
+        <div
+          style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 24px" }}
+          className="flex flex-col md:flex-row items-center justify-between gap-6"
+        >
+          <Link href="/">
+            <span
+              style={{
+                fontFamily: "var(--font-display)",
                 fontStyle: "italic",
-                color: "var(--white-50)",
+                fontWeight: 300,
+                fontSize: "1.5rem",
+                color: "var(--text-primary)",
               }}
             >
               beatmyrate
             </span>
-          </div>
+          </Link>
 
-          {/* Copyright */}
-          <p
-            className="text-xs"
-            style={{
-              color: "var(--white-30)",
-              fontFamily: "var(--font-mono)",
-            }}
-          >
-            &copy; 2025 BeatMyRate. B2B hotel rates for everyone.
-          </p>
-
-          {/* Contact links */}
-          <div className="flex items-center gap-6">
-            <a
-              href="tel:+919876543210"
-              className="text-xs transition-colors duration-300"
+          <div className="flex items-center gap-8">
+            <Link
+              href="#destinations"
               style={{
-                color: "var(--white-50)",
-                fontFamily: "var(--font-mono)",
+                fontFamily: "var(--font-body)",
+                fontWeight: 300,
+                fontSize: "0.8rem",
+                color: "var(--text-tertiary)",
               }}
+              className="transition-colors duration-300 hover:text-[var(--text-secondary)]"
             >
-              Call Us
-            </a>
+              Destinations
+            </Link>
+            <Link
+              href="#the-proof"
+              style={{
+                fontFamily: "var(--font-body)",
+                fontWeight: 300,
+                fontSize: "0.8rem",
+                color: "var(--text-tertiary)",
+              }}
+              className="transition-colors duration-300 hover:text-[var(--text-secondary)]"
+            >
+              Pricing
+            </Link>
             <a
               href="https://wa.me/919876543210"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs transition-colors duration-300"
               style={{
-                color: "var(--white-50)",
-                fontFamily: "var(--font-mono)",
+                fontFamily: "var(--font-body)",
+                fontWeight: 300,
+                fontSize: "0.8rem",
+                color: "var(--text-tertiary)",
               }}
+              className="transition-colors duration-300 hover:text-[var(--text-secondary)]"
             >
               WhatsApp
             </a>
-            <a
-              href="mailto:hello@beatmyrate.com"
-              className="text-xs transition-colors duration-300"
-              style={{
-                color: "var(--white-50)",
-                fontFamily: "var(--font-mono)",
-              }}
-            >
-              Email
-            </a>
           </div>
+
+          <p
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.6rem",
+              color: "var(--text-ghost)",
+              letterSpacing: "0.05em",
+            }}
+          >
+            &copy; 2026 beatmyrate
+          </p>
         </div>
       </footer>
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Destination Card — editorial style with full-bleed image
+// ═══════════════════════════════════════════════════════════════════════════
+function DestinationCard({
+  city,
+  tall = false,
+  wide = false,
+}: {
+  city: CuratedCity;
+  tall?: boolean;
+  wide?: boolean;
+}) {
+  const img = getCityImage(city.city_slug);
+
+  return (
+    <Link
+      href={`/city/${city.city_slug}`}
+      className="block group"
+      style={{
+        gridColumn: wide ? "span 2" : undefined,
+        height: tall ? "100%" : undefined,
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="relative overflow-hidden rounded-sm h-full"
+        style={{
+          minHeight: wide ? "420px" : tall ? "420px" : "320px",
+        }}
+      >
+        {/* Image */}
+        <img
+          src={safeImageSrc(img)}
+          alt={city.city_name}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105"
+          loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+          }}
+        />
+
+        {/* Gradient */}
+        <div
+          className="absolute inset-0 transition-opacity duration-500"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(12,10,9,0.8) 0%, rgba(12,10,9,0.15) 50%, transparent 100%)",
+          }}
+        />
+
+        {/* Content — bottom-left */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+          <p
+            className="mb-1 transition-transform duration-500 group-hover:-translate-y-1"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.6rem",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "var(--text-tertiary)",
+            }}
+          >
+            {city.country}
+          </p>
+          <h3
+            className="transition-transform duration-500 group-hover:-translate-y-1"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontStyle: "italic",
+              fontWeight: 300,
+              fontSize: wide ? "clamp(2rem, 3vw, 3rem)" : "clamp(1.5rem, 2vw, 2.2rem)",
+              lineHeight: 1.1,
+              color: "var(--text-primary)",
+            }}
+          >
+            {city.city_name}
+          </h3>
+          <p
+            className="mt-2 transition-all duration-500 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.6rem",
+              letterSpacing: "0.08em",
+              color: "var(--text-tertiary)",
+            }}
+          >
+            {city.hotel_count > 0 ? `${city.hotel_count}+ stays` : "Explore stays"}
+          </p>
+        </div>
+      </motion.div>
+    </Link>
   );
 }

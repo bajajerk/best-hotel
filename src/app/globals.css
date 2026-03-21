@@ -1,34 +1,62 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-dm-sans);
-  --font-serif: var(--font-instrument-serif);
-  --font-mono: var(--font-jetbrains-mono);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
+  --font-mono: var(--font-mono);
 }
 
 :root {
-  --bg-black: #0A0A0A;
-  --bg-card: #111111;
-  --bg-elevated: #181818;
-  --bg-input: #1A1A1A;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-focus: rgba(255, 255, 255, 0.15);
-  --white: #FAFAFA;
-  --white-80: rgba(255, 255, 255, 0.8);
-  --white-50: rgba(255, 255, 255, 0.5);
-  --white-30: rgba(255, 255, 255, 0.3);
-  --white-15: rgba(255, 255, 255, 0.15);
-  --white-08: rgba(255, 255, 255, 0.08);
-  --white-04: rgba(255, 255, 255, 0.04);
-  --gold: #C9A962;
-  --gold-soft: rgba(201, 169, 98, 0.12);
-  --gold-border: rgba(201, 169, 98, 0.25);
-  --green: #4ADE80;
-  --green-soft: rgba(74, 222, 128, 0.08);
-  --green-border: rgba(74, 222, 128, 0.15);
-  --red: #F87171;
-  --red-soft: rgba(248, 113, 113, 0.08);
-  --red-border: rgba(248, 113, 113, 0.12);
+  /* Warm darks — NOT pure black, has stone warmth */
+  --bg-deep: #0C0A09;
+  --bg-surface: #1C1917;
+  --bg-elevated: #292524;
+  --bg-input: #1E1B1A;
+
+  /* Warm light text — NOT harsh white */
+  --text-primary: #F5F0EB;
+  --text-secondary: rgba(245, 240, 235, 0.7);
+  --text-tertiary: rgba(245, 240, 235, 0.4);
+  --text-ghost: rgba(245, 240, 235, 0.15);
+
+  /* Accent: warm terracotta/amber — NOT generic gold */
+  --accent: #C2703E;
+  --accent-soft: rgba(194, 112, 62, 0.12);
+  --accent-border: rgba(194, 112, 62, 0.3);
+  --accent-hover: #D4834F;
+
+  /* Success: deep emerald — NOT neon green */
+  --success: #2D9B6A;
+  --success-soft: rgba(45, 155, 106, 0.1);
+
+  /* Danger: warm coral */
+  --danger: #E07B6C;
+  --danger-soft: rgba(224, 123, 108, 0.1);
+
+  /* Borders: warm */
+  --border: rgba(245, 240, 235, 0.06);
+  --border-hover: rgba(245, 240, 235, 0.12);
+
+  /* Backward compat aliases — remove after full migration */
+  --bg-black: var(--bg-deep);
+  --bg-card: var(--bg-surface);
+  --white: var(--text-primary);
+  --white-80: var(--text-secondary);
+  --white-50: var(--text-secondary);
+  --white-30: var(--text-tertiary);
+  --white-15: var(--text-ghost);
+  --white-08: rgba(245, 240, 235, 0.08);
+  --white-04: rgba(245, 240, 235, 0.04);
+  --gold: var(--accent);
+  --gold-soft: var(--accent-soft);
+  --gold-border: var(--accent-border);
+  --green: var(--success);
+  --green-soft: var(--success-soft);
+  --green-border: rgba(45, 155, 106, 0.15);
+  --red: var(--danger);
+  --red-soft: var(--danger-soft);
+  --red-border: rgba(224, 123, 108, 0.12);
+  --border-focus: var(--border-hover);
 }
 
 html {
@@ -47,11 +75,13 @@ img {
 }
 
 body {
-  background: var(--bg-black);
-  color: var(--white);
-  font-family: var(--font-sans);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Subtle noise texture for depth */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.015'/%3E%3C/svg%3E");
 }
 
 input:focus,
@@ -61,14 +91,14 @@ button:focus {
 
 /* Selection color */
 ::selection {
-  background: rgba(201, 169, 98, 0.3);
-  color: var(--white);
+  background: rgba(194, 112, 62, 0.35);
+  color: var(--text-primary);
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -76,12 +106,12 @@ button:focus {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--white-15);
+  background: var(--text-ghost);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--white-30);
+  background: var(--text-tertiary);
 }
 
 /* Hide scrollbar for horizontal scroll sections */
@@ -134,15 +164,15 @@ main {
 .shimmer {
   background: linear-gradient(
     90deg,
-    var(--white-04) 25%,
-    var(--white-08) 50%,
-    var(--white-04) 75%
+    var(--bg-surface) 25%,
+    var(--bg-elevated) 50%,
+    var(--bg-surface) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
-/* Line clamp utilities (Tailwind v4 compat) */
+/* Line clamp utilities */
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -162,4 +192,26 @@ main {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Hotel overview prose */
+.prose-hotel {
+  font-size: 0.875rem;
+  line-height: 1.85;
+  color: var(--text-secondary);
+}
+
+.prose-hotel p {
+  margin-bottom: 0.75rem;
+}
+
+.prose-hotel a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.prose-hotel br {
+  display: block;
+  margin-bottom: 0.5rem;
+  content: "";
 }

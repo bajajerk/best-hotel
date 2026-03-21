@@ -1,33 +1,33 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, DM_Sans, JetBrains_Mono } from "next/font/google";
+import { Cormorant_Garamond, Sora, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const instrumentSerif = Instrument_Serif({
-  weight: "400",
+const cormorant = Cormorant_Garamond({
+  weight: ["300", "400", "500", "600"],
   subsets: ["latin"],
   style: ["normal", "italic"],
-  variable: "--font-instrument-serif",
+  variable: "--font-display",
 });
 
-const dmSans = DM_Sans({
+const sora = Sora({
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
-  variable: "--font-dm-sans",
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-body",
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
-  variable: "--font-jetbrains-mono",
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
-  title: "BeatMyRate — Hotel Rates You Weren't Supposed to See | Save 20-40%",
+  title: "beatmyrate",
   description:
     "Get B2B wholesale hotel rates across 50+ cities worldwide. We negotiate directly with hotels so you save 20-40% on every booking. No markup, no hidden fees.",
   keywords: ["hotel deals", "B2B hotel rates", "cheap hotels", "wholesale hotel booking", "hotel price comparison", "beatmyrate"],
   openGraph: {
-    title: "BeatMyRate — Hotel Rates You Weren't Supposed to See",
+    title: "beatmyrate",
     description: "Get B2B wholesale hotel rates across 50+ cities worldwide. Save 20-40% on every booking.",
     type: "website",
   },
@@ -41,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${instrumentSerif.variable} ${dmSans.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${cormorant.variable} ${sora.variable} ${jetbrainsMono.variable} antialiased`}
       >
         {children}
 
