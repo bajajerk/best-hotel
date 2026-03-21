@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -241,7 +241,7 @@ function ReviewCard({ review }: { review: Review }) {
       }
     >
       {/* Header row */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-5">
         <div className="flex items-center gap-3">
           <img
             src={
@@ -305,8 +305,8 @@ function ReviewCard({ review }: { review: Review }) {
             +
           </span>
           <p
-            className="text-sm leading-relaxed"
-            style={{ color: "var(--white-50)" }}
+            className="text-sm"
+            style={{ color: "var(--white-50)", lineHeight: 1.8 }}
           >
             {review.positive}
           </p>
@@ -323,8 +323,8 @@ function ReviewCard({ review }: { review: Review }) {
             &minus;
           </span>
           <p
-            className="text-sm leading-relaxed"
-            style={{ color: "var(--white-30)" }}
+            className="text-sm"
+            style={{ color: "var(--white-30)", lineHeight: 1.8 }}
           >
             {review.negative}
           </p>
@@ -361,12 +361,12 @@ function FactCard({
 }) {
   return (
     <div
-      className="rounded-xl p-4 flex items-start gap-3"
+      className="rounded-xl p-5 flex items-start gap-3.5"
       style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
     >
       <span
         className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-base"
-        style={{ background: "var(--white-04)", color: "var(--white-30)" }}
+        style={{ background: "var(--gold-soft)", color: "var(--gold)" }}
       >
         {icon}
       </span>
@@ -400,6 +400,9 @@ export default function HotelPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
   const [carouselIdx, setCarouselIdx] = useState(0);
+
+  /* Overview "Read more" toggle */
+  const [overviewExpanded, setOverviewExpanded] = useState(false);
 
   /* Sticky header visibility */
   const [headerVisible, setHeaderVisible] = useState(false);
@@ -647,10 +650,10 @@ export default function HotelPage() {
             <>
               {/* Desktop: main + grid of 4 */}
               <div
-                className="hidden md:grid gap-2 rounded-2xl overflow-hidden"
+                className="hidden md:grid gap-1.5 rounded-2xl overflow-hidden"
                 style={{
                   gridTemplateColumns: "3fr 2fr",
-                  height: "500px",
+                  height: "420px",
                   boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
                 }}
               >
@@ -678,7 +681,7 @@ export default function HotelPage() {
                 </div>
 
                 {/* Side grid */}
-                <div className="grid grid-cols-2 grid-rows-2 gap-2">
+                <div className="grid grid-cols-2 grid-rows-2 gap-1.5">
                   {[1, 2, 3, 4].map((i) => {
                     const photo = photos[i];
                     if (!photo) return <div key={i} style={{ background: "var(--bg-card)" }} />;
@@ -726,7 +729,8 @@ export default function HotelPage() {
                 <div
                   className="relative rounded-2xl overflow-hidden"
                   style={{
-                    height: "280px",
+                    height: "260px",
+                    maxHeight: "300px",
                     boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
                   }}
                 >
@@ -836,7 +840,7 @@ export default function HotelPage() {
       </section>
 
       {/* ═══════════════════ Hotel Info — 2-Column ═══════════════════ */}
-      <section className="px-4 md:px-10 lg:px-20 py-10 md:py-14">
+      <section className="px-4 md:px-10 lg:px-20 py-10 md:py-16">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-14">
           {/* ─── Left Column (2/3) ─── */}
           <div className="lg:col-span-2 min-w-0">
@@ -925,7 +929,7 @@ export default function HotelPage() {
 
             {/* ── Divider ── */}
             <div
-              className="my-8"
+              className="my-10"
               style={{
                 height: "1px",
                 background:
@@ -937,16 +941,64 @@ export default function HotelPage() {
             {hotel.overview && (
               <div className="mb-10">
                 <h2
-                  className="text-xl md:text-2xl mb-4"
+                  className="text-xl md:text-2xl mb-5"
                   style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
                 >
                   About this hotel
                 </h2>
-                <div
-                  className="text-sm leading-[1.8] max-w-prose"
-                  style={{ color: "var(--white-50)" }}
-                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(hotel.overview) }}
-                />
+                <div className="relative">
+                  <div
+                    className="max-w-prose overview-prose"
+                    style={{
+                      color: "var(--white-50)",
+                      lineHeight: 1.8,
+                      fontSize: "0.875rem",
+                      maxHeight: overviewExpanded ? "none" : "200px",
+                      overflow: "hidden",
+                    }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(hotel.overview) }}
+                  />
+                  {/* Gradient fade when collapsed */}
+                  {!overviewExpanded && hotel.overview.length > 400 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: "80px",
+                        background: "linear-gradient(to bottom, transparent, var(--bg-black))",
+                        pointerEvents: "none",
+                      }}
+                    />
+                  )}
+                </div>
+                {hotel.overview.length > 400 && (
+                  <button
+                    onClick={() => setOverviewExpanded(!overviewExpanded)}
+                    className="mt-3 text-sm font-medium transition-colors hover:opacity-80"
+                    style={{ color: "var(--gold)" }}
+                  >
+                    {overviewExpanded ? "Show less" : "Read more"}
+                  </button>
+                )}
+                {/* Prose styles for HTML content */}
+                <style>{`
+                  .overview-prose p { margin-bottom: 0.75rem; }
+                  .overview-prose br { display: block; content: ""; margin-bottom: 0.5rem; }
+                  .overview-prose ul, .overview-prose ol { margin: 0.5rem 0; padding-left: 1.25rem; }
+                  .overview-prose li { margin-bottom: 0.25rem; }
+                  .overview-prose h1, .overview-prose h2, .overview-prose h3, .overview-prose h4 {
+                    color: var(--white-80);
+                    margin-top: 1rem;
+                    margin-bottom: 0.5rem;
+                    font-weight: 600;
+                  }
+                  .overview-prose a { color: var(--gold); text-decoration: underline; }
+                  @media (max-width: 768px) {
+                    .overview-prose { max-height: ${overviewExpanded ? "none" : "150px"} !important; }
+                  }
+                `}</style>
               </div>
             )}
 
@@ -974,7 +1026,7 @@ export default function HotelPage() {
 
             {/* ── Divider ── */}
             <div
-              className="my-8"
+              className="my-10"
               style={{
                 height: "1px",
                 background:
@@ -1019,7 +1071,7 @@ export default function HotelPage() {
           {/* ─── Right Column (1/3) — Sticky Booking Card ─── */}
           <div className="lg:col-span-1">
             <div
-              className="sticky top-24 rounded-2xl overflow-hidden"
+              className="sticky top-24 rounded-2xl overflow-hidden hidden lg:block"
               style={{
                 background: "var(--bg-card)",
                 border: "1px solid var(--gold-border)",
@@ -1029,15 +1081,15 @@ export default function HotelPage() {
               {/* Gold accent bar */}
               <div
                 style={{
-                  height: "3px",
+                  height: "4px",
                   background:
-                    "linear-gradient(to right, var(--gold), transparent)",
+                    "linear-gradient(to right, var(--gold), var(--gold) 60%, transparent)",
                 }}
               />
 
               <div className="p-6">
                 {/* B2B label */}
-                <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center justify-between mb-6">
                   <span
                     className="text-[11px] tracking-[0.25em] uppercase font-medium"
                     style={{

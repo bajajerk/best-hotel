@@ -142,19 +142,19 @@ function CityCard({ city }: { city: CuratedCity }) {
   const img = getCityImage(city.city_slug);
 
   return (
-    <Link href={`/city/${city.city_slug}`} className="block">
+    <Link href={`/city/${city.city_slug}`} className="block h-full">
       <motion.div
         variants={itemVariants}
         whileHover={{ y: -6 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
-        className="group relative rounded-2xl overflow-hidden cursor-pointer"
+        className="group relative rounded-2xl overflow-hidden cursor-pointer h-full flex flex-col"
         style={{
           background: "var(--bg-card)",
           border: "1px solid var(--border)",
         }}
       >
         {/* Image Container */}
-        <div className="relative overflow-hidden" style={{ height: "240px" }}>
+        <div className="relative overflow-hidden" style={{ height: "200px" }}>
           <img
             src={safeImageSrc(img)}
             alt={city.city_name}
@@ -219,17 +219,16 @@ function CityCard({ city }: { city: CuratedCity }) {
         </div>
 
         {/* Content */}
-        <div className="p-5">
+        <div className="p-5 flex flex-col flex-1">
           <p
-            className="text-xs leading-relaxed line-clamp-2"
+            className="text-xs leading-relaxed line-clamp-1"
             style={{
               color: "var(--white-50)",
-              minHeight: "2.5em",
             }}
           >
             {city.tagline}
           </p>
-          <div className="flex items-center justify-between mt-4 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+          <div className="flex items-center justify-between mt-auto pt-4" style={{ borderTop: "1px solid var(--border)" }}>
             <span
               className="text-[11px] px-3 py-1 rounded-full tracking-wide"
               style={{
@@ -468,7 +467,7 @@ export default function Home() {
 
             {/* Main headline */}
             <h1
-              className="text-5xl md:text-7xl lg:text-[5.5rem] xl:text-[6.5rem] leading-[0.92] tracking-tight"
+              className="text-3xl sm:text-5xl md:text-7xl lg:text-[5.5rem] xl:text-[6.5rem] leading-[0.92] tracking-tight"
               style={{
                 fontFamily: "var(--font-serif)",
                 fontStyle: "italic",
@@ -511,17 +510,18 @@ export default function Home() {
                 style={{
                   background: "rgba(255,255,255,0.08)",
                   backdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255,255,255,0.12)",
+                  border: "1px solid rgba(255,255,255,0.35)",
+                  boxShadow: "0 0 20px rgba(255,255,255,0.08), 0 0 40px rgba(255,255,255,0.04)",
                 }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--white-50)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--white-80)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 <input
                   type="text"
                   placeholder="Where do you want to go? Try Bangkok, Bali, Paris..."
-                  className="flex-1 bg-transparent text-sm outline-none"
+                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-white/50"
                   style={{
                     color: "var(--white)",
                     fontFamily: "var(--font-sans)",
@@ -544,7 +544,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 1.2 }}
-              className="flex items-center justify-center gap-3 md:gap-4 mt-6"
+              className="flex flex-wrap items-center justify-center gap-3 md:gap-4 mt-6"
             >
               {Object.entries(CATEGORIES).map(([key, cat]) => (
                 <Link
@@ -607,7 +607,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════════
           HOW IT WORKS — 3 elegant cards
       ═══════════════════════════════════════════════════════════════════ */}
-      <section id="how-it-works" className="px-6 md:px-12 lg:px-20 py-24 lg:py-32">
+      <section id="how-it-works" className="px-6 md:px-12 lg:px-20 py-16 md:py-28 lg:py-36 mt-8">
         <div className="mx-auto" style={{ maxWidth: "1200px" }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -715,13 +715,13 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════════
           FEATURED DEALS (Top rated hotels across all cities)
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="px-6 md:px-12 lg:px-20 py-20">
+      <section className="px-6 md:px-12 lg:px-20 py-16 md:py-24">
         <div className="mx-auto" style={{ maxWidth: "1200px" }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-14"
           >
             <p
               className="text-[11px] tracking-[0.3em] uppercase mb-3"
@@ -735,6 +735,14 @@ export default function Home() {
             >
               Real savings, real hotels
             </h2>
+            <div
+              className="mx-auto mt-3 mb-5"
+              style={{
+                width: "48px",
+                height: "2px",
+                background: "linear-gradient(90deg, transparent, var(--gold), transparent)",
+              }}
+            />
             <p className="text-sm max-w-md mx-auto" style={{ color: "var(--white-50)" }}>
               Here is what a typical booking looks like. Same hotel, same dates — just a better rate.
             </p>
@@ -753,41 +761,41 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="rounded-2xl p-6"
+                className="rounded-2xl p-7 md:p-8"
                 style={{
                   background: "var(--bg-card)",
                   border: "1px solid var(--border)",
                 }}
               >
-                <div className="flex items-center gap-1 mb-1">
+                <div className="flex items-center gap-1 mb-2">
                   {Array.from({ length: deal.stars }).map((_, j) => (
-                    <svg key={j} width="10" height="10" viewBox="0 0 24 24" fill="var(--gold)" stroke="none">
+                    <svg key={j} width="12" height="12" viewBox="0 0 24 24" fill="var(--gold)" stroke="none">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                     </svg>
                   ))}
                 </div>
                 <h3
-                  className="text-base mb-0.5"
+                  className="text-lg md:text-xl mb-1"
                   style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--white)" }}
                 >
                   {deal.hotel}
                 </h3>
-                <p className="text-xs mb-4" style={{ color: "var(--white-30)" }}>{deal.city}</p>
+                <p className="text-xs mb-5" style={{ color: "var(--white-30)" }}>{deal.city}</p>
 
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-[10px] uppercase mb-1" style={{ color: "var(--white-30)", fontFamily: "var(--font-mono)" }}>OTA Price</p>
-                    <p className="text-lg line-through" style={{ color: "var(--red)", fontFamily: "var(--font-mono)" }}>${deal.ota}</p>
+                    <p className="text-[11px] uppercase mb-1" style={{ color: "var(--white-30)", fontFamily: "var(--font-mono)" }}>OTA Price</p>
+                    <p className="text-xl line-through" style={{ color: "var(--red)", fontFamily: "var(--font-mono)" }}>${deal.ota}</p>
                   </div>
                   <div className="text-center">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--white-15)" strokeWidth="2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--white-15)" strokeWidth="2">
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] uppercase mb-1" style={{ color: "var(--gold)", fontFamily: "var(--font-mono)" }}>Our Rate</p>
+                    <p className="text-[11px] uppercase mb-1" style={{ color: "var(--gold)", fontFamily: "var(--font-mono)" }}>Our Rate</p>
                     <p
-                      className="text-2xl"
+                      className="text-3xl"
                       style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--green)" }}
                     >
                       ${deal.our}
@@ -796,7 +804,7 @@ export default function Home() {
                 </div>
 
                 <div
-                  className="text-center py-2 rounded-lg text-xs font-medium"
+                  className="text-center py-2.5 rounded-lg text-sm font-medium"
                   style={{
                     background: "var(--green-soft)",
                     color: "var(--green)",
@@ -814,7 +822,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════════
           DESTINATIONS GRID
       ═══════════════════════════════════════════════════════════════════ */}
-      <section id="destinations" className="px-6 md:px-12 lg:px-20 py-24 lg:py-32">
+      <section id="destinations" className="px-6 md:px-12 lg:px-20 py-16 md:py-24 lg:py-32">
         <div className="mx-auto" style={{ maxWidth: "1400px" }}>
           {/* Section header + filter */}
           <motion.div
@@ -906,7 +914,7 @@ export default function Home() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-50px" }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6"
             >
               <AnimatePresence mode="popLayout">
                 {filtered.map((city) => (
@@ -932,13 +940,13 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════════
           STATS / TRUST BAR
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="px-6 md:px-12 lg:px-20 py-24 lg:py-32">
+      <section className="px-6 md:px-12 lg:px-20 py-16 md:py-28 lg:py-36">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.7 }}
-          className="mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 p-10 md:p-14 rounded-3xl"
+          className="mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-6 p-10 md:p-16 lg:p-20 rounded-3xl"
           style={{
             maxWidth: "1100px",
             background: "var(--bg-card)",
@@ -960,7 +968,7 @@ export default function Home() {
               className="text-center"
             >
               <p
-                className="text-3xl md:text-4xl lg:text-5xl mb-2"
+                className="text-4xl md:text-5xl lg:text-6xl mb-3"
                 style={{
                   fontFamily: "var(--font-serif)",
                   fontStyle: "italic",
@@ -991,13 +999,13 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════════
           TESTIMONIALS
       ═══════════════════════════════════════════════════════════════════ */}
-      <section className="px-6 md:px-12 lg:px-20 py-20">
+      <section className="px-6 md:px-12 lg:px-20 py-16 md:py-24">
         <div className="mx-auto" style={{ maxWidth: "1200px" }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-14"
           >
             <p
               className="text-[11px] tracking-[0.3em] uppercase mb-3"
@@ -1040,14 +1048,26 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="rounded-2xl p-6"
+                className="rounded-2xl p-7 md:p-8 relative"
                 style={{
                   background: "var(--bg-card)",
                   border: "1px solid var(--border)",
                 }}
               >
+                {/* Large decorative quote mark */}
+                <span
+                  className="absolute top-4 right-6 text-6xl leading-none pointer-events-none select-none"
+                  style={{
+                    fontFamily: "Georgia, serif",
+                    color: "var(--gold)",
+                    opacity: 0.15,
+                  }}
+                  aria-hidden="true"
+                >
+                  &ldquo;
+                </span>
                 {/* Stars */}
-                <div className="flex gap-0.5 mb-3">
+                <div className="flex gap-0.5 mb-4">
                   {Array.from({ length: 5 }).map((_, j) => (
                     <svg key={j} width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)" stroke="none">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -1055,8 +1075,11 @@ export default function Home() {
                   ))}
                 </div>
                 <p
-                  className="text-sm leading-relaxed mb-4"
-                  style={{ color: "var(--white-80)" }}
+                  className="text-sm md:text-base leading-relaxed mb-5"
+                  style={{
+                    color: "var(--white-80)",
+                    fontStyle: "italic",
+                  }}
                 >
                   &ldquo;{t.text}&rdquo;
                 </p>

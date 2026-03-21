@@ -131,12 +131,13 @@ function HotelCard({ hotel, index, isTopPick = false }: { hotel: CuratedHotel; i
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="h-full"
     >
-      <Link href={`/hotel/${hotel.hotel_id}`} className="block">
+      <Link href={`/hotel/${hotel.hotel_id}`} className="block h-full">
         <motion.div
           whileHover={{ y: -4 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
-          className="group rounded-2xl overflow-hidden cursor-pointer h-full"
+          className="group rounded-2xl overflow-hidden cursor-pointer h-full flex flex-col"
           style={{
             background: "var(--bg-card)",
             border: "1px solid var(--border)",
@@ -227,7 +228,7 @@ function HotelCard({ hotel, index, isTopPick = false }: { hotel: CuratedHotel; i
           </div>
 
           {/* ── Content ── */}
-          <div className="p-5">
+          <div className="p-5 flex flex-col flex-1">
             <h3
               className="text-[1.05rem] leading-snug mb-1.5"
               style={{
@@ -268,17 +269,17 @@ function HotelCard({ hotel, index, isTopPick = false }: { hotel: CuratedHotel; i
                 className="text-xs leading-relaxed mb-4 line-clamp-2"
                 style={{ color: "var(--white-50)" }}
               >
-                {stripHtml(hotel.overview).slice(0, 140)}
+                {stripHtml(hotel.overview).slice(0, 120)}
               </p>
             )}
 
             {/* Price & reviews row */}
-            <div className="flex items-end justify-between pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+            <div className="flex items-end justify-between pt-3 mt-auto" style={{ borderTop: "1px solid var(--border)" }}>
               <div>
                 {hotel.rates_from ? (
                   <div>
                     {/* OTA price (crossed out with markup) */}
-                    <div className="flex items-baseline gap-1.5 mb-0.5">
+                    <div className="flex items-baseline gap-1.5 mb-0.5 flex-wrap">
                       <span
                         className="text-xs line-through"
                         style={{ color: "var(--red)", fontFamily: "var(--font-mono)" }}
@@ -514,7 +515,7 @@ export default function CityPage() {
             )}
 
             <h1
-              className="text-5xl md:text-7xl lg:text-8xl leading-[0.92] mb-4"
+              className="text-4xl md:text-7xl lg:text-8xl leading-[0.92] mb-4"
               style={{
                 fontFamily: "var(--font-serif)",
                 fontStyle: "italic",
@@ -551,7 +552,7 @@ export default function CityPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div
-              className="inline-flex rounded-full p-1"
+              className="inline-flex rounded-full p-1 overflow-x-auto whitespace-nowrap md:overflow-x-visible"
               style={{
                 background: "var(--bg-elevated)",
                 border: "1px solid var(--border)",
@@ -563,7 +564,7 @@ export default function CityPage() {
                   <button
                     key={key}
                     onClick={() => setActiveCategory(key)}
-                    className="relative inline-flex items-center gap-2 px-5 md:px-7 py-2.5 rounded-full text-sm transition-all duration-300"
+                    className="relative inline-flex items-center gap-2 px-4 md:px-7 py-2 md:py-2.5 rounded-full text-sm transition-all duration-300"
                     style={{
                       background: isActive ? "var(--gold)" : "transparent",
                       color: isActive ? "#0A0A0A" : "var(--white-50)",
@@ -596,7 +597,7 @@ export default function CityPage() {
       <section className="px-5 md:px-10 lg:px-16 py-8">
         <div className="max-w-7xl mx-auto">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
                 <SkeletonCard key={i} />
               ))}
@@ -611,7 +612,7 @@ export default function CityPage() {
                 transition={{ duration: 0.3, ease: "easeInOut" }}
               >
                 {hotels.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                     {hotels.map((hotel, i) => (
                       <HotelCard
                         key={hotel.hotel_id}
@@ -796,7 +797,7 @@ export default function CityPage() {
           >
             Explore other cities
           </h3>
-          <div className="flex gap-3 overflow-x-auto pb-4" style={{ scrollbarWidth: "none" }}>
+          <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
             {["bangkok", "tokyo", "paris", "london", "dubai", "bali", "singapore", "rome", "barcelona", "seoul", "maldives", "phuket"]
               .filter((s) => s !== slug)
               .slice(0, 8)
@@ -804,7 +805,7 @@ export default function CityPage() {
                 <Link
                   key={citySlug}
                   href={`/city/${citySlug}`}
-                  className="shrink-0 px-5 py-2.5 rounded-full text-sm transition-all hover:scale-105"
+                  className="shrink-0 whitespace-nowrap px-5 py-2.5 rounded-full text-sm transition-all hover:scale-105"
                   style={{
                     background: "var(--bg-elevated)",
                     border: "1px solid var(--border)",
