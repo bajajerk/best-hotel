@@ -257,23 +257,46 @@ function HotelCard({ hotel, index }: { hotel: CuratedHotel; index: number }) {
             <div className="flex items-end justify-between pt-3" style={{ borderTop: "1px solid var(--border)" }}>
               <div>
                 {hotel.rates_from ? (
-                  <div className="flex items-baseline gap-1">
-                    <span
-                      className="text-xl"
-                      style={{
-                        fontFamily: "var(--font-serif)",
-                        fontStyle: "italic",
-                        color: "var(--green)",
-                      }}
-                    >
-                      {formatCurrency(hotel.rates_from, hotel.rates_currency)}
-                    </span>
-                    <span
-                      className="text-xs"
-                      style={{ color: "var(--white-30)" }}
-                    >
-                      /night
-                    </span>
+                  <div>
+                    {/* OTA price (crossed out with markup) */}
+                    <div className="flex items-baseline gap-1.5 mb-0.5">
+                      <span
+                        className="text-xs line-through"
+                        style={{ color: "var(--red)", fontFamily: "var(--font-mono)" }}
+                      >
+                        {formatCurrency(Math.round(hotel.rates_from * 1.30), hotel.rates_currency)}
+                      </span>
+                      <span
+                        className="text-[0.6rem] px-1.5 py-0.5 rounded"
+                        style={{
+                          background: "var(--green-soft)",
+                          color: "var(--green)",
+                          fontFamily: "var(--font-mono)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        -30%
+                      </span>
+                    </div>
+                    {/* Our B2B price */}
+                    <div className="flex items-baseline gap-1">
+                      <span
+                        className="text-xl"
+                        style={{
+                          fontFamily: "var(--font-serif)",
+                          fontStyle: "italic",
+                          color: "var(--green)",
+                        }}
+                      >
+                        {formatCurrency(hotel.rates_from, hotel.rates_currency)}
+                      </span>
+                      <span
+                        className="text-xs"
+                        style={{ color: "var(--white-30)" }}
+                      >
+                        /night
+                      </span>
+                    </div>
                   </div>
                 ) : (
                   <span

@@ -1058,6 +1058,27 @@ export default function HotelPage() {
                 {/* Price */}
                 {hotel.rates_from ? (
                   <div className="mb-6">
+                    {/* OTA Price (crossed out) */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className="text-lg line-through"
+                        style={{ color: "var(--red)", fontFamily: "var(--font-mono)" }}
+                      >
+                        {formatCurrency(Math.round(hotel.rates_from * 1.30), hotel.rates_currency)}
+                      </span>
+                      <span
+                        className="text-xs px-2 py-0.5 rounded"
+                        style={{
+                          background: "var(--green-soft)",
+                          color: "var(--green)",
+                          fontFamily: "var(--font-mono)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Save 30%
+                      </span>
+                    </div>
+                    {/* Our B2B Price */}
                     <div className="flex items-baseline gap-2">
                       <span
                         className="text-4xl"
