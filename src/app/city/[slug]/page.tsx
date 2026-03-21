@@ -343,7 +343,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
 
             {/* Voyagr rate */}
             {hotel.rates_from ? (
-              <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 6 }}>
                 <div
                   style={{
                     fontSize: 10,

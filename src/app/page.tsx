@@ -651,7 +651,7 @@ export default function Home() {
       {/* ================================================================
           FEATURED HOTELS — asymmetric grid
       ================================================================ */}
-      <section style={{ padding: "80px 60px" }}>
+      <section style={{ padding: "100px 60px 80px" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           {/* Section header */}
           <motion.div
