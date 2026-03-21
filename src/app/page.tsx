@@ -323,7 +323,7 @@ export default function Home() {
       <section
         ref={heroRef}
         className="relative overflow-hidden"
-        style={{ height: "90vh", minHeight: "700px" }}
+        style={{ height: "90vh", minHeight: "600px", maxHeight: "900px" }}
       >
         {/* Parallax background images */}
         <motion.div className="absolute inset-0" style={{ y: heroY }}>

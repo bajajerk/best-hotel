@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -1006,7 +1006,7 @@ export default function HotelPage() {
             {quickFacts.length > 0 && (
               <div className="mb-10">
                 <h2
-                  className="text-xl md:text-2xl mb-4"
+                  className="text-xl md:text-2xl mb-5"
                   style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
                 >
                   Quick facts
@@ -1059,7 +1059,7 @@ export default function HotelPage() {
                     </span>
                   )}
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {reviews.map((review) => (
                     <ReviewCard key={review.id} review={review} />
                   ))}
@@ -1281,8 +1281,48 @@ export default function HotelPage() {
         </div>
       </section>
 
+      {/* ═══════════════════ Mobile Fixed Bottom Booking Bar ═══════════════════ */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden px-4 py-3 flex items-center justify-between"
+        style={{
+          background: "rgba(10,10,10,0.95)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <div>
+          {hotel.rates_from ? (
+            <>
+              <p
+                className="text-xl font-bold"
+                style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", color: "var(--green)" }}
+              >
+                {formatCurrency(hotel.rates_from, hotel.rates_currency)}
+                <span className="text-xs font-normal ml-1" style={{ color: "var(--white-30)" }}>
+                  / night
+                </span>
+              </p>
+              <p className="text-[10px]" style={{ color: "var(--white-30)", fontFamily: "var(--font-mono)" }}>
+                B2B Rate
+              </p>
+            </>
+          ) : (
+            <p className="text-sm" style={{ color: "var(--white-50)" }}>Request a quote</p>
+          )}
+        </div>
+        <a
+          href="tel:+919876543210"
+          className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
+          style={{ background: "var(--gold)", color: "#0A0A0A" }}
+        >
+          Book Now
+        </a>
+      </div>
+
       {/* ═══════════════════ Footer spacer ═══════════════════ */}
-      <div style={{ height: "80px" }} />
+      <div className="h-20 lg:h-20" />
+      {/* Extra space on mobile for fixed bottom bar */}
+      <div className="h-16 lg:hidden" />
     </div>
   );
 }
