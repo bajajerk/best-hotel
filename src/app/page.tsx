@@ -265,7 +265,7 @@ export default function Home() {
         {/* Nav links + basket */}
         <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
           <div
-            className="hidden md:flex"
+            className="nav-links"
             style={{ display: "flex", gap: "32px", alignItems: "center" }}
           >
             {[
@@ -336,6 +336,7 @@ export default function Home() {
       ================================================================ */}
       <section
         ref={heroRef}
+        className="hero-section"
         style={{
           paddingTop: "60px",
           display: "grid",
@@ -410,6 +411,7 @@ export default function Home() {
           {/* Search bar */}
           <motion.div
             variants={fadeUp}
+            className="hero-search-form"
             style={{
               background: "var(--white)",
               border: "1px solid var(--cream-border)",
@@ -423,6 +425,7 @@ export default function Home() {
           >
             {/* Destination field */}
             <div
+              className="search-field"
               style={{
                 padding: "12px 16px",
                 borderRight: "1px solid var(--cream-border)",
@@ -467,6 +470,7 @@ export default function Home() {
 
             {/* Check in */}
             <div
+              className="search-field"
               style={{
                 padding: "12px 16px",
                 borderRight: "1px solid var(--cream-border)",
@@ -490,6 +494,7 @@ export default function Home() {
 
             {/* Check out */}
             <div
+              className="search-field"
               style={{
                 padding: "12px 16px",
                 cursor: "pointer",
@@ -512,6 +517,7 @@ export default function Home() {
 
             {/* Search button */}
             <button
+              className="hero-search-btn"
               style={{
                 width: "52px",
                 background: "var(--ink)",
@@ -539,6 +545,7 @@ export default function Home() {
           {/* Hero stats */}
           <motion.div
             variants={fadeUp}
+            className="hero-stats"
             style={{ display: "flex", gap: "40px", marginTop: "48px" }}
           >
             {[
@@ -570,7 +577,7 @@ export default function Home() {
         </motion.div>
 
         {/* Right side — hero image with overlay card */}
-        <div style={{ position: "relative", overflow: "hidden" }}>
+        <div className="hero-image" style={{ position: "relative", overflow: "hidden" }}>
           <AnimatePresence mode="sync">
             {HERO_IMAGES.map((src, i) =>
               i === heroIdx ? (
@@ -651,7 +658,7 @@ export default function Home() {
       {/* ================================================================
           FEATURED HOTELS — asymmetric grid
       ================================================================ */}
-      <section style={{ padding: "100px 60px 80px" }}>
+      <section className="section-featured" style={{ padding: "100px 60px 80px" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           {/* Section header */}
           <motion.div
@@ -659,6 +666,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
+            className="section-header"
             style={{
               display: "flex",
               alignItems: "flex-end",
@@ -707,7 +715,7 @@ export default function Home() {
 
           {/* Hotel grid — asymmetric 2fr 1fr 1fr, 2 rows */}
           {loading ? (
-            <div style={{
+            <div className="featured-grid" style={{
               display: "grid",
               gridTemplateColumns: "2fr 1fr 1fr",
               gridTemplateRows: "260px 260px",
@@ -727,6 +735,7 @@ export default function Home() {
             </div>
           ) : (
             <motion.div
+              className="featured-grid"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true, margin: "-50px" }}
@@ -755,6 +764,7 @@ export default function Home() {
       ================================================================ */}
       <section
         id="how-it-works"
+        className="section-why"
         style={{
           background: "var(--ink)",
           padding: "96px 60px",
@@ -789,7 +799,7 @@ export default function Home() {
             </h2>
           </motion.div>
 
-          <div style={{
+          <div className="why-grid" style={{
             display: "grid",
             gridTemplateColumns: "repeat(4, 1fr)",
             gap: "40px",
@@ -843,6 +853,7 @@ export default function Home() {
       ================================================================ */}
       <section
         id="destinations"
+        className="section-destinations"
         style={{ padding: "80px 60px" }}
       >
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
@@ -887,7 +898,7 @@ export default function Home() {
 
           {/* City cards grid */}
           {loading ? (
-            <div style={{
+            <div className="destinations-grid" style={{
               display: "grid",
               gridTemplateColumns: "repeat(3, 1fr)",
               gap: "20px",
@@ -902,6 +913,7 @@ export default function Home() {
             </div>
           ) : (
             <motion.div
+              className="destinations-grid"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true, margin: "-50px" }}
@@ -942,6 +954,7 @@ export default function Home() {
       ================================================================ */}
       <section
         id="the-proof"
+        className="section-proof"
         style={{
           padding: "80px 60px",
           background: "var(--white)",
@@ -1016,6 +1029,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: i * 0.1 }}
+                className="price-card"
                 style={{
                   background: "var(--white)",
                   border: "1px solid var(--cream-border)",
@@ -1084,7 +1098,7 @@ export default function Home() {
                 </div>
 
                 {/* Pricing panel */}
-                <div style={{
+                <div className="price-panel" style={{
                   padding: "20px",
                   borderLeft: "1px solid var(--cream-border)",
                   display: "flex",
@@ -1153,7 +1167,7 @@ export default function Home() {
       {/* ================================================================
           TESTIMONIALS
       ================================================================ */}
-      <section style={{ padding: "100px 60px", background: "var(--cream)" }}>
+      <section className="section-testimonials" style={{ padding: "100px 60px", background: "var(--cream)" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -1300,6 +1314,7 @@ export default function Home() {
           TRUST STATS BAR
       ================================================================ */}
       <section
+        className="section-trust"
         style={{
           padding: "80px 60px",
           borderTop: "1px solid var(--cream-border)",
@@ -1308,6 +1323,7 @@ export default function Home() {
         }}
       >
         <div
+          className="trust-stats"
           style={{
             maxWidth: "1100px",
             margin: "0 auto",
@@ -1358,6 +1374,7 @@ export default function Home() {
               </div>
               {i < arr.length - 1 && (
                 <div
+                  className="trust-divider"
                   style={{
                     width: "1px",
                     height: "48px",
@@ -1374,6 +1391,7 @@ export default function Home() {
           FOOTER — minimal, elegant
       ================================================================ */}
       <footer
+        className="site-footer"
         style={{
           padding: "60px 60px 96px",
           background: "var(--cream)",
@@ -1381,6 +1399,7 @@ export default function Home() {
         }}
       >
         <div
+          className="footer-inner"
           style={{
             maxWidth: "1400px",
             margin: "0 auto",
@@ -1406,7 +1425,7 @@ export default function Home() {
           </Link>
 
           {/* Footer links */}
-          <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
+          <div className="footer-links" style={{ display: "flex", alignItems: "center", gap: "32px" }}>
             {[
               { label: "Destinations", href: "#destinations" },
               { label: "How It Works", href: "#how-it-works" },

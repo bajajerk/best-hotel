@@ -708,6 +708,7 @@ export default function CityPage() {
         {/* Right: CTA */}
         <a
           href="tel:+919876543210"
+          className="city-nav-cta"
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -862,6 +863,7 @@ export default function CityPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.5 }}
+              className="city-category-tabs"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -1084,6 +1086,7 @@ export default function CityPage() {
           </p>
 
           <div
+            className="city-cta-buttons"
             style={{
               display: "flex",
               flexWrap: "wrap",
@@ -1214,6 +1217,7 @@ export default function CityPage() {
             Other <em style={{ fontStyle: "italic", color: "var(--gold)" }}>destinations</em>
           </h3>
           <div
+            className="city-destination-pills"
             style={{
               display: "flex",
               gap: 12,

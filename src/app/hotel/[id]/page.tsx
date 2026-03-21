@@ -591,8 +591,7 @@ export default function HotelPage() {
       {/* ═══════════════════ Hero Image (440px) ═══════════════════ */}
       <section ref={heroRef} style={{ paddingTop: "60px" }}>
         <div
-          className="relative overflow-hidden cursor-pointer"
-          style={{ height: "440px" }}
+          className="relative overflow-hidden cursor-pointer hotel-hero"
           onClick={() => photos.length > 0 && openLightbox(0)}
         >
           {photos.length > 0 ? (
@@ -628,8 +627,8 @@ export default function HotelPage() {
 
           {/* Hotel name + save badge overlay */}
           <div
-            className="absolute bottom-0 left-0 right-0 flex items-end justify-between"
-            style={{ padding: "40px 60px 48px", color: "var(--cream)" }}
+            className="absolute bottom-0 left-0 right-0 flex items-end justify-between hotel-hero-overlay"
+            style={{ color: "var(--cream)" }}
           >
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -651,9 +650,9 @@ export default function HotelPage() {
                 </div>
               )}
               <h1
+                className="hotel-hero-title"
                 style={{
                   fontFamily: "var(--font-display)",
-                  fontSize: "clamp(32px, 4vw, 46px)",
                   fontWeight: 300,
                   fontStyle: "italic",
                   lineHeight: 1.1,
@@ -717,11 +716,10 @@ export default function HotelPage() {
 
       {/* ═══════════════════ Tabs Bar ═══════════════════ */}
       <div
-        className="hidden md:flex gap-2 sticky top-[60px] z-40"
+        className="hidden md:flex gap-2 sticky top-[60px] z-40 hotel-tabs-bar"
         style={{
           background: "var(--white)",
           borderBottom: "1px solid var(--cream-border)",
-          padding: "0 60px",
         }}
       >
         {TABS.map((tab) => (
@@ -862,7 +860,7 @@ export default function HotelPage() {
                   {quickFacts.map((fact, i) => (
                     <div
                       key={fact.label}
-                      className="grid grid-cols-2 py-4 px-5 text-sm"
+                      className="grid grid-cols-2 py-4 px-5 text-sm hotel-detail-row"
                       style={{
                         borderBottom: i < quickFacts.length - 1 ? "1px solid var(--cream-border)" : "none",
                       }}
@@ -1120,7 +1118,7 @@ export default function HotelPage() {
                     )}
                   </div>
                   <div
-                    className="p-6 md:p-6"
+                    className="hotel-reviews-card"
                     style={{
                       background: "var(--white)",
                       border: "1px solid var(--cream-border)",
@@ -1330,9 +1328,9 @@ export default function HotelPage() {
 
       {/* ═══════════════════ Footer ═══════════════════ */}
       <footer
+        className="hotel-footer"
         style={{
           borderTop: "1px solid var(--cream-border)",
-          padding: "40px 60px 72px",
           background: "var(--white)",
         }}
       >
@@ -1375,7 +1373,7 @@ export default function HotelPage() {
 
       {/* ═══════════════════ Mobile Fixed Bottom Bar ═══════════════════ */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden px-5 py-3.5 flex items-center justify-between"
+        className="fixed bottom-0 left-0 right-0 z-[60] lg:hidden px-5 py-3.5 flex items-center justify-between hotel-bottom-bar"
         style={{
           background: "rgba(245, 240, 232, 0.95)",
           backdropFilter: "blur(16px)",

@@ -366,3 +366,127 @@ nav {
     padding-right: 24px !important;
   }
 }
+
+/* ── Mobile overrides for city page ── */
+@media (max-width: 767px) {
+  /* Category tabs: horizontal scroll */
+  .city-category-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .city-category-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* CTA buttons: stack vertically */
+  .city-cta-buttons {
+    flex-direction: column !important;
+    width: 100%;
+  }
+  .city-cta-buttons a {
+    width: 100% !important;
+    text-align: center;
+  }
+
+  /* Destination pills: horizontal scroll, hide scrollbar */
+  .city-destination-pills {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .city-destination-pills::-webkit-scrollbar {
+    display: none;
+  }
+  .city-destination-pills a {
+    flex-shrink: 0;
+  }
+
+  /* Nav CTA: smaller on mobile */
+  .city-nav-cta {
+    padding: 8px 16px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Hotel detail page — mobile responsive overrides
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Hero image — default height */
+.hotel-hero {
+  height: 440px;
+}
+
+/* Hero overlay — default padding */
+.hotel-hero-overlay {
+  padding: 40px 60px 48px;
+}
+
+/* Hero title — default size */
+.hotel-hero-title {
+  font-size: clamp(32px, 4vw, 46px);
+}
+
+/* Tabs bar — default padding */
+.hotel-tabs-bar {
+  padding: 0 60px;
+}
+
+/* Reviews card — default padding */
+.hotel-reviews-card {
+  padding: 24px;
+}
+
+/* Footer — default padding */
+.hotel-footer {
+  padding: 40px 60px 72px;
+}
+
+/* Bottom bar — safe area padding */
+.hotel-bottom-bar {
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+}
+
+@media (max-width: 767px) {
+  /* Fix 1: Hero image — cap height on mobile */
+  .hotel-hero {
+    height: 280px !important;
+  }
+
+  /* Fix 2: Hero overlay — reduce padding on mobile */
+  .hotel-hero-overlay {
+    padding: 24px 20px 28px !important;
+  }
+
+  /* Fix 3: Hero title — smaller font on mobile */
+  .hotel-hero-title {
+    font-size: 24px !important;
+  }
+
+  /* Fix 4: Tabs bar — tighter padding (already hidden on mobile via md:flex) */
+  .hotel-tabs-bar {
+    padding: 0 20px !important;
+  }
+
+  /* Fix 5: Reviews card — tighter padding */
+  .hotel-reviews-card {
+    padding: 16px !important;
+  }
+
+  /* Fix 6: Details table — tighter row padding */
+  .hotel-detail-row {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Fix 7: Footer — reduce padding, extra bottom for fixed bar */
+  .hotel-footer {
+    padding: 32px 20px 80px !important;
+  }
+}
