@@ -1,4 +1,7 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// In production (Vercel), use the Next.js API proxy route to avoid mixed-content issues.
+// The proxy at /api/[...path] forwards to the backend server.
+// In local dev, you can hit the backend directly.
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 export interface CuratedCity {
   city_slug: string;
