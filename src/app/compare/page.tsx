@@ -103,7 +103,7 @@ export default function ComparePage() {
             side by side. You can compare up to 4 hotels at once.
           </p>
           <Link
-            href="/locations"
+            href="/search"
             style={{
               display: "inline-block",
               background: "var(--ink)",

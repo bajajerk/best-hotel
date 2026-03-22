@@ -15,7 +15,6 @@ const FOOTER_DESTINATIONS = [
 
 const FOOTER_COMPANY = [
   { label: "Search Hotels", href: "/search" },
-  { label: "All Destinations", href: "/locations" },
   { label: "How It Works", href: "/#how-it-works" },
   { label: "Preferred Rates", href: "/#the-proof" },
 ];

@@ -13,7 +13,7 @@ import DestinationSearch from "@/components/DestinationSearch";
 import { useBooking } from "@/context/BookingContext";
 import VoyagerClubComparison from "@/components/VoyagerClubComparison";
 import FeaturedPropertiesCarousel from "@/components/FeaturedPropertiesCarousel";
-import DestinationTabs from "@/components/DestinationTabs";
+
 import TopSellers, { computeTopSellers, type TopSellerHotel } from "@/components/TopSellers";
 
 // ---------------------------------------------------------------------------
@@ -780,7 +780,7 @@ export default function Home() {
               marginBottom: "40px",
             }}
           >
-            B2B wholesale pricing on 1,500+ hotels across 50 cities.
+            B2B wholesale pricing on 1,500+ hotels worldwide.
             Save 20&ndash;40% on every booking. No markup, no hidden fees.
           </motion.p>
 
@@ -923,7 +923,6 @@ export default function Home() {
             style={{ display: "flex", gap: "40px", marginTop: "48px" }}
           >
             {[
-              { num: "50+", label: "Destinations" },
               { num: "1,500+", label: "Hotels" },
               { num: "20-40%", label: "Average savings" },
             ].map((stat) => (
@@ -1074,7 +1073,7 @@ export default function Home() {
               </h2>
             </div>
             <Link
-              href="#destinations"
+              href="/search"
               className="btn-outline"
               style={{
                 display: "inline-flex",
@@ -1535,7 +1534,7 @@ export default function Home() {
             }}>
               Whether it&rsquo;s a weekend escape, a business trip, or the honeymoon you&rsquo;ve been dreaming of &mdash; we&rsquo;ll
               match you with the right hotel at a rate that makes sense. No algorithms, no upsells. Just a
-              concierge who listens and a network of 1,500+ partner hotels across 50 cities.
+              concierge who listens and a network of 1,500+ partner hotels worldwide.
             </p>
             <p className="type-body" style={{
               color: "var(--ink-light)",
@@ -1663,10 +1662,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ================================================================
-          DESTINATIONS — tabbed navigation with region / popular / seasonal views
-      ================================================================ */}
-      <DestinationTabs cities={cities} loading={loading} />
 
       {/* ================================================================
           PRICE COMPARISON — "the proof"

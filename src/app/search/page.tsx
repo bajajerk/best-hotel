@@ -1113,7 +1113,7 @@ export default function SearchPage() {
               Try searching with a different city name, hotel, or country.
             </p>
             <Link
-              href="/locations"
+              href="/search"
               style={{
                 fontSize: "12px",
                 color: "var(--gold)",
@@ -1243,7 +1243,7 @@ export default function SearchPage() {
             {/* Browse all locations CTA */}
             <div style={{ textAlign: "center", marginTop: "48px" }}>
               <Link
-                href="/locations"
+                href="/search"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -1302,7 +1302,7 @@ export default function SearchPage() {
           </Link>
           <div className="footer-links" style={{ display: "flex", alignItems: "center", gap: "32px" }}>
             {[
-              { label: "Locations", href: "/locations" },
+              { label: "Search", href: "/search" },
               { label: "Search", href: "/search" },
               { label: "WhatsApp", href: "https://wa.me/919876543210" },
             ].map((link) => (
