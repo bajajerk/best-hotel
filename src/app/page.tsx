@@ -1323,6 +1323,85 @@ export default function Home() {
       </section>
 
       {/* ================================================================
+          LET'S PLAN YOUR STAY — editorial CTA
+      ================================================================ */}
+      <section
+        className="section-plan-stay"
+        style={{
+          padding: "100px 60px",
+          background: "var(--white)",
+        }}
+      >
+        <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
+              Your Journey Starts Here
+            </div>
+            <h2 className="type-display-2" style={{ color: "var(--ink)", marginBottom: "24px" }}>
+              Let&rsquo;s plan your <em style={{ fontStyle: "italic", color: "var(--gold)" }}>stay</em>
+            </h2>
+            <p className="type-body-lg" style={{
+              color: "var(--ink-mid)",
+              lineHeight: 1.8,
+              maxWidth: "600px",
+              margin: "0 auto 16px",
+            }}>
+              Whether it&rsquo;s a weekend escape, a business trip, or the honeymoon you&rsquo;ve been dreaming of &mdash; we&rsquo;ll
+              match you with the right hotel at a rate that makes sense. No algorithms, no upsells. Just a
+              concierge who listens and a network of 1,500+ partner hotels across 50 cities.
+            </p>
+            <p className="type-body" style={{
+              color: "var(--ink-light)",
+              lineHeight: 1.8,
+              maxWidth: "540px",
+              margin: "0 auto 40px",
+            }}>
+              Tell us where you&rsquo;re headed and when. We&rsquo;ll handle the rest &mdash; from
+              sourcing the best available B2B rate to confirming your reservation within minutes
+              over WhatsApp.
+            </p>
+            <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" as const }}>
+              <a
+                href="#hero-search"
+                className="btn-gold"
+                style={{
+                  padding: "14px 36px",
+                  fontSize: "12px",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase" as const,
+                  textDecoration: "none",
+                  fontWeight: 500,
+                  display: "inline-block",
+                }}
+              >
+                Search Hotels
+              </a>
+              <a
+                href="https://wa.me/919876543210"
+                className="btn-outline"
+                style={{
+                  padding: "14px 36px",
+                  fontSize: "12px",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase" as const,
+                  textDecoration: "none",
+                  fontWeight: 500,
+                  display: "inline-block",
+                }}
+              >
+                Chat on WhatsApp
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ================================================================
           WHY VOYAGR — dark ink section
       ================================================================ */}
       <section
@@ -1892,6 +1971,110 @@ export default function Home() {
               ))}
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* ================================================================
+          WHY BOOK WITH US — benefit highlights
+      ================================================================ */}
+      <section
+        className="section-why-book"
+        style={{
+          padding: "96px 60px",
+          background: "var(--cream-deep)",
+        }}
+      >
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            style={{ textAlign: "center", marginBottom: "56px" }}
+          >
+            <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
+              The Voyagr Difference
+            </div>
+            <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
+              Why book with <em style={{ fontStyle: "italic", color: "var(--gold)" }}>us?</em>
+            </h2>
+          </motion.div>
+
+          <div className="why-book-grid" style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "32px",
+          }}>
+            {[
+              {
+                title: "Rates You Won\u2019t Find Online",
+                desc: "Our prices come from direct B2B contracts with hotels \u2014 the same wholesale rates that travel agencies use internally. These never appear on public booking sites.",
+                accent: "01",
+              },
+              {
+                title: "No Hidden Fees, Ever",
+                desc: "The price we quote is the price you pay. No resort fees tucked into the fine print, no credit-card surcharges, no last-minute \u201ctaxes\u201d at checkout.",
+                accent: "02",
+              },
+              {
+                title: "A Human, Not a Chatbot",
+                desc: "Every booking is handled by a real concierge on WhatsApp. Change of plans? Need a late checkout? Just message us \u2014 no hold music, no ticket numbers.",
+                accent: "03",
+              },
+              {
+                title: "Verified Five-Star Partners",
+                desc: "We only work with properties we\u2019ve vetted ourselves. Every hotel in our network meets our standards for service, cleanliness, and guest satisfaction.",
+                accent: "04",
+              },
+              {
+                title: "Flexible Cancellations",
+                desc: "Plans change \u2014 we get it. Most of our partner hotels offer free cancellation up to 48 hours before check-in, and we\u2019ll always fight for the best terms on your behalf.",
+                accent: "05",
+              },
+              {
+                title: "Loyalty Without Lock-In",
+                desc: "No points programmes that expire, no membership tiers to maintain. Book once or book every month \u2014 you get the same wholesale rate from day one.",
+                accent: "06",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.08 }}
+                style={{
+                  padding: "32px",
+                  background: "var(--white)",
+                  border: "1px solid var(--cream-border)",
+                }}
+              >
+                <div style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "36px",
+                  fontWeight: 300,
+                  color: "var(--gold)",
+                  opacity: 0.35,
+                  lineHeight: 1,
+                  marginBottom: "16px",
+                }}>
+                  {item.accent}
+                </div>
+                <div className="type-heading-3" style={{
+                  color: "var(--ink)",
+                  marginBottom: "10px",
+                }}>
+                  {item.title}
+                </div>
+                <div className="type-body" style={{
+                  color: "var(--ink-light)",
+                  lineHeight: 1.7,
+                }}>
+                  {item.desc}
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

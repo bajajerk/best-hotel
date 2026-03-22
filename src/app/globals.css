@@ -606,6 +606,11 @@ nav {
     grid-template-columns: 200px 1fr auto !important;
   }
 
+  /* ── Home: Why book grid — 2 columns on tablet ── */
+  .why-book-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
   /* ── Home: Section padding — moderate ── */
   .section-featured,
   .section-popular,
@@ -613,7 +618,9 @@ nav {
   .section-destinations,
   .section-proof,
   .section-trust,
-  .section-testimonials {
+  .section-testimonials,
+  .section-plan-stay,
+  .section-why-book {
     padding-left: 36px !important;
     padding-right: 36px !important;
   }
@@ -699,12 +706,19 @@ nav {
   .section-destinations,
   .section-proof,
   .section-trust,
-  .section-testimonials {
+  .section-testimonials,
+  .section-plan-stay,
+  .section-why-book {
     padding-left: 20px !important;
     padding-right: 20px !important;
   }
   .section-why {
     padding: 64px 20px !important;
+  }
+
+  /* Why book grid — single column on mobile */
+  .why-book-grid {
+    grid-template-columns: 1fr !important;
   }
   .dark-section-container {
     padding-left: 0 !important;
