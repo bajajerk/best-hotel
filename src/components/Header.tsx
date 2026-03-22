@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import MobileNav from "./MobileNav";
 
 const NAV_LINKS = [
+  { label: "PREFERRED RATES", href: "/preferred-rates" },
   { label: "THE LOBBY", href: "/" },
   { label: "SEARCH", href: "/search" },
-  { label: "PREFERRED RATES", href: "/preferred-rates" },
   { label: "MATCH MY RATES", href: "/match-my-rates" },
 ];
 
@@ -155,9 +155,9 @@ export default function Header() {
         {/* Mobile hamburger menu */}
         <MobileNav
           links={[
+            { label: "Preferred Rates", href: "/preferred-rates" },
             { label: "The Lobby", href: "/" },
             { label: "Search", href: "/search" },
-            { label: "Preferred Rates", href: "/preferred-rates" },
             { label: "Match My Rates", href: "/match-my-rates" },
           ]}
           menuLinks={[
