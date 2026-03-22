@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import MobileNav from "@/components/MobileNav";
 import BackButton from "@/components/BackButton";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -643,10 +644,19 @@ export default function HotelPage() {
         </div>
       </nav>
 
+      {/* ═══════════════════ Breadcrumbs ═══════════════════ */}
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/" },
+          { label: hotel.city, href: `/city/${hotel.city.toLowerCase().replace(/\s+/g, "-")}` },
+          { label: hotel.hotel_name },
+        ]}
+      />
+
       {/* ═══════════════════ Back Button ═══════════════════ */}
       <div
         style={{
-          paddingTop: 68,
+          paddingTop: 104,
           paddingLeft: 24,
           paddingRight: 24,
           paddingBottom: 0,

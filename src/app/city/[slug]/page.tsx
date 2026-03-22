@@ -8,6 +8,7 @@ import { fetchCityCurations, CuratedHotel } from "@/lib/api";
 import { CATEGORIES } from "@/lib/constants";
 import MobileNav from "@/components/MobileNav";
 import BackButton from "@/components/BackButton";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -764,12 +765,21 @@ export default function CityPage() {
         </div>
       </nav>
 
+      {/* ════════ Breadcrumbs below navbar ════════ */}
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Destinations" },
+          { label: displayName },
+        ]}
+      />
+
       {/* ================================================================
-          CITY HERO — breadcrumb, large italic serif name, tagline
+          CITY HERO — large italic serif name, tagline
           ================================================================ */}
       <header
         style={{
-          paddingTop: 100,
+          paddingTop: 136,
           paddingBottom: 0,
           paddingLeft: 60,
           paddingRight: 60,
@@ -785,39 +795,6 @@ export default function CityPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
           >
-            {/* Breadcrumb */}
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              style={{
-                fontSize: 12,
-                color: "var(--ink-light)",
-                marginBottom: 24,
-              }}
-            >
-              <Link
-                href="/"
-                style={{
-                  color: "var(--ink)",
-                  cursor: "pointer",
-                  textDecoration: "none",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.color = "var(--gold)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.color = "var(--ink)";
-                }}
-              >
-                Home
-              </Link>
-              <span style={{ margin: "0 8px", color: "var(--ink-light)" }}>/</span>
-              <span>Destinations</span>
-              <span style={{ margin: "0 8px", color: "var(--ink-light)" }}>/</span>
-              <span style={{ color: "var(--ink)" }}>{displayName}</span>
-            </motion.div>
-
             {/* City name */}
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
