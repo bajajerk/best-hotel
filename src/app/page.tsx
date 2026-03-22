@@ -12,6 +12,7 @@ import DestinationSearch from "@/components/DestinationSearch";
 import { useBooking } from "@/context/BookingContext";
 import VoyagerClubComparison from "@/components/VoyagerClubComparison";
 import RegionFilterTabs from "@/components/RegionFilterTabs";
+import FeaturedPropertiesCarousel from "@/components/FeaturedPropertiesCarousel";
 
 // ---------------------------------------------------------------------------
 // Hero background images (cinematic hotel/travel shots)
@@ -594,6 +595,7 @@ export default function Home() {
   const [popularProps, setPopularProps] = useState<HotelCardData[]>([]);
   const [topDeals, setTopDeals] = useState<{ name: string; city: string; citySlug: string; stars: number; rating: number; tags: string[]; marketRate: number; voyagrRate: number; savePercent: number; img: string }[]>([]);
   const [curatedTabData, setCuratedTabData] = useState<Record<string, HotelCardData[]>>({ popular: [], suggest: [], curated: [] });
+  const [featuredCarouselProps, setFeaturedCarouselProps] = useState<HotelCardData[]>([]);
   const heroRef = useRef<HTMLElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -631,6 +633,13 @@ export default function Home() {
           .filter((h) => h.rating_average && h.rates_from)
           .sort((a, b) => (b.rating_average || 0) - (a.rating_average || 0));
         setPopularProps(byRating.slice(0, 8).map(curatedToCard));
+
+        // Featured carousel — top 6 highest-rated properties with images
+        const featuredSelection = byRating
+          .filter((h) => h.photo1)
+          .slice(0, 6)
+          .map(curatedToCard);
+        setFeaturedCarouselProps(featuredSelection);
 
         // Top deals — sorted by rates_from (best value)
         const withRates = hotels.filter((h) => h.rates_from && h.rates_from > 0);
@@ -1132,6 +1141,24 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* ================================================================
+          FEATURED PROPERTIES CAROUSEL — cinematic hero-style slider
+      ================================================================ */}
+      {featuredCarouselProps.length > 0 && (
+        <section className="section-featured-carousel" style={{ background: "var(--ink)" }}>
+          <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <FeaturedPropertiesCarousel properties={featuredCarouselProps} />
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* ================================================================
           FEATURED HOTELS — asymmetric grid

@@ -1359,6 +1359,21 @@ nav {
     display: none !important;
   }
 
+  /* Featured properties carousel — mobile */
+  .featured-carousel {
+    height: 420px !important;
+  }
+  .featured-carousel-thumbs {
+    display: none !important;
+  }
+  .featured-carousel-arrow {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .section-featured-carousel {
+    margin: 0 !important;
+  }
+
   /* Voyager Club comparison cards — mobile */
   .section-voyager-club {
     padding: 48px 20px !important;
