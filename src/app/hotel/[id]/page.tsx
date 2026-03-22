@@ -323,7 +323,7 @@ function ReviewItem({ review }: { review: Review }) {
 
 /* ────────────────────────── Section Label ────────────────────────── */
 
-function SectionLabel({ children }: { children: string }) {
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <h3
       className="type-label mb-6"
@@ -347,6 +347,7 @@ export default function HotelPage() {
   const [hotel, setHotel] = useState<HotelDetail | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewCount, setReviewCount] = useState(0);
+  const [similarHotels, setSimilarHotels] = useState<HotelDetail[]>([]);
   const [loading, setLoading] = useState(true);
 
   /* Gallery */
@@ -387,6 +388,31 @@ export default function HotelPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [hotelId]);
+
+  /* ── Fetch similar hotels from same city ── */
+  useEffect(() => {
+    if (!hotel?.city) return;
+    const citySlug = hotel.city.toLowerCase().replace(/\s+/g, "-");
+    fetch(`${API_BASE}/api/curations/${citySlug}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data?.curations) return;
+        const all = [
+          ...(data.curations.singles || []),
+          ...(data.curations.couples || []),
+          ...(data.curations.families || []),
+        ];
+        // Deduplicate and exclude current hotel
+        const seen = new Set<number>();
+        const unique = all.filter((h: { hotel_id: number }) => {
+          if (h.hotel_id === hotel.hotel_id || seen.has(h.hotel_id)) return false;
+          seen.add(h.hotel_id);
+          return true;
+        });
+        setSimilarHotels(unique.slice(0, 4));
+      })
+      .catch(() => {});
+  }, [hotel?.city, hotel?.hotel_id]);
 
   /* ── Scroll observer for sticky header ── */
   useEffect(() => {
@@ -705,6 +731,28 @@ export default function HotelPage() {
             }}
           />
 
+          {/* Photo count badge */}
+          {photos.length > 1 && (
+            <div
+              className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-1.5 px-3 py-1.5 z-10"
+              style={{
+                background: "rgba(26,23,16,0.6)",
+                backdropFilter: "blur(8px)",
+                color: "var(--cream)",
+                fontSize: "11px",
+                letterSpacing: "0.06em",
+                fontFamily: "var(--font-mono)",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="M21 15l-5-5L5 21" />
+              </svg>
+              {photos.length} photos
+            </div>
+          )}
+
           {/* Hotel name + save badge overlay */}
           <div
             className="absolute bottom-0 left-0 right-0 flex items-end justify-between hotel-hero-overlay"
@@ -793,19 +841,22 @@ export default function HotelPage() {
 
       {/* ═══════════════════ Tabs Bar ═══════════════════ */}
       <div
-        className="hidden md:flex gap-2 sticky top-[60px] z-40 hotel-tabs-bar"
+        className="flex gap-0 md:gap-2 sticky top-[60px] z-40 hotel-tabs-bar overflow-x-auto"
         style={{
           background: "var(--white)",
           borderBottom: "1px solid var(--cream-border)",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => handleTabClick(tab)}
-            className="type-nav"
+            className="type-nav shrink-0"
             style={{
-              padding: "16px 24px",
+              padding: "14px 18px",
               color: activeTab === tab ? "var(--ink)" : "var(--ink-light)",
               cursor: "pointer",
               background: "transparent",
@@ -814,6 +865,7 @@ export default function HotelPage() {
               borderBottomStyle: "solid",
               borderBottomColor: activeTab === tab ? "var(--ink)" : "transparent",
               transition: "all 0.2s",
+              whiteSpace: "nowrap",
             }}
             onMouseEnter={(e) => {
               if (activeTab !== tab) (e.target as HTMLButtonElement).style.color = "var(--ink)";
@@ -1206,21 +1258,62 @@ export default function HotelPage() {
                     style={{
                       border: "1px solid var(--cream-border)",
                       background: "var(--white)",
-                      padding: "24px",
+                      overflow: "hidden",
                     }}
                   >
-                    <p className="text-sm mb-3" style={{ color: "var(--ink-mid)" }}>
-                      {address}
-                    </p>
+                    {/* Static map image from OpenStreetMap */}
                     <a
                       href={`https://www.google.com/maps?q=${hotel.latitude},${hotel.longitude}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-block text-xs font-medium uppercase tracking-[0.08em] transition-opacity hover:opacity-80"
-                      style={{ color: "var(--gold)", textDecoration: "none" }}
+                      className="block relative group"
+                      style={{ height: "220px", background: "var(--cream-deep)" }}
                     >
-                      View on Google Maps &rarr;
+                      <img
+                        src={`https://staticmap.openstreetmap.de/staticmap.php?center=${hotel.latitude},${hotel.longitude}&zoom=14&size=800x300&markers=${hotel.latitude},${hotel.longitude},red-pushpin`}
+                        alt={`Map of ${hotel.hotel_name}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                        style={{ filter: "saturate(0.8) contrast(0.95)" }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                      <div
+                        className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        style={{ background: "rgba(26,23,16,0.3)" }}
+                      >
+                        <span
+                          className="px-4 py-2 text-xs font-medium uppercase tracking-[0.1em]"
+                          style={{ background: "var(--cream)", color: "var(--ink)" }}
+                        >
+                          Open in Google Maps
+                        </span>
+                      </div>
                     </a>
+
+                    <div style={{ padding: "20px 24px" }}>
+                      <p className="text-sm mb-1" style={{ color: "var(--ink-mid)" }}>
+                        {address}
+                      </p>
+                      {hotel.addressline2 && (
+                        <p className="text-xs" style={{ color: "var(--ink-light)" }}>
+                          {hotel.addressline2}
+                        </p>
+                      )}
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${hotel.latitude},${hotel.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium uppercase tracking-[0.08em] transition-opacity hover:opacity-80"
+                        style={{ color: "var(--gold)", textDecoration: "none" }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 11l19-9-9 19-2-8-8-2z" />
+                        </svg>
+                        Get Directions
+                      </a>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -1384,6 +1477,84 @@ export default function HotelPage() {
           </div>
         </div>
       </div>
+
+      {/* ═══════════════════ Similar Hotels ═══════════════════ */}
+      {similarHotels.length > 0 && (
+        <section
+          style={{
+            padding: "48px 24px",
+            borderTop: "1px solid var(--cream-border)",
+            background: "var(--cream)",
+          }}
+          className="lg:!px-[60px]"
+        >
+          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <SectionLabel>More Hotels in {hotel.city}</SectionLabel>
+            <div
+              className="grid grid-cols-2 md:grid-cols-4 gap-4"
+            >
+              {similarHotels.map((sh: any) => (
+                <Link
+                  key={sh.hotel_id}
+                  href={`/hotel/${sh.hotel_id}`}
+                  className="group block overflow-hidden no-underline"
+                  style={{
+                    background: "var(--white)",
+                    border: "1px solid var(--cream-border)",
+                    textDecoration: "none",
+                  }}
+                >
+                  <div className="relative overflow-hidden" style={{ height: "140px" }}>
+                    <img
+                      src={sh.photo1 ? safePhotoUrl(sh.photo1) : FALLBACK_IMG}
+                      alt={sh.hotel_name}
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      style={{ filter: "saturate(0.85)" }}
+                      onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+                    />
+                  </div>
+                  <div style={{ padding: "12px 14px" }}>
+                    {sh.star_rating > 0 && (
+                      <div style={{ fontSize: "10px", color: "var(--gold)", marginBottom: "4px" }}>
+                        {"\u2605".repeat(Math.round(sh.star_rating))}
+                      </div>
+                    )}
+                    <h4
+                      className="text-sm leading-tight line-clamp-2"
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontWeight: 500,
+                        color: "var(--ink)",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      {sh.hotel_name}
+                    </h4>
+                    {sh.rates_from && (
+                      <p style={{ fontSize: "12px", color: "var(--our-rate)", fontWeight: 500 }}>
+                        From {formatCurrency(sh.rates_from, sh.rates_currency || hotel.rates_currency)}
+                      </p>
+                    )}
+                    {sh.rating_average > 0 && (
+                      <span
+                        className="inline-block mt-1.5 px-1.5 py-0.5 text-[10px]"
+                        style={{
+                          background: sh.rating_average >= 8.5 ? "rgba(74,124,89,0.1)" : "var(--gold-pale)",
+                          color: sh.rating_average >= 8.5 ? "var(--success)" : "var(--gold)",
+                          fontFamily: "var(--font-mono)",
+                        }}
+                      >
+                        {sh.rating_average.toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ═══════════════════ Footer ═══════════════════ */}
       <footer

@@ -1060,6 +1060,9 @@ nav {
 .hotel-tabs-bar {
   padding: 0 60px;
 }
+.hotel-tabs-bar::-webkit-scrollbar {
+  display: none;
+}
 
 /* Reviews card — default padding */
 .hotel-reviews-card {
