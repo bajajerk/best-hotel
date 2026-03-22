@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import MobileNav from "@/components/MobileNav";
+import BackButton from "@/components/BackButton";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -642,8 +643,24 @@ export default function HotelPage() {
         </div>
       </nav>
 
+      {/* ═══════════════════ Back Button ═══════════════════ */}
+      <div
+        style={{
+          paddingTop: 68,
+          paddingLeft: 24,
+          paddingRight: 24,
+          paddingBottom: 0,
+          background: "var(--white)",
+        }}
+        className="md:!pl-[60px]"
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <BackButton />
+        </div>
+      </div>
+
       {/* ═══════════════════ Hero Image (440px) ═══════════════════ */}
-      <section ref={heroRef} style={{ paddingTop: "60px" }}>
+      <section ref={heroRef}>
         <div
           className="relative overflow-hidden cursor-pointer hotel-hero"
           onClick={() => photos.length > 0 && openLightbox(0)}

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { fetchCityCurations, CuratedHotel } from "@/lib/api";
 import { CATEGORIES } from "@/lib/constants";
 import MobileNav from "@/components/MobileNav";
+import BackButton from "@/components/BackButton";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -778,6 +779,7 @@ export default function CityPage() {
         className="!px-5 md:!px-[60px]"
       >
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <BackButton />
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
