@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PriceProofCompact } from "@/components/PriceProof";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -179,17 +180,20 @@ export default function HotelCard({ hotel }: { hotel: HotelCardData }) {
                 per night
               </span>
             </div>
-            <span
-              className="card-arrow"
-              style={{
-                fontSize: "11px",
-                color: "var(--gold)",
-                fontWeight: 500,
-                letterSpacing: "0.04em",
-              }}
-            >
-              View &rarr;
-            </span>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+              <PriceProofCompact savePercent={hotel.savePercent} />
+              <span
+                className="card-arrow"
+                style={{
+                  fontSize: "11px",
+                  color: "var(--gold)",
+                  fontWeight: 500,
+                  letterSpacing: "0.04em",
+                }}
+              >
+                View &rarr;
+              </span>
+            </div>
           </div>
         </div>
       </div>

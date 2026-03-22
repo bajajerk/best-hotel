@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { CuratedHotel } from "@/lib/api";
 import { AmenityChips } from "@/components/AmenityIcons";
+import { PriceProofCompact } from "@/components/PriceProof";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -269,18 +270,21 @@ export default function HotelResultCard({
             )}
 
             {savePercent && savePercent > 0 ? (
-              <div
-                style={{
-                  background: "var(--gold-pale)",
-                  color: "var(--success)",
-                  fontSize: 11,
-                  fontWeight: 500,
-                  padding: "4px 10px",
-                  textAlign: "center",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                Save {savePercent}%
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                <div
+                  style={{
+                    background: "var(--gold-pale)",
+                    color: "var(--success)",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    padding: "4px 10px",
+                    textAlign: "center",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  Save {savePercent}%
+                </div>
+                <PriceProofCompact savePercent={savePercent} />
               </div>
             ) : (
               <div />
@@ -450,15 +454,20 @@ export default function HotelResultCard({
                 </span>
               )}
               {marketRate && hotel.rates_from && (
-                <span
-                  style={{
-                    fontSize: 12,
-                    textDecoration: "line-through",
-                    color: "var(--market-rate)",
-                  }}
-                >
-                  {formatCurrency(marketRate, hotel.rates_currency)}
-                </span>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      textDecoration: "line-through",
+                      color: "var(--market-rate)",
+                    }}
+                  >
+                    {formatCurrency(marketRate, hotel.rates_currency)}
+                  </span>
+                  {savePercent && savePercent > 0 && (
+                    <PriceProofCompact savePercent={savePercent} />
+                  )}
+                </div>
               )}
             </div>
           </div>

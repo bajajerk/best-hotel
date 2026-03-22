@@ -10,6 +10,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import DateBar from "@/components/DateBar";
 import { extractAmenities } from "@/components/AmenityIcons";
 import AvailabilityCalendar from "@/components/AvailabilityCalendar";
+import { PriceComparisonBars, BestPriceGuarantee, PriceProofTrustRow } from "@/components/PriceProof";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -1531,6 +1532,22 @@ export default function HotelPage() {
                       </div>
                     )}
 
+                    {/* Price Comparison Bars */}
+                    <div style={{ marginBottom: "20px" }}>
+                      <PriceComparisonBars
+                        ratesFrom={hotel.rates_from}
+                        currency={hotel.rates_currency}
+                      />
+                    </div>
+
+                    {/* Trust Signals Row */}
+                    <PriceProofTrustRow />
+
+                    {/* Best Price Guarantee */}
+                    <div style={{ marginBottom: "16px" }}>
+                      <BestPriceGuarantee />
+                    </div>
+
                     <p
                       className="mb-4"
                       style={{ fontSize: "11px", color: "var(--ink-light)" }}
@@ -1748,9 +1765,18 @@ export default function HotelPage() {
                 </span>
               </p>
               {savePct && savePct > 0 && (
-                <p style={{ fontSize: "11px", color: "var(--success)", fontWeight: 500 }}>
-                  Save {savePct}%
-                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <p style={{ fontSize: "11px", color: "var(--success)", fontWeight: 500, margin: 0 }}>
+                    Save {savePct}%
+                  </p>
+                  <span style={{ fontSize: "9px", color: "var(--ink-light)", display: "flex", alignItems: "center", gap: 3 }}>
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      <path d="M9 12l2 2 4-4" />
+                    </svg>
+                    Best price
+                  </span>
+                </div>
               )}
             </>
           ) : (
