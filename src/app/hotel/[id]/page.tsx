@@ -11,6 +11,7 @@ import DateBar from "@/components/DateBar";
 import { extractAmenities } from "@/components/AmenityIcons";
 import AvailabilityCalendar from "@/components/AvailabilityCalendar";
 import { PriceComparisonBars, BestPriceGuarantee, PriceProofTrustRow, TrustBadgesRow, TrustBadgesCompact } from "@/components/PriceProof";
+import PriceTrendChart from "@/components/PriceTrendChart";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -1038,6 +1039,26 @@ export default function HotelPage() {
                 />
               </div>
             </motion.div>
+
+            {/* ── Price Trend Chart ── */}
+            {hotel.rates_from && (
+              <motion.div variants={fadeUp} custom={3.9} className="mb-10">
+                <SectionLabel>Price Trends</SectionLabel>
+                <div
+                  style={{
+                    background: "var(--white)",
+                    border: "1px solid var(--cream-border)",
+                    padding: "24px",
+                  }}
+                >
+                  <PriceTrendChart
+                    ratesFrom={hotel.rates_from}
+                    currency={hotel.rates_currency}
+                    hotelId={hotel.hotel_id}
+                  />
+                </div>
+              </motion.div>
+            )}
 
             {/* ── Policies ── */}
             {(hotel.checkin || hotel.checkout) && (
