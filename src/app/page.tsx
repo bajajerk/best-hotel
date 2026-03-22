@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { CONTINENTS, CATEGORIES, SAMPLE_CITIES, CITY_IMAGES, FALLBACK_CITY_IMAGE, getCityImage } from "@/lib/constants";
+import { CATEGORIES, SAMPLE_CITIES, CITY_IMAGES, FALLBACK_CITY_IMAGE, getCityImage } from "@/lib/constants";
 import { fetchCuratedCities, fetchFeaturedHotels, CuratedCity, CuratedHotel } from "@/lib/api";
 import MobileNav from "@/components/MobileNav";
 import HotelCard from "@/components/HotelCard";
@@ -11,8 +11,8 @@ import type { HotelCardData } from "@/components/HotelCard";
 import DestinationSearch from "@/components/DestinationSearch";
 import { useBooking } from "@/context/BookingContext";
 import VoyagerClubComparison from "@/components/VoyagerClubComparison";
-import RegionFilterTabs from "@/components/RegionFilterTabs";
 import FeaturedPropertiesCarousel from "@/components/FeaturedPropertiesCarousel";
+import DestinationTabs from "@/components/DestinationTabs";
 
 // ---------------------------------------------------------------------------
 // Hero background images (cinematic hotel/travel shots)
@@ -591,7 +591,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [heroIdx, setHeroIdx] = useState(0);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
-  const [activeContinent, setActiveContinent] = useState<string>("All");
   const [popularProps, setPopularProps] = useState<HotelCardData[]>([]);
   const [topDeals, setTopDeals] = useState<{ name: string; city: string; citySlug: string; stars: number; rating: number; tags: string[]; marketRate: number; voyagrRate: number; savePercent: number; img: string }[]>([]);
   const [curatedTabData, setCuratedTabData] = useState<Record<string, HotelCardData[]>>({ popular: [], suggest: [], curated: [] });
@@ -702,23 +701,7 @@ export default function Home() {
   }, []);
 
   const featured = cities.slice(0, 6);
-  const totalCities = cities.length;
 
-  // Group cities by continent for sub-division display
-  const filteredCities = activeContinent === "All"
-    ? cities
-    : cities.filter((c) => c.continent === activeContinent);
-
-  const continentGroups = filteredCities.reduce<Record<string, CuratedCity[]>>((acc, city) => {
-    const cont = city.continent || "Other";
-    if (!acc[cont]) acc[cont] = [];
-    acc[cont].push(city);
-    return acc;
-  }, {});
-
-  // Order continents consistently
-  const continentOrder = ["Asia", "Europe", "North America", "South America", "Africa", "Oceania", "Other"];
-  const sortedContinents = continentOrder.filter((c) => continentGroups[c]);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
@@ -766,6 +749,7 @@ export default function Home() {
             {[
               { label: "HOME", href: "/" },
               { label: "SEARCH", href: "/search" },
+              { label: "DESTINATIONS", href: "#destinations" },
               { label: "LOCATIONS", href: "/locations" },
               { label: "PREFERRED RATES", href: "#preferred-rates" },
               { label: "MATCH MY PRICE", href: "#match-my-price" },
@@ -827,6 +811,7 @@ export default function Home() {
             links={[
               { label: "Home", href: "/" },
               { label: "Search", href: "/search" },
+              { label: "Destinations", href: "#destinations" },
               { label: "Locations", href: "/locations" },
               { label: "Preferred Rates", href: "#preferred-rates" },
               { label: "Match My Price", href: "#match-my-price" },
@@ -1777,133 +1762,9 @@ export default function Home() {
       </section>
 
       {/* ================================================================
-          DESTINATIONS — city cards grouped by continent sub-divisions
+          DESTINATIONS — tabbed navigation with region / popular / seasonal views
       ================================================================ */}
-      <section
-        id="destinations"
-        className="section-destinations"
-        style={{ padding: "80px 60px" }}
-      >
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "24px",
-              marginBottom: "48px",
-            }}
-          >
-            <div>
-              <div className="type-eyebrow" style={{
-                marginBottom: "8px",
-              }}>
-                Destinations
-              </div>
-              <h2 className="type-display-2" style={{
-                color: "var(--ink)",
-              }}>
-                Explore{" "}
-                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>
-                  {totalCities > 0 ? totalCities : 50}
-                </em>{" "}
-                curated cities
-              </h2>
-            </div>
-
-            {/* Continent filter pills */}
-            <RegionFilterTabs
-              active={activeContinent}
-              onChange={setActiveContinent}
-              variant="pills"
-              showIcons
-            />
-          </motion.div>
-
-          {/* City cards — grouped by continent sub-divisions */}
-          {loading ? (
-            <div className="destinations-grid" style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "20px",
-            }}>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="shimmer"
-                  style={{ height: "320px", background: "var(--cream-deep)" }}
-                />
-              ))}
-            </div>
-          ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeContinent}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.35 }}
-                style={{ display: "flex", flexDirection: "column", gap: "56px" }}
-              >
-                {sortedContinents.map((continent) => (
-                  <div key={continent}>
-                    {/* Continent sub-division header */}
-                    {activeContinent === "All" && (
-                      <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "16px",
-                        marginBottom: "24px",
-                      }}>
-                        <h3 style={{
-                          fontFamily: "var(--font-display)",
-                          fontSize: "22px",
-                          fontWeight: 400,
-                          fontStyle: "italic",
-                          color: "var(--ink)",
-                          whiteSpace: "nowrap",
-                        }}>
-                          {continent}
-                        </h3>
-                        <div style={{
-                          flex: 1,
-                          height: "1px",
-                          background: "var(--cream-border)",
-                        }} />
-                        <span style={{
-                          fontSize: "11px",
-                          color: "var(--ink-light)",
-                          letterSpacing: "0.06em",
-                          whiteSpace: "nowrap",
-                        }}>
-                          {continentGroups[continent].length} {continentGroups[continent].length === 1 ? "city" : "cities"}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* City cards grid */}
-                    <div
-                      className="destinations-grid"
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(3, 1fr)",
-                        gap: "20px",
-                      }}
-                    >
-                      {continentGroups[continent].map((city) => (
-                        <DestinationCard key={city.city_slug} city={city} />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </motion.div>
-            </AnimatePresence>
-          )}
-        </div>
-      </section>
+      <DestinationTabs cities={cities} loading={loading} />
 
       {/* ================================================================
           PRICE COMPARISON — "the proof"
@@ -2598,93 +2459,3 @@ function FeaturedCityCard({
   );
 }
 
-// ============================================================================
-// Destination Card — clean white card with cream border
-// ============================================================================
-function DestinationCard({ city }: { city: CuratedCity }) {
-  const img = getCityImage(city.city_slug);
-
-  return (
-    <Link
-      href={`/city/${city.city_slug}`}
-      style={{ textDecoration: "none", display: "block" }}
-    >
-      <motion.div
-        className="card-hover"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        style={{
-          background: "var(--white)",
-          border: "1px solid var(--cream-border)",
-          overflow: "hidden",
-          cursor: "pointer",
-        }}
-      >
-        {/* Image */}
-        <div style={{ height: "220px", overflow: "hidden" }}>
-          <img
-            className="card-img"
-            src={safeImageSrc(img)}
-            alt={city.city_name}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-              filter: "saturate(0.88)",
-            }}
-            loading="lazy"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
-            }}
-          />
-        </div>
-
-        {/* Content */}
-        <div style={{ padding: "20px 24px 28px" }}>
-          <h3 className="type-display-3" style={{
-            fontStyle: "italic",
-            color: "var(--ink)",
-            marginBottom: "4px",
-          }}>
-            {city.city_name}
-          </h3>
-          <p style={{
-            fontSize: "12px",
-            color: "var(--ink-light)",
-            letterSpacing: "0.06em",
-            marginBottom: "12px",
-          }}>
-            {city.country}
-          </p>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{
-              fontSize: "11px",
-              color: "var(--ink-light)",
-              fontWeight: 400,
-            }}>
-              {city.hotel_count > 0 ? `${city.hotel_count}+ hotels` : "Explore stays"}
-            </span>
-            <span className="card-arrow" style={{
-              fontSize: "11px",
-              color: "var(--gold)",
-              fontWeight: 500,
-              letterSpacing: "0.06em",
-            }}>
-              View &rarr;
-            </span>
-          </div>
-          {/* Divider */}
-          <div style={{
-            width: "40px",
-            height: "1px",
-            background: "var(--gold)",
-            marginTop: "12px",
-          }} />
-        </div>
-      </motion.div>
-    </Link>
-  );
-}
