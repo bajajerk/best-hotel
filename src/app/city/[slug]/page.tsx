@@ -598,6 +598,11 @@ export default function CityPage() {
   const [tagline, setTagline] = useState("");
   const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const [priceMin, setPriceMin] = useState(0);
+  const [priceMax, setPriceMax] = useState(0);
+  const [filterMin, setFilterMin] = useState(0);
+  const [filterMax, setFilterMax] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchCityCurations(slug)
@@ -611,15 +616,43 @@ export default function CityPage() {
       .finally(() => setLoading(false));
   }, [slug]);
 
+  // Compute price bounds whenever curations or active category changes
+  useEffect(() => {
+    const allHotels = curations[activeCategory] || [];
+    const prices = allHotels
+      .map((h) => h.rates_from)
+      .filter((p): p is number => p !== null && p > 0);
+    if (prices.length > 0) {
+      const min = Math.floor(Math.min(...prices));
+      const max = Math.ceil(Math.max(...prices));
+      setPriceMin(min);
+      setPriceMax(max);
+      setFilterMin(min);
+      setFilterMax(max);
+    } else {
+      setPriceMin(0);
+      setPriceMax(0);
+      setFilterMin(0);
+      setFilterMax(0);
+    }
+  }, [curations, activeCategory]);
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const hotels = curations[activeCategory] || [];
+  const allHotels = curations[activeCategory] || [];
+  const hotels = allHotels.filter((h) => {
+    if (priceMin === 0 && priceMax === 0) return true;
+    if (!h.rates_from) return true; // show hotels without price
+    return h.rates_from >= filterMin && h.rates_from <= filterMax;
+  });
   const displayName = cityName || slugToName(slug);
   const categoryKeys: Category[] = ["singles", "couples", "families"];
+  const isFilterActive = filterMin > priceMin || filterMax < priceMax;
+  const currency = allHotels.find((h) => h.rates_currency)?.rates_currency || null;
 
   return (
     <div
@@ -928,7 +961,7 @@ export default function CityPage() {
       </header>
 
       {/* ================================================================
-          HOTEL LIST — horizontal result cards
+          HOTEL LIST — sidebar + horizontal result cards
           ================================================================ */}
       <section
         style={{
@@ -938,91 +971,522 @@ export default function CityPage() {
         className="!px-4 md:!px-[60px]"
       >
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          {loading ? (
-            <>
-              {/* Desktop skeletons */}
-              <div className="hidden md:flex" style={{ flexDirection: "column", gap: 12 }}>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <CardSkeleton key={i} />
-                ))}
-              </div>
-              {/* Mobile skeletons */}
-              <div className="md:hidden" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Mobile filter toggle */}
+          {priceMax > priceMin && !loading && (
+            <div className="md:hidden" style={{ marginBottom: 16 }}>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  background: isFilterActive ? "var(--ink)" : "var(--white)",
+                  color: isFilterActive ? "var(--cream)" : "var(--ink-mid)",
+                  border: "1px solid var(--cream-border)",
+                  borderColor: isFilterActive ? "var(--ink)" : "var(--cream-border)",
+                  padding: "10px 16px",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  fontFamily: "var(--sans)",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" />
+                  <line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
+                  <line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" />
+                  <line x1="17" y1="16" x2="23" y2="16" />
+                </svg>
+                {isFilterActive ? `Filtered: ${formatCurrency(filterMin, currency)} – ${formatCurrency(filterMax, currency)}` : "Price Filter"}
+              </button>
+
+              {/* Mobile filter panel */}
+              <AnimatePresence>
+                {showFilters && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <div
+                      style={{
+                        marginTop: 12,
+                        padding: 20,
+                        background: "var(--white)",
+                        border: "1px solid var(--cream-border)",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                        <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-light)", fontFamily: "var(--sans)" }}>
+                          Price Range
+                        </span>
+                        {isFilterActive && (
+                          <button
+                            onClick={() => { setFilterMin(priceMin); setFilterMax(priceMax); }}
+                            style={{ fontSize: 11, color: "var(--gold)", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--sans)", fontWeight: 500 }}
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 20 }}>
+                        <span style={{ fontFamily: "var(--serif)", fontSize: 20, fontWeight: 500, color: "var(--ink)" }}>
+                          {formatCurrency(filterMin, currency)}
+                        </span>
+                        <span style={{ fontSize: 12, color: "var(--ink-light)" }}>—</span>
+                        <span style={{ fontFamily: "var(--serif)", fontSize: 20, fontWeight: 500, color: "var(--ink)" }}>
+                          {formatCurrency(filterMax, currency)}
+                        </span>
+                      </div>
+                      {/* Dual range */}
+                      <div style={{ position: "relative", height: 32, marginBottom: 4 }}>
+                        <div style={{ position: "absolute", top: 14, left: 0, right: 0, height: 4, background: "var(--cream-deep)", borderRadius: 2 }} />
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 14,
+                            left: `${((filterMin - priceMin) / (priceMax - priceMin)) * 100}%`,
+                            right: `${100 - ((filterMax - priceMin) / (priceMax - priceMin)) * 100}%`,
+                            height: 4,
+                            background: "var(--gold)",
+                            borderRadius: 2,
+                          }}
+                        />
+                        <input
+                          type="range"
+                          min={priceMin}
+                          max={priceMax}
+                          value={filterMin}
+                          onChange={(e) => {
+                            const v = Number(e.target.value);
+                            if (v <= filterMax) setFilterMin(v);
+                          }}
+                          style={{
+                            position: "absolute",
+                            top: 4,
+                            left: 0,
+                            width: "100%",
+                            height: 24,
+                            WebkitAppearance: "none",
+                            appearance: "none" as never,
+                            background: "transparent",
+                            pointerEvents: "none",
+                            zIndex: 3,
+                          }}
+                          className="price-range-input"
+                        />
+                        <input
+                          type="range"
+                          min={priceMin}
+                          max={priceMax}
+                          value={filterMax}
+                          onChange={(e) => {
+                            const v = Number(e.target.value);
+                            if (v >= filterMin) setFilterMax(v);
+                          }}
+                          style={{
+                            position: "absolute",
+                            top: 4,
+                            left: 0,
+                            width: "100%",
+                            height: 24,
+                            WebkitAppearance: "none",
+                            appearance: "none" as never,
+                            background: "transparent",
+                            pointerEvents: "none",
+                            zIndex: 4,
+                          }}
+                          className="price-range-input"
+                        />
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 10, color: "var(--ink-light)" }}>{formatCurrency(priceMin, currency)}</span>
+                        <span style={{ fontSize: 10, color: "var(--ink-light)" }}>{formatCurrency(priceMax, currency)}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* Desktop: sidebar + cards layout */}
+          <div
+            className="hidden md:flex"
+            style={{ gap: 32, alignItems: "flex-start" }}
+          >
+            {/* Sidebar — price filter */}
+            {priceMax > priceMin && !loading && (
+              <motion.aside
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+                style={{
+                  width: 240,
+                  flexShrink: 0,
+                  position: "sticky",
+                  top: 108,
+                }}
+              >
+                <div
+                  style={{
+                    background: "var(--white)",
+                    border: "1px solid var(--cream-border)",
+                    padding: 24,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 500,
+                        letterSpacing: "0.14em",
+                        textTransform: "uppercase",
+                        color: "var(--ink-light)",
+                        fontFamily: "var(--sans)",
+                      }}
+                    >
+                      Filters
+                    </span>
+                    {isFilterActive && (
+                      <button
+                        onClick={() => { setFilterMin(priceMin); setFilterMax(priceMax); }}
+                        style={{
+                          fontSize: 11,
+                          color: "var(--gold)",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          fontFamily: "var(--sans)",
+                          fontWeight: 500,
+                          transition: "color 0.2s",
+                        }}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--ink)"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--gold)"; }}
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Price range label */}
+                  <div style={{ marginBottom: 8 }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: "var(--ink-mid)",
+                        fontFamily: "var(--sans)",
+                      }}
+                    >
+                      Price Range
+                    </span>
+                  </div>
+
+                  {/* Price display */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 20 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                      <span style={{ fontFamily: "var(--serif)", fontSize: 22, fontWeight: 500, color: "var(--ink)" }}>
+                        {formatCurrency(filterMin, currency)}
+                      </span>
+                      <span style={{ fontSize: 12, color: "var(--ink-light)" }}>—</span>
+                      <span style={{ fontFamily: "var(--serif)", fontSize: 22, fontWeight: 500, color: "var(--ink)" }}>
+                        {formatCurrency(filterMax, currency)}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 11, color: "var(--ink-light)" }}>per night</span>
+                  </div>
+
+                  {/* Dual range slider */}
+                  <div style={{ position: "relative", height: 32, marginBottom: 8 }}>
+                    {/* Track background */}
+                    <div style={{ position: "absolute", top: 14, left: 0, right: 0, height: 4, background: "var(--cream-deep)", borderRadius: 2 }} />
+                    {/* Active track */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 14,
+                        left: `${((filterMin - priceMin) / (priceMax - priceMin)) * 100}%`,
+                        right: `${100 - ((filterMax - priceMin) / (priceMax - priceMin)) * 100}%`,
+                        height: 4,
+                        background: "var(--gold)",
+                        borderRadius: 2,
+                      }}
+                    />
+                    {/* Min handle */}
+                    <input
+                      type="range"
+                      min={priceMin}
+                      max={priceMax}
+                      value={filterMin}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        if (v <= filterMax) setFilterMin(v);
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: 4,
+                        left: 0,
+                        width: "100%",
+                        height: 24,
+                        WebkitAppearance: "none",
+                        appearance: "none" as never,
+                        background: "transparent",
+                        pointerEvents: "none",
+                        zIndex: 3,
+                      }}
+                      className="price-range-input"
+                    />
+                    {/* Max handle */}
+                    <input
+                      type="range"
+                      min={priceMin}
+                      max={priceMax}
+                      value={filterMax}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        if (v >= filterMin) setFilterMax(v);
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: 4,
+                        left: 0,
+                        width: "100%",
+                        height: 24,
+                        WebkitAppearance: "none",
+                        appearance: "none" as never,
+                        background: "transparent",
+                        pointerEvents: "none",
+                        zIndex: 4,
+                      }}
+                      className="price-range-input"
+                    />
+                  </div>
+
+                  {/* Min/Max labels */}
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+                    <span style={{ fontSize: 10, color: "var(--ink-light)" }}>{formatCurrency(priceMin, currency)}</span>
+                    <span style={{ fontSize: 10, color: "var(--ink-light)" }}>{formatCurrency(priceMax, currency)}</span>
+                  </div>
+
+                  {/* Divider */}
+                  <div style={{ height: 1, background: "var(--cream-border)", margin: "0 0 16px" }} />
+
+                  {/* Showing count */}
+                  <p style={{ fontSize: 12, color: "var(--ink-light)" }}>
+                    Showing <strong style={{ color: "var(--ink-mid)", fontWeight: 500 }}>{hotels.length}</strong> of {allHotels.length} stays
+                  </p>
+                </div>
+              </motion.aside>
+            )}
+
+            {/* Hotel cards */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {loading ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <CardSkeleton key={i} />
+                  ))}
+                </div>
+              ) : (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeCategory}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: 20,
+                      }}
+                    >
+                      <p style={{ fontSize: 13, color: "var(--ink-light)" }}>
+                        {hotels.length} curated {hotels.length === 1 ? "stay" : "stays"}{" "}
+                        {CATEGORY_LABELS[activeCategory]}
+                        {isFilterActive && (
+                          <span style={{ color: "var(--gold)" }}> &middot; price filtered</span>
+                        )}
+                      </p>
+                    </div>
+
+                    {hotels.length > 0 ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        {hotels.map((hotel, i) => (
+                          <HotelResultCard key={hotel.hotel_id} hotel={hotel} index={i} />
+                        ))}
+                      </div>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        style={{ textAlign: "center", paddingTop: 80, paddingBottom: 80 }}
+                      >
+                        {isFilterActive ? (
+                          <>
+                            <p
+                              style={{
+                                fontFamily: "var(--serif)",
+                                fontSize: 28,
+                                fontStyle: "italic",
+                                fontWeight: 300,
+                                color: "var(--ink-mid)",
+                                marginBottom: 12,
+                              }}
+                            >
+                              No matches
+                            </p>
+                            <p style={{ fontSize: 14, color: "var(--ink-light)", marginBottom: 20 }}>
+                              No stays found in the {formatCurrency(filterMin, currency)} – {formatCurrency(filterMax, currency)} range.
+                            </p>
+                            <button
+                              onClick={() => { setFilterMin(priceMin); setFilterMax(priceMax); }}
+                              style={{
+                                background: "none",
+                                border: "1px solid var(--cream-border)",
+                                padding: "10px 24px",
+                                fontSize: 12,
+                                fontWeight: 500,
+                                letterSpacing: "0.1em",
+                                textTransform: "uppercase",
+                                color: "var(--ink-mid)",
+                                cursor: "pointer",
+                                fontFamily: "var(--sans)",
+                                transition: "all 0.2s",
+                              }}
+                              onMouseEnter={(e) => {
+                                (e.currentTarget as HTMLElement).style.background = "var(--ink)";
+                                (e.currentTarget as HTMLElement).style.color = "var(--cream)";
+                              }}
+                              onMouseLeave={(e) => {
+                                (e.currentTarget as HTMLElement).style.background = "transparent";
+                                (e.currentTarget as HTMLElement).style.color = "var(--ink-mid)";
+                              }}
+                            >
+                              Clear filter
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <p
+                              style={{
+                                fontFamily: "var(--serif)",
+                                fontSize: 28,
+                                fontStyle: "italic",
+                                fontWeight: 300,
+                                color: "var(--ink-mid)",
+                                marginBottom: 12,
+                              }}
+                            >
+                              Coming soon
+                            </p>
+                            <p style={{ fontSize: 14, color: "var(--ink-light)" }}>
+                              We are curating {CATEGORIES[activeCategory].label.toLowerCase()} stays
+                              in {displayName}.
+                            </p>
+                          </>
+                        )}
+                      </motion.div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile: cards only (sidebar is the toggle panel above) */}
+          <div className="md:hidden">
+            {loading ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {Array.from({ length: 4 }).map((_, i) => (
                   <CardSkeletonMobile key={i} />
                 ))}
               </div>
-            </>
-          ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeCategory}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              >
-                {/* Results count */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: 20,
-                  }}
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeCategory}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <p
-                    style={{
-                      fontSize: 13,
-                      color: "var(--ink-light)",
-                    }}
-                  >
-                    {hotels.length} curated {hotels.length === 1 ? "stay" : "stays"}{" "}
-                    {CATEGORY_LABELS[activeCategory]}
-                  </p>
-                </div>
-
-                {hotels.length > 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    {hotels.map((hotel, i) => (
-                      <HotelResultCard
-                        key={hotel.hotel_id}
-                        hotel={hotel}
-                        index={i}
-                      />
-                    ))}
+                  <div style={{ marginBottom: 16 }}>
+                    <p style={{ fontSize: 13, color: "var(--ink-light)" }}>
+                      {hotels.length} curated {hotels.length === 1 ? "stay" : "stays"}{" "}
+                      {CATEGORY_LABELS[activeCategory]}
+                      {isFilterActive && (
+                        <span style={{ color: "var(--gold)" }}> &middot; price filtered</span>
+                      )}
+                    </p>
                   </div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    style={{
-                      textAlign: "center",
-                      paddingTop: 80,
-                      paddingBottom: 80,
-                    }}
-                  >
-                    <p
-                      style={{
-                        fontFamily: "var(--serif)",
-                        fontSize: 28,
-                        fontStyle: "italic",
-                        fontWeight: 300,
-                        color: "var(--ink-mid)",
-                        marginBottom: 12,
-                      }}
+
+                  {hotels.length > 0 ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                      {hotels.map((hotel, i) => (
+                        <HotelResultCard key={hotel.hotel_id} hotel={hotel} index={i} />
+                      ))}
+                    </div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      style={{ textAlign: "center", paddingTop: 60, paddingBottom: 60 }}
                     >
-                      Coming soon
-                    </p>
-                    <p style={{ fontSize: 14, color: "var(--ink-light)" }}>
-                      We are curating {CATEGORIES[activeCategory].label.toLowerCase()} stays
-                      in {displayName}.
-                    </p>
-                  </motion.div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          )}
+                      {isFilterActive ? (
+                        <>
+                          <p style={{ fontFamily: "var(--serif)", fontSize: 24, fontStyle: "italic", fontWeight: 300, color: "var(--ink-mid)", marginBottom: 12 }}>
+                            No matches
+                          </p>
+                          <p style={{ fontSize: 14, color: "var(--ink-light)", marginBottom: 20 }}>
+                            No stays in this price range.
+                          </p>
+                          <button
+                            onClick={() => { setFilterMin(priceMin); setFilterMax(priceMax); }}
+                            style={{
+                              background: "none",
+                              border: "1px solid var(--cream-border)",
+                              padding: "10px 24px",
+                              fontSize: 12,
+                              fontWeight: 500,
+                              letterSpacing: "0.1em",
+                              textTransform: "uppercase",
+                              color: "var(--ink-mid)",
+                              cursor: "pointer",
+                              fontFamily: "var(--sans)",
+                            }}
+                          >
+                            Clear filter
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <p style={{ fontFamily: "var(--serif)", fontSize: 24, fontStyle: "italic", fontWeight: 300, color: "var(--ink-mid)", marginBottom: 12 }}>
+                            Coming soon
+                          </p>
+                          <p style={{ fontSize: 14, color: "var(--ink-light)" }}>
+                            We are curating {CATEGORIES[activeCategory].label.toLowerCase()} stays in {displayName}.
+                          </p>
+                        </>
+                      )}
+                    </motion.div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            )}
+          </div>
         </div>
       </section>
 
