@@ -9,6 +9,7 @@ import BackButton from "@/components/BackButton";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import DateBar from "@/components/DateBar";
 import { extractAmenities } from "@/components/AmenityIcons";
+import AvailabilityCalendar from "@/components/AvailabilityCalendar";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -1117,6 +1118,23 @@ export default function HotelPage() {
               <p className="mt-3 text-[11px]" style={{ color: "var(--ink-light)" }}>
                 Room availability varies by date. Contact us for specific options.
               </p>
+            </motion.div>
+
+            {/* ── Availability Calendar ── */}
+            <motion.div variants={fadeUp} custom={3.8} className="mb-10">
+              <SectionLabel>Availability</SectionLabel>
+              <div
+                style={{
+                  background: "var(--white)",
+                  border: "1px solid var(--cream-border)",
+                  padding: "24px",
+                }}
+              >
+                <AvailabilityCalendar
+                  ratesFrom={hotel.rates_from}
+                  currency={hotel.rates_currency}
+                />
+              </div>
             </motion.div>
 
             {/* ── Policies ── */}
