@@ -454,6 +454,84 @@ const TOP_CURATED: HotelCardData[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Top deals — hotels with the highest discount percentages
+// ---------------------------------------------------------------------------
+const TOP_DEALS = [
+  {
+    name: "Taj Lake Palace",
+    city: "Udaipur, India",
+    citySlug: "jaipur",
+    stars: 5,
+    rating: 9.5,
+    tags: ["Lake View", "Heritage", "Romantic"],
+    marketRate: 25800,
+    voyagrRate: 16800,
+    savePercent: 35,
+    img: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80",
+  },
+  {
+    name: "Aman Tokyo",
+    city: "Tokyo, Japan",
+    citySlug: "tokyo",
+    stars: 5,
+    rating: 9.6,
+    tags: ["Minimalist", "Onsen", "Otemachi"],
+    marketRate: 61700,
+    voyagrRate: 42000,
+    savePercent: 32,
+    img: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=600&q=80",
+  },
+  {
+    name: "Four Seasons Bali",
+    city: "Bali, Indonesia",
+    citySlug: "bali",
+    stars: 5,
+    rating: 9.6,
+    tags: ["Villa", "Jungle", "Pool"],
+    marketRate: 27200,
+    voyagrRate: 18500,
+    savePercent: 32,
+    img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80",
+  },
+  {
+    name: "Riad Fès",
+    city: "Marrakech, Morocco",
+    citySlug: "marrakech",
+    stars: 5,
+    rating: 9.2,
+    tags: ["Riad", "Medina", "Rooftop"],
+    marketRate: 12140,
+    voyagrRate: 8500,
+    savePercent: 30,
+    img: "https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=600&q=80",
+  },
+  {
+    name: "The Oberoi",
+    city: "Mumbai, India",
+    citySlug: "mumbai",
+    stars: 5,
+    rating: 9.0,
+    tags: ["Sea View", "Fine Dining", "Heritage"],
+    marketRate: 18200,
+    voyagrRate: 12800,
+    savePercent: 30,
+    img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600&q=80",
+  },
+  {
+    name: "Mandarin Oriental",
+    city: "Bangkok, Thailand",
+    citySlug: "bangkok",
+    stars: 5,
+    rating: 9.4,
+    tags: ["Riverside", "Spa", "Michelin"],
+    marketRate: 20280,
+    voyagrRate: 14200,
+    savePercent: 30,
+    img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
+  },
+];
+
 const CURATED_TABS = [
   { key: "popular", label: "Most popular", data: MOST_POPULAR },
   { key: "suggest", label: "We suggest", data: WE_SUGGEST },
@@ -1518,6 +1596,271 @@ export default function Home() {
 
           {/* Property cards — carousel */}
           <PopularCarousel properties={POPULAR_PROPERTIES} />
+        </div>
+      </section>
+
+      {/* ================================================================
+          TOP DEALS — highest discount %
+      ================================================================ */}
+      <section
+        className="section-top-deals"
+        style={{
+          padding: "80px 60px",
+          background: "var(--cream)",
+        }}
+      >
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="section-header"
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              marginBottom: "48px",
+            }}
+          >
+            <div>
+              <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
+                Top Deals
+              </div>
+              <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
+                Biggest{" "}
+                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>savings</em>{" "}
+                right now
+              </h2>
+            </div>
+          </motion.div>
+
+          {/* Deals grid — 3 columns */}
+          <div
+            className="top-deals-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "20px",
+            }}
+          >
+            {TOP_DEALS.map((deal, i) => (
+              <motion.div
+                key={deal.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.08 }}
+              >
+                <Link
+                  href={`/city/${deal.citySlug}`}
+                  style={{ textDecoration: "none", display: "block" }}
+                >
+                  <div
+                    className="card-hover"
+                    style={{
+                      background: "var(--white)",
+                      border: "1px solid var(--cream-border)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {/* Image with discount badge */}
+                    <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
+                      <img
+                        className="card-img"
+                        src={safeImageSrc(deal.img)}
+                        alt={deal.name}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                          filter: "saturate(0.88)",
+                        }}
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+                        }}
+                      />
+                      {/* Large discount badge */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "12px",
+                          left: "12px",
+                          background: "var(--success)",
+                          color: "var(--cream)",
+                          padding: "6px 14px",
+                          display: "flex",
+                          alignItems: "baseline",
+                          gap: "3px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: "var(--font-display)",
+                            fontSize: "22px",
+                            fontWeight: 500,
+                            lineHeight: 1,
+                          }}
+                        >
+                          {deal.savePercent}%
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "9px",
+                            fontWeight: 500,
+                            letterSpacing: "0.06em",
+                            textTransform: "uppercase" as const,
+                          }}
+                        >
+                          off
+                        </span>
+                      </div>
+                      {/* Rating badge */}
+                      {deal.rating >= 8.5 && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "12px",
+                            right: "12px",
+                            background: "var(--gold)",
+                            color: "var(--white)",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            padding: "4px 10px",
+                            fontFamily: "var(--font-mono)",
+                          }}
+                        >
+                          {deal.rating.toFixed(1)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div style={{ padding: "18px 20px 22px" }}>
+                      <div
+                        style={{
+                          color: "var(--gold)",
+                          fontSize: "10px",
+                          letterSpacing: "2px",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        {"★".repeat(deal.stars)}
+                      </div>
+                      <h3
+                        className="type-heading-3"
+                        style={{
+                          color: "var(--ink)",
+                          marginBottom: "4px",
+                          fontSize: "16px",
+                        }}
+                      >
+                        {deal.name}
+                      </h3>
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--ink-light)",
+                          letterSpacing: "0.04em",
+                          marginBottom: "14px",
+                        }}
+                      >
+                        {deal.city}
+                      </p>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "5px",
+                          flexWrap: "wrap",
+                          marginBottom: "16px",
+                        }}
+                      >
+                        {deal.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            style={{
+                              fontSize: "9px",
+                              padding: "3px 8px",
+                              background: "var(--cream)",
+                              color: "var(--ink-mid)",
+                              border: "1px solid var(--cream-border)",
+                              letterSpacing: "0.04em",
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Pricing */}
+                      <div
+                        style={{
+                          borderTop: "1px solid var(--cream-border)",
+                          paddingTop: "14px",
+                          display: "flex",
+                          alignItems: "flex-end",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                textDecoration: "line-through",
+                                color: "var(--market-rate)",
+                              }}
+                            >
+                              &#8377;{deal.marketRate.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              fontFamily: "var(--font-display)",
+                              fontSize: "22px",
+                              fontWeight: 500,
+                              color: "var(--our-rate)",
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            &#8377;{deal.voyagrRate.toLocaleString("en-IN")}
+                          </div>
+                          <span style={{ fontSize: "10px", color: "var(--ink-light)" }}>
+                            per night
+                          </span>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: 500,
+                              color: "var(--success)",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            Save &#8377;{(deal.marketRate - deal.voyagrRate).toLocaleString("en-IN")}
+                          </div>
+                          <span
+                            className="card-arrow"
+                            style={{
+                              fontSize: "11px",
+                              color: "var(--gold)",
+                              fontWeight: 500,
+                              letterSpacing: "0.04em",
+                            }}
+                          >
+                            View &rarr;
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
