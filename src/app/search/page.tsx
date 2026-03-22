@@ -45,6 +45,10 @@ interface HotelResult {
   city: string;
   country: string;
   star_rating: number | null;
+  rating_average?: number | null;
+  number_of_reviews?: number | null;
+  rates_from?: number | null;
+  rates_currency?: string | null;
   photo1: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -95,14 +99,18 @@ const STAR_FILTERS = [
 ];
 
 // ---------------------------------------------------------------------------
-// Sort options
+// Sort options — extended with rating, reviews, price
 // ---------------------------------------------------------------------------
-type SortOption = "relevance" | "name_asc" | "name_desc" | "stars_desc";
+type SortOption = "relevance" | "name_asc" | "name_desc" | "stars_desc" | "rating_desc" | "reviews_desc" | "price_asc" | "price_desc";
 const SORT_OPTIONS: { label: string; value: SortOption }[] = [
   { label: "Relevance", value: "relevance" },
-  { label: "Name A-Z", value: "name_asc" },
-  { label: "Name Z-A", value: "name_desc" },
-  { label: "Stars (High to Low)", value: "stars_desc" },
+  { label: "Guest Rating", value: "rating_desc" },
+  { label: "Most Reviewed", value: "reviews_desc" },
+  { label: "Price: Low to High", value: "price_asc" },
+  { label: "Price: High to Low", value: "price_desc" },
+  { label: "Stars: High to Low", value: "stars_desc" },
+  { label: "Name A–Z", value: "name_asc" },
+  { label: "Name Z–A", value: "name_desc" },
 ];
 
 // ============================================================================
@@ -252,6 +260,14 @@ export default function SearchPage() {
           return b.hotel_name.localeCompare(a.hotel_name);
         case "stars_desc":
           return (b.star_rating || 0) - (a.star_rating || 0);
+        case "rating_desc":
+          return (b.rating_average || 0) - (a.rating_average || 0);
+        case "reviews_desc":
+          return (b.number_of_reviews || 0) - (a.number_of_reviews || 0);
+        case "price_asc":
+          return (a.rates_from || Infinity) - (b.rates_from || Infinity);
+        case "price_desc":
+          return (b.rates_from || 0) - (a.rates_from || 0);
         default:
           return 0;
       }
@@ -966,11 +982,51 @@ export default function SearchPage() {
                           </svg>
                           {hotel.city}, {hotel.country}
                         </div>
+                        {/* Rating / reviews / price chips */}
+                        {(hotel.rating_average || hotel.number_of_reviews || hotel.rates_from) && (
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "10px" }}>
+                            {hotel.rating_average != null && hotel.rating_average > 0 && (
+                              <span style={{
+                                fontSize: "10px",
+                                padding: "2px 8px",
+                                background: hotel.rating_average >= 8.5 ? "var(--gold-pale)" : "var(--cream)",
+                                color: hotel.rating_average >= 8.5 ? "var(--gold)" : "var(--ink-mid)",
+                                border: "1px solid var(--cream-border)",
+                                fontWeight: 500,
+                              }}>
+                                {hotel.rating_average.toFixed(1)} rating
+                              </span>
+                            )}
+                            {hotel.number_of_reviews != null && hotel.number_of_reviews > 0 && (
+                              <span style={{
+                                fontSize: "10px",
+                                padding: "2px 8px",
+                                background: "var(--cream)",
+                                color: "var(--ink-mid)",
+                                border: "1px solid var(--cream-border)",
+                              }}>
+                                {hotel.number_of_reviews.toLocaleString()} reviews
+                              </span>
+                            )}
+                            {hotel.rates_from != null && hotel.rates_from > 0 && (
+                              <span style={{
+                                fontSize: "10px",
+                                padding: "2px 8px",
+                                background: "var(--cream)",
+                                color: "var(--ink-mid)",
+                                border: "1px solid var(--cream-border)",
+                                fontWeight: 500,
+                              }}>
+                                From ${Math.round(hotel.rates_from)}
+                              </span>
+                            )}
+                          </div>
+                        )}
                         <div style={{
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "space-between",
-                          marginTop: "16px",
+                          marginTop: "12px",
                           paddingTop: "12px",
                           borderTop: "1px solid var(--cream-border)",
                         }}>

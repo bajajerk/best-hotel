@@ -113,9 +113,11 @@ function CompareToggle({ hotel }: { hotel: CuratedHotel }) {
 export default function HotelResultCard({
   hotel,
   index,
+  valueScore,
 }: {
   hotel: CuratedHotel;
   index: number;
+  valueScore?: number;
 }) {
   const photo = sanitizePhoto(hotel.photo1);
   const marketRate = hotel.rates_from ? Math.round(hotel.rates_from * 1.25) : null;
@@ -182,6 +184,32 @@ export default function HotelResultCard({
                 }}
               >
                 Preferred
+              </div>
+            )}
+            {valueScore != null && valueScore >= 60 && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  background: valueScore >= 85 ? "#2d6a4f" : valueScore >= 75 ? "#40916c" : "rgba(26,23,16,0.75)",
+                  backdropFilter: "blur(4px)",
+                  color: "#fff",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  padding: "4px 8px",
+                  fontFamily: "var(--font-body)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                {valueScore >= 85 ? "Top Pick" : valueScore >= 75 ? "Great Value" : "Good Value"}
               </div>
             )}
           </div>
@@ -423,6 +451,26 @@ export default function HotelResultCard({
                 }}
               >
                 Save {savePercent}%
+              </div>
+            )}
+            {valueScore != null && valueScore >= 60 && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 12,
+                  left: 12,
+                  background: valueScore >= 85 ? "#2d6a4f" : valueScore >= 75 ? "#40916c" : "rgba(26,23,16,0.75)",
+                  backdropFilter: "blur(4px)",
+                  color: "#fff",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  padding: "4px 8px",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                {valueScore >= 85 ? "Top Pick" : valueScore >= 75 ? "Great Value" : "Good Value"}
               </div>
             )}
           </div>

@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import type { CuratedHotel } from "@/lib/api";
+import { computeTopSellerScores } from "@/lib/ranking";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,47 +25,12 @@ export interface TopSellerHotel {
 }
 
 // ---------------------------------------------------------------------------
-// Scoring: weighted combination of bookings (reviews) + savings
+// Compute top sellers using shared ranking algorithm
 // ---------------------------------------------------------------------------
-// Weights: 60% bookings (reviews), 40% savings
-const BOOKING_WEIGHT = 0.6;
-const SAVINGS_WEIGHT = 0.4;
-
 export function computeTopSellers(hotels: CuratedHotel[], limit = 8): TopSellerHotel[] {
-  const eligible = hotels.filter(
-    (h) => h.rates_from && h.rates_from > 0 && h.number_of_reviews && h.number_of_reviews > 0
-  );
+  const scored = computeTopSellerScores(hotels, limit);
 
-  if (eligible.length === 0) return [];
-
-  // Normalize values to 0–1 range
-  const maxReviews = Math.max(...eligible.map((h) => h.number_of_reviews || 0));
-  const maxSavePercent = 40; // cap at 40% since savings are typically 20-40%
-
-  const scored = eligible.map((h) => {
-    const reviews = h.number_of_reviews || 0;
-    const marketRate = Math.round((h.rates_from || 0) * 1.25);
-    const savePercent =
-      h.rates_from && marketRate
-        ? Math.round(((marketRate - h.rates_from) / marketRate) * 100)
-        : 20;
-
-    const normalizedBookings = reviews / maxReviews;
-    const normalizedSavings = Math.min(savePercent, maxSavePercent) / maxSavePercent;
-    const score = BOOKING_WEIGHT * normalizedBookings + SAVINGS_WEIGHT * normalizedSavings;
-
-    return {
-      hotel: h,
-      score,
-      reviews,
-      savePercent,
-      marketRate,
-    };
-  });
-
-  scored.sort((a, b) => b.score - a.score);
-
-  return scored.slice(0, limit).map((item, idx) => ({
+  return scored.map((item, idx) => ({
     name: item.hotel.hotel_name,
     city: `${item.hotel.city_name}, ${item.hotel.country}`,
     citySlug: item.hotel.city_slug,

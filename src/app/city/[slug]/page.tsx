@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { fetchCityCurations, CuratedHotel } from "@/lib/api";
+import { rankHotels, sortRankedHotels, SORT_STRATEGY_LABELS, type SortStrategy, type RankedHotel } from "@/lib/ranking";
 import { CATEGORIES } from "@/lib/constants";
 import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
@@ -176,6 +177,12 @@ export default function CityPage() {
   const [filterMin, setFilterMin] = useState(0);
   const [filterMax, setFilterMax] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<SortStrategy>("recommended");
+
+  // Subset of sort strategies relevant for city pages
+  const citySortOptions = SORT_STRATEGY_LABELS.filter((s) =>
+    ["recommended", "price_asc", "price_desc", "rating_desc", "popularity_desc", "deal_desc", "stars_desc"].includes(s.value)
+  );
 
   useEffect(() => {
     fetchCityCurations(slug)
@@ -217,14 +224,25 @@ export default function CityPage() {
   }, []);
 
   const allHotels = curations[activeCategory] || [];
-  const hotels = allHotels.filter((h) => {
+
+  // Rank all hotels, then filter by price, then sort by chosen strategy
+  const rankedAll = rankHotels(allHotels);
+  const rankedFiltered = rankedAll.filter((r) => {
     if (priceMin === 0 && priceMax === 0) return true;
-    if (!h.rates_from) return true; // show hotels without price
-    return h.rates_from >= filterMin && h.rates_from <= filterMax;
+    if (!r.hotel.rates_from) return true;
+    return r.hotel.rates_from >= filterMin && r.hotel.rates_from <= filterMax;
   });
+  const sortedRanked = sortRankedHotels(rankedFiltered, sortBy);
+  const hotels = sortedRanked.map((r) => r.hotel);
+
+  // Build a lookup for value scores (used by HotelResultCard badges)
+  const valueScoreMap = new Map<number, number>();
+  for (const r of sortedRanked) valueScoreMap.set(r.hotel.hotel_id, r.valueScore);
+
   const displayName = cityName || slugToName(slug);
   const categoryKeys: Category[] = ["singles", "couples", "families"];
   const isFilterActive = filterMin > priceMin || filterMax < priceMax;
+  const isSortActive = sortBy !== "recommended";
   const currency = allHotels.find((h) => h.rates_currency)?.rates_currency || null;
 
   return (
@@ -420,9 +438,34 @@ export default function CityPage() {
         className="!px-4 md:!px-[60px]"
       >
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          {/* Mobile filter toggle */}
-          {priceMax > priceMin && !loading && (
-            <div className="md:hidden" style={{ marginBottom: 16 }}>
+          {/* Mobile filter + sort controls */}
+          {!loading && (
+            <div className="md:hidden" style={{ marginBottom: 16, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              {/* Mobile sort dropdown */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortStrategy)}
+                style={{
+                  padding: "10px 12px",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  letterSpacing: "0.04em",
+                  fontFamily: "var(--font-body)",
+                  border: "1px solid var(--cream-border)",
+                  borderColor: isSortActive ? "var(--gold)" : "var(--cream-border)",
+                  background: isSortActive ? "var(--gold-pale)" : "var(--white)",
+                  color: "var(--ink-mid)",
+                  cursor: "pointer",
+                  outline: "none",
+                }}
+              >
+                {citySortOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+
+              {/* Mobile price filter toggle */}
+              {priceMax > priceMin && (<>
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 style={{
@@ -562,6 +605,7 @@ export default function CityPage() {
                   </motion.div>
                 )}
               </AnimatePresence>
+              </>)}
             </div>
           )}
 
@@ -729,6 +773,61 @@ export default function CityPage() {
                   {/* Divider */}
                   <div style={{ height: 1, background: "var(--cream-border)", margin: "0 0 16px" }} />
 
+                  {/* Sort by */}
+                  <div style={{ marginBottom: 20 }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: "var(--ink-mid)",
+                        fontFamily: "var(--font-body)",
+                        display: "block",
+                        marginBottom: 10,
+                      }}
+                    >
+                      Sort By
+                    </span>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      {citySortOptions.map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setSortBy(opt.value)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            padding: "7px 10px",
+                            fontSize: 12,
+                            fontFamily: "var(--font-body)",
+                            color: sortBy === opt.value ? "var(--ink)" : "var(--ink-light)",
+                            fontWeight: sortBy === opt.value ? 500 : 400,
+                            background: sortBy === opt.value ? "var(--cream)" : "transparent",
+                            border: "none",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            transition: "all 0.15s",
+                            letterSpacing: "0.02em",
+                          }}
+                        >
+                          <span style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: sortBy === opt.value ? "var(--gold)" : "transparent",
+                            border: sortBy === opt.value ? "none" : "1px solid var(--cream-border)",
+                            flexShrink: 0,
+                          }} />
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div style={{ height: 1, background: "var(--cream-border)", margin: "0 0 16px" }} />
+
                   {/* Showing count */}
                   <p style={{ fontSize: 12, color: "var(--ink-light)" }}>
                     Showing <strong style={{ color: "var(--ink-mid)", fontWeight: 500 }}>{hotels.length}</strong> of {allHotels.length} stays
@@ -768,13 +867,16 @@ export default function CityPage() {
                         {isFilterActive && (
                           <span style={{ color: "var(--gold)" }}> &middot; price filtered</span>
                         )}
+                        {isSortActive && (
+                          <span style={{ color: "var(--gold)" }}> &middot; sorted by {citySortOptions.find((o) => o.value === sortBy)?.label?.toLowerCase()}</span>
+                        )}
                       </p>
                     </div>
 
                     {hotels.length > 0 ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                         {hotels.map((hotel, i) => (
-                          <HotelResultCard key={hotel.hotel_id} hotel={hotel} index={i} />
+                          <HotelResultCard key={hotel.hotel_id} hotel={hotel} index={i} valueScore={valueScoreMap.get(hotel.hotel_id)} />
                         ))}
                       </div>
                     ) : (
@@ -879,13 +981,16 @@ export default function CityPage() {
                       {isFilterActive && (
                         <span style={{ color: "var(--gold)" }}> &middot; price filtered</span>
                       )}
+                      {isSortActive && (
+                        <span style={{ color: "var(--gold)" }}> &middot; sorted</span>
+                      )}
                     </p>
                   </div>
 
                   {hotels.length > 0 ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                       {hotels.map((hotel, i) => (
-                        <HotelResultCard key={hotel.hotel_id} hotel={hotel} index={i} />
+                        <HotelResultCard key={hotel.hotel_id} hotel={hotel} index={i} valueScore={valueScoreMap.get(hotel.hotel_id)} />
                       ))}
                     </div>
                   ) : (
