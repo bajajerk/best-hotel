@@ -8,7 +8,7 @@ import MobileNav from "@/components/MobileNav";
 import BackButton from "@/components/BackButton";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import DateBar from "@/components/DateBar";
-import { AmenityGrid } from "@/components/AmenityIcons";
+import { extractAmenities } from "@/components/AmenityIcons";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -357,8 +357,6 @@ export default function HotelPage() {
   /* Tabs */
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
 
-  /* Overview toggle */
-  const [overviewExpanded, setOverviewExpanded] = useState(false);
 
   /* Sticky header */
   const [headerVisible, setHeaderVisible] = useState(false);
@@ -935,46 +933,67 @@ export default function HotelPage() {
               style={{ height: "1px", background: "var(--cream-border)" }}
             />
 
-            {/* About / Overview */}
-            {hotel.overview && (
-              <motion.div variants={fadeUp} custom={2} className="mb-10">
-                <SectionLabel>About This Property</SectionLabel>
-                <div className="relative">
+            {/* Property Highlights — visual amenity icons replacing long About text */}
+            {hotel.overview && (() => {
+              const detected = extractAmenities(hotel.overview);
+              if (detected.length === 0) return null;
+              return (
+                <motion.div variants={fadeUp} custom={2} className="mb-10">
+                  <SectionLabel>Property Highlights</SectionLabel>
                   <div
                     style={{
-                      maxHeight: overviewExpanded ? "none" : "200px",
-                      overflow: "hidden",
-                      fontSize: "14px",
-                      lineHeight: 1.8,
-                      color: "var(--ink-mid)",
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+                      gap: "2px",
+                      background: "var(--cream-border)",
+                      border: "1px solid var(--cream-border)",
                     }}
-                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(hotel.overview) }}
-                  />
-                  {!overviewExpanded && hotel.overview.length > 400 && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: "80px",
-                        background: "linear-gradient(to bottom, transparent, var(--cream))",
-                        pointerEvents: "none",
-                      }}
-                    />
-                  )}
-                </div>
-                {hotel.overview.length > 400 && (
-                  <button
-                    onClick={() => setOverviewExpanded(!overviewExpanded)}
-                    className="mt-3 text-xs font-medium uppercase tracking-[0.08em] transition-colors hover:opacity-80"
-                    style={{ color: "var(--gold)", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)" }}
                   >
-                    {overviewExpanded ? "Show less" : "Read more"}
-                  </button>
-                )}
-              </motion.div>
-            )}
+                    {detected.map((a) => (
+                      <div
+                        key={a.key}
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 8,
+                          padding: "20px 12px",
+                          background: "var(--white)",
+                        }}
+                      >
+                        <svg
+                          width={28}
+                          height={28}
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={1.3}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ color: "var(--gold)" }}
+                        >
+                          <path d={a.icon} />
+                        </svg>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: 500,
+                            color: "var(--ink-mid)",
+                            letterSpacing: "0.04em",
+                            textAlign: "center",
+                            lineHeight: 1.3,
+                            fontFamily: "var(--font-body)",
+                          }}
+                        >
+                          {a.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              );
+            })()}
 
             {/* ── Amenities / Quick Facts ── */}
             {quickFacts.length > 0 && (
@@ -1007,13 +1026,7 @@ export default function HotelPage() {
               </motion.div>
             )}
 
-            {/* ── Amenities ── */}
-            {hotel.overview && (
-              <motion.div variants={fadeUp} custom={3.5} className="mb-10">
-                <SectionLabel>Amenities</SectionLabel>
-                <AmenityGrid overview={hotel.overview} />
-              </motion.div>
-            )}
+            {/* Amenities section consolidated into Property Highlights above */}
 
             {/* ── Policies ── */}
             {(hotel.checkin || hotel.checkout) && (
