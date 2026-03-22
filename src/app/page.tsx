@@ -94,6 +94,100 @@ const EDITORIAL_IMAGES = [
 ];
 
 // ---------------------------------------------------------------------------
+// Popular properties data
+// ---------------------------------------------------------------------------
+const POPULAR_PROPERTIES = [
+  {
+    name: "Siam Kempinski",
+    city: "Bangkok, Thailand",
+    citySlug: "bangkok",
+    stars: 5,
+    rating: 9.2,
+    tags: ["Pool", "Spa", "City Centre"],
+    priceFrom: 10500,
+    savePercent: 28,
+    img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
+  },
+  {
+    name: "The Oberoi",
+    city: "Mumbai, India",
+    citySlug: "mumbai",
+    stars: 5,
+    rating: 9.0,
+    tags: ["Sea View", "Fine Dining", "Heritage"],
+    priceFrom: 12800,
+    savePercent: 30,
+    img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600&q=80",
+  },
+  {
+    name: "Park Hyatt",
+    city: "Tokyo, Japan",
+    citySlug: "tokyo",
+    stars: 5,
+    rating: 9.1,
+    tags: ["Skyline View", "Spa", "Shinjuku"],
+    priceFrom: 19500,
+    savePercent: 30,
+    img: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&q=80",
+  },
+  {
+    name: "Taj Palace",
+    city: "Delhi, India",
+    citySlug: "delhi",
+    stars: 5,
+    rating: 8.8,
+    tags: ["Heritage", "Pool", "Gardens"],
+    priceFrom: 9200,
+    savePercent: 25,
+    img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80",
+  },
+  {
+    name: "Marina Bay Sands",
+    city: "Singapore",
+    citySlug: "singapore",
+    stars: 5,
+    rating: 9.3,
+    tags: ["Infinity Pool", "Skyline", "Casino"],
+    priceFrom: 22000,
+    savePercent: 22,
+    img: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=600&q=80",
+  },
+  {
+    name: "Burj Al Arab",
+    city: "Dubai, UAE",
+    citySlug: "dubai",
+    stars: 5,
+    rating: 9.5,
+    tags: ["Iconic", "Butler Service", "Beach"],
+    priceFrom: 35000,
+    savePercent: 20,
+    img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&q=80",
+  },
+  {
+    name: "Hotel & Ritz",
+    city: "Paris, France",
+    citySlug: "paris",
+    stars: 5,
+    rating: 9.4,
+    tags: ["Champs-Élysées", "Spa", "Michelin"],
+    priceFrom: 28000,
+    savePercent: 26,
+    img: "https://images.unsplash.com/photo-1549294413-26f195200c16?w=600&q=80",
+  },
+  {
+    name: "Aman Tokyo",
+    city: "Tokyo, Japan",
+    citySlug: "tokyo",
+    stars: 5,
+    rating: 9.6,
+    tags: ["Minimalist", "Onsen", "Otemachi"],
+    priceFrom: 42000,
+    savePercent: 32,
+    img: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=600&q=80",
+  },
+];
+
+// ---------------------------------------------------------------------------
 // Animation variants
 // ---------------------------------------------------------------------------
 const orchestrate = {
@@ -746,6 +840,249 @@ export default function Home() {
               ))}
             </motion.div>
           )}
+        </div>
+      </section>
+
+      {/* ================================================================
+          POPULAR PROPERTIES — individual hotel cards
+      ================================================================ */}
+      <section
+        className="section-popular"
+        style={{
+          padding: "80px 60px",
+          background: "var(--white)",
+        }}
+      >
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="section-header"
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              marginBottom: "48px",
+            }}
+          >
+            <div>
+              <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
+                Popular Properties
+              </div>
+              <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
+                Traveller{" "}
+                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>favourites</em>
+              </h2>
+            </div>
+          </motion.div>
+
+          {/* Property cards — 4-column grid */}
+          <div
+            className="popular-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: "20px",
+            }}
+          >
+            {POPULAR_PROPERTIES.map((prop, i) => (
+              <motion.div
+                key={prop.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.08 }}
+              >
+                <Link
+                  href={`/city/${prop.citySlug}`}
+                  style={{ textDecoration: "none", display: "block" }}
+                >
+                  <div
+                    style={{
+                      background: "var(--white)",
+                      border: "1px solid var(--cream-border)",
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      transition: "box-shadow 0.3s, border-color 0.3s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLDivElement).style.boxShadow =
+                        "0 8px 32px rgba(26,23,16,0.08)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+                    }}
+                  >
+                    {/* Image */}
+                    <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
+                      <img
+                        src={safeImageSrc(prop.img)}
+                        alt={prop.name}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          transition: "transform 0.6s ease",
+                          display: "block",
+                          filter: "saturate(0.88)",
+                        }}
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+                        }}
+                      />
+                      {/* Rating badge */}
+                      {prop.rating >= 8.5 && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "12px",
+                            right: "12px",
+                            background: "var(--gold)",
+                            color: "var(--white)",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            padding: "4px 10px",
+                            fontFamily: "var(--font-mono)",
+                          }}
+                        >
+                          {prop.rating.toFixed(1)}
+                        </div>
+                      )}
+                      {/* Savings badge */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          bottom: "12px",
+                          left: "12px",
+                          background: "var(--success)",
+                          color: "var(--cream)",
+                          fontSize: "10px",
+                          fontWeight: 500,
+                          padding: "4px 10px",
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        Save up to {prop.savePercent}%
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div style={{ padding: "18px 20px 22px" }}>
+                      {/* Stars */}
+                      <div
+                        style={{
+                          color: "var(--gold)",
+                          fontSize: "10px",
+                          letterSpacing: "2px",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        {"★".repeat(prop.stars)}
+                      </div>
+
+                      <h3
+                        className="type-heading-3"
+                        style={{
+                          color: "var(--ink)",
+                          marginBottom: "4px",
+                          fontSize: "16px",
+                        }}
+                      >
+                        {prop.name}
+                      </h3>
+
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--ink-light)",
+                          letterSpacing: "0.04em",
+                          marginBottom: "14px",
+                        }}
+                      >
+                        {prop.city}
+                      </p>
+
+                      {/* Tags */}
+                      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginBottom: "16px" }}>
+                        {prop.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            style={{
+                              fontSize: "9px",
+                              padding: "3px 8px",
+                              background: "var(--cream)",
+                              color: "var(--ink-mid)",
+                              border: "1px solid var(--cream-border)",
+                              letterSpacing: "0.04em",
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Price */}
+                      <div
+                        style={{
+                          borderTop: "1px solid var(--cream-border)",
+                          paddingTop: "14px",
+                          display: "flex",
+                          alignItems: "baseline",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <div>
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              color: "var(--ink-light)",
+                              letterSpacing: "0.06em",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            From
+                          </span>
+                          <div
+                            style={{
+                              fontFamily: "var(--font-display)",
+                              fontSize: "22px",
+                              fontWeight: 500,
+                              color: "var(--ink)",
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            &#8377;{prop.priceFrom.toLocaleString("en-IN")}
+                          </div>
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              color: "var(--ink-light)",
+                            }}
+                          >
+                            per night
+                          </span>
+                        </div>
+
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "var(--gold)",
+                            fontWeight: 500,
+                            letterSpacing: "0.04em",
+                          }}
+                        >
+                          View &rarr;
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
