@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { fetchCuratedCities, CuratedCity } from "@/lib/api";
 import { CONTINENTS, SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE } from "@/lib/constants";
-import MobileNav from "@/components/MobileNav";
+import Header from "@/components/Header";
 import DateBar from "@/components/DateBar";
 import RegionFilterTabs from "@/components/RegionFilterTabs";
 
@@ -121,63 +121,7 @@ export default function LocationsPage() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
       {/* ── Nav ── */}
-      <nav
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          background: "rgba(245, 240, 232, 0.92)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderBottom: "1px solid var(--cream-border)",
-          height: "60px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 24px",
-        }}
-      >
-        <Link href="/" style={{ textDecoration: "none" }}>
-          <span className="type-logo" style={{ letterSpacing: "0.08em", color: "var(--ink)" }}>
-            <span style={{ color: "var(--gold)" }}>V</span>oyagr
-          </span>
-        </Link>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-          <div className="nav-links" style={{ display: "flex", gap: "24px", alignItems: "center" }}>
-            {[
-              { label: "HOME", href: "/" },
-              { label: "SEARCH", href: "/search" },
-              { label: "LOCATIONS", href: "/locations" },
-            ].map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="type-nav"
-                style={{
-                  color: link.href === "/locations" ? "var(--gold)" : "var(--ink-mid)",
-                  textDecoration: "none",
-                  paddingBottom: "2px",
-                  borderBottom: link.href === "/locations" ? "1px solid var(--gold)" : "1px solid transparent",
-                  transition: "color 0.2s, border-color 0.2s",
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          <MobileNav
-            links={[
-              { label: "Home", href: "/" },
-              { label: "Search", href: "/search" },
-              { label: "Locations", href: "/locations" },
-            ]}
-          />
-        </div>
-      </nav>
+      <Header />
 
       {/* ── Date bar ── */}
       <div style={{ paddingTop: 60 }}>

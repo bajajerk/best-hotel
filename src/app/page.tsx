@@ -5,7 +5,8 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import Link from "next/link";
 import { CATEGORIES, SAMPLE_CITIES, CITY_IMAGES, FALLBACK_CITY_IMAGE, getCityImage } from "@/lib/constants";
 import { fetchCuratedCities, fetchFeaturedHotels, CuratedCity, CuratedHotel } from "@/lib/api";
-import MobileNav from "@/components/MobileNav";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import HotelCard from "@/components/HotelCard";
 import type { HotelCardData } from "@/components/HotelCard";
 import DestinationSearch from "@/components/DestinationSearch";
@@ -707,118 +708,9 @@ export default function Home() {
     <div style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
 
       {/* ================================================================
-          FIXED NAV — frosted cream glass
+          FIXED NAV — reusable Header component
       ================================================================ */}
-      <nav
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          background: "rgba(245, 240, 232, 0.92)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderBottom: "1px solid var(--cream-border)",
-          height: "60px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 24px",
-        }}
-      >
-        {/* Logo */}
-        <Link href="/" style={{ textDecoration: "none" }}>
-          <span
-            className="type-logo"
-            style={{
-              letterSpacing: "0.08em",
-              color: "var(--ink)",
-            }}
-          >
-            <span style={{ color: "var(--gold)" }}>V</span>oyagr
-          </span>
-        </Link>
-
-        {/* Nav links + basket */}
-        <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-          <div
-            className="nav-links"
-            style={{ display: "flex", gap: "24px", alignItems: "center" }}
-          >
-            {[
-              { label: "HOME", href: "/" },
-              { label: "SEARCH", href: "/search" },
-              { label: "DESTINATIONS", href: "#destinations" },
-              { label: "LOCATIONS", href: "/locations" },
-              { label: "PREFERRED RATES", href: "#preferred-rates" },
-              { label: "MATCH MY PRICE", href: "#match-my-price" },
-            ].map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="type-nav"
-                style={{
-                  color: "var(--ink-mid)",
-                  textDecoration: "none",
-                  paddingBottom: "2px",
-                  borderBottom: "1px solid transparent",
-                  transition: "color 0.2s, border-color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  (e.target as HTMLAnchorElement).style.color = "var(--gold)";
-                  (e.target as HTMLAnchorElement).style.borderBottomColor = "var(--gold)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.target as HTMLAnchorElement).style.color = "var(--ink-mid)";
-                  (e.target as HTMLAnchorElement).style.borderBottomColor = "transparent";
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Basket icon */}
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              background: "var(--ink)",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              transition: "background 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLDivElement).style.background = "var(--gold)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLDivElement).style.background = "var(--ink)";
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cream)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="9" cy="21" r="1" />
-              <circle cx="20" cy="21" r="1" />
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-            </svg>
-          </div>
-
-          {/* Mobile hamburger menu */}
-          <MobileNav
-            links={[
-              { label: "Home", href: "/" },
-              { label: "Search", href: "/search" },
-              { label: "Destinations", href: "#destinations" },
-              { label: "Locations", href: "/locations" },
-              { label: "Preferred Rates", href: "#preferred-rates" },
-              { label: "Match My Price", href: "#match-my-price" },
-            ]}
-          />
-        </div>
-      </nav>
+      <Header />
 
       {/* ================================================================
           HERO — split layout: text left, image right
@@ -2281,73 +2173,102 @@ export default function Home() {
       </section>
 
       {/* ================================================================
-          FOOTER — minimal, elegant
+          NEWSLETTER CTA — before footer
       ================================================================ */}
-      <footer
-        className="site-footer"
+      <section
+        className="newsletter-section"
         style={{
-          padding: "60px 60px 80px",
+          padding: "80px 60px",
           background: "var(--cream)",
           borderTop: "1px solid var(--cream-border)",
         }}
       >
-        <div
-          className="footer-inner"
-          style={{
-            maxWidth: "1400px",
-            margin: "0 auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap" as const,
-            gap: "24px",
-          }}
-        >
-          {/* Logo */}
-          <Link href="/" style={{ textDecoration: "none" }}>
-            <span className="type-logo" style={{
-              color: "var(--ink)",
-              letterSpacing: "0.08em",
+        <div style={{ maxWidth: "640px", margin: "0 auto", textAlign: "center" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
+              Stay Updated
+            </div>
+            <h2 className="type-display-2" style={{ color: "var(--ink)", marginBottom: "16px" }}>
+              Exclusive <em style={{ fontStyle: "italic", color: "var(--gold)" }}>deals</em> in your inbox
+            </h2>
+            <p className="type-body" style={{
+              color: "var(--ink-light)",
+              lineHeight: 1.7,
+              marginBottom: "32px",
+              maxWidth: "480px",
+              margin: "0 auto 32px",
             }}>
-              <span style={{ color: "var(--gold)" }}>V</span>oyagr
-            </span>
-          </Link>
+              Get early access to flash sales, new destination launches, and curated hotel picks
+              delivered once a week.
+            </p>
 
-          {/* Footer links */}
-          <div className="footer-links" style={{ display: "flex", alignItems: "center", gap: "32px" }}>
-            {[
-              { label: "Locations", href: "/locations" },
-              { label: "Search", href: "/search" },
-              { label: "WhatsApp", href: "https://wa.me/919876543210" },
-            ].map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="type-caption"
+            <div
+              className="newsletter-form"
+              style={{
+                display: "flex",
+                gap: "0",
+                maxWidth: "480px",
+                margin: "0 auto",
+              }}
+            >
+              <input
+                type="email"
+                placeholder="your@email.com"
                 style={{
-                  fontWeight: 400,
-                  letterSpacing: "0.08em",
-                  color: "var(--ink-light)",
-                  textDecoration: "none",
-                  transition: "color 0.2s",
+                  flex: 1,
+                  padding: "14px 18px",
+                  border: "1px solid var(--cream-border)",
+                  borderRight: "none",
+                  background: "var(--white)",
+                  fontSize: "14px",
+                  fontFamily: "var(--font-body)",
+                  color: "var(--ink)",
+                  outline: "none",
+                  transition: "border-color 0.2s",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "var(--gold)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "var(--cream-border)";
+                }}
+              />
+              <button
+                className="btn-gold"
+                style={{
+                  padding: "14px 28px",
+                  fontSize: "11px",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  fontWeight: 500,
+                  whiteSpace: "nowrap",
                 }}
               >
-                {link.label}
-              </Link>
-            ))}
-          </div>
+                Subscribe
+              </button>
+            </div>
 
-          {/* Copyright */}
-          <p style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "11px",
-            color: "var(--ink-light)",
-            letterSpacing: "0.05em",
-          }}>
-            &copy; 2026 Voyagr
-          </p>
+            <p style={{
+              fontSize: "11px",
+              color: "var(--ink-light)",
+              marginTop: "12px",
+              opacity: 0.6,
+            }}>
+              No spam. Unsubscribe anytime.
+            </p>
+          </motion.div>
         </div>
-      </footer>
+      </section>
+
+      {/* ================================================================
+          FOOTER — multi-column layout
+      ================================================================ */}
+      <Footer />
     </div>
   );
 }

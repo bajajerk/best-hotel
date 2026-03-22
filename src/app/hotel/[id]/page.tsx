@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import MobileNav from "@/components/MobileNav";
+import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import DateBar from "@/components/DateBar";
@@ -563,106 +563,7 @@ export default function HotelPage() {
         )}
       </AnimatePresence>
 
-      {/* ═══════════════════ Sticky Frosted Cream Nav ═══════════════════ */}
-      <nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between"
-        style={{
-          height: "60px",
-          padding: "0 24px",
-          background: "rgba(245, 240, 232, 0.92)",
-          backdropFilter: "blur(16px)",
-          borderBottom: "1px solid var(--cream-border)",
-        }}
-      >
-        <Link href="/" className="no-underline">
-          <span
-            className="type-logo"
-            style={{
-              letterSpacing: "0.08em",
-              color: "var(--ink)",
-            }}
-          >
-            Voyag<span style={{ color: "var(--gold)" }}>r</span>
-          </span>
-        </Link>
-
-        {/* Desktop nav links */}
-        <div
-          className="nav-links"
-          style={{ display: "flex", gap: "24px", alignItems: "center" }}
-        >
-          {[
-            { label: "HOME", href: "/" },
-            { label: "SEARCH", href: "#search" },
-            { label: "ACCOUNT", href: "#account" },
-            { label: "PREFERRED RATES", href: "#preferred-rates" },
-            { label: "MATCH MY PRICE", href: "#match-my-price" },
-            { label: "BOOKING HISTORY", href: "#booking-history" },
-          ].map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              className="type-nav"
-              style={{
-                color: "var(--ink-mid)",
-                textDecoration: "none",
-                paddingBottom: "2px",
-                borderBottom: "1px solid transparent",
-                transition: "color 0.2s, border-color 0.2s",
-                whiteSpace: "nowrap",
-              }}
-              onMouseEnter={(e) => {
-                (e.target as HTMLAnchorElement).style.color = "var(--gold)";
-                (e.target as HTMLAnchorElement).style.borderBottomColor = "var(--gold)";
-              }}
-              onMouseLeave={(e) => {
-                (e.target as HTMLAnchorElement).style.color = "var(--ink-mid)";
-                (e.target as HTMLAnchorElement).style.borderBottomColor = "transparent";
-              }}
-            >
-              {link.label}
-            </a>
-          ))}
-        </div>
-
-        {/* Sticky hotel name + book button appear after scrolling past hero */}
-        <div
-          className="flex items-center gap-4 transition-all duration-500"
-          style={{
-            opacity: headerVisible ? 1 : 0,
-            transform: headerVisible ? "translateY(0)" : "translateY(-8px)",
-            pointerEvents: headerVisible ? "auto" : "none",
-          }}
-        >
-          <span
-            className="text-sm truncate max-w-[200px] hidden md:block"
-            style={{ color: "var(--ink-mid)" }}
-          >
-            {hotel.hotel_name}
-          </span>
-          <a
-            href="tel:+919876543210"
-            className="shrink-0 text-xs font-medium uppercase tracking-[0.1em] transition-opacity hover:opacity-80"
-            style={{
-              background: "var(--gold)",
-              color: "var(--ink)",
-              padding: "10px 20px",
-            }}
-          >
-            Book Now
-          </a>
-          <MobileNav
-            links={[
-              { label: "Home", href: "/" },
-              { label: "Search", href: "#search" },
-              { label: "Account", href: "#account" },
-              { label: "Preferred Rates", href: "#preferred-rates" },
-              { label: "Match My Price", href: "#match-my-price" },
-              { label: "Booking History", href: "#booking-history" },
-            ]}
-          />
-        </div>
-      </nav>
+      <Header />
 
       {/* ═══════════════════ Breadcrumbs ═══════════════════ */}
       <Breadcrumbs

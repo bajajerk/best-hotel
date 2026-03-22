@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { fetchCityCurations, CuratedHotel } from "@/lib/api";
 import { CATEGORIES } from "@/lib/constants";
-import MobileNav from "@/components/MobileNav";
+import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import DateBar from "@/components/DateBar";
@@ -240,129 +240,7 @@ export default function CityPage() {
         overflowX: "hidden",
       } as React.CSSProperties}
     >
-      {/* ================================================================
-          STICKY NAV — frosted cream glass
-          ================================================================ */}
-      <nav
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          background: scrolled ? "rgba(245, 240, 232, 0.92)" : "rgba(245, 240, 232, 0.7)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderBottom: scrolled ? "1px solid var(--cream-border)" : "1px solid transparent",
-          height: 60,
-          display: "flex",
-          alignItems: "center",
-          padding: "0 24px",
-          justifyContent: "space-between",
-          transition: "all 0.3s ease",
-        }}
-      >
-        {/* Logo */}
-        <Link href="/" style={{ textDecoration: "none" }}>
-          <span
-            className="type-logo"
-            style={{
-              letterSpacing: "0.08em",
-              color: "var(--ink)",
-            }}
-          >
-            <span style={{ color: "var(--gold)" }}>V</span>oyagr
-          </span>
-        </Link>
-
-        {/* Nav links */}
-        <div
-          className="hidden md:flex"
-          style={{
-            gap: 32,
-            alignItems: "center",
-          }}
-        >
-          {[
-              { label: "Home", href: "/" },
-              { label: "Search", href: "#search" },
-              { label: "Account", href: "#account" },
-              { label: "Preferred Rates", href: "#preferred-rates" },
-              { label: "Match My Price", href: "#match-my-price" },
-              { label: "Booking History", href: "#booking-history" },
-            ].map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              className="type-nav"
-              style={{
-                color: "var(--ink-mid)",
-                cursor: "pointer",
-                transition: "color 0.2s",
-                paddingBottom: 2,
-                borderBottom: "1px solid transparent",
-                textDecoration: "none",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "var(--gold)";
-                (e.currentTarget as HTMLElement).style.borderBottomColor = "var(--gold)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "var(--ink-mid)";
-                (e.currentTarget as HTMLElement).style.borderBottomColor = "transparent";
-              }}
-            >
-              {link.label}
-            </a>
-          ))}
-        </div>
-
-        {/* Right: CTA + mobile menu */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        <MobileNav
-          links={[
-            { label: "Home", href: "/" },
-            { label: "Search", href: "#search" },
-            { label: "Account", href: "#account" },
-            { label: "Preferred Rates", href: "#preferred-rates" },
-            { label: "Match My Price", href: "#match-my-price" },
-            { label: "Booking History", href: "#booking-history" },
-          ]}
-        />
-        <a
-          href="tel:+919876543210"
-          className="city-nav-cta"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            background: "var(--ink)",
-            color: "var(--cream)",
-            border: "none",
-            padding: "10px 24px",
-            fontFamily: "var(--font-body)",
-            fontSize: 12,
-            fontWeight: 500,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            cursor: "pointer",
-            transition: "all 0.25s",
-            textDecoration: "none",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "var(--gold)";
-            (e.currentTarget as HTMLElement).style.color = "var(--ink)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "var(--ink)";
-            (e.currentTarget as HTMLElement).style.color = "var(--cream)";
-          }}
-        >
-          Book Now
-        </a>
-        </div>
-      </nav>
+      <Header />
 
       {/* ════════ Breadcrumbs below navbar ════════ */}
       <Breadcrumbs
