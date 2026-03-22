@@ -1,7 +1,35 @@
 "use client";
 
+import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+
+const perks = [
+  {
+    emoji: "🍳",
+    title: "Free breakfast daily",
+    description:
+      "Full breakfast for two guests, every morning of your stay.",
+  },
+  {
+    emoji: "💳",
+    title: "$100 property credit",
+    description:
+      "Spend at the spa, restaurants, or room service at any Preferred property.",
+  },
+  {
+    emoji: "⬆️",
+    title: "Room upgrade on arrival",
+    description:
+      "Best available room at check-in, subject to availability.",
+  },
+  {
+    emoji: "🕐",
+    title: "Flexible check-in/out",
+    description:
+      "Early check-in from 10am and late check-out until 4pm.",
+  },
+];
 
 export default function PreferredRatesPage() {
   return (
@@ -15,66 +43,146 @@ export default function PreferredRatesPage() {
           background: "var(--cream)",
         }}
       >
-        <div style={{ maxWidth: "900px", margin: "0 auto", padding: "0 24px" }}>
+        {/* Hero section */}
+        <section
+          style={{
+            maxWidth: "900px",
+            margin: "0 auto",
+            padding: "0 24px 64px",
+            textAlign: "center",
+          }}
+        >
           <h1
             className="type-display-3"
-            style={{ color: "var(--ink)", marginBottom: "16px" }}
+            style={{
+              color: "var(--ink)",
+              marginBottom: "24px",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+            }}
           >
-            Preferred Rates
+            Voyagr Preferred Rates
           </h1>
           <p
             className="type-body-lg"
-            style={{ color: "var(--ink-light)", marginBottom: "40px", maxWidth: "600px" }}
+            style={{
+              color: "var(--ink-light)",
+              marginBottom: "48px",
+              maxWidth: "620px",
+              margin: "0 auto 48px",
+              lineHeight: 1.7,
+            }}
           >
-            Unlock exclusive negotiated rates at the world&apos;s finest hotels.
-            Voyagr Club members enjoy insider pricing that&apos;s not available on
-            public booking platforms.
+            Rates that exist outside the public market. Our concierge team holds
+            negotiated contracts with 400+ luxury properties. Members get rates
+            that simply aren&apos;t listed anywhere else — plus perks that
+            elevate every stay.
           </p>
 
           <div
             style={{
-              background: "var(--white)",
-              border: "1px solid var(--cream-border)",
-              borderRadius: "8px",
-              padding: "40px",
-              textAlign: "center",
+              display: "flex",
+              gap: "16px",
+              justifyContent: "center",
+              flexWrap: "wrap",
             }}
           >
-            <div
+            <Link
+              href="/search"
+              className="type-label"
               style={{
-                width: "64px",
-                height: "64px",
-                borderRadius: "50%",
-                background: "var(--gold-pale)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 20px",
+                display: "inline-block",
+                padding: "14px 36px",
+                background: "var(--gold)",
+                color: "var(--white)",
+                borderRadius: "6px",
+                textDecoration: "none",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                transition: "opacity 0.2s",
+              }}
+              onMouseEnter={(e) =>
+                ((e.currentTarget as HTMLElement).style.opacity = "0.85")
+              }
+              onMouseLeave={(e) =>
+                ((e.currentTarget as HTMLElement).style.opacity = "1")
+              }
+            >
+              Enquire Now
+            </Link>
+            <Link
+              href="/search"
+              className="type-label"
+              style={{
+                display: "inline-block",
+                padding: "14px 36px",
+                border: "1px solid var(--ink)",
+                color: "var(--ink)",
+                borderRadius: "6px",
+                textDecoration: "none",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                background: "transparent",
+                transition: "background 0.2s, color 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "var(--ink)";
+                (e.currentTarget as HTMLElement).style.color = "var(--white)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "transparent";
+                (e.currentTarget as HTMLElement).style.color = "var(--ink)";
               }}
             >
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="var(--gold)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                <line x1="7" y1="7" x2="7.01" y2="7" />
-              </svg>
-            </div>
-            <h2 className="type-heading-2" style={{ color: "var(--ink)", marginBottom: "12px" }}>
-              Coming Soon
-            </h2>
-            <p className="type-body" style={{ color: "var(--ink-light)" }}>
-              We&apos;re curating exclusive preferred rates with our hotel partners.
-              Check back soon for members-only pricing.
-            </p>
+              Browse Hotels
+            </Link>
           </div>
-        </div>
+        </section>
+
+        {/* Perks grid */}
+        <section
+          style={{
+            maxWidth: "900px",
+            margin: "0 auto",
+            padding: "0 24px",
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: "24px",
+            }}
+          >
+            {perks.map((perk) => (
+              <div
+                key={perk.title}
+                style={{
+                  background: "var(--white)",
+                  border: "1px solid var(--cream-border)",
+                  borderRadius: "8px",
+                  padding: "32px 28px",
+                }}
+              >
+                <div style={{ fontSize: "32px", marginBottom: "16px" }}>
+                  {perk.emoji}
+                </div>
+                <h3
+                  className="type-heading-3"
+                  style={{ color: "var(--ink)", marginBottom: "8px" }}
+                >
+                  {perk.title}
+                </h3>
+                <p
+                  className="type-body"
+                  style={{ color: "var(--ink-light)", lineHeight: 1.6 }}
+                >
+                  {perk.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
       </main>
       <Footer />
     </>
