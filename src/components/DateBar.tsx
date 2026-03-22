@@ -1,6 +1,7 @@
 "use client";
 
 import { useBooking } from "@/context/BookingContext";
+import GuestRoomPicker from "@/components/GuestRoomPicker";
 
 interface DateBarProps {
   /** Light theme variant for pages with light background */
@@ -23,107 +24,114 @@ export default function DateBar({ variant = "light" }: DateBarProps) {
     <div
       style={{
         display: "flex",
-        gap: 8,
-        padding: "10px 16px",
+        flexDirection: "column",
+        gap: 0,
         background: bgCard,
         borderBottom: `1px solid ${border}`,
       }}
     >
-      <label
-        style={{
-          flex: 1,
-          position: "relative",
-          cursor: "pointer",
-          background: bgInput,
-          border: `1px solid ${border}`,
-          borderRadius: 10,
-          padding: "8px 12px",
-        }}
-      >
-        <div
+      {/* Date row */}
+      <div style={{ display: "flex", gap: 8, padding: "10px 16px 6px" }}>
+        <label
           style={{
-            fontFamily: "var(--font-body), sans-serif",
-            fontSize: 9,
-            letterSpacing: 1,
-            textTransform: "uppercase",
-            color: labelColor,
-            marginBottom: 2,
-          }}
-        >
-          CHECK-IN
-        </div>
-        <div
-          style={{
-            fontFamily: "var(--font-body), sans-serif",
-            fontSize: 13,
-            fontWeight: 400,
-            color: checkIn ? valueColor : placeholderColor,
-          }}
-        >
-          {formatDate(checkIn, "Select date")}
-        </div>
-        <input
-          type="date"
-          value={checkIn}
-          onChange={(e) => setCheckIn(e.target.value)}
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity: 0,
+            flex: 1,
+            position: "relative",
             cursor: "pointer",
-            width: "100%",
-            height: "100%",
-          }}
-        />
-      </label>
-      <label
-        style={{
-          flex: 1,
-          position: "relative",
-          cursor: "pointer",
-          background: bgInput,
-          border: `1px solid ${border}`,
-          borderRadius: 10,
-          padding: "8px 12px",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: "var(--font-body), sans-serif",
-            fontSize: 9,
-            letterSpacing: 1,
-            textTransform: "uppercase",
-            color: labelColor,
-            marginBottom: 2,
+            background: bgInput,
+            border: `1px solid ${border}`,
+            borderRadius: 10,
+            padding: "8px 12px",
           }}
         >
-          CHECK-OUT
-        </div>
-        <div
+          <div
+            style={{
+              fontFamily: "var(--font-body), sans-serif",
+              fontSize: 9,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: labelColor,
+              marginBottom: 2,
+            }}
+          >
+            CHECK-IN
+          </div>
+          <div
+            style={{
+              fontFamily: "var(--font-body), sans-serif",
+              fontSize: 13,
+              fontWeight: 400,
+              color: checkIn ? valueColor : placeholderColor,
+            }}
+          >
+            {formatDate(checkIn, "Select date")}
+          </div>
+          <input
+            type="date"
+            value={checkIn}
+            onChange={(e) => setCheckIn(e.target.value)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: 0,
+              cursor: "pointer",
+              width: "100%",
+              height: "100%",
+            }}
+          />
+        </label>
+        <label
           style={{
-            fontFamily: "var(--font-body), sans-serif",
-            fontSize: 13,
-            fontWeight: 400,
-            color: checkOut ? valueColor : placeholderColor,
-          }}
-        >
-          {formatDate(checkOut, "Select date")}
-        </div>
-        <input
-          type="date"
-          value={checkOut}
-          min={checkIn || undefined}
-          onChange={(e) => setCheckOut(e.target.value)}
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity: 0,
+            flex: 1,
+            position: "relative",
             cursor: "pointer",
-            width: "100%",
-            height: "100%",
+            background: bgInput,
+            border: `1px solid ${border}`,
+            borderRadius: 10,
+            padding: "8px 12px",
           }}
-        />
-      </label>
+        >
+          <div
+            style={{
+              fontFamily: "var(--font-body), sans-serif",
+              fontSize: 9,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              color: labelColor,
+              marginBottom: 2,
+            }}
+          >
+            CHECK-OUT
+          </div>
+          <div
+            style={{
+              fontFamily: "var(--font-body), sans-serif",
+              fontSize: 13,
+              fontWeight: 400,
+              color: checkOut ? valueColor : placeholderColor,
+            }}
+          >
+            {formatDate(checkOut, "Select date")}
+          </div>
+          <input
+            type="date"
+            value={checkOut}
+            min={checkIn || undefined}
+            onChange={(e) => setCheckOut(e.target.value)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: 0,
+              cursor: "pointer",
+              width: "100%",
+              height: "100%",
+            }}
+          />
+        </label>
+      </div>
+      {/* Guests row */}
+      <div style={{ padding: "0 16px 10px" }}>
+        <GuestRoomPicker variant={variant} compact />
+      </div>
     </div>
   );
 }

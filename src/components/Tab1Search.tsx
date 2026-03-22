@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useBooking } from "@/context/BookingContext";
+import GuestRoomPicker from "@/components/GuestRoomPicker";
 
 const featuredHotels = [
   {
@@ -298,37 +299,8 @@ export default function Tab1Search() {
         </div>
 
         {/* Guests */}
-        <div
-          style={{
-            background: "var(--bg-input)",
-            border: "1px solid var(--border)",
-            borderRadius: 12,
-            padding: "12px 14px",
-            marginBottom: 14,
-          }}
-        >
-          <div
-            style={{
-              fontFamily: "var(--font-jetbrains-mono)",
-              fontSize: 9,
-              letterSpacing: 1.2,
-              textTransform: "uppercase",
-              color: "var(--white-30)",
-              marginBottom: 4,
-            }}
-          >
-            GUESTS
-          </div>
-          <div
-            style={{
-              fontFamily: "var(--font-dm-sans)",
-              fontSize: 14,
-              fontWeight: 400,
-              color: "var(--white-80)",
-            }}
-          >
-            2 Adults
-          </div>
+        <div style={{ marginBottom: 14 }}>
+          <GuestRoomPicker variant="dark" />
         </div>
 
         {/* Search Button */}
