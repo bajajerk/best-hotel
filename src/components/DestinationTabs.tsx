@@ -3,9 +3,12 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getCityImage, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import type { CuratedCity } from "@/lib/api";
 import RegionFilterTabs from "./RegionFilterTabs";
+
+const INITIAL_CITY_LIMIT = 8;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -191,6 +194,52 @@ function MiniDestCard({ city, index }: { city: CuratedCity; index: number }) {
 }
 
 // ---------------------------------------------------------------------------
+// View More button — redirects to search page
+// ---------------------------------------------------------------------------
+function ViewMoreButton({ onClick }: { onClick: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      style={{ textAlign: "center", marginTop: "36px" }}
+    >
+      <button
+        onClick={onClick}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "8px",
+          padding: "12px 32px",
+          fontSize: "13px",
+          fontWeight: 500,
+          letterSpacing: "0.06em",
+          color: "var(--gold)",
+          background: "none",
+          border: "1px solid var(--gold)",
+          cursor: "pointer",
+          fontFamily: "var(--font-body)",
+          transition: "all 0.25s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "var(--gold)";
+          e.currentTarget.style.color = "var(--white)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "none";
+          e.currentTarget.style.color = "var(--gold)";
+        }}
+      >
+        View More
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // DestinationTabs Component
 // ---------------------------------------------------------------------------
 interface DestinationTabsProps {
@@ -204,13 +253,20 @@ export default function DestinationTabs({ cities, loading }: DestinationTabsProp
 
   const totalCities = cities.length;
 
-  // Region-filtered cities
-  const filteredCities = useMemo(
+  const router = useRouter();
+
+  // Region-filtered cities (limited to 8 initially)
+  const allFilteredCities = useMemo(
     () => (activeContinent === "All" ? cities : cities.filter((c) => c.continent === activeContinent)),
     [cities, activeContinent]
   );
+  const filteredCities = useMemo(
+    () => allFilteredCities.slice(0, INITIAL_CITY_LIMIT),
+    [allFilteredCities]
+  );
+  const hasMoreRegionCities = allFilteredCities.length > INITIAL_CITY_LIMIT;
 
-  // Group by continent
+  // Group by continent (from the limited set)
   const continentGroups = useMemo(
     () =>
       filteredCities.reduce<Record<string, CuratedCity[]>>((acc, city) => {
@@ -225,11 +281,16 @@ export default function DestinationTabs({ cities, loading }: DestinationTabsProp
   const continentOrder = ["Asia", "Europe", "North America", "South America", "Africa", "Oceania", "Other"];
   const sortedContinents = continentOrder.filter((c) => continentGroups[c]);
 
-  // Popular: sorted by hotel count
-  const popularCities = useMemo(
-    () => [...cities].sort((a, b) => (b.hotel_count || 0) - (a.hotel_count || 0)).slice(0, 12),
+  // Popular: sorted by hotel count, limited to 8
+  const allPopularCities = useMemo(
+    () => [...cities].sort((a, b) => (b.hotel_count || 0) - (a.hotel_count || 0)),
     [cities]
   );
+  const popularCities = useMemo(
+    () => allPopularCities.slice(0, INITIAL_CITY_LIMIT),
+    [allPopularCities]
+  );
+  const hasMorePopularCities = allPopularCities.length > INITIAL_CITY_LIMIT;
 
   // Seasonal: group cities by season
   const seasonalGroups = useMemo(() => {
@@ -392,6 +453,9 @@ export default function DestinationTabs({ cities, loading }: DestinationTabsProp
                     </div>
                   </div>
                 ))}
+                {hasMoreRegionCities && (
+                  <ViewMoreButton onClick={() => router.push("/search")} />
+                )}
               </motion.div>
             )}
 
@@ -422,6 +486,9 @@ export default function DestinationTabs({ cities, loading }: DestinationTabsProp
                     <MiniDestCard key={city.city_slug} city={city} index={i} />
                   ))}
                 </div>
+                {hasMorePopularCities && (
+                  <ViewMoreButton onClick={() => router.push("/search")} />
+                )}
               </motion.div>
             )}
 
@@ -508,7 +575,7 @@ export default function DestinationTabs({ cities, loading }: DestinationTabsProp
           style={{ textAlign: "center", marginTop: "48px" }}
         >
           <Link
-            href="/locations"
+            href="/search"
             className="btn-outline"
             style={{
               display: "inline-flex",
