@@ -222,7 +222,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
                   padding: "4px 10px",
-                  fontFamily: "var(--sans)",
+                  fontFamily: "var(--font-body)",
                 }}
               >
                 Preferred
@@ -248,13 +248,10 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
 
             {/* Hotel name */}
             <h3
+              className="type-heading-3"
               style={{
-                fontFamily: "var(--serif)",
-                fontSize: 20,
-                fontWeight: 400,
                 color: "var(--ink)",
                 marginBottom: 4,
-                lineHeight: 1.2,
               }}
             >
               {hotel.hotel_name}
@@ -283,7 +280,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
                     background: hotel.rating_average >= 8.5 ? "var(--gold-pale)" : "var(--cream)",
                     color: hotel.rating_average >= 8.5 ? "var(--gold)" : "var(--ink-mid)",
                     border: "1px solid var(--cream-border)",
-                    fontFamily: "var(--sans)",
+                    fontFamily: "var(--font-body)",
                     fontWeight: 500,
                   }}
                 >
@@ -298,7 +295,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
                     background: "var(--cream)",
                     color: "var(--ink-mid)",
                     border: "1px solid var(--cream-border)",
-                    fontFamily: "var(--sans)",
+                    fontFamily: "var(--font-body)",
                   }}
                 >
                   {hotel.number_of_reviews.toLocaleString()} reviews
@@ -349,24 +346,17 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
             {hotel.rates_from ? (
               <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 6 }}>
                 <div
+                  className="type-label"
                   style={{
-                    fontSize: 10,
-                    fontWeight: 500,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
                     color: "var(--gold)",
-                    fontFamily: "var(--sans)",
                   }}
                 >
                   Voyagr Rate
                 </div>
                 <div
+                  className="type-price"
                   style={{
-                    fontFamily: "var(--serif)",
-                    fontSize: 28,
-                    fontWeight: 500,
                     color: "var(--ink)",
-                    lineHeight: 1.1,
                   }}
                 >
                   {formatCurrency(hotel.rates_from, hotel.rates_currency)}
@@ -388,7 +378,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: "var(--gold)",
-                  fontFamily: "var(--sans)",
+                  fontFamily: "var(--font-body)",
                 }}
               >
                 Call for rates
@@ -405,7 +395,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
                   fontWeight: 500,
                   padding: "4px 10px",
                   textAlign: "center",
-                  fontFamily: "var(--sans)",
+                  fontFamily: "var(--font-body)",
                 }}
               >
                 Save {savePercent}%
@@ -455,7 +445,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
                   padding: "4px 10px",
-                  fontFamily: "var(--sans)",
+                  fontFamily: "var(--font-body)",
                 }}
               >
                 Preferred
@@ -472,7 +462,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
                   fontSize: 11,
                   fontWeight: 500,
                   padding: "4px 10px",
-                  fontFamily: "var(--sans)",
+                  fontFamily: "var(--font-body)",
                 }}
               >
                 Save {savePercent}%
@@ -495,10 +485,8 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
               </div>
             )}
             <h3
+              className="type-heading-3"
               style={{
-                fontFamily: "var(--serif)",
-                fontSize: 18,
-                fontWeight: 400,
                 color: "var(--ink)",
                 marginBottom: 4,
               }}
@@ -528,7 +516,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
                       color: "var(--gold)",
-                      fontFamily: "var(--sans)",
+                      fontFamily: "var(--font-body)",
                       marginBottom: 2,
                     }}
                   >
@@ -537,7 +525,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                     <span
                       style={{
-                        fontFamily: "var(--serif)",
+                        fontFamily: "var(--font-display)",
                         fontSize: 24,
                         fontWeight: 500,
                         color: "var(--ink)",
@@ -556,7 +544,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
                     color: "var(--gold)",
-                    fontFamily: "var(--sans)",
+                    fontFamily: "var(--font-body)",
                   }}
                 >
                   Call for rates
@@ -660,7 +648,7 @@ export default function CityPage() {
         ...cssVars,
         background: "var(--cream)",
         color: "var(--ink)",
-        fontFamily: "var(--sans)",
+        fontFamily: "var(--font-body)",
         fontSize: 14,
         lineHeight: 1.6,
         minHeight: "100vh",
@@ -692,13 +680,10 @@ export default function CityPage() {
         {/* Logo */}
         <Link href="/" style={{ textDecoration: "none" }}>
           <span
+            className="type-logo"
             style={{
-              fontFamily: "var(--serif)",
-              fontSize: 22,
-              fontWeight: 500,
               letterSpacing: "0.08em",
               color: "var(--ink)",
-              fontStyle: "italic",
             }}
           >
             <span style={{ color: "var(--gold)" }}>V</span>oyagr
@@ -724,12 +709,8 @@ export default function CityPage() {
             <a
               key={link.label}
               href={link.href}
+              className="type-nav"
               style={{
-                fontFamily: "var(--sans)",
-                fontSize: 12,
-                fontWeight: 500,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
                 color: "var(--ink-mid)",
                 cursor: "pointer",
                 transition: "color 0.2s",
@@ -775,7 +756,7 @@ export default function CityPage() {
             color: "var(--cream)",
             border: "none",
             padding: "10px 24px",
-            fontFamily: "var(--sans)",
+            fontFamily: "var(--font-body)",
             fontSize: 12,
             fontWeight: 500,
             letterSpacing: "0.12em",
@@ -834,7 +815,7 @@ export default function CityPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
               style={{
-                fontFamily: "var(--serif)",
+                fontFamily: "var(--font-display)",
                 fontSize: "clamp(36px, 5vw, 56px)",
                 fontWeight: 300,
                 fontStyle: "italic",
@@ -928,7 +909,7 @@ export default function CityPage() {
                       style={{
                         position: "relative",
                         fontSize: 13,
-                        fontFamily: "var(--sans)",
+                        fontFamily: "var(--font-body)",
                         fontWeight: isActive ? 500 : 400,
                         color: isActive ? "var(--ink)" : "var(--ink-light)",
                         background: "none",
@@ -989,7 +970,7 @@ export default function CityPage() {
                   fontWeight: 500,
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
-                  fontFamily: "var(--sans)",
+                  fontFamily: "var(--font-body)",
                   cursor: "pointer",
                   transition: "all 0.2s",
                 }}
@@ -1023,24 +1004,24 @@ export default function CityPage() {
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                        <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-light)", fontFamily: "var(--sans)" }}>
+                        <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-light)", fontFamily: "var(--font-body)" }}>
                           Price Range
                         </span>
                         {isFilterActive && (
                           <button
                             onClick={() => { setFilterMin(priceMin); setFilterMax(priceMax); }}
-                            style={{ fontSize: 11, color: "var(--gold)", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--sans)", fontWeight: 500 }}
+                            style={{ fontSize: 11, color: "var(--gold)", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)", fontWeight: 500 }}
                           >
                             Reset
                           </button>
                         )}
                       </div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 20 }}>
-                        <span style={{ fontFamily: "var(--serif)", fontSize: 20, fontWeight: 500, color: "var(--ink)" }}>
+                        <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 500, color: "var(--ink)" }}>
                           {formatCurrency(filterMin, currency)}
                         </span>
                         <span style={{ fontSize: 12, color: "var(--ink-light)" }}>—</span>
-                        <span style={{ fontFamily: "var(--serif)", fontSize: 20, fontWeight: 500, color: "var(--ink)" }}>
+                        <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 500, color: "var(--ink)" }}>
                           {formatCurrency(filterMax, currency)}
                         </span>
                       </div>
@@ -1149,7 +1130,7 @@ export default function CityPage() {
                         letterSpacing: "0.14em",
                         textTransform: "uppercase",
                         color: "var(--ink-light)",
-                        fontFamily: "var(--sans)",
+                        fontFamily: "var(--font-body)",
                       }}
                     >
                       Filters
@@ -1163,7 +1144,7 @@ export default function CityPage() {
                           background: "none",
                           border: "none",
                           cursor: "pointer",
-                          fontFamily: "var(--sans)",
+                          fontFamily: "var(--font-body)",
                           fontWeight: 500,
                           transition: "color 0.2s",
                         }}
@@ -1184,7 +1165,7 @@ export default function CityPage() {
                         letterSpacing: "0.08em",
                         textTransform: "uppercase",
                         color: "var(--ink-mid)",
-                        fontFamily: "var(--sans)",
+                        fontFamily: "var(--font-body)",
                       }}
                     >
                       Price Range
@@ -1194,11 +1175,11 @@ export default function CityPage() {
                   {/* Price display */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 20 }}>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                      <span style={{ fontFamily: "var(--serif)", fontSize: 22, fontWeight: 500, color: "var(--ink)" }}>
+                      <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 500, color: "var(--ink)" }}>
                         {formatCurrency(filterMin, currency)}
                       </span>
                       <span style={{ fontSize: 12, color: "var(--ink-light)" }}>—</span>
-                      <span style={{ fontFamily: "var(--serif)", fontSize: 22, fontWeight: 500, color: "var(--ink)" }}>
+                      <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 500, color: "var(--ink)" }}>
                         {formatCurrency(filterMax, currency)}
                       </span>
                     </div>
@@ -1338,7 +1319,7 @@ export default function CityPage() {
                           <>
                             <p
                               style={{
-                                fontFamily: "var(--serif)",
+                                fontFamily: "var(--font-display)",
                                 fontSize: 28,
                                 fontStyle: "italic",
                                 fontWeight: 300,
@@ -1363,7 +1344,7 @@ export default function CityPage() {
                                 textTransform: "uppercase",
                                 color: "var(--ink-mid)",
                                 cursor: "pointer",
-                                fontFamily: "var(--sans)",
+                                fontFamily: "var(--font-body)",
                                 transition: "all 0.2s",
                               }}
                               onMouseEnter={(e) => {
@@ -1382,7 +1363,7 @@ export default function CityPage() {
                           <>
                             <p
                               style={{
-                                fontFamily: "var(--serif)",
+                                fontFamily: "var(--font-display)",
                                 fontSize: 28,
                                 fontStyle: "italic",
                                 fontWeight: 300,
@@ -1447,7 +1428,7 @@ export default function CityPage() {
                     >
                       {isFilterActive ? (
                         <>
-                          <p style={{ fontFamily: "var(--serif)", fontSize: 24, fontStyle: "italic", fontWeight: 300, color: "var(--ink-mid)", marginBottom: 12 }}>
+                          <p style={{ fontFamily: "var(--font-display)", fontSize: 24, fontStyle: "italic", fontWeight: 300, color: "var(--ink-mid)", marginBottom: 12 }}>
                             No matches
                           </p>
                           <p style={{ fontSize: 14, color: "var(--ink-light)", marginBottom: 20 }}>
@@ -1465,7 +1446,7 @@ export default function CityPage() {
                               textTransform: "uppercase",
                               color: "var(--ink-mid)",
                               cursor: "pointer",
-                              fontFamily: "var(--sans)",
+                              fontFamily: "var(--font-body)",
                             }}
                           >
                             Clear filter
@@ -1473,7 +1454,7 @@ export default function CityPage() {
                         </>
                       ) : (
                         <>
-                          <p style={{ fontFamily: "var(--serif)", fontSize: 24, fontStyle: "italic", fontWeight: 300, color: "var(--ink-mid)", marginBottom: 12 }}>
+                          <p style={{ fontFamily: "var(--font-display)", fontSize: 24, fontStyle: "italic", fontWeight: 300, color: "var(--ink-mid)", marginBottom: 12 }}>
                             Coming soon
                           </p>
                           <p style={{ fontSize: 14, color: "var(--ink-light)" }}>
@@ -1513,25 +1494,17 @@ export default function CityPage() {
           }}
         >
           <p
+            className="type-eyebrow"
             style={{
-              fontSize: 10,
-              fontWeight: 500,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              color: "var(--gold)",
               marginBottom: 16,
-              fontFamily: "var(--sans)",
             }}
           >
             Ready to save?
           </p>
           <h3
+            className="type-display-2"
             style={{
-              fontFamily: "var(--serif)",
-              fontSize: "clamp(28px, 3vw, 40px)",
-              fontWeight: 300,
               fontStyle: "italic",
-              lineHeight: 1.15,
               color: "var(--cream)",
               marginBottom: 16,
             }}
@@ -1572,7 +1545,7 @@ export default function CityPage() {
                 color: "var(--ink)",
                 border: "none",
                 padding: "12px 28px",
-                fontFamily: "var(--sans)",
+                fontFamily: "var(--font-body)",
                 fontSize: 12,
                 fontWeight: 500,
                 letterSpacing: "0.12em",
@@ -1616,7 +1589,7 @@ export default function CityPage() {
                 color: "var(--cream)",
                 border: "1px solid rgba(245,240,232,0.3)",
                 padding: "11px 28px",
-                fontFamily: "var(--sans)",
+                fontFamily: "var(--font-body)",
                 fontSize: 12,
                 fontWeight: 500,
                 letterSpacing: "0.12em",
@@ -1658,24 +1631,17 @@ export default function CityPage() {
       >
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <p
+            className="type-eyebrow"
             style={{
-              fontSize: 10,
-              fontWeight: 500,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              color: "var(--gold)",
               marginBottom: 8,
-              fontFamily: "var(--sans)",
             }}
           >
             Explore
           </p>
           <h3
+            className="type-display-2"
             style={{
-              fontFamily: "var(--serif)",
               fontSize: "clamp(24px, 3vw, 36px)",
-              fontWeight: 400,
-              lineHeight: 1.15,
               color: "var(--ink)",
               marginBottom: 32,
             }}
@@ -1713,7 +1679,7 @@ export default function CityPage() {
                     transition: "all 0.2s",
                     background: "var(--white)",
                     textDecoration: "none",
-                    fontFamily: "var(--serif)",
+                    fontFamily: "var(--font-display)",
                     fontStyle: "italic",
                   }}
                   onMouseEnter={(e) => {
@@ -1758,13 +1724,10 @@ export default function CityPage() {
         >
           <Link href="/" style={{ textDecoration: "none" }}>
             <span
+              className="type-logo"
               style={{
-                fontFamily: "var(--serif)",
-                fontSize: 22,
-                fontWeight: 500,
                 letterSpacing: "0.08em",
                 color: "var(--ink)",
-                fontStyle: "italic",
               }}
             >
               <span style={{ color: "var(--gold)" }}>V</span>oyagr
@@ -1774,7 +1737,7 @@ export default function CityPage() {
             style={{
               fontSize: 12,
               color: "var(--ink-light)",
-              fontFamily: "var(--sans)",
+              fontFamily: "var(--font-body)",
             }}
           >
             Preferred hotel rates for everyone.
@@ -1792,7 +1755,7 @@ export default function CityPage() {
                   fontSize: 11,
                   color: "var(--ink-light)",
                   cursor: "pointer",
-                  fontFamily: "var(--sans)",
+                  fontFamily: "var(--font-body)",
                   letterSpacing: "0.06em",
                   transition: "color 0.2s",
                 }}

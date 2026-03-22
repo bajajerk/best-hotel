@@ -267,13 +267,10 @@ export default function Home() {
         {/* Logo */}
         <Link href="/" style={{ textDecoration: "none" }}>
           <span
+            className="type-logo"
             style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "22px",
-              fontWeight: 500,
               letterSpacing: "0.08em",
               color: "var(--ink)",
-              fontStyle: "italic",
             }}
           >
             <span style={{ color: "var(--gold)" }}>V</span>oyagr
@@ -297,12 +294,8 @@ export default function Home() {
               <a
                 key={link.label}
                 href={link.href}
+                className="type-nav"
                 style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase" as const,
                   color: "var(--ink-mid)",
                   textDecoration: "none",
                   paddingBottom: "2px",
@@ -395,12 +388,8 @@ export default function Home() {
         >
           <motion.p
             variants={fadeUp}
+            className="type-eyebrow"
             style={{
-              fontSize: "10px",
-              fontWeight: 500,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase" as const,
-              color: "var(--gold)",
               marginBottom: "20px",
             }}
           >
@@ -409,11 +398,8 @@ export default function Home() {
 
           <motion.h1
             variants={fadeUp}
+            className="type-display-1"
             style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(42px, 5vw, 68px)",
-              fontWeight: 300,
-              lineHeight: 1.1,
               color: "var(--ink)",
               marginBottom: "24px",
             }}
@@ -427,14 +413,11 @@ export default function Home() {
 
           <motion.p
             variants={fadeUp}
+            className="type-body-lg"
             style={{
-              fontSize: "15px",
-              fontWeight: 300,
               color: "var(--ink-light)",
-              lineHeight: 1.7,
               maxWidth: "380px",
               marginBottom: "40px",
-              fontFamily: "var(--font-body)",
             }}
           >
             B2B wholesale pricing on 1,500+ hotels across 50 cities.
@@ -466,11 +449,7 @@ export default function Home() {
                 transition: "background 0.2s",
               }}
             >
-              <div style={{
-                fontSize: "9px",
-                fontWeight: 500,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase" as const,
+              <div className="type-micro" style={{
                 color: "var(--ink-light)",
                 marginBottom: "3px",
               }}>
@@ -510,11 +489,7 @@ export default function Home() {
                 cursor: "pointer",
               }}
             >
-              <div style={{
-                fontSize: "9px",
-                fontWeight: 500,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase" as const,
+              <div className="type-micro" style={{
                 color: "var(--ink-light)",
                 marginBottom: "3px",
               }}>
@@ -533,11 +508,7 @@ export default function Home() {
                 cursor: "pointer",
               }}
             >
-              <div style={{
-                fontSize: "9px",
-                fontWeight: 500,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase" as const,
+              <div className="type-micro" style={{
                 color: "var(--ink-light)",
                 marginBottom: "3px",
               }}>
@@ -587,17 +558,12 @@ export default function Home() {
               { num: "20-40%", label: "Average savings" },
             ].map((stat) => (
               <div key={stat.label}>
-                <div style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "28px",
-                  fontWeight: 400,
+                <div className="type-stat" style={{
                   color: "var(--ink)",
-                  lineHeight: 1,
                 }}>
                   {stat.num}
                 </div>
-                <div style={{
-                  fontSize: "10px",
+                <div className="type-label" style={{
                   color: "var(--ink-light)",
                   letterSpacing: "0.08em",
                   marginTop: "4px",
@@ -708,21 +674,12 @@ export default function Home() {
             }}
           >
             <div>
-              <div style={{
-                fontSize: "10px",
-                fontWeight: 500,
-                letterSpacing: "0.22em",
-                textTransform: "uppercase" as const,
-                color: "var(--gold)",
+              <div className="type-eyebrow" style={{
                 marginBottom: "8px",
               }}>
                 Featured Properties
               </div>
-              <h2 style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(28px, 3vw, 40px)",
-                fontWeight: 400,
-                lineHeight: 1.15,
+              <h2 className="type-display-2" style={{
                 color: "var(--ink)",
               }}>
                 Curated <em style={{ fontStyle: "italic", color: "var(--gold)" }}>stays</em> worldwide
@@ -811,21 +768,12 @@ export default function Home() {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
           >
-            <div style={{
-              fontSize: "10px",
-              fontWeight: 500,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase" as const,
-              color: "var(--gold)",
+            <div className="type-eyebrow" style={{
               marginBottom: "8px",
             }}>
               How It Works
             </div>
-            <h2 style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(28px, 3vw, 40px)",
-              fontWeight: 400,
-              lineHeight: 1.15,
+            <h2 className="type-display-2" style={{
               color: "var(--cream)",
             }}>
               Why travellers choose <em style={{ fontStyle: "italic", color: "var(--gold)" }}>Voyagr</em>
@@ -903,21 +851,12 @@ export default function Home() {
             }}
           >
             <div>
-              <div style={{
-                fontSize: "10px",
-                fontWeight: 500,
-                letterSpacing: "0.22em",
-                textTransform: "uppercase" as const,
-                color: "var(--gold)",
+              <div className="type-eyebrow" style={{
                 marginBottom: "8px",
               }}>
                 Destinations
               </div>
-              <h2 style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(28px, 3vw, 40px)",
-                fontWeight: 400,
-                lineHeight: 1.15,
+              <h2 className="type-display-2" style={{
                 color: "var(--ink)",
               }}>
                 Explore{" "}
@@ -1062,21 +1001,12 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             style={{ marginBottom: "48px" }}
           >
-            <div style={{
-              fontSize: "10px",
-              fontWeight: 500,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase" as const,
-              color: "var(--gold)",
+            <div className="type-eyebrow" style={{
               marginBottom: "8px",
             }}>
               The Proof
             </div>
-            <h2 style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(28px, 3vw, 40px)",
-              fontWeight: 400,
-              lineHeight: 1.15,
+            <h2 className="type-display-2" style={{
               color: "var(--ink)",
             }}>
               Same hotel, same room &mdash; <em style={{ fontStyle: "italic", color: "var(--gold)" }}>better rate</em>
@@ -1161,10 +1091,7 @@ export default function Home() {
                   <div style={{ color: "var(--gold)", fontSize: "11px", letterSpacing: "2px", marginBottom: "6px" }}>
                     {"★".repeat(deal.stars)}
                   </div>
-                  <div style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "20px",
-                    fontWeight: 400,
+                  <div className="type-heading-3" style={{
                     color: "var(--ink)",
                     marginBottom: "4px",
                   }}>
@@ -1226,12 +1153,8 @@ export default function Home() {
                     }}>
                       VOYAGR RATE
                     </div>
-                    <div style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "28px",
-                      fontWeight: 500,
+                    <div className="type-price" style={{
                       color: "var(--ink)",
-                      lineHeight: 1.1,
                     }}>
                       &#8377;{deal.voyagrRate.toLocaleString("en-IN")}
                     </div>
@@ -1271,12 +1194,7 @@ export default function Home() {
             style={{ textAlign: "center" }}
           >
             {/* Section eyebrow */}
-            <div style={{
-              fontSize: "10px",
-              fontWeight: 500,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase" as const,
-              color: "var(--gold)",
+            <div className="type-eyebrow" style={{
               marginBottom: "24px",
             }}>
               Testimonials
@@ -1455,11 +1373,7 @@ export default function Home() {
                 }}>
                   {stat.prefix || ""}{stat.number}
                 </div>
-                <div style={{
-                  fontSize: "10px",
-                  fontWeight: 500,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase" as const,
+                <div className="type-label" style={{
                   color: "var(--ink-light)",
                   marginTop: "6px",
                 }}>
@@ -1506,11 +1420,7 @@ export default function Home() {
         >
           {/* Logo */}
           <Link href="/" style={{ textDecoration: "none" }}>
-            <span style={{
-              fontFamily: "var(--font-display)",
-              fontStyle: "italic",
-              fontWeight: 500,
-              fontSize: "22px",
+            <span className="type-logo" style={{
               color: "var(--ink)",
               letterSpacing: "0.08em",
             }}>
@@ -1528,10 +1438,9 @@ export default function Home() {
               <a
                 key={link.label}
                 href={link.href}
+                className="type-caption"
                 style={{
-                  fontFamily: "var(--font-body)",
                   fontWeight: 400,
-                  fontSize: "12px",
                   letterSpacing: "0.08em",
                   color: "var(--ink-light)",
                   textDecoration: "none",
@@ -1629,12 +1538,9 @@ function HotelCard({
           pointerEvents: "none",
         }}
       >
-        <div style={{
-          fontFamily: "var(--font-display)",
-          fontSize: isLarge ? "26px" : "22px",
-          fontWeight: 400,
+        <div className="type-display-3" style={{
           fontStyle: "italic",
-          lineHeight: 1.2,
+          fontSize: isLarge ? "26px" : undefined,
         }}>
           {city.city_name}
         </div>
@@ -1719,13 +1625,9 @@ function DestinationCard({ city }: { city: CuratedCity }) {
 
         {/* Content */}
         <div style={{ padding: "20px 24px 28px" }}>
-          <h3 style={{
-            fontFamily: "var(--font-display)",
+          <h3 className="type-display-3" style={{
             fontStyle: "italic",
-            fontSize: "22px",
-            fontWeight: 400,
             color: "var(--ink)",
-            lineHeight: 1.2,
             marginBottom: "4px",
           }}>
             {city.city_name}

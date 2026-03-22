@@ -324,9 +324,8 @@ function ReviewItem({ review }: { review: Review }) {
 function SectionLabel({ children }: { children: string }) {
   return (
     <h3
-      className="text-[10px] uppercase mb-6"
+      className="type-label mb-6"
       style={{
-        fontFamily: "var(--sans)",
         fontWeight: 600,
         letterSpacing: "0.18em",
         color: "var(--gold)",
@@ -549,13 +548,10 @@ export default function HotelPage() {
       >
         <Link href="/" className="no-underline">
           <span
+            className="type-logo"
             style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "22px",
-              fontWeight: 500,
               letterSpacing: "0.08em",
               color: "var(--ink)",
-              fontStyle: "italic",
             }}
           >
             Voyag<span style={{ color: "var(--gold)" }}>r</span>
@@ -578,12 +574,8 @@ export default function HotelPage() {
             <a
               key={link.label}
               href={link.href}
+              className="type-nav"
               style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "12px",
-                fontWeight: 500,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase" as const,
                 color: "var(--ink-mid)",
                 textDecoration: "none",
                 paddingBottom: "2px",
@@ -718,11 +710,8 @@ export default function HotelPage() {
             >
               {starDisplay && (
                 <div
-                  className="mb-2"
+                  className="mb-2 type-label"
                   style={{
-                    fontSize: "10px",
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
                     color: "var(--gold)",
                   }}
                 >
@@ -780,8 +769,8 @@ export default function HotelPage() {
                   You save
                 </div>
                 <div
+                  className="type-price"
                   style={{
-                    fontFamily: "var(--font-display)",
                     fontSize: "28px",
                     fontWeight: 500,
                   }}
@@ -807,22 +796,17 @@ export default function HotelPage() {
           <button
             key={tab}
             onClick={() => handleTabClick(tab)}
+            className="type-nav"
             style={{
               padding: "16px 24px",
-              fontSize: "12px",
-              fontWeight: 500,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
               color: activeTab === tab ? "var(--ink)" : "var(--ink-light)",
               cursor: "pointer",
-              borderBottom: activeTab === tab ? "2px solid var(--ink)" : "2px solid transparent",
               background: "transparent",
               border: "none",
               borderBottomWidth: "2px",
               borderBottomStyle: "solid",
               borderBottomColor: activeTab === tab ? "var(--ink)" : "transparent",
               transition: "all 0.2s",
-              fontFamily: "var(--font-body)",
             }}
             onMouseEnter={(e) => {
               if (activeTab !== tab) (e.target as HTMLButtonElement).style.color = "var(--ink)";
@@ -975,11 +959,9 @@ export default function HotelPage() {
                   {hotel.checkin && (
                     <div className="p-5" style={{ background: "var(--white)" }}>
                       <div
+                        className="type-micro"
                         style={{
-                          fontSize: "10px",
                           fontWeight: 600,
-                          letterSpacing: "0.16em",
-                          textTransform: "uppercase",
                           color: "var(--ink-light)",
                           marginBottom: "6px",
                         }}
@@ -987,10 +969,8 @@ export default function HotelPage() {
                         Check-in
                       </div>
                       <div
+                        className="type-heading-3"
                         style={{
-                          fontFamily: "var(--font-display)",
-                          fontSize: "20px",
-                          fontWeight: 400,
                           color: "var(--ink)",
                         }}
                       >
@@ -1001,11 +981,9 @@ export default function HotelPage() {
                   {hotel.checkout && (
                     <div className="p-5" style={{ background: "var(--white)" }}>
                       <div
+                        className="type-micro"
                         style={{
-                          fontSize: "10px",
                           fontWeight: 600,
-                          letterSpacing: "0.16em",
-                          textTransform: "uppercase",
                           color: "var(--ink-light)",
                           marginBottom: "6px",
                         }}
@@ -1013,10 +991,8 @@ export default function HotelPage() {
                         Check-out
                       </div>
                       <div
+                        className="type-heading-3"
                         style={{
-                          fontFamily: "var(--font-display)",
-                          fontSize: "20px",
-                          fontWeight: 400,
                           color: "var(--ink)",
                         }}
                       >
@@ -1083,11 +1059,8 @@ export default function HotelPage() {
                 {hotel.rates_from ? (
                   <div className="mb-5">
                     <div
+                      className="type-eyebrow"
                       style={{
-                        fontSize: "10px",
-                        color: "var(--gold)",
-                        letterSpacing: "0.18em",
-                        textTransform: "uppercase",
                         marginBottom: "8px",
                       }}
                     >
@@ -1107,12 +1080,9 @@ export default function HotelPage() {
                     )}
                     <div className="flex items-baseline gap-2">
                       <span
+                        className="type-price-lg"
                         style={{
-                          fontFamily: "var(--font-display)",
-                          fontSize: "36px",
-                          fontWeight: 400,
                           color: "var(--ink)",
-                          lineHeight: 1,
                         }}
                       >
                         {formatCurrency(hotel.rates_from, hotel.rates_currency)}
@@ -1263,11 +1233,8 @@ export default function HotelPage() {
                 {hotel.rates_from ? (
                   <>
                     <div
+                      className="type-eyebrow"
                       style={{
-                        fontSize: "10px",
-                        color: "var(--gold)",
-                        letterSpacing: "0.18em",
-                        textTransform: "uppercase",
                         marginBottom: "16px",
                       }}
                     >
@@ -1275,12 +1242,9 @@ export default function HotelPage() {
                     </div>
 
                     <div
+                      className="type-price-lg"
                       style={{
-                        fontFamily: "var(--font-display)",
-                        fontSize: "36px",
-                        fontWeight: 400,
                         color: "var(--ink)",
-                        lineHeight: 1,
                       }}
                     >
                       {formatCurrency(hotel.rates_from, hotel.rates_currency)}
@@ -1416,11 +1380,9 @@ export default function HotelPage() {
       >
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <span
+            className="type-logo"
             style={{
-              fontFamily: "var(--font-display)",
               fontSize: "18px",
-              fontWeight: 500,
-              fontStyle: "italic",
               color: "var(--ink)",
               letterSpacing: "0.08em",
             }}
