@@ -6,6 +6,8 @@ import Link from "next/link";
 import { CONTINENTS, CATEGORIES, SAMPLE_CITIES } from "@/lib/constants";
 import { fetchCuratedCities, CuratedCity } from "@/lib/api";
 import MobileNav from "@/components/MobileNav";
+import HotelCard from "@/components/HotelCard";
+import type { HotelCardData } from "@/components/HotelCard";
 import { useBooking } from "@/context/BookingContext";
 
 // ---------------------------------------------------------------------------
@@ -245,19 +247,7 @@ const SEASONAL_TRIPS = [
 // ---------------------------------------------------------------------------
 // Curated sub-sections data: Most popular · We suggest · Top curated
 // ---------------------------------------------------------------------------
-type CuratedHotelCard = {
-  name: string;
-  city: string;
-  citySlug: string;
-  stars: number;
-  rating: number;
-  tags: string[];
-  priceFrom: number;
-  savePercent: number;
-  img: string;
-};
-
-const MOST_POPULAR: CuratedHotelCard[] = [
+const MOST_POPULAR: HotelCardData[] = [
   {
     name: "Mandarin Oriental",
     city: "Bangkok, Thailand",
@@ -326,7 +316,7 @@ const MOST_POPULAR: CuratedHotelCard[] = [
   },
 ];
 
-const WE_SUGGEST: CuratedHotelCard[] = [
+const WE_SUGGEST: HotelCardData[] = [
   {
     name: "Aman Venice",
     city: "Venice, Italy",
@@ -395,7 +385,7 @@ const WE_SUGGEST: CuratedHotelCard[] = [
   },
 ];
 
-const TOP_CURATED: CuratedHotelCard[] = [
+const TOP_CURATED: HotelCardData[] = [
   {
     name: "The Peninsula",
     city: "Hong Kong",
@@ -648,99 +638,7 @@ function PopularCarousel({ properties }: { properties: PopularProp[] }) {
       <div className="carousel-track" ref={trackRef}>
         {properties.map((prop) => (
           <div key={prop.name} style={{ width: "calc(25% - 15px)" }}>
-            <Link href={`/city/${prop.citySlug}`} style={{ textDecoration: "none", display: "block" }}>
-              <div
-                className="card-hover"
-                style={{
-                  background: "var(--white)",
-                  border: "1px solid var(--cream-border)",
-                  overflow: "hidden",
-                  cursor: "pointer",
-                }}
-              >
-                {/* Image */}
-                <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
-                  <img
-                    className="card-img"
-                    src={safeImageSrc(prop.img)}
-                    alt={prop.name}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      display: "block",
-                      filter: "saturate(0.88)",
-                    }}
-                    loading="lazy"
-                    onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
-                  />
-                  {prop.rating >= 8.5 && (
-                    <div style={{
-                      position: "absolute", top: "12px", right: "12px",
-                      background: "var(--gold)", color: "var(--white)",
-                      fontSize: "12px", fontWeight: 600, padding: "4px 10px",
-                      fontFamily: "var(--font-mono)",
-                    }}>
-                      {prop.rating.toFixed(1)}
-                    </div>
-                  )}
-                  <div style={{
-                    position: "absolute", bottom: "12px", left: "12px",
-                    background: "var(--success)", color: "var(--cream)",
-                    fontSize: "10px", fontWeight: 500, padding: "4px 10px",
-                    letterSpacing: "0.04em",
-                  }}>
-                    Save up to {prop.savePercent}%
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div style={{ padding: "18px 20px 22px" }}>
-                  <div style={{ color: "var(--gold)", fontSize: "10px", letterSpacing: "2px", marginBottom: "6px" }}>
-                    {"★".repeat(prop.stars)}
-                  </div>
-                  <h3 className="type-heading-3" style={{ color: "var(--ink)", marginBottom: "4px", fontSize: "16px" }}>
-                    {prop.name}
-                  </h3>
-                  <p style={{ fontSize: "12px", color: "var(--ink-light)", letterSpacing: "0.04em", marginBottom: "14px" }}>
-                    {prop.city}
-                  </p>
-                  <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginBottom: "16px" }}>
-                    {prop.tags.map((tag) => (
-                      <span key={tag} style={{
-                        fontSize: "9px", padding: "3px 8px",
-                        background: "var(--cream)", color: "var(--ink-mid)",
-                        border: "1px solid var(--cream-border)", letterSpacing: "0.04em",
-                      }}>
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  <div style={{
-                    borderTop: "1px solid var(--cream-border)", paddingTop: "14px",
-                    display: "flex", alignItems: "baseline", justifyContent: "space-between",
-                  }}>
-                    <div>
-                      <span style={{ fontSize: "10px", color: "var(--ink-light)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                        From
-                      </span>
-                      <div style={{
-                        fontFamily: "var(--font-display)", fontSize: "22px",
-                        fontWeight: 500, color: "var(--ink)", lineHeight: 1.2,
-                      }}>
-                        &#8377;{prop.priceFrom.toLocaleString("en-IN")}
-                      </div>
-                      <span style={{ fontSize: "10px", color: "var(--ink-light)" }}>per night</span>
-                    </div>
-                    <span className="card-arrow" style={{
-                      fontSize: "11px", color: "var(--gold)", fontWeight: 500, letterSpacing: "0.04em",
-                    }}>
-                      View &rarr;
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Link>
+            <HotelCard hotel={prop} />
           </div>
         ))}
       </div>
@@ -953,97 +851,7 @@ function CuratedSubSections() {
           <div className="carousel-track" ref={trackRef}>
             {activeData.map((prop) => (
               <div key={prop.name} style={{ width: "calc(25% - 15px)" }}>
-                <Link href={`/city/${prop.citySlug}`} style={{ textDecoration: "none", display: "block" }}>
-                  <div
-                    className="card-hover"
-                    style={{
-                      background: "var(--white)",
-                      border: "1px solid var(--cream-border)",
-                      overflow: "hidden",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
-                      <img
-                        className="card-img"
-                        src={safeImageSrc(prop.img)}
-                        alt={prop.name}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          display: "block",
-                          filter: "saturate(0.88)",
-                        }}
-                        loading="lazy"
-                        onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
-                      />
-                      {prop.rating >= 8.5 && (
-                        <div style={{
-                          position: "absolute", top: "12px", right: "12px",
-                          background: "var(--gold)", color: "var(--white)",
-                          fontSize: "12px", fontWeight: 600, padding: "4px 10px",
-                          fontFamily: "var(--font-mono)",
-                        }}>
-                          {prop.rating.toFixed(1)}
-                        </div>
-                      )}
-                      <div style={{
-                        position: "absolute", bottom: "12px", left: "12px",
-                        background: "var(--success)", color: "var(--cream)",
-                        fontSize: "10px", fontWeight: 500, padding: "4px 10px",
-                        letterSpacing: "0.04em",
-                      }}>
-                        Save up to {prop.savePercent}%
-                      </div>
-                    </div>
-
-                    <div style={{ padding: "18px 20px 22px" }}>
-                      <div style={{ color: "var(--gold)", fontSize: "10px", letterSpacing: "2px", marginBottom: "6px" }}>
-                        {"★".repeat(prop.stars)}
-                      </div>
-                      <h3 className="type-heading-3" style={{ color: "var(--ink)", marginBottom: "4px", fontSize: "16px" }}>
-                        {prop.name}
-                      </h3>
-                      <p style={{ fontSize: "12px", color: "var(--ink-light)", letterSpacing: "0.04em", marginBottom: "14px" }}>
-                        {prop.city}
-                      </p>
-                      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginBottom: "16px" }}>
-                        {prop.tags.map((tag) => (
-                          <span key={tag} style={{
-                            fontSize: "9px", padding: "3px 8px",
-                            background: "var(--cream)", color: "var(--ink-mid)",
-                            border: "1px solid var(--cream-border)", letterSpacing: "0.04em",
-                          }}>
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                      <div style={{
-                        borderTop: "1px solid var(--cream-border)", paddingTop: "14px",
-                        display: "flex", alignItems: "baseline", justifyContent: "space-between",
-                      }}>
-                        <div>
-                          <span style={{ fontSize: "10px", color: "var(--ink-light)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                            From
-                          </span>
-                          <div style={{
-                            fontFamily: "var(--font-display)", fontSize: "22px",
-                            fontWeight: 500, color: "var(--ink)", lineHeight: 1.2,
-                          }}>
-                            &#8377;{prop.priceFrom.toLocaleString("en-IN")}
-                          </div>
-                          <span style={{ fontSize: "10px", color: "var(--ink-light)" }}>per night</span>
-                        </div>
-                        <span className="card-arrow" style={{
-                          fontSize: "11px", color: "var(--gold)", fontWeight: 500, letterSpacing: "0.04em",
-                        }}>
-                          View &rarr;
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
+                <HotelCard hotel={prop} />
               </div>
             ))}
           </div>
@@ -1662,7 +1470,7 @@ export default function Home() {
               }}
             >
               {featured.slice(0, 5).map((city, i) => (
-                <HotelCard
+                <FeaturedCityCard
                   key={city.city_slug}
                   city={city}
                   isLarge={i === 0}
@@ -2658,7 +2466,7 @@ export default function Home() {
 // ============================================================================
 // Hotel Card — for the featured asymmetric grid
 // ============================================================================
-function HotelCard({
+function FeaturedCityCard({
   city,
   isLarge = false,
 }: {
