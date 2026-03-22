@@ -14,6 +14,7 @@ import { useBooking } from "@/context/BookingContext";
 import VoyagerClubComparison from "@/components/VoyagerClubComparison";
 import FeaturedPropertiesCarousel from "@/components/FeaturedPropertiesCarousel";
 import DestinationTabs from "@/components/DestinationTabs";
+import TopSellers, { computeTopSellers, type TopSellerHotel } from "@/components/TopSellers";
 
 // ---------------------------------------------------------------------------
 // Hero background images (cinematic hotel/travel shots)
@@ -596,6 +597,7 @@ export default function Home() {
   const [topDeals, setTopDeals] = useState<{ name: string; city: string; citySlug: string; stars: number; rating: number; tags: string[]; marketRate: number; voyagrRate: number; savePercent: number; img: string }[]>([]);
   const [curatedTabData, setCuratedTabData] = useState<Record<string, HotelCardData[]>>({ popular: [], suggest: [], curated: [] });
   const [featuredCarouselProps, setFeaturedCarouselProps] = useState<HotelCardData[]>([]);
+  const [topSellers, setTopSellers] = useState<TopSellerHotel[]>([]);
   const heroRef = useRef<HTMLElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -627,6 +629,9 @@ export default function Home() {
     async function loadFeaturedHotels() {
       try {
         const hotels = await fetchFeaturedHotels(FEATURED_CITY_SLUGS, "couples");
+
+        // Top sellers — weighted by bookings + savings
+        setTopSellers(computeTopSellers(hotels, 8));
 
         // Sort by rating for popular properties (top 8)
         const byRating = [...hotels]
@@ -1179,6 +1184,11 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* ================================================================
+          TOP SELLERS — bookings + savings weighted
+      ================================================================ */}
+      <TopSellers hotels={topSellers} />
 
       {/* ================================================================
           TOP DEALS — highest discount %
