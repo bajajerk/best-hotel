@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { fetchCuratedCities, CuratedCity } from "@/lib/api";
@@ -18,32 +18,43 @@ function safeImageSrc(url: string): string {
 // ---------------------------------------------------------------------------
 // Continent metadata for hero cards
 // ---------------------------------------------------------------------------
-const CONTINENT_META: Record<string, { tagline: string; img: string }> = {
+const CONTINENT_META: Record<string, { tagline: string; img: string; emoji: string }> = {
   Asia: {
     tagline: "Temples, street food & turquoise waters",
     img: "https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=1200&q=80",
+    emoji: "🏯",
   },
   Europe: {
     tagline: "Cobblestones, culture & café terraces",
     img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&q=80",
+    emoji: "🏰",
   },
   "North America": {
     tagline: "Skylines, coastlines & canyon sunsets",
     img: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=1200&q=80",
+    emoji: "🗽",
   },
   "South America": {
     tagline: "Samba, summits & ancient ruins",
     img: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1200&q=80",
+    emoji: "🌎",
   },
   Africa: {
     tagline: "Saharan sunsets & savanna wildlife",
     img: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=1200&q=80",
+    emoji: "🌍",
   },
   Oceania: {
     tagline: "Golden beaches & harbour cities",
     img: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1200&q=80",
+    emoji: "🏝️",
   },
 };
+
+// ---------------------------------------------------------------------------
+// View modes
+// ---------------------------------------------------------------------------
+type ViewMode = "grid" | "list";
 
 // ============================================================================
 // Locations Page
@@ -53,6 +64,7 @@ export default function LocationsPage() {
   const [loading, setLoading] = useState(true);
   const [activeContinent, setActiveContinent] = useState<string>("All");
   const [searchFilter, setSearchFilter] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   // Fetch cities
   useEffect(() => {
@@ -72,32 +84,38 @@ export default function LocationsPage() {
   }, []);
 
   // Filter cities
-  const filteredCities = cities.filter((c) => {
+  const filteredCities = useMemo(() => cities.filter((c) => {
     const matchesContinent = activeContinent === "All" || c.continent === activeContinent;
     const matchesSearch =
       !searchFilter.trim() ||
       c.city_name.toLowerCase().includes(searchFilter.toLowerCase()) ||
       c.country.toLowerCase().includes(searchFilter.toLowerCase());
     return matchesContinent && matchesSearch;
-  });
+  }), [cities, activeContinent, searchFilter]);
 
   // Group by continent
-  const continentGroups = filteredCities.reduce<Record<string, CuratedCity[]>>((acc, city) => {
+  const continentGroups = useMemo(() => filteredCities.reduce<Record<string, CuratedCity[]>>((acc, city) => {
     const cont = city.continent || "Other";
     if (!acc[cont]) acc[cont] = [];
     acc[cont].push(city);
     return acc;
-  }, {});
+  }, {}), [filteredCities]);
 
   const continentOrder = ["Asia", "Europe", "North America", "South America", "Africa", "Oceania", "Other"];
   const sortedContinents = continentOrder.filter((c) => continentGroups[c]);
 
   // Count by continent
-  const continentCounts = cities.reduce<Record<string, number>>((acc, city) => {
+  const continentCounts = useMemo(() => cities.reduce<Record<string, number>>((acc, city) => {
     const cont = city.continent || "Other";
     acc[cont] = (acc[cont] || 0) + 1;
     return acc;
-  }, {});
+  }, {}), [cities]);
+
+  // Total hotel count
+  const totalHotels = useMemo(() => cities.reduce((sum, c) => sum + (c.hotel_count || 0), 0), [cities]);
+
+  // Unique countries
+  const uniqueCountries = useMemo(() => new Set(cities.map((c) => c.country)).size, [cities]);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
@@ -167,6 +185,7 @@ export default function LocationsPage() {
 
       {/* ── Hero banner ── */}
       <section
+        className="locations-hero"
         style={{
           paddingTop: "0px",
           position: "relative",
@@ -184,7 +203,7 @@ export default function LocationsPage() {
           backgroundPosition: "center",
         }} />
 
-        <div style={{ position: "relative", padding: "80px 60px 72px", maxWidth: "1400px", margin: "0 auto" }}>
+        <div className="locations-hero-inner" style={{ position: "relative", padding: "80px 60px 72px", maxWidth: "1400px", margin: "0 auto" }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -204,8 +223,49 @@ export default function LocationsPage() {
               Hand-picked destinations with exclusive hotel rates across every continent.
             </p>
 
+            {/* Stats row */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="locations-stats"
+              style={{
+                display: "flex",
+                gap: "32px",
+                marginBottom: "32px",
+              }}
+            >
+              {[
+                { value: cities.length || 50, label: "Cities" },
+                { value: uniqueCountries || 30, label: "Countries" },
+                { value: totalHotels > 0 ? `${Math.round(totalHotels / 100) * 100}+` : "1,500+", label: "Hotels" },
+                { value: Object.keys(continentCounts).length || 6, label: "Continents" },
+              ].map((stat) => (
+                <div key={stat.label} className="locations-stat-item">
+                  <div style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: "28px",
+                    fontWeight: 300,
+                    color: "var(--gold)",
+                    lineHeight: 1,
+                  }}>
+                    {stat.value}
+                  </div>
+                  <div style={{
+                    fontSize: "10px",
+                    color: "rgba(245,240,232,0.4)",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    marginTop: "4px",
+                  }}>
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+
             {/* Quick search */}
-            <div style={{
+            <div className="locations-search-bar" style={{
               display: "flex",
               background: "rgba(245,240,232,0.08)",
               border: "1px solid rgba(245,240,232,0.12)",
@@ -237,17 +297,33 @@ export default function LocationsPage() {
                   outline: "none",
                 }}
               />
+              {searchFilter && (
+                <button
+                  onClick={() => setSearchFilter("")}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    padding: "0 14px",
+                    cursor: "pointer",
+                    color: "rgba(245,240,232,0.4)",
+                    fontSize: "16px",
+                  }}
+                >
+                  ×
+                </button>
+              )}
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* ── Continent quick-nav cards ── */}
-      <section style={{ padding: "48px 60px 0", maxWidth: "1400px", margin: "0 auto" }}>
+      <section className="locations-continent-section" style={{ padding: "48px 60px 0", maxWidth: "1400px", margin: "0 auto" }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
+          className="locations-continent-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(6, 1fr)",
@@ -263,6 +339,7 @@ export default function LocationsPage() {
               <button
                 key={cont}
                 onClick={() => setActiveContinent(isActive ? "All" : cont)}
+                className="locations-continent-card"
                 style={{
                   position: "relative",
                   height: "120px",
@@ -329,8 +406,8 @@ export default function LocationsPage() {
         </motion.div>
       </section>
 
-      {/* ── Filter pills ── */}
-      <section style={{ padding: "32px 60px 0", maxWidth: "1400px", margin: "0 auto" }}>
+      {/* ── Filter pills + view toggle ── */}
+      <section className="locations-filter-section" style={{ padding: "32px 60px 0", maxWidth: "1400px", margin: "0 auto" }}>
         <div style={{
           display: "flex",
           alignItems: "center",
@@ -338,7 +415,7 @@ export default function LocationsPage() {
           flexWrap: "wrap",
           gap: "16px",
         }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          <div className="locations-filter-pills" style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {CONTINENTS.map((cont) => (
               <button
                 key={cont}
@@ -362,16 +439,67 @@ export default function LocationsPage() {
             ))}
           </div>
 
-          <div style={{ fontSize: "12px", color: "var(--ink-light)" }}>
-            {filteredCities.length} {filteredCities.length === 1 ? "destination" : "destinations"}
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            {/* View toggle */}
+            <div style={{ display: "flex", border: "1px solid var(--cream-border)" }}>
+              <button
+                onClick={() => setViewMode("grid")}
+                style={{
+                  padding: "6px 12px",
+                  border: "none",
+                  background: viewMode === "grid" ? "var(--ink)" : "transparent",
+                  color: viewMode === "grid" ? "var(--cream)" : "var(--ink-light)",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                aria-label="Grid view"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                style={{
+                  padding: "6px 12px",
+                  border: "none",
+                  borderLeft: "1px solid var(--cream-border)",
+                  background: viewMode === "list" ? "var(--ink)" : "transparent",
+                  color: viewMode === "list" ? "var(--cream)" : "var(--ink-light)",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                aria-label="List view"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="8" y1="6" x2="21" y2="6" />
+                  <line x1="8" y1="12" x2="21" y2="12" />
+                  <line x1="8" y1="18" x2="21" y2="18" />
+                  <line x1="3" y1="6" x2="3.01" y2="6" />
+                  <line x1="3" y1="12" x2="3.01" y2="12" />
+                  <line x1="3" y1="18" x2="3.01" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <div style={{ fontSize: "12px", color: "var(--ink-light)" }}>
+              {filteredCities.length} {filteredCities.length === 1 ? "destination" : "destinations"}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── City grid ── */}
-      <section style={{ padding: "40px 60px 100px", maxWidth: "1400px", margin: "0 auto" }}>
+      {/* ── City grid / list ── */}
+      <section className="locations-city-section" style={{ padding: "40px 60px 100px", maxWidth: "1400px", margin: "0 auto" }}>
         {loading ? (
-          <div style={{
+          <div className="locations-grid" style={{
             display: "grid",
             gridTemplateColumns: "repeat(3, 1fr)",
             gap: "20px",
@@ -408,14 +536,29 @@ export default function LocationsPage() {
             <h3 className="type-display-3" style={{ color: "var(--ink)", fontStyle: "italic", marginBottom: "8px" }}>
               No destinations found
             </h3>
-            <p className="type-body" style={{ color: "var(--ink-light)" }}>
+            <p className="type-body" style={{ color: "var(--ink-light)", marginBottom: "20px" }}>
               Try adjusting your filter or selecting a different continent.
             </p>
+            <button
+              onClick={() => { setActiveContinent("All"); setSearchFilter(""); }}
+              style={{
+                fontSize: "12px",
+                color: "var(--gold)",
+                background: "transparent",
+                border: "1px solid var(--gold)",
+                padding: "10px 24px",
+                cursor: "pointer",
+                fontFamily: "var(--font-body)",
+                transition: "all 0.2s",
+              }}
+            >
+              Clear all filters
+            </button>
           </motion.div>
         ) : (
           <AnimatePresence mode="wait">
             <motion.div
-              key={`${activeContinent}-${searchFilter}`}
+              key={`${activeContinent}-${searchFilter}-${viewMode}`}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
@@ -442,6 +585,16 @@ export default function LocationsPage() {
                       }}>
                         {continent}
                       </h3>
+                      {CONTINENT_META[continent] && (
+                        <span style={{
+                          fontSize: "12px",
+                          color: "var(--ink-light)",
+                          fontStyle: "italic",
+                          whiteSpace: "nowrap",
+                        }}>
+                          {CONTINENT_META[continent].tagline}
+                        </span>
+                      )}
                       <div style={{
                         flex: 1,
                         height: "1px",
@@ -458,111 +611,230 @@ export default function LocationsPage() {
                     </div>
                   )}
 
-                  {/* City cards */}
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)",
-                    gap: "20px",
-                  }}>
-                    {continentGroups[continent].map((city, i) => (
-                      <Link
-                        key={city.city_slug}
-                        href={`/city/${city.city_slug}`}
-                        style={{ textDecoration: "none", display: "block" }}
-                      >
-                        <motion.div
-                          className="card-hover"
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.5, delay: i * 0.04 }}
-                          style={{
-                            background: "var(--white)",
-                            border: "1px solid var(--cream-border)",
-                            overflow: "hidden",
-                            cursor: "pointer",
-                          }}
+                  {/* Grid view */}
+                  {viewMode === "grid" ? (
+                    <div className="locations-grid" style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, 1fr)",
+                      gap: "20px",
+                    }}>
+                      {continentGroups[continent].map((city, i) => (
+                        <Link
+                          key={city.city_slug}
+                          href={`/city/${city.city_slug}`}
+                          style={{ textDecoration: "none", display: "block" }}
                         >
-                          {/* Image */}
-                          <div style={{ height: "220px", overflow: "hidden" }}>
-                            <img
-                              className="card-img"
-                              src={safeImageSrc(getCityImage(city.city_slug))}
-                              alt={city.city_name}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                display: "block",
-                                filter: "saturate(0.88)",
-                              }}
-                              loading="lazy"
-                              onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
-                            />
-                          </div>
+                          <motion.div
+                            className="card-hover"
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: i * 0.04 }}
+                            style={{
+                              background: "var(--white)",
+                              border: "1px solid var(--cream-border)",
+                              overflow: "hidden",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {/* Image */}
+                            <div style={{ height: "220px", overflow: "hidden", position: "relative" }}>
+                              <img
+                                className="card-img"
+                                src={safeImageSrc(getCityImage(city.city_slug))}
+                                alt={city.city_name}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                  display: "block",
+                                  filter: "saturate(0.88)",
+                                }}
+                                loading="lazy"
+                                onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
+                              />
+                              {/* Continent badge */}
+                              <div style={{
+                                position: "absolute",
+                                top: "12px",
+                                right: "12px",
+                                background: "rgba(26,23,16,0.65)",
+                                backdropFilter: "blur(4px)",
+                                padding: "4px 10px",
+                                fontSize: "10px",
+                                color: "rgba(245,240,232,0.7)",
+                                letterSpacing: "0.06em",
+                              }}>
+                                {city.continent}
+                              </div>
+                            </div>
 
-                          {/* Content */}
-                          <div style={{ padding: "20px 24px 28px" }}>
-                            <h4 className="type-display-3" style={{
-                              fontStyle: "italic",
-                              color: "var(--ink)",
-                              marginBottom: "4px",
-                            }}>
-                              {city.city_name}
-                            </h4>
-                            <p style={{
-                              fontSize: "12px",
-                              color: "var(--ink-light)",
-                              letterSpacing: "0.06em",
-                              marginBottom: "4px",
-                            }}>
-                              {city.country}
-                            </p>
-                            {city.tagline && (
+                            {/* Content */}
+                            <div style={{ padding: "20px 24px 28px" }}>
+                              <h4 className="type-display-3" style={{
+                                fontStyle: "italic",
+                                color: "var(--ink)",
+                                marginBottom: "4px",
+                              }}>
+                                {city.city_name}
+                              </h4>
                               <p style={{
                                 fontSize: "12px",
-                                color: "var(--ink-mid)",
-                                fontStyle: "italic",
-                                marginBottom: "12px",
-                                lineHeight: 1.5,
+                                color: "var(--ink-light)",
+                                letterSpacing: "0.06em",
+                                marginBottom: "4px",
                               }}>
-                                {city.tagline}
+                                {city.country}
                               </p>
-                            )}
-                            <div style={{
-                              display: "flex",
+                              {city.tagline && (
+                                <p style={{
+                                  fontSize: "12px",
+                                  color: "var(--ink-mid)",
+                                  fontStyle: "italic",
+                                  marginBottom: "12px",
+                                  lineHeight: 1.5,
+                                }}>
+                                  {city.tagline}
+                                </p>
+                              )}
+                              <div style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                borderTop: "1px solid var(--cream-border)",
+                                paddingTop: "12px",
+                              }}>
+                                <span style={{
+                                  fontSize: "11px",
+                                  color: "var(--ink-light)",
+                                  fontWeight: 400,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                }}>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M3 21h18" />
+                                    <path d="M5 21V7l8-4v18" />
+                                    <path d="M19 21V11l-6-4" />
+                                  </svg>
+                                  {city.hotel_count > 0 ? `${city.hotel_count}+ hotels` : "Explore stays"}
+                                </span>
+                                <span className="card-arrow" style={{
+                                  fontSize: "11px",
+                                  color: "var(--gold)",
+                                  fontWeight: 500,
+                                  letterSpacing: "0.06em",
+                                }}>
+                                  View &rarr;
+                                </span>
+                              </div>
+                              <div style={{
+                                width: "40px",
+                                height: "1px",
+                                background: "var(--gold)",
+                                marginTop: "12px",
+                              }} />
+                            </div>
+                          </motion.div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    /* List view */
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {continentGroups[continent].map((city, i) => (
+                        <Link
+                          key={city.city_slug}
+                          href={`/city/${city.city_slug}`}
+                          style={{ textDecoration: "none", display: "block" }}
+                        >
+                          <motion.div
+                            className="card-hover locations-list-card"
+                            initial={{ opacity: 0, x: -12 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.4, delay: i * 0.03 }}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "160px 1fr auto",
+                              background: "var(--white)",
+                              border: "1px solid var(--cream-border)",
+                              overflow: "hidden",
+                              cursor: "pointer",
                               alignItems: "center",
-                              justifyContent: "space-between",
-                              borderTop: "1px solid var(--cream-border)",
-                              paddingTop: "12px",
-                            }}>
-                              <span style={{
+                            }}
+                          >
+                            {/* Image */}
+                            <div style={{ height: "100px", overflow: "hidden" }}>
+                              <img
+                                className="card-img"
+                                src={safeImageSrc(getCityImage(city.city_slug))}
+                                alt={city.city_name}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                  display: "block",
+                                  filter: "saturate(0.88)",
+                                }}
+                                loading="lazy"
+                                onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
+                              />
+                            </div>
+
+                            {/* Content */}
+                            <div style={{ padding: "16px 24px" }}>
+                              <h4 style={{
+                                fontFamily: "var(--font-display)",
+                                fontSize: "18px",
+                                fontWeight: 400,
+                                fontStyle: "italic",
+                                color: "var(--ink)",
+                                marginBottom: "4px",
+                              }}>
+                                {city.city_name}
+                              </h4>
+                              <p style={{
+                                fontSize: "12px",
+                                color: "var(--ink-light)",
+                                letterSpacing: "0.04em",
+                              }}>
+                                {city.country} · {city.continent}
+                              </p>
+                              {city.tagline && (
+                                <p style={{
+                                  fontSize: "12px",
+                                  color: "var(--ink-mid)",
+                                  fontStyle: "italic",
+                                  marginTop: "4px",
+                                }}>
+                                  {city.tagline}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Right side */}
+                            <div style={{ padding: "16px 24px", textAlign: "right" }}>
+                              <div style={{
                                 fontSize: "11px",
                                 color: "var(--ink-light)",
-                                fontWeight: 400,
+                                marginBottom: "8px",
                               }}>
-                                {city.hotel_count > 0 ? `${city.hotel_count}+ hotels` : "Explore stays"}
-                              </span>
+                                {city.hotel_count > 0 ? `${city.hotel_count}+ hotels` : "Explore"}
+                              </div>
                               <span className="card-arrow" style={{
                                 fontSize: "11px",
                                 color: "var(--gold)",
                                 fontWeight: 500,
-                                letterSpacing: "0.06em",
                               }}>
                                 View &rarr;
                               </span>
                             </div>
-                            <div style={{
-                              width: "40px",
-                              height: "1px",
-                              background: "var(--gold)",
-                              marginTop: "12px",
-                            }} />
-                          </div>
-                        </motion.div>
-                      </Link>
-                    ))}
-                  </div>
+                          </motion.div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </motion.div>

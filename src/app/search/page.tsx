@@ -29,6 +29,8 @@ const POPULAR_SEARCHES = [
   { label: "Maldives", slug: "maldives", type: "city" as const },
   { label: "Singapore", slug: "singapore", type: "city" as const },
   { label: "London", slug: "london", type: "city" as const },
+  { label: "Santorini", slug: "santorini", type: "city" as const },
+  { label: "Rome", slug: "rome", type: "city" as const },
 ];
 
 // ---------------------------------------------------------------------------
@@ -43,6 +45,56 @@ interface HotelResult {
   photo1: string | null;
 }
 
+// ---------------------------------------------------------------------------
+// Recent searches (localStorage)
+// ---------------------------------------------------------------------------
+const RECENT_SEARCHES_KEY = "voyagr_recent_searches";
+const MAX_RECENT = 6;
+
+function getRecentSearches(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(RECENT_SEARCHES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function addRecentSearch(q: string) {
+  if (typeof window === "undefined" || !q.trim()) return;
+  try {
+    const existing = getRecentSearches().filter(
+      (s) => s.toLowerCase() !== q.trim().toLowerCase()
+    );
+    const updated = [q.trim(), ...existing].slice(0, MAX_RECENT);
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+  } catch {
+    // ignore
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Star rating filter options
+// ---------------------------------------------------------------------------
+const STAR_FILTERS = [
+  { label: "All Stars", value: 0 },
+  { label: "3+", value: 3 },
+  { label: "4+", value: 4 },
+  { label: "5", value: 5 },
+];
+
+// ---------------------------------------------------------------------------
+// Sort options
+// ---------------------------------------------------------------------------
+type SortOption = "relevance" | "name_asc" | "name_desc" | "stars_desc";
+const SORT_OPTIONS: { label: string; value: SortOption }[] = [
+  { label: "Relevance", value: "relevance" },
+  { label: "Name A-Z", value: "name_asc" },
+  { label: "Name Z-A", value: "name_desc" },
+  { label: "Stars (High to Low)", value: "stars_desc" },
+];
+
 // ============================================================================
 // Search Page
 // ============================================================================
@@ -56,7 +108,10 @@ export default function SearchPage() {
   const [hotelResults, setHotelResults] = useState<HotelResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [starFilter, setStarFilter] = useState(0);
+  const [sortBy, setSortBy] = useState<SortOption>("relevance");
+  const [showFilters, setShowFilters] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load cities for matching
@@ -75,9 +130,9 @@ export default function SearchPage() {
       });
   }, []);
 
-  // Auto-focus the search input
+  // Load recent searches
   useEffect(() => {
-    inputRef.current?.focus();
+    setRecentSearches(getRecentSearches());
   }, []);
 
   // Run search if initial query exists
@@ -97,8 +152,10 @@ export default function SearchPage() {
 
     setSearching(true);
     setHasSearched(true);
+    addRecentSearch(q);
+    setRecentSearches(getRecentSearches());
     try {
-      const results = await searchHotels(q, 20);
+      const results = await searchHotels(q, 30);
       setHotelResults(results || []);
     } catch {
       setHotelResults([]);
@@ -126,6 +183,19 @@ export default function SearchPage() {
     router.replace(`/search?${params.toString()}`);
   };
 
+  const handleRecentClick = (term: string) => {
+    setQuery(term);
+    performSearch(term);
+    router.replace(`/search?q=${encodeURIComponent(term)}`);
+  };
+
+  const clearRecentSearches = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(RECENT_SEARCHES_KEY);
+      setRecentSearches([]);
+    }
+  };
+
   // Filter matching cities based on query
   const matchingCities = query.trim().length >= 2
     ? cities.filter(
@@ -134,6 +204,29 @@ export default function SearchPage() {
           c.country.toLowerCase().includes(query.toLowerCase())
       )
     : [];
+
+  // Apply star filter + sort to hotel results
+  const filteredHotels = hotelResults
+    .filter((h) => {
+      if (starFilter === 0) return true;
+      if (starFilter === 5) return h.star_rating === 5;
+      return (h.star_rating || 0) >= starFilter;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "name_asc":
+          return a.hotel_name.localeCompare(b.hotel_name);
+        case "name_desc":
+          return b.hotel_name.localeCompare(a.hotel_name);
+        case "stars_desc":
+          return (b.star_rating || 0) - (a.star_rating || 0);
+        default:
+          return 0;
+      }
+    });
+
+  // Total city results + hotel results for stats
+  const totalResults = matchingCities.length + filteredHotels.length;
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
@@ -203,6 +296,7 @@ export default function SearchPage() {
 
       {/* ── Hero search area ── */}
       <section
+        className="search-hero"
         style={{
           paddingTop: "0px",
           background: "var(--ink)",
@@ -221,7 +315,7 @@ export default function SearchPage() {
           }}
         />
 
-        <div style={{ position: "relative", padding: "80px 60px 72px", maxWidth: "900px", margin: "0 auto", textAlign: "center" }}>
+        <div className="search-hero-inner" style={{ position: "relative", padding: "80px 60px 72px", maxWidth: "900px", margin: "0 auto", textAlign: "center" }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -248,6 +342,7 @@ export default function SearchPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
+            className="search-form-bar"
             style={{
               display: "flex",
               background: "var(--white)",
@@ -274,6 +369,7 @@ export default function SearchPage() {
             </div>
             <button
               type="submit"
+              className="search-submit-btn"
               style={{
                 padding: "18px 32px",
                 background: "var(--ink)",
@@ -294,55 +390,306 @@ export default function SearchPage() {
             </button>
           </motion.form>
 
-          {/* Popular searches */}
+          {/* Popular searches + recent searches */}
           {!query.trim() && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              style={{
-                marginTop: "28px",
+              style={{ marginTop: "28px" }}
+            >
+              {/* Recent searches */}
+              {recentSearches.length > 0 && (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                  gap: "8px",
+                  marginBottom: "16px",
+                }}>
+                  <span style={{ fontSize: "11px", color: "rgba(245,240,232,0.35)", letterSpacing: "0.08em" }}>
+                    RECENT:
+                  </span>
+                  {recentSearches.slice(0, 4).map((term) => (
+                    <button
+                      key={term}
+                      onClick={() => handleRecentClick(term)}
+                      style={{
+                        fontSize: "12px",
+                        color: "rgba(245,240,232,0.7)",
+                        background: "rgba(245,240,232,0.08)",
+                        border: "1px solid rgba(245,240,232,0.12)",
+                        padding: "4px 14px",
+                        cursor: "pointer",
+                        fontFamily: "var(--font-body)",
+                        transition: "all 0.2s",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget).style.borderColor = "var(--gold)";
+                        (e.currentTarget).style.color = "var(--gold)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget).style.borderColor = "rgba(245,240,232,0.12)";
+                        (e.currentTarget).style.color = "rgba(245,240,232,0.7)";
+                      }}
+                    >
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="1 4 1 10 7 10" />
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                      </svg>
+                      {term}
+                    </button>
+                  ))}
+                  <button
+                    onClick={clearRecentSearches}
+                    style={{
+                      fontSize: "10px",
+                      color: "rgba(245,240,232,0.25)",
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      fontFamily: "var(--font-body)",
+                      padding: "4px 8px",
+                    }}
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+
+              {/* Popular searches */}
+              <div style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexWrap: "wrap",
                 gap: "8px",
-              }}
-            >
-              <span style={{ fontSize: "11px", color: "rgba(245,240,232,0.35)", letterSpacing: "0.08em" }}>
-                POPULAR:
-              </span>
-              {POPULAR_SEARCHES.map((s) => (
-                <Link
-                  key={s.slug}
-                  href={`/city/${s.slug}`}
-                  style={{
-                    fontSize: "12px",
-                    color: "rgba(245,240,232,0.6)",
-                    textDecoration: "none",
-                    padding: "4px 14px",
-                    border: "1px solid rgba(245,240,232,0.12)",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget).style.borderColor = "var(--gold)";
-                    (e.currentTarget).style.color = "var(--gold)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget).style.borderColor = "rgba(245,240,232,0.12)";
-                    (e.currentTarget).style.color = "rgba(245,240,232,0.6)";
-                  }}
-                >
-                  {s.label}
-                </Link>
-              ))}
+              }}>
+                <span style={{ fontSize: "11px", color: "rgba(245,240,232,0.35)", letterSpacing: "0.08em" }}>
+                  POPULAR:
+                </span>
+                {POPULAR_SEARCHES.map((s) => (
+                  <Link
+                    key={s.slug}
+                    href={`/city/${s.slug}`}
+                    style={{
+                      fontSize: "12px",
+                      color: "rgba(245,240,232,0.6)",
+                      textDecoration: "none",
+                      padding: "4px 14px",
+                      border: "1px solid rgba(245,240,232,0.12)",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget).style.borderColor = "var(--gold)";
+                      (e.currentTarget).style.color = "var(--gold)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget).style.borderColor = "rgba(245,240,232,0.12)";
+                      (e.currentTarget).style.color = "rgba(245,240,232,0.6)";
+                    }}
+                  >
+                    {s.label}
+                  </Link>
+                ))}
+              </div>
             </motion.div>
           )}
         </div>
       </section>
 
       {/* ── Results area ── */}
-      <section style={{ padding: "60px 60px 100px", maxWidth: "1400px", margin: "0 auto" }}>
+      <section className="search-results-section" style={{ padding: "60px 60px 100px", maxWidth: "1400px", margin: "0 auto" }}>
+
+        {/* Results toolbar — filters + sort (only when we have results) */}
+        {hasSearched && (matchingCities.length > 0 || hotelResults.length > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ marginBottom: "32px" }}
+          >
+            {/* Results count + toggle */}
+            <div className="search-toolbar" style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "12px",
+              marginBottom: "16px",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{
+                  fontSize: "13px",
+                  color: "var(--ink)",
+                  fontWeight: 500,
+                }}>
+                  {totalResults} result{totalResults !== 1 ? "s" : ""} for &ldquo;{query.trim()}&rdquo;
+                </span>
+                {matchingCities.length > 0 && (
+                  <span style={{
+                    fontSize: "11px",
+                    color: "var(--ink-light)",
+                    padding: "2px 10px",
+                    background: "var(--cream-deep)",
+                    borderRadius: "2px",
+                  }}>
+                    {matchingCities.length} {matchingCities.length === 1 ? "city" : "cities"}
+                  </span>
+                )}
+                {filteredHotels.length > 0 && (
+                  <span style={{
+                    fontSize: "11px",
+                    color: "var(--ink-light)",
+                    padding: "2px 10px",
+                    background: "var(--cream-deep)",
+                    borderRadius: "2px",
+                  }}>
+                    {filteredHotels.length} {filteredHotels.length === 1 ? "hotel" : "hotels"}
+                  </span>
+                )}
+              </div>
+
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 16px",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  letterSpacing: "0.06em",
+                  border: showFilters ? "1px solid var(--gold)" : "1px solid var(--cream-border)",
+                  background: showFilters ? "var(--gold)" : "transparent",
+                  color: showFilters ? "var(--white)" : "var(--ink-mid)",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-body)",
+                  transition: "all 0.2s",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="4" y1="6" x2="20" y2="6" />
+                  <line x1="8" y1="12" x2="20" y2="12" />
+                  <line x1="12" y1="18" x2="20" y2="18" />
+                </svg>
+                Filters
+                {starFilter > 0 && (
+                  <span style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: showFilters ? "var(--white)" : "var(--gold)",
+                  }} />
+                )}
+              </button>
+            </div>
+
+            {/* Expanded filter bar */}
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.25 }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <div className="search-filters" style={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: "24px",
+                    padding: "20px 24px",
+                    background: "var(--white)",
+                    border: "1px solid var(--cream-border)",
+                    marginBottom: "8px",
+                  }}>
+                    {/* Star rating filter */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "11px", color: "var(--ink-light)", letterSpacing: "0.06em", fontWeight: 500 }}>
+                        STARS
+                      </span>
+                      <div style={{ display: "flex", gap: "4px" }}>
+                        {STAR_FILTERS.map((sf) => (
+                          <button
+                            key={sf.value}
+                            onClick={() => setStarFilter(sf.value)}
+                            style={{
+                              padding: "6px 14px",
+                              fontSize: "12px",
+                              border: "1px solid",
+                              borderColor: starFilter === sf.value ? "var(--gold)" : "var(--cream-border)",
+                              background: starFilter === sf.value ? "var(--gold)" : "transparent",
+                              color: starFilter === sf.value ? "var(--white)" : "var(--ink-mid)",
+                              cursor: "pointer",
+                              fontFamily: "var(--font-body)",
+                              transition: "all 0.2s",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                            }}
+                          >
+                            {sf.value > 0 && <span style={{ color: starFilter === sf.value ? "var(--white)" : "var(--gold)", fontSize: "11px" }}>★</span>}
+                            {sf.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Sort */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "11px", color: "var(--ink-light)", letterSpacing: "0.06em", fontWeight: 500 }}>
+                        SORT
+                      </span>
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as SortOption)}
+                        style={{
+                          padding: "6px 12px",
+                          fontSize: "12px",
+                          border: "1px solid var(--cream-border)",
+                          background: "var(--cream)",
+                          color: "var(--ink)",
+                          cursor: "pointer",
+                          fontFamily: "var(--font-body)",
+                          outline: "none",
+                        }}
+                      >
+                        {SORT_OPTIONS.map((so) => (
+                          <option key={so.value} value={so.value}>{so.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Clear filters */}
+                    {(starFilter > 0 || sortBy !== "relevance") && (
+                      <button
+                        onClick={() => { setStarFilter(0); setSortBy("relevance"); }}
+                        style={{
+                          fontSize: "11px",
+                          color: "var(--gold)",
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          fontFamily: "var(--font-body)",
+                          textDecoration: "underline",
+                        }}
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+
         {/* City matches */}
         {matchingCities.length > 0 && (
           <motion.div
@@ -354,7 +701,7 @@ export default function SearchPage() {
             <div className="type-eyebrow" style={{ marginBottom: "20px" }}>
               Matching Destinations
             </div>
-            <div style={{
+            <div className="search-city-grid" style={{
               display: "grid",
               gridTemplateColumns: "repeat(4, 1fr)",
               gap: "16px",
@@ -425,18 +772,20 @@ export default function SearchPage() {
         {/* Hotel results */}
         {searching && (
           <div style={{ textAlign: "center", padding: "60px 0" }}>
-            <div className="shimmer" style={{
-              width: "200px",
-              height: "8px",
-              margin: "0 auto 16px",
-              background: "var(--cream-deep)",
-              borderRadius: "4px",
-            }} />
-            <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>Searching hotels...</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "600px", margin: "0 auto" }}>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="shimmer" style={{
+                  height: "140px",
+                  background: "var(--cream-deep)",
+                  borderRadius: "0",
+                }} />
+              ))}
+            </div>
+            <p style={{ fontSize: "13px", color: "var(--ink-light)", marginTop: "16px" }}>Searching hotels...</p>
           </div>
         )}
 
-        {!searching && hasSearched && hotelResults.length > 0 && (
+        {!searching && hasSearched && filteredHotels.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -447,27 +796,27 @@ export default function SearchPage() {
                 Hotels Found
               </div>
               <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>
-                {hotelResults.length} result{hotelResults.length !== 1 ? "s" : ""}
+                {filteredHotels.length} result{filteredHotels.length !== 1 ? "s" : ""}
               </span>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {hotelResults.map((hotel, i) => (
+            <div className="search-hotel-list" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {filteredHotels.map((hotel, i) => (
                 <motion.div
                   key={hotel.hotel_id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: i * 0.05 }}
+                  transition={{ duration: 0.4, delay: i * 0.04 }}
                 >
                   <Link
                     href={`/hotel/${hotel.hotel_id}`}
                     style={{ textDecoration: "none", display: "block" }}
                   >
                     <div
-                      className="card-hover"
+                      className="card-hover search-hotel-card"
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "200px 1fr",
+                        gridTemplateColumns: "220px 1fr",
                         background: "var(--white)",
                         border: "1px solid var(--cream-border)",
                         overflow: "hidden",
@@ -475,7 +824,7 @@ export default function SearchPage() {
                       }}
                     >
                       {/* Image */}
-                      <div style={{ height: "140px", overflow: "hidden" }}>
+                      <div className="search-hotel-card-img" style={{ height: "160px", overflow: "hidden", position: "relative" }}>
                         <img
                           className="card-img"
                           src={hotel.photo1 ? safeImageSrc(hotel.photo1.startsWith("http") ? hotel.photo1 : `https://photos.hotelbeds.com/giata/${hotel.photo1}`) : FALLBACK_IMAGE}
@@ -490,12 +839,28 @@ export default function SearchPage() {
                           loading="lazy"
                           onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
                         />
+                        {hotel.star_rating && hotel.star_rating >= 4 && (
+                          <div style={{
+                            position: "absolute",
+                            top: "10px",
+                            left: "10px",
+                            background: "rgba(26,23,16,0.75)",
+                            backdropFilter: "blur(4px)",
+                            padding: "3px 8px",
+                            fontSize: "10px",
+                            color: "var(--gold)",
+                            letterSpacing: "1px",
+                            fontWeight: 500,
+                          }}>
+                            {"★".repeat(hotel.star_rating)}
+                          </div>
+                        )}
                       </div>
 
                       {/* Content */}
-                      <div style={{ padding: "18px 24px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                      <div className="search-hotel-card-content" style={{ padding: "20px 28px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                          {hotel.star_rating && (
+                          {hotel.star_rating && hotel.star_rating < 4 && (
                             <span style={{ color: "var(--gold)", fontSize: "10px", letterSpacing: "1px" }}>
                               {"★".repeat(hotel.star_rating)}
                             </span>
@@ -504,15 +869,48 @@ export default function SearchPage() {
                         <div className="type-heading-3" style={{
                           color: "var(--ink)",
                           fontStyle: "italic",
-                          marginBottom: "4px",
+                          marginBottom: "6px",
                           fontSize: "18px",
                         }}>
                           {hotel.hotel_name}
                         </div>
-                        <div style={{ fontSize: "12px", color: "var(--ink-light)", letterSpacing: "0.04em" }}>
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          fontSize: "12px",
+                          color: "var(--ink-light)",
+                          letterSpacing: "0.04em",
+                        }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-light)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                          </svg>
                           {hotel.city}, {hotel.country}
                         </div>
-                        <div style={{ marginTop: "12px" }}>
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          marginTop: "16px",
+                          paddingTop: "12px",
+                          borderTop: "1px solid var(--cream-border)",
+                        }}>
+                          <span style={{
+                            fontSize: "11px",
+                            color: "var(--success)",
+                            fontWeight: 500,
+                            letterSpacing: "0.04em",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                              <polyline points="22 4 12 14.01 9 11.01" />
+                            </svg>
+                            Exclusive rate available
+                          </span>
                           <span className="card-arrow" style={{ fontSize: "11px", color: "var(--gold)", fontWeight: 500, letterSpacing: "0.04em" }}>
                             View details &rarr;
                           </span>
@@ -523,6 +921,33 @@ export default function SearchPage() {
                 </motion.div>
               ))}
             </div>
+          </motion.div>
+        )}
+
+        {/* No results after filtering */}
+        {!searching && hasSearched && hotelResults.length > 0 && filteredHotels.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ textAlign: "center", padding: "60px 0" }}
+          >
+            <p style={{ fontSize: "14px", color: "var(--ink-light)", marginBottom: "12px" }}>
+              No hotels match your current filters.
+            </p>
+            <button
+              onClick={() => { setStarFilter(0); setSortBy("relevance"); }}
+              style={{
+                fontSize: "13px",
+                color: "var(--gold)",
+                background: "transparent",
+                border: "1px solid var(--gold)",
+                padding: "10px 24px",
+                cursor: "pointer",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              Clear filters
+            </button>
           </motion.div>
         )}
 
@@ -550,9 +975,31 @@ export default function SearchPage() {
             <h3 className="type-display-3" style={{ color: "var(--ink)", fontStyle: "italic", marginBottom: "8px" }}>
               No results found
             </h3>
-            <p className="type-body" style={{ color: "var(--ink-light)", maxWidth: "400px", margin: "0 auto" }}>
+            <p className="type-body" style={{ color: "var(--ink-light)", maxWidth: "400px", margin: "0 auto 24px" }}>
               Try searching with a different city name, hotel, or country.
             </p>
+            <Link
+              href="/locations"
+              style={{
+                fontSize: "12px",
+                color: "var(--gold)",
+                textDecoration: "none",
+                fontWeight: 500,
+                letterSpacing: "0.06em",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                border: "1px solid var(--gold)",
+                padding: "10px 24px",
+                transition: "all 0.2s",
+              }}
+            >
+              Browse all locations
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </Link>
           </motion.div>
         )}
 
@@ -566,12 +1013,12 @@ export default function SearchPage() {
             <div className="type-eyebrow" style={{ marginBottom: "24px" }}>
               Trending Destinations
             </div>
-            <div style={{
+            <div className="search-trending-grid" style={{
               display: "grid",
               gridTemplateColumns: "repeat(4, 1fr)",
               gap: "16px",
             }}>
-              {cities.slice(0, 8).map((city, i) => (
+              {cities.slice(0, 12).map((city, i) => (
                 <Link
                   key={city.city_slug}
                   href={`/city/${city.city_slug}`}
@@ -582,7 +1029,7 @@ export default function SearchPage() {
                     initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: i * 0.06 }}
+                    transition={{ duration: 0.5, delay: i * 0.04 }}
                     style={{
                       background: "var(--white)",
                       border: "1px solid var(--cream-border)",
@@ -647,6 +1094,38 @@ export default function SearchPage() {
                   </motion.div>
                 </Link>
               ))}
+            </div>
+
+            {/* Browse all locations CTA */}
+            <div style={{ textAlign: "center", marginTop: "48px" }}>
+              <Link
+                href="/locations"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "14px 32px",
+                  border: "1px solid var(--cream-border)",
+                  background: "var(--white)",
+                  color: "var(--ink)",
+                  textDecoration: "none",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  letterSpacing: "0.06em",
+                  fontFamily: "var(--font-body)",
+                  transition: "all 0.2s",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                Browse all 50+ destinations
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </Link>
             </div>
           </motion.div>
         )}

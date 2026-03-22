@@ -1190,3 +1190,172 @@ nav {
     padding: 14px !important;
   }
 }
+
+/* ═══════════════════════════════════════
+   SEARCH PAGE — responsive overrides
+   ═══════════════════════════════════════ */
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .search-hero-inner {
+    padding: 60px 32px 56px !important;
+  }
+  .search-results-section {
+    padding: 40px 32px 80px !important;
+  }
+  .search-city-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .search-trending-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .search-hotel-card {
+    grid-template-columns: 180px 1fr !important;
+  }
+  .search-filters {
+    gap: 16px !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .search-hero-inner {
+    padding: 48px 20px 40px !important;
+  }
+  .search-form-bar {
+    flex-direction: column !important;
+  }
+  .search-submit-btn {
+    padding: 14px !important;
+  }
+  .search-results-section {
+    padding: 32px 20px 80px !important;
+  }
+  .search-city-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  .search-trending-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  .search-hotel-card {
+    grid-template-columns: 1fr !important;
+  }
+  .search-hotel-card-img {
+    height: 180px !important;
+  }
+  .search-hotel-card-content {
+    padding: 16px 20px !important;
+  }
+  .search-toolbar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .search-filters {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    padding: 16px !important;
+  }
+  .search-hotel-list {
+    gap: 12px !important;
+  }
+}
+
+/* ═══════════════════════════════════════
+   LOCATIONS PAGE — responsive overrides
+   ═══════════════════════════════════════ */
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .locations-hero-inner {
+    padding: 60px 32px 56px !important;
+  }
+  .locations-continent-section {
+    padding: 36px 32px 0 !important;
+  }
+  .locations-continent-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .locations-filter-section {
+    padding: 24px 32px 0 !important;
+  }
+  .locations-city-section {
+    padding: 32px 32px 80px !important;
+  }
+  .locations-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .locations-list-card {
+    grid-template-columns: 140px 1fr auto !important;
+  }
+  .locations-stats {
+    gap: 24px !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .locations-hero-inner {
+    padding: 48px 20px 40px !important;
+  }
+  .locations-stats {
+    gap: 16px !important;
+    flex-wrap: wrap !important;
+  }
+  .locations-stat-item div:first-child {
+    font-size: 22px !important;
+  }
+  .locations-search-bar {
+    max-width: 100% !important;
+  }
+  .locations-continent-section {
+    padding: 28px 20px 0 !important;
+  }
+  .locations-continent-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .locations-continent-card {
+    height: 100px !important;
+  }
+  .locations-filter-section {
+    padding: 20px 20px 0 !important;
+  }
+  .locations-filter-pills {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .locations-filter-pills button {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .locations-city-section {
+    padding: 28px 20px 80px !important;
+  }
+  .locations-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .locations-list-card {
+    grid-template-columns: 1fr !important;
+  }
+  .locations-list-card > div:first-child {
+    height: 160px !important;
+  }
+  .locations-list-card > div:last-child {
+    padding: 0 16px 16px !important;
+    text-align: left !important;
+    display: flex !important;
+    gap: 16px !important;
+    align-items: center !important;
+  }
+
+  /* Hide continent tagline on mobile */
+  .locations-city-section h3 + span {
+    display: none !important;
+  }
+}
