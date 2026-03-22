@@ -5,73 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { searchHotels, fetchCuratedCities, CuratedCity } from "@/lib/api";
-import { SAMPLE_CITIES } from "@/lib/constants";
+import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import MobileNav from "@/components/MobileNav";
 import DateBar from "@/components/DateBar";
 import DestinationSearch from "@/components/DestinationSearch";
 
-// ---------------------------------------------------------------------------
-// City image map (shared with home page)
-// ---------------------------------------------------------------------------
-const cityImages: Record<string, string> = {
-  bangkok: "https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=800&q=80",
-  tokyo: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80",
-  paris: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80",
-  london: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&q=80",
-  dubai: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80",
-  singapore: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800&q=80",
-  "new-york": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&q=80",
-  barcelona: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=800&q=80",
-  rome: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&q=80",
-  bali: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80",
-  phuket: "https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?w=800&q=80",
-  sydney: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800&q=80",
-  mumbai: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=800&q=80",
-  delhi: "https://images.unsplash.com/photo-1587474260584-136574528ed5?w=800&q=80",
-  seoul: "https://images.unsplash.com/photo-1538485399081-7191377e8241?w=800&q=80",
-  "hong-kong": "https://images.unsplash.com/photo-1536599018102-9f803c140fc1?w=800&q=80",
-  amsterdam: "https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=800&q=80",
-  prague: "https://images.unsplash.com/photo-1519677100203-a0e668c92439?w=800&q=80",
-  budapest: "https://images.unsplash.com/photo-1549877452-9c387954fbc2?w=800&q=80",
-  marrakech: "https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=800&q=80",
-  "cape-town": "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=800&q=80",
-  maldives: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=800&q=80",
-  jaipur: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800&q=80",
-  goa: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&q=80",
-  osaka: "https://images.unsplash.com/photo-1590559899731-a382839e5549?w=800&q=80",
-  hanoi: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&q=80",
-  lisbon: "https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=800&q=80",
-  vienna: "https://images.unsplash.com/photo-1516550893923-42d28e5677af?w=800&q=80",
-  florence: "https://images.unsplash.com/photo-1543429258-0a3e78096a93?w=800&q=80",
-  berlin: "https://images.unsplash.com/photo-1560969184-10fe8719e047?w=800&q=80",
-  "kuala-lumpur": "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=800&q=80",
-  athens: "https://images.unsplash.com/photo-1555993539-1732b0258235?w=800&q=80",
-  santorini: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800&q=80",
-  milan: "https://images.unsplash.com/photo-1520440229-6469d1bfe80a?w=800&q=80",
-  melbourne: "https://images.unsplash.com/photo-1514395462725-fb4566210144?w=800&q=80",
-  "rio-de-janeiro": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=800&q=80",
-  cancun: "https://images.unsplash.com/photo-1510097467424-192d713fd8b2?w=800&q=80",
-  "mexico-city": "https://images.unsplash.com/photo-1585464231875-d9ef1f5ad396?w=800&q=80",
-  colombo: "https://images.unsplash.com/photo-1586211082529-c2fc67e099b9?w=800&q=80",
-  kathmandu: "https://images.unsplash.com/photo-1558799401-1dcba79834c2?w=800&q=80",
-  "ho-chi-minh-city": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&q=80",
-  "buenos-aires": "https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=800&q=80",
-  "chiang-mai": "https://images.unsplash.com/photo-1598935898639-81586f7d2129?w=800&q=80",
-  pattaya: "https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=800&q=80",
-  kyoto: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80",
-  taipei: "https://images.unsplash.com/photo-1470004914212-05527e49370b?w=800&q=80",
-  geneva: "https://images.unsplash.com/photo-1573108037329-37aa135a142e?w=800&q=80",
-  lima: "https://images.unsplash.com/photo-1531968455001-5c5272a67c71?w=800&q=80",
-  edinburgh: "https://images.unsplash.com/photo-1454537468202-b7ff71d51c2e?w=800&q=80",
-  dublin: "https://images.unsplash.com/photo-1549918864-48ac978761a4?w=800&q=80",
-};
-
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&q=80";
-
-function getCityImage(slug: string): string {
-  return cityImages[slug] || FALLBACK_IMAGE;
-}
+const FALLBACK_IMAGE = FALLBACK_CITY_IMAGE;
 
 function safeImageSrc(url: string): string {
   if (url.startsWith("http://")) return url.replace("http://", "https://");

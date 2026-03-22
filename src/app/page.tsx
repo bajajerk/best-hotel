@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { CONTINENTS, CATEGORIES, SAMPLE_CITIES } from "@/lib/constants";
-import { fetchCuratedCities, CuratedCity } from "@/lib/api";
+import { CONTINENTS, CATEGORIES, SAMPLE_CITIES, CITY_IMAGES, FALLBACK_CITY_IMAGE, getCityImage } from "@/lib/constants";
+import { fetchCuratedCities, fetchFeaturedHotels, CuratedCity, CuratedHotel } from "@/lib/api";
 import MobileNav from "@/components/MobileNav";
 import HotelCard from "@/components/HotelCard";
 import type { HotelCardData } from "@/components/HotelCard";
@@ -20,72 +20,58 @@ const HERO_IMAGES = [
   "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=1920&q=80",
 ];
 
-// ---------------------------------------------------------------------------
-// City image map
-// ---------------------------------------------------------------------------
-const cityImages: Record<string, string> = {
-  bangkok: "https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=800&q=80",
-  tokyo: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80",
-  paris: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80",
-  london: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&q=80",
-  dubai: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80",
-  singapore: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800&q=80",
-  "new-york": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&q=80",
-  barcelona: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=800&q=80",
-  rome: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&q=80",
-  bali: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80",
-  phuket: "https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?w=800&q=80",
-  sydney: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800&q=80",
-  mumbai: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=800&q=80",
-  delhi: "https://images.unsplash.com/photo-1587474260584-136574528ed5?w=800&q=80",
-  seoul: "https://images.unsplash.com/photo-1538485399081-7191377e8241?w=800&q=80",
-  "hong-kong": "https://images.unsplash.com/photo-1536599018102-9f803c140fc1?w=800&q=80",
-  amsterdam: "https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=800&q=80",
-  prague: "https://images.unsplash.com/photo-1519677100203-a0e668c92439?w=800&q=80",
-  budapest: "https://images.unsplash.com/photo-1549877452-9c387954fbc2?w=800&q=80",
-  marrakech: "https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=800&q=80",
-  "cape-town": "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=800&q=80",
-  maldives: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=800&q=80",
-  jaipur: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800&q=80",
-  goa: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&q=80",
-  osaka: "https://images.unsplash.com/photo-1590559899731-a382839e5549?w=800&q=80",
-  hanoi: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&q=80",
-  lisbon: "https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=800&q=80",
-  vienna: "https://images.unsplash.com/photo-1516550893923-42d28e5677af?w=800&q=80",
-  florence: "https://images.unsplash.com/photo-1543429258-0a3e78096a93?w=800&q=80",
-  berlin: "https://images.unsplash.com/photo-1560969184-10fe8719e047?w=800&q=80",
-  "kuala-lumpur": "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=800&q=80",
-  athens: "https://images.unsplash.com/photo-1555993539-1732b0258235?w=800&q=80",
-  santorini: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800&q=80",
-  milan: "https://images.unsplash.com/photo-1520440229-6469d1bfe80a?w=800&q=80",
-  melbourne: "https://images.unsplash.com/photo-1514395462725-fb4566210144?w=800&q=80",
-  "rio-de-janeiro": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=800&q=80",
-  cancun: "https://images.unsplash.com/photo-1510097467424-192d713fd8b2?w=800&q=80",
-  "mexico-city": "https://images.unsplash.com/photo-1585464231875-d9ef1f5ad396?w=800&q=80",
-  colombo: "https://images.unsplash.com/photo-1586211082529-c2fc67e099b9?w=800&q=80",
-  kathmandu: "https://images.unsplash.com/photo-1558799401-1dcba79834c2?w=800&q=80",
-  "ho-chi-minh-city": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&q=80",
-  "buenos-aires": "https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=800&q=80",
-  "chiang-mai": "https://images.unsplash.com/photo-1598935898639-81586f7d2129?w=800&q=80",
-  pattaya: "https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=800&q=80",
-  kyoto: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80",
-  taipei: "https://images.unsplash.com/photo-1470004914212-05527e49370b?w=800&q=80",
-  geneva: "https://images.unsplash.com/photo-1573108037329-37aa135a142e?w=800&q=80",
-  lima: "https://images.unsplash.com/photo-1531968455001-5c5272a67c71?w=800&q=80",
-  edinburgh: "https://images.unsplash.com/photo-1454537468202-b7ff71d51c2e?w=800&q=80",
-  dublin: "https://images.unsplash.com/photo-1549918864-48ac978761a4?w=800&q=80",
-};
-
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&q=80";
-
-function getCityImage(slug: string): string {
-  return cityImages[slug] || FALLBACK_IMAGE;
-}
+const FALLBACK_IMAGE = FALLBACK_CITY_IMAGE;
 
 function safeImageSrc(url: string): string {
   if (url.startsWith("http://")) return url.replace("http://", "https://");
   return url;
+}
+
+function sanitizePhoto(url: string | null): string {
+  if (!url) return FALLBACK_IMAGE;
+  let src = url.startsWith("http://") ? url.replace("http://", "https://") : url;
+  if (!src.startsWith("https://"))
+    src = `https://photos.hotelbeds.com/giata/${src}`;
+  return src;
+}
+
+function curatedToCard(hotel: CuratedHotel): HotelCardData {
+  const marketRate = hotel.rates_from ? Math.round(hotel.rates_from * 1.25) : 0;
+  const savePercent =
+    hotel.rates_from && marketRate
+      ? Math.round(((marketRate - hotel.rates_from) / marketRate) * 100)
+      : 20;
+  return {
+    name: hotel.hotel_name,
+    city: `${hotel.city_name}, ${hotel.country}`,
+    citySlug: hotel.city_slug,
+    stars: hotel.star_rating || 4,
+    rating: hotel.rating_average || 8.0,
+    tags: extractTags(hotel.overview),
+    priceFrom: hotel.rates_from || 0,
+    savePercent,
+    img: sanitizePhoto(hotel.photo1),
+  };
+}
+
+function extractTags(overview: string | null): string[] {
+  if (!overview) return ["Hotel"];
+  const tags: string[] = [];
+  const keywords: [string, RegExp][] = [
+    ["Pool", /pool/i],
+    ["Spa", /spa|massage/i],
+    ["Gym", /fitness|gym/i],
+    ["Beach", /beach|shoreline/i],
+    ["Restaurant", /restaurant|dining/i],
+    ["Wi-Fi", /wi-?fi/i],
+    ["Bar", /bar|nightclub/i],
+    ["Room Service", /room service/i],
+  ];
+  for (const [tag, regex] of keywords) {
+    if (regex.test(overview)) tags.push(tag);
+    if (tags.length >= 3) break;
+  }
+  return tags.length > 0 ? tags : ["Hotel"];
 }
 
 // ---------------------------------------------------------------------------
@@ -98,97 +84,12 @@ const EDITORIAL_IMAGES = [
 ];
 
 // ---------------------------------------------------------------------------
-// Popular properties data
+// Featured city slugs for fetching real hotel data from the API
 // ---------------------------------------------------------------------------
-const POPULAR_PROPERTIES = [
-  {
-    name: "Siam Kempinski",
-    city: "Bangkok, Thailand",
-    citySlug: "bangkok",
-    stars: 5,
-    rating: 9.2,
-    tags: ["Pool", "Spa", "City Centre"],
-    priceFrom: 10500,
-    savePercent: 28,
-    img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
-  },
-  {
-    name: "The Oberoi",
-    city: "Mumbai, India",
-    citySlug: "mumbai",
-    stars: 5,
-    rating: 9.0,
-    tags: ["Sea View", "Fine Dining", "Heritage"],
-    priceFrom: 12800,
-    savePercent: 30,
-    img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600&q=80",
-  },
-  {
-    name: "Park Hyatt",
-    city: "Tokyo, Japan",
-    citySlug: "tokyo",
-    stars: 5,
-    rating: 9.1,
-    tags: ["Skyline View", "Spa", "Shinjuku"],
-    priceFrom: 19500,
-    savePercent: 30,
-    img: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&q=80",
-  },
-  {
-    name: "Taj Palace",
-    city: "Delhi, India",
-    citySlug: "delhi",
-    stars: 5,
-    rating: 8.8,
-    tags: ["Heritage", "Pool", "Gardens"],
-    priceFrom: 9200,
-    savePercent: 25,
-    img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80",
-  },
-  {
-    name: "Marina Bay Sands",
-    city: "Singapore",
-    citySlug: "singapore",
-    stars: 5,
-    rating: 9.3,
-    tags: ["Infinity Pool", "Skyline", "Casino"],
-    priceFrom: 22000,
-    savePercent: 22,
-    img: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=600&q=80",
-  },
-  {
-    name: "Burj Al Arab",
-    city: "Dubai, UAE",
-    citySlug: "dubai",
-    stars: 5,
-    rating: 9.5,
-    tags: ["Iconic", "Butler Service", "Beach"],
-    priceFrom: 35000,
-    savePercent: 20,
-    img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&q=80",
-  },
-  {
-    name: "Hotel & Ritz",
-    city: "Paris, France",
-    citySlug: "paris",
-    stars: 5,
-    rating: 9.4,
-    tags: ["Champs-Élysées", "Spa", "Michelin"],
-    priceFrom: 28000,
-    savePercent: 26,
-    img: "https://images.unsplash.com/photo-1549294413-26f195200c16?w=600&q=80",
-  },
-  {
-    name: "Aman Tokyo",
-    city: "Tokyo, Japan",
-    citySlug: "tokyo",
-    stars: 5,
-    rating: 9.6,
-    tags: ["Minimalist", "Onsen", "Otemachi"],
-    priceFrom: 42000,
-    savePercent: 32,
-    img: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=600&q=80",
-  },
+const FEATURED_CITY_SLUGS = [
+  "bangkok", "tokyo", "paris", "london", "dubai", "singapore",
+  "bali", "rome", "barcelona", "hong-kong", "mumbai", "delhi",
+  "maldives", "sydney", "marrakech", "cape-town", "jaipur", "phuket",
 ];
 
 // ---------------------------------------------------------------------------
@@ -246,297 +147,15 @@ const SEASONAL_TRIPS = [
 ];
 
 // ---------------------------------------------------------------------------
-// Curated sub-sections data: Most popular · We suggest · Top curated
+// Curated sub-section tab keys
 // ---------------------------------------------------------------------------
-const MOST_POPULAR: HotelCardData[] = [
-  {
-    name: "Mandarin Oriental",
-    city: "Bangkok, Thailand",
-    citySlug: "bangkok",
-    stars: 5,
-    rating: 9.4,
-    tags: ["Riverside", "Spa", "Michelin"],
-    priceFrom: 14200,
-    savePercent: 30,
-    img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
-  },
-  {
-    name: "The Ritz-Carlton",
-    city: "Tokyo, Japan",
-    citySlug: "tokyo",
-    stars: 5,
-    rating: 9.3,
-    tags: ["Skyline", "Spa", "Roppongi"],
-    priceFrom: 24500,
-    savePercent: 26,
-    img: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&q=80",
-  },
-  {
-    name: "The Leela Palace",
-    city: "Delhi, India",
-    citySlug: "delhi",
-    stars: 5,
-    rating: 9.1,
-    tags: ["Heritage", "Fine Dining", "Pool"],
-    priceFrom: 11500,
-    savePercent: 28,
-    img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80",
-  },
-  {
-    name: "Raffles Hotel",
-    city: "Singapore",
-    citySlug: "singapore",
-    stars: 5,
-    rating: 9.5,
-    tags: ["Colonial", "Heritage", "Bar"],
-    priceFrom: 28000,
-    savePercent: 22,
-    img: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=600&q=80",
-  },
-  {
-    name: "Claridge's",
-    city: "London, UK",
-    citySlug: "london",
-    stars: 5,
-    rating: 9.4,
-    tags: ["Art Deco", "Mayfair", "Afternoon Tea"],
-    priceFrom: 32000,
-    savePercent: 24,
-    img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600&q=80",
-  },
-  {
-    name: "Four Seasons",
-    city: "Bali, Indonesia",
-    citySlug: "bali",
-    stars: 5,
-    rating: 9.6,
-    tags: ["Villa", "Jungle", "Pool"],
-    priceFrom: 18500,
-    savePercent: 32,
-    img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80",
-  },
-];
 
-const WE_SUGGEST: HotelCardData[] = [
-  {
-    name: "Aman Venice",
-    city: "Venice, Italy",
-    citySlug: "florence",
-    stars: 5,
-    rating: 9.7,
-    tags: ["Canal View", "Palazzo", "Intimate"],
-    priceFrom: 45000,
-    savePercent: 20,
-    img: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=600&q=80",
-  },
-  {
-    name: "Taj Lake Palace",
-    city: "Udaipur, India",
-    citySlug: "jaipur",
-    stars: 5,
-    rating: 9.5,
-    tags: ["Lake View", "Heritage", "Romantic"],
-    priceFrom: 16800,
-    savePercent: 35,
-    img: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80",
-  },
-  {
-    name: "One&Only Reethi Rah",
-    city: "Maldives",
-    citySlug: "maldives",
-    stars: 5,
-    rating: 9.8,
-    tags: ["Overwater", "Diving", "Spa"],
-    priceFrom: 52000,
-    savePercent: 25,
-    img: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=600&q=80",
-  },
-  {
-    name: "Belmond Cap Juluca",
-    city: "Anguilla, Caribbean",
-    citySlug: "cancun",
-    stars: 5,
-    rating: 9.4,
-    tags: ["Beach", "Sunset", "Secluded"],
-    priceFrom: 38000,
-    savePercent: 22,
-    img: "https://images.unsplash.com/photo-1510097467424-192d713fd8b2?w=600&q=80",
-  },
-  {
-    name: "Singita Kruger",
-    city: "Cape Town, South Africa",
-    citySlug: "cape-town",
-    stars: 5,
-    rating: 9.6,
-    tags: ["Safari", "Wildlife", "Luxury"],
-    priceFrom: 42000,
-    savePercent: 18,
-    img: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=600&q=80",
-  },
-  {
-    name: "Riad Fès",
-    city: "Marrakech, Morocco",
-    citySlug: "marrakech",
-    stars: 5,
-    rating: 9.2,
-    tags: ["Riad", "Medina", "Rooftop"],
-    priceFrom: 8500,
-    savePercent: 30,
-    img: "https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=600&q=80",
-  },
-];
 
-const TOP_CURATED: HotelCardData[] = [
-  {
-    name: "The Peninsula",
-    city: "Hong Kong",
-    citySlug: "hong-kong",
-    stars: 5,
-    rating: 9.5,
-    tags: ["Harbour View", "Rolls-Royce", "Iconic"],
-    priceFrom: 26000,
-    savePercent: 24,
-    img: "https://images.unsplash.com/photo-1536599018102-9f803c140fc1?w=600&q=80",
-  },
-  {
-    name: "Baglioni Hotel Luna",
-    city: "Rome, Italy",
-    citySlug: "rome",
-    stars: 5,
-    rating: 9.3,
-    tags: ["Historic", "Art", "Piazza"],
-    priceFrom: 22500,
-    savePercent: 26,
-    img: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=600&q=80",
-  },
-  {
-    name: "Hôtel Plaza Athénée",
-    city: "Paris, France",
-    citySlug: "paris",
-    stars: 5,
-    rating: 9.6,
-    tags: ["Haute Couture", "Eiffel View", "Dior Spa"],
-    priceFrom: 38500,
-    savePercent: 28,
-    img: "https://images.unsplash.com/photo-1549294413-26f195200c16?w=600&q=80",
-  },
-  {
-    name: "W Barcelona",
-    city: "Barcelona, Spain",
-    citySlug: "barcelona",
-    stars: 5,
-    rating: 9.1,
-    tags: ["Beachfront", "Rooftop", "Design"],
-    priceFrom: 19800,
-    savePercent: 30,
-    img: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&q=80",
-  },
-  {
-    name: "Park Hyatt Sydney",
-    city: "Sydney, Australia",
-    citySlug: "sydney",
-    stars: 5,
-    rating: 9.4,
-    tags: ["Opera House", "Harbour", "Waterfront"],
-    priceFrom: 27500,
-    savePercent: 22,
-    img: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=600&q=80",
-  },
-  {
-    name: "Shinta Mani Wild",
-    city: "Siem Reap, Cambodia",
-    citySlug: "bangkok",
-    stars: 5,
-    rating: 9.7,
-    tags: ["Eco-Luxury", "Jungle", "Adventure"],
-    priceFrom: 34000,
-    savePercent: 20,
-    img: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=600&q=80",
-  },
-];
 
-// ---------------------------------------------------------------------------
-// Top deals — hotels with the highest discount percentages
-// ---------------------------------------------------------------------------
-const TOP_DEALS = [
-  {
-    name: "Taj Lake Palace",
-    city: "Udaipur, India",
-    citySlug: "jaipur",
-    stars: 5,
-    rating: 9.5,
-    tags: ["Lake View", "Heritage", "Romantic"],
-    marketRate: 25800,
-    voyagrRate: 16800,
-    savePercent: 35,
-    img: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80",
-  },
-  {
-    name: "Aman Tokyo",
-    city: "Tokyo, Japan",
-    citySlug: "tokyo",
-    stars: 5,
-    rating: 9.6,
-    tags: ["Minimalist", "Onsen", "Otemachi"],
-    marketRate: 61700,
-    voyagrRate: 42000,
-    savePercent: 32,
-    img: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=600&q=80",
-  },
-  {
-    name: "Four Seasons Bali",
-    city: "Bali, Indonesia",
-    citySlug: "bali",
-    stars: 5,
-    rating: 9.6,
-    tags: ["Villa", "Jungle", "Pool"],
-    marketRate: 27200,
-    voyagrRate: 18500,
-    savePercent: 32,
-    img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80",
-  },
-  {
-    name: "Riad Fès",
-    city: "Marrakech, Morocco",
-    citySlug: "marrakech",
-    stars: 5,
-    rating: 9.2,
-    tags: ["Riad", "Medina", "Rooftop"],
-    marketRate: 12140,
-    voyagrRate: 8500,
-    savePercent: 30,
-    img: "https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=600&q=80",
-  },
-  {
-    name: "The Oberoi",
-    city: "Mumbai, India",
-    citySlug: "mumbai",
-    stars: 5,
-    rating: 9.0,
-    tags: ["Sea View", "Fine Dining", "Heritage"],
-    marketRate: 18200,
-    voyagrRate: 12800,
-    savePercent: 30,
-    img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600&q=80",
-  },
-  {
-    name: "Mandarin Oriental",
-    city: "Bangkok, Thailand",
-    citySlug: "bangkok",
-    stars: 5,
-    rating: 9.4,
-    tags: ["Riverside", "Spa", "Michelin"],
-    marketRate: 20280,
-    voyagrRate: 14200,
-    savePercent: 30,
-    img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
-  },
-];
-
-const CURATED_TABS = [
-  { key: "popular", label: "Most popular", data: MOST_POPULAR },
-  { key: "suggest", label: "We suggest", data: WE_SUGGEST },
-  { key: "curated", label: "Top curated", data: TOP_CURATED },
+const CURATED_TAB_KEYS = [
+  { key: "popular", label: "Most popular" },
+  { key: "suggest", label: "We suggest" },
+  { key: "curated", label: "Top curated" },
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -691,9 +310,7 @@ function useCarousel(itemCount: number, visibleCount: number = 4) {
 // ---------------------------------------------------------------------------
 // Popular Properties Carousel
 // ---------------------------------------------------------------------------
-type PopularProp = (typeof POPULAR_PROPERTIES)[number];
-
-function PopularCarousel({ properties }: { properties: PopularProp[] }) {
+function PopularCarousel({ properties }: { properties: HotelCardData[] }) {
   const { trackRef, activeIdx, dotCount, prev, next, scrollTo, maxIdx } =
     useCarousel(properties.length, 4);
 
@@ -851,9 +468,9 @@ function SeasonalCarousel({ trips }: { trips: SeasonalTrip[] }) {
 // ---------------------------------------------------------------------------
 // Curated Sub-Sections: Most popular · We suggest · Top curated
 // ---------------------------------------------------------------------------
-function CuratedSubSections() {
+function CuratedSubSections({ tabData }: { tabData: Record<string, HotelCardData[]> }) {
   const [activeTab, setActiveTab] = useState<string>("popular");
-  const activeData = CURATED_TABS.find((t) => t.key === activeTab)?.data ?? MOST_POPULAR;
+  const activeData = tabData[activeTab] || [];
   const { trackRef, activeIdx, dotCount, prev, next, scrollTo, maxIdx } =
     useCarousel(activeData.length, 4);
 
@@ -888,7 +505,7 @@ function CuratedSubSections() {
             borderBottom: "1px solid var(--cream-border)",
             paddingBottom: "0",
           }}>
-            {CURATED_TABS.map((tab) => (
+            {CURATED_TAB_KEYS.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
@@ -914,41 +531,49 @@ function CuratedSubSections() {
         </motion.div>
 
         {/* Carousel for active tab */}
-        <motion.div
-          key={activeTab}
-          className="carousel-container"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <button className="carousel-btn carousel-btn-prev" onClick={prev} disabled={activeIdx === 0} aria-label="Previous">
-            <ChevronLeft />
-          </button>
-          <button className="carousel-btn carousel-btn-next" onClick={next} disabled={activeIdx >= maxIdx} aria-label="Next">
-            <ChevronRight />
-          </button>
+        {activeData.length > 0 ? (
+          <motion.div
+            key={activeTab}
+            className="carousel-container"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <button className="carousel-btn carousel-btn-prev" onClick={prev} disabled={activeIdx === 0} aria-label="Previous">
+              <ChevronLeft />
+            </button>
+            <button className="carousel-btn carousel-btn-next" onClick={next} disabled={activeIdx >= maxIdx} aria-label="Next">
+              <ChevronRight />
+            </button>
 
-          <div className="carousel-track" ref={trackRef}>
-            {activeData.map((prop) => (
-              <div key={prop.name} style={{ width: "calc(25% - 15px)" }}>
-                <HotelCard hotel={prop} />
-              </div>
-            ))}
-          </div>
-
-          {dotCount > 1 && (
-            <div className="carousel-dots">
-              {Array.from({ length: dotCount }).map((_, i) => (
-                <button
-                  key={i}
-                  className={`carousel-dot${i === activeIdx ? " active" : ""}`}
-                  onClick={() => scrollTo(i)}
-                  aria-label={`Go to slide ${i + 1}`}
-                />
+            <div className="carousel-track" ref={trackRef}>
+              {activeData.map((prop) => (
+                <div key={`${prop.name}-${prop.citySlug}`} style={{ width: "calc(25% - 15px)" }}>
+                  <HotelCard hotel={prop} />
+                </div>
               ))}
             </div>
-          )}
-        </motion.div>
+
+            {dotCount > 1 && (
+              <div className="carousel-dots">
+                {Array.from({ length: dotCount }).map((_, i) => (
+                  <button
+                    key={i}
+                    className={`carousel-dot${i === activeIdx ? " active" : ""}`}
+                    onClick={() => scrollTo(i)}
+                    aria-label={`Go to slide ${i + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="shimmer" style={{ height: 320, background: "var(--cream)" }} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -964,6 +589,9 @@ export default function Home() {
   const [heroIdx, setHeroIdx] = useState(0);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
   const [activeContinent, setActiveContinent] = useState<string>("All");
+  const [popularProps, setPopularProps] = useState<HotelCardData[]>([]);
+  const [topDeals, setTopDeals] = useState<{ name: string; city: string; citySlug: string; stars: number; rating: number; tags: string[]; marketRate: number; voyagrRate: number; savePercent: number; img: string }[]>([]);
+  const [curatedTabData, setCuratedTabData] = useState<Record<string, HotelCardData[]>>({ popular: [], suggest: [], curated: [] });
   const heroRef = useRef<HTMLElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -988,6 +616,62 @@ export default function Home() {
         );
       })
       .finally(() => setLoading(false));
+  }, []);
+
+  // Fetch featured hotel data from API for home page sections
+  useEffect(() => {
+    async function loadFeaturedHotels() {
+      try {
+        const hotels = await fetchFeaturedHotels(FEATURED_CITY_SLUGS, "couples");
+
+        // Sort by rating for popular properties (top 8)
+        const byRating = [...hotels]
+          .filter((h) => h.rating_average && h.rates_from)
+          .sort((a, b) => (b.rating_average || 0) - (a.rating_average || 0));
+        setPopularProps(byRating.slice(0, 8).map(curatedToCard));
+
+        // Top deals — sorted by rates_from (best value)
+        const withRates = hotels.filter((h) => h.rates_from && h.rates_from > 0);
+        const dealHotels = withRates.slice(0, 6).map((h) => {
+          const marketRate = Math.round((h.rates_from || 0) * 1.25);
+          const voyagrRate = h.rates_from || 0;
+          const savePercent = marketRate > 0 ? Math.round(((marketRate - voyagrRate) / marketRate) * 100) : 20;
+          return {
+            name: h.hotel_name,
+            city: `${h.city_name}, ${h.country}`,
+            citySlug: h.city_slug,
+            stars: h.star_rating || 4,
+            rating: h.rating_average || 8.0,
+            tags: extractTags(h.overview),
+            marketRate,
+            voyagrRate,
+            savePercent,
+            img: sanitizePhoto(h.photo1),
+          };
+        });
+        setTopDeals(dealHotels);
+
+        // Curated tabs — split hotels across the three tabs
+        const singles = await fetchFeaturedHotels(FEATURED_CITY_SLUGS.slice(0, 12), "singles");
+        const families = await fetchFeaturedHotels(FEATURED_CITY_SLUGS.slice(0, 12), "families");
+        setCuratedTabData({
+          popular: byRating.slice(0, 6).map(curatedToCard),
+          suggest: singles
+            .filter((h) => h.rating_average && h.rates_from)
+            .sort((a, b) => (b.rating_average || 0) - (a.rating_average || 0))
+            .slice(0, 6)
+            .map(curatedToCard),
+          curated: families
+            .filter((h) => h.rating_average && h.rates_from)
+            .sort((a, b) => (b.rating_average || 0) - (a.rating_average || 0))
+            .slice(0, 6)
+            .map(curatedToCard),
+        });
+      } catch {
+        // Silently fail — sections will show shimmer/empty state
+      }
+    }
+    loadFeaturedHotels();
   }, []);
 
   // Rotate hero background
@@ -1578,7 +1262,15 @@ export default function Home() {
           </motion.div>
 
           {/* Property cards — carousel */}
-          <PopularCarousel properties={POPULAR_PROPERTIES} />
+          {popularProps.length > 0 ? (
+            <PopularCarousel properties={popularProps} />
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="shimmer" style={{ height: 320, background: "var(--cream)" }} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -1627,7 +1319,7 @@ export default function Home() {
               gap: "20px",
             }}
           >
-            {TOP_DEALS.map((deal, i) => (
+            {topDeals.map((deal, i) => (
               <motion.div
                 key={deal.name}
                 initial={{ opacity: 0, y: 30 }}
@@ -1889,7 +1581,7 @@ export default function Home() {
       {/* ================================================================
           CURATED SUB-SECTIONS — Most popular · We suggest · Top curated
       ================================================================ */}
-      <CuratedSubSections />
+      <CuratedSubSections tabData={curatedTabData} />
 
       {/* ================================================================
           LET'S PLAN YOUR STAY — editorial CTA
@@ -2245,7 +1937,7 @@ export default function Home() {
                 marketRate: 14500,
                 voyagrRate: 10500,
                 savePercent: 28,
-                img: cityImages.bangkok,
+                img: CITY_IMAGES.bangkok,
               },
               {
                 hotel: "The Oberoi",
@@ -2255,7 +1947,7 @@ export default function Home() {
                 marketRate: 18200,
                 voyagrRate: 12800,
                 savePercent: 30,
-                img: cityImages.mumbai,
+                img: CITY_IMAGES.mumbai,
               },
               {
                 hotel: "Park Hyatt Tokyo",
@@ -2265,7 +1957,7 @@ export default function Home() {
                 marketRate: 28000,
                 voyagrRate: 19500,
                 savePercent: 30,
-                img: cityImages.tokyo,
+                img: CITY_IMAGES.tokyo,
               },
             ].map((deal, i) => (
               <motion.div

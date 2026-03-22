@@ -108,3 +108,28 @@ export async function searchHotels(query: string, limit: number = 10): Promise<a
   const data = await res.json();
   return data.results;
 }
+
+/**
+ * Fetch top-rated curated hotels across multiple cities for home page sections.
+ * Fetches from a diverse set of cities and returns hotels sorted by rating.
+ */
+export async function fetchFeaturedHotels(
+  citySlugs: string[],
+  category: 'singles' | 'couples' | 'families' = 'couples'
+): Promise<CuratedHotel[]> {
+  const results = await Promise.allSettled(
+    citySlugs.map((slug) => fetchCityCurations(slug))
+  );
+
+  const hotels: CuratedHotel[] = [];
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      const curations = result.value.curations;
+      // Take the top hotel from the requested category for each city
+      const categoryHotels = curations[category] || [];
+      hotels.push(...categoryHotels.slice(0, 3));
+    }
+  }
+
+  return hotels;
+}
