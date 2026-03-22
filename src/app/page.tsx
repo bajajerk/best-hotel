@@ -243,6 +243,234 @@ const SEASONAL_TRIPS = [
 ];
 
 // ---------------------------------------------------------------------------
+// Curated sub-sections data: Most popular · We suggest · Top curated
+// ---------------------------------------------------------------------------
+type CuratedHotelCard = {
+  name: string;
+  city: string;
+  citySlug: string;
+  stars: number;
+  rating: number;
+  tags: string[];
+  priceFrom: number;
+  savePercent: number;
+  img: string;
+};
+
+const MOST_POPULAR: CuratedHotelCard[] = [
+  {
+    name: "Mandarin Oriental",
+    city: "Bangkok, Thailand",
+    citySlug: "bangkok",
+    stars: 5,
+    rating: 9.4,
+    tags: ["Riverside", "Spa", "Michelin"],
+    priceFrom: 14200,
+    savePercent: 30,
+    img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80",
+  },
+  {
+    name: "The Ritz-Carlton",
+    city: "Tokyo, Japan",
+    citySlug: "tokyo",
+    stars: 5,
+    rating: 9.3,
+    tags: ["Skyline", "Spa", "Roppongi"],
+    priceFrom: 24500,
+    savePercent: 26,
+    img: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&q=80",
+  },
+  {
+    name: "The Leela Palace",
+    city: "Delhi, India",
+    citySlug: "delhi",
+    stars: 5,
+    rating: 9.1,
+    tags: ["Heritage", "Fine Dining", "Pool"],
+    priceFrom: 11500,
+    savePercent: 28,
+    img: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80",
+  },
+  {
+    name: "Raffles Hotel",
+    city: "Singapore",
+    citySlug: "singapore",
+    stars: 5,
+    rating: 9.5,
+    tags: ["Colonial", "Heritage", "Bar"],
+    priceFrom: 28000,
+    savePercent: 22,
+    img: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=600&q=80",
+  },
+  {
+    name: "Claridge's",
+    city: "London, UK",
+    citySlug: "london",
+    stars: 5,
+    rating: 9.4,
+    tags: ["Art Deco", "Mayfair", "Afternoon Tea"],
+    priceFrom: 32000,
+    savePercent: 24,
+    img: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600&q=80",
+  },
+  {
+    name: "Four Seasons",
+    city: "Bali, Indonesia",
+    citySlug: "bali",
+    stars: 5,
+    rating: 9.6,
+    tags: ["Villa", "Jungle", "Pool"],
+    priceFrom: 18500,
+    savePercent: 32,
+    img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80",
+  },
+];
+
+const WE_SUGGEST: CuratedHotelCard[] = [
+  {
+    name: "Aman Venice",
+    city: "Venice, Italy",
+    citySlug: "florence",
+    stars: 5,
+    rating: 9.7,
+    tags: ["Canal View", "Palazzo", "Intimate"],
+    priceFrom: 45000,
+    savePercent: 20,
+    img: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=600&q=80",
+  },
+  {
+    name: "Taj Lake Palace",
+    city: "Udaipur, India",
+    citySlug: "jaipur",
+    stars: 5,
+    rating: 9.5,
+    tags: ["Lake View", "Heritage", "Romantic"],
+    priceFrom: 16800,
+    savePercent: 35,
+    img: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80",
+  },
+  {
+    name: "One&Only Reethi Rah",
+    city: "Maldives",
+    citySlug: "maldives",
+    stars: 5,
+    rating: 9.8,
+    tags: ["Overwater", "Diving", "Spa"],
+    priceFrom: 52000,
+    savePercent: 25,
+    img: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=600&q=80",
+  },
+  {
+    name: "Belmond Cap Juluca",
+    city: "Anguilla, Caribbean",
+    citySlug: "cancun",
+    stars: 5,
+    rating: 9.4,
+    tags: ["Beach", "Sunset", "Secluded"],
+    priceFrom: 38000,
+    savePercent: 22,
+    img: "https://images.unsplash.com/photo-1510097467424-192d713fd8b2?w=600&q=80",
+  },
+  {
+    name: "Singita Kruger",
+    city: "Cape Town, South Africa",
+    citySlug: "cape-town",
+    stars: 5,
+    rating: 9.6,
+    tags: ["Safari", "Wildlife", "Luxury"],
+    priceFrom: 42000,
+    savePercent: 18,
+    img: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=600&q=80",
+  },
+  {
+    name: "Riad Fès",
+    city: "Marrakech, Morocco",
+    citySlug: "marrakech",
+    stars: 5,
+    rating: 9.2,
+    tags: ["Riad", "Medina", "Rooftop"],
+    priceFrom: 8500,
+    savePercent: 30,
+    img: "https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=600&q=80",
+  },
+];
+
+const TOP_CURATED: CuratedHotelCard[] = [
+  {
+    name: "The Peninsula",
+    city: "Hong Kong",
+    citySlug: "hong-kong",
+    stars: 5,
+    rating: 9.5,
+    tags: ["Harbour View", "Rolls-Royce", "Iconic"],
+    priceFrom: 26000,
+    savePercent: 24,
+    img: "https://images.unsplash.com/photo-1536599018102-9f803c140fc1?w=600&q=80",
+  },
+  {
+    name: "Baglioni Hotel Luna",
+    city: "Rome, Italy",
+    citySlug: "rome",
+    stars: 5,
+    rating: 9.3,
+    tags: ["Historic", "Art", "Piazza"],
+    priceFrom: 22500,
+    savePercent: 26,
+    img: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=600&q=80",
+  },
+  {
+    name: "Hôtel Plaza Athénée",
+    city: "Paris, France",
+    citySlug: "paris",
+    stars: 5,
+    rating: 9.6,
+    tags: ["Haute Couture", "Eiffel View", "Dior Spa"],
+    priceFrom: 38500,
+    savePercent: 28,
+    img: "https://images.unsplash.com/photo-1549294413-26f195200c16?w=600&q=80",
+  },
+  {
+    name: "W Barcelona",
+    city: "Barcelona, Spain",
+    citySlug: "barcelona",
+    stars: 5,
+    rating: 9.1,
+    tags: ["Beachfront", "Rooftop", "Design"],
+    priceFrom: 19800,
+    savePercent: 30,
+    img: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&q=80",
+  },
+  {
+    name: "Park Hyatt Sydney",
+    city: "Sydney, Australia",
+    citySlug: "sydney",
+    stars: 5,
+    rating: 9.4,
+    tags: ["Opera House", "Harbour", "Waterfront"],
+    priceFrom: 27500,
+    savePercent: 22,
+    img: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=600&q=80",
+  },
+  {
+    name: "Shinta Mani Wild",
+    city: "Siem Reap, Cambodia",
+    citySlug: "bangkok",
+    stars: 5,
+    rating: 9.7,
+    tags: ["Eco-Luxury", "Jungle", "Adventure"],
+    priceFrom: 34000,
+    savePercent: 20,
+    img: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=600&q=80",
+  },
+];
+
+const CURATED_TABS = [
+  { key: "popular", label: "Most popular", data: MOST_POPULAR },
+  { key: "suggest", label: "We suggest", data: WE_SUGGEST },
+  { key: "curated", label: "Top curated", data: TOP_CURATED },
+] as const;
+
+// ---------------------------------------------------------------------------
 // Animation variants
 // ---------------------------------------------------------------------------
 const orchestrate = {
@@ -640,6 +868,201 @@ function SeasonalCarousel({ trips }: { trips: SeasonalTrip[] }) {
         </div>
       )}
     </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Curated Sub-Sections: Most popular · We suggest · Top curated
+// ---------------------------------------------------------------------------
+function CuratedSubSections() {
+  const [activeTab, setActiveTab] = useState<string>("popular");
+  const activeData = CURATED_TABS.find((t) => t.key === activeTab)?.data ?? MOST_POPULAR;
+  const { trackRef, activeIdx, dotCount, prev, next, scrollTo, maxIdx } =
+    useCarousel(activeData.length, 4);
+
+  return (
+    <section
+      style={{
+        padding: "80px 60px",
+        background: "var(--white)",
+      }}
+    >
+      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          style={{ marginBottom: "48px" }}
+        >
+          <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
+            Curated Collections
+          </div>
+          <h2 className="type-display-2" style={{ color: "var(--ink)", marginBottom: "32px" }}>
+            Handpicked{" "}
+            <em style={{ fontStyle: "italic", color: "var(--gold)" }}>for you</em>
+          </h2>
+
+          {/* Tabs */}
+          <div style={{
+            display: "flex",
+            gap: "8px",
+            borderBottom: "1px solid var(--cream-border)",
+            paddingBottom: "0",
+          }}>
+            {CURATED_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                style={{
+                  padding: "10px 24px",
+                  fontSize: "13px",
+                  fontWeight: activeTab === tab.key ? 600 : 400,
+                  letterSpacing: "0.04em",
+                  color: activeTab === tab.key ? "var(--gold)" : "var(--ink-light)",
+                  background: "none",
+                  border: "none",
+                  borderBottom: activeTab === tab.key ? "2px solid var(--gold)" : "2px solid transparent",
+                  cursor: "pointer",
+                  transition: "all 0.25s ease",
+                  marginBottom: "-1px",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Carousel for active tab */}
+        <motion.div
+          key={activeTab}
+          className="carousel-container"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <button className="carousel-btn carousel-btn-prev" onClick={prev} disabled={activeIdx === 0} aria-label="Previous">
+            <ChevronLeft />
+          </button>
+          <button className="carousel-btn carousel-btn-next" onClick={next} disabled={activeIdx >= maxIdx} aria-label="Next">
+            <ChevronRight />
+          </button>
+
+          <div className="carousel-track" ref={trackRef}>
+            {activeData.map((prop) => (
+              <div key={prop.name} style={{ width: "calc(25% - 15px)" }}>
+                <Link href={`/city/${prop.citySlug}`} style={{ textDecoration: "none", display: "block" }}>
+                  <div
+                    className="card-hover"
+                    style={{
+                      background: "var(--white)",
+                      border: "1px solid var(--cream-border)",
+                      overflow: "hidden",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
+                      <img
+                        className="card-img"
+                        src={safeImageSrc(prop.img)}
+                        alt={prop.name}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                          filter: "saturate(0.88)",
+                        }}
+                        loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
+                      />
+                      {prop.rating >= 8.5 && (
+                        <div style={{
+                          position: "absolute", top: "12px", right: "12px",
+                          background: "var(--gold)", color: "var(--white)",
+                          fontSize: "12px", fontWeight: 600, padding: "4px 10px",
+                          fontFamily: "var(--font-mono)",
+                        }}>
+                          {prop.rating.toFixed(1)}
+                        </div>
+                      )}
+                      <div style={{
+                        position: "absolute", bottom: "12px", left: "12px",
+                        background: "var(--success)", color: "var(--cream)",
+                        fontSize: "10px", fontWeight: 500, padding: "4px 10px",
+                        letterSpacing: "0.04em",
+                      }}>
+                        Save up to {prop.savePercent}%
+                      </div>
+                    </div>
+
+                    <div style={{ padding: "18px 20px 22px" }}>
+                      <div style={{ color: "var(--gold)", fontSize: "10px", letterSpacing: "2px", marginBottom: "6px" }}>
+                        {"★".repeat(prop.stars)}
+                      </div>
+                      <h3 className="type-heading-3" style={{ color: "var(--ink)", marginBottom: "4px", fontSize: "16px" }}>
+                        {prop.name}
+                      </h3>
+                      <p style={{ fontSize: "12px", color: "var(--ink-light)", letterSpacing: "0.04em", marginBottom: "14px" }}>
+                        {prop.city}
+                      </p>
+                      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginBottom: "16px" }}>
+                        {prop.tags.map((tag) => (
+                          <span key={tag} style={{
+                            fontSize: "9px", padding: "3px 8px",
+                            background: "var(--cream)", color: "var(--ink-mid)",
+                            border: "1px solid var(--cream-border)", letterSpacing: "0.04em",
+                          }}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <div style={{
+                        borderTop: "1px solid var(--cream-border)", paddingTop: "14px",
+                        display: "flex", alignItems: "baseline", justifyContent: "space-between",
+                      }}>
+                        <div>
+                          <span style={{ fontSize: "10px", color: "var(--ink-light)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                            From
+                          </span>
+                          <div style={{
+                            fontFamily: "var(--font-display)", fontSize: "22px",
+                            fontWeight: 500, color: "var(--ink)", lineHeight: 1.2,
+                          }}>
+                            &#8377;{prop.priceFrom.toLocaleString("en-IN")}
+                          </div>
+                          <span style={{ fontSize: "10px", color: "var(--ink-light)" }}>per night</span>
+                        </div>
+                        <span className="card-arrow" style={{
+                          fontSize: "11px", color: "var(--gold)", fontWeight: 500, letterSpacing: "0.04em",
+                        }}>
+                          View &rarr;
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          {dotCount > 1 && (
+            <div className="carousel-dots">
+              {Array.from({ length: dotCount }).map((_, i) => (
+                <button
+                  key={i}
+                  className={`carousel-dot${i === activeIdx ? " active" : ""}`}
+                  onClick={() => scrollTo(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </section>
   );
 }
 
@@ -1328,6 +1751,11 @@ export default function Home() {
           <SeasonalCarousel trips={SEASONAL_TRIPS} />
         </div>
       </section>
+
+      {/* ================================================================
+          CURATED SUB-SECTIONS — Most popular · We suggest · Top curated
+      ================================================================ */}
+      <CuratedSubSections />
 
       {/* ================================================================
           LET'S PLAN YOUR STAY — editorial CTA
