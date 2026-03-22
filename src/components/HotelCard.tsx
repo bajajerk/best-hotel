@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PriceProofCompact } from "@/components/PriceProof";
+import { PriceProofCompact, TrustBadgesCompact } from "@/components/PriceProof";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -144,6 +144,9 @@ export default function HotelCard({ hotel }: { hotel: HotelCardData }) {
                 {tag}
               </span>
             ))}
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <TrustBadgesCompact />
           </div>
           <div
             style={{

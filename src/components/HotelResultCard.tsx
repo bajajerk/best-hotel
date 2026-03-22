@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { CuratedHotel } from "@/lib/api";
 import { AmenityChips } from "@/components/AmenityIcons";
-import { PriceProofCompact } from "@/components/PriceProof";
+import { PriceProofCompact, TrustBadgesCompact } from "@/components/PriceProof";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -196,6 +196,9 @@ export default function HotelResultCard({
                 <AmenityChips overview={hotel.overview} max={4} />
               </div>
             )}
+            <div style={{ marginTop: 10 }}>
+              <TrustBadgesCompact />
+            </div>
           </div>
 
           {/* Right: Pricing */}
@@ -389,10 +392,13 @@ export default function HotelResultCard({
               </p>
             )}
             {hotel.overview && (
-              <div style={{ marginBottom: 12 }}>
+              <div style={{ marginBottom: 8 }}>
                 <AmenityChips overview={hotel.overview} max={3} />
               </div>
             )}
+            <div style={{ marginBottom: 12 }}>
+              <TrustBadgesCompact />
+            </div>
 
             {/* Price row */}
             <div

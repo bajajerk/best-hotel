@@ -10,7 +10,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import DateBar from "@/components/DateBar";
 import { extractAmenities } from "@/components/AmenityIcons";
 import AvailabilityCalendar from "@/components/AvailabilityCalendar";
-import { PriceComparisonBars, BestPriceGuarantee, PriceProofTrustRow } from "@/components/PriceProof";
+import { PriceComparisonBars, BestPriceGuarantee, PriceProofTrustRow, TrustBadgesRow, TrustBadgesCompact } from "@/components/PriceProof";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -1336,9 +1336,9 @@ export default function HotelPage() {
                   WhatsApp
                 </a>
 
-                <p className="text-[11px] text-center mt-4" style={{ color: "var(--ink-light)" }}>
-                  Free cancellation. No hidden fees.
-                </p>
+                <div className="mt-4 flex justify-center">
+                  <TrustBadgesCompact />
+                </div>
               </div>
             </motion.div>
 
@@ -1548,6 +1548,11 @@ export default function HotelPage() {
                       <BestPriceGuarantee />
                     </div>
 
+                    {/* Trust Badges: Free cancellation + Pay tax at hotel */}
+                    <div style={{ marginBottom: "16px" }}>
+                      <TrustBadgesRow />
+                    </div>
+
                     <p
                       className="mb-4"
                       style={{ fontSize: "11px", color: "var(--ink-light)" }}
@@ -1607,9 +1612,9 @@ export default function HotelPage() {
 
                 {/* Trust */}
                 <div className="mt-5 pt-4" style={{ borderTop: "1px solid var(--cream-border)" }}>
-                  <p className="text-[11px] text-center" style={{ color: "var(--ink-light)" }}>
-                    Free cancellation &middot; No hidden fees
-                  </p>
+                  <div className="flex justify-center">
+                    <TrustBadgesCompact />
+                  </div>
                 </div>
               </div>
             </motion.div>

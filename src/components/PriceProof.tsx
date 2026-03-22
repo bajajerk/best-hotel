@@ -319,3 +319,122 @@ export function PriceProofTrustRow() {
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// TrustBadgesRow — "Free cancellation" + "Pay tax at hotel" badges
+// ---------------------------------------------------------------------------
+export function TrustBadgesRow() {
+  const badges = [
+    {
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0" />
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+      ),
+      label: "Free cancellation",
+      sublabel: "Up to 48 hrs before check-in",
+    },
+    {
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="6" width="20" height="12" rx="2" />
+          <path d="M12 12h.01" />
+          <path d="M17 12h.01" />
+          <path d="M7 12h.01" />
+        </svg>
+      ),
+      label: "Pay tax at hotel",
+      sublabel: "No prepayment needed for taxes",
+    },
+  ];
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "0",
+        border: "1px solid var(--cream-border)",
+        background: "var(--cream)",
+      }}
+    >
+      {badges.map((b, i) => (
+        <div
+          key={b.label}
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "10px",
+            padding: "14px 16px",
+            borderTop: i > 0 ? "1px solid var(--cream-border)" : undefined,
+          }}
+        >
+          <div style={{ color: "var(--success)", flexShrink: 0, marginTop: "1px" }}>
+            {b.icon}
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                color: "var(--ink)",
+                fontFamily: "var(--font-body)",
+                letterSpacing: "0.02em",
+              }}
+            >
+              {b.label}
+            </div>
+            <div
+              style={{
+                fontSize: "10px",
+                color: "var(--ink-light)",
+                marginTop: "2px",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              {b.sublabel}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// TrustBadgesCompact — inline "Free cancellation · Pay tax at hotel" for cards
+// ---------------------------------------------------------------------------
+export function TrustBadgesCompact() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        fontSize: "9px",
+        color: "var(--success)",
+        fontWeight: 500,
+        fontFamily: "var(--font-body)",
+        letterSpacing: "0.02em",
+        flexWrap: "wrap",
+      }}
+    >
+      <span style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0" />
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+        Free cancellation
+      </span>
+      <span style={{ color: "var(--ink-light)" }}>&middot;</span>
+      <span style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="6" width="20" height="12" rx="2" />
+          <path d="M12 12h.01" />
+        </svg>
+        Pay tax at hotel
+      </span>
+    </div>
+  );
+}
