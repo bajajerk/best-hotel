@@ -858,6 +858,7 @@ function CuratedSubSections() {
 
   return (
     <section
+      className="section-curated"
       style={{
         padding: "80px 60px",
         background: "var(--white)",
@@ -1467,7 +1468,7 @@ export default function Home() {
       {/* ================================================================
           FEATURED HOTELS — asymmetric grid
       ================================================================ */}
-      <section className="section-featured" style={{ padding: "100px 60px 80px" }}>
+      <section className="section-featured" style={{ padding: "80px 60px" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           {/* Section header */}
           <motion.div
@@ -1914,7 +1915,7 @@ export default function Home() {
       <section
         className="section-plan-stay"
         style={{
-          padding: "100px 60px",
+          padding: "80px 60px",
           background: "var(--white)",
         }}
       >
@@ -1995,7 +1996,7 @@ export default function Home() {
         className="section-why"
         style={{
           background: "var(--ink)",
-          padding: "96px 60px",
+          padding: "80px 60px",
           color: "var(--cream)",
         }}
       >
@@ -2419,7 +2420,7 @@ export default function Home() {
       {/* ================================================================
           TESTIMONIALS
       ================================================================ */}
-      <section className="section-testimonials" style={{ padding: "100px 60px", background: "var(--cream)" }}>
+      <section className="section-testimonials" style={{ padding: "80px 60px", background: "var(--cream)" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -2563,7 +2564,7 @@ export default function Home() {
       <section
         className="section-why-book"
         style={{
-          padding: "96px 60px",
+          padding: "80px 60px",
           background: "var(--cream-deep)",
         }}
       >
@@ -2740,7 +2741,7 @@ export default function Home() {
       <footer
         className="site-footer"
         style={{
-          padding: "60px 60px 96px",
+          padding: "60px 60px 80px",
           background: "var(--cream)",
           borderTop: "1px solid var(--cream-border)",
         }}

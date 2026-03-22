@@ -755,6 +755,7 @@ nav {
   .section-popular,
   .section-top-deals,
   .section-seasonal,
+  .section-curated,
   .section-destinations,
   .section-proof,
   .section-trust,
@@ -765,7 +766,7 @@ nav {
     padding-right: 36px !important;
   }
   .section-why {
-    padding: 64px 36px !important;
+    padding: 80px 36px !important;
   }
 
   /* ── Home: Section header — allow wrapping ── */
@@ -834,6 +835,8 @@ nav {
   .section-featured,
   .section-popular,
   .section-top-deals,
+  .section-seasonal,
+  .section-curated,
   .section-destinations,
   .section-proof,
   .section-trust,
@@ -844,7 +847,7 @@ nav {
     padding-right: 20px !important;
   }
   .section-why {
-    padding: 64px 20px !important;
+    padding: 80px 20px !important;
   }
 
   /* Why book grid — single column on mobile */
