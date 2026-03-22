@@ -521,7 +521,19 @@ nav {
     gap: 32px !important;
   }
 
-  /* 9. Destinations grid — single column */
+  /* 9a. Continent pills — horizontal scroll on mobile */
+  .continent-pills {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .continent-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 9b. Destinations grid — single column */
   .destinations-grid {
     grid-template-columns: 1fr !important;
   }

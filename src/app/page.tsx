@@ -177,6 +177,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [heroIdx, setHeroIdx] = useState(0);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
+  const [activeContinent, setActiveContinent] = useState<string>("All");
   const heroRef = useRef<HTMLElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -221,6 +222,22 @@ export default function Home() {
 
   const featured = cities.slice(0, 6);
   const totalCities = cities.length;
+
+  // Group cities by continent for sub-division display
+  const filteredCities = activeContinent === "All"
+    ? cities
+    : cities.filter((c) => c.continent === activeContinent);
+
+  const continentGroups = filteredCities.reduce<Record<string, CuratedCity[]>>((acc, city) => {
+    const cont = city.continent || "Other";
+    if (!acc[cont]) acc[cont] = [];
+    acc[cont].push(city);
+    return acc;
+  }, {});
+
+  // Order continents consistently
+  const continentOrder = ["Asia", "Europe", "North America", "South America", "Africa", "Oceania", "Other"];
+  const sortedContinents = continentOrder.filter((c) => continentGroups[c]);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
@@ -849,7 +866,7 @@ export default function Home() {
       </section>
 
       {/* ================================================================
-          DESTINATIONS — city cards
+          DESTINATIONS — city cards grouped by continent sub-divisions
       ================================================================ */}
       <section
         id="destinations"
@@ -864,8 +881,8 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             style={{
               display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
+              flexDirection: "column",
+              gap: "24px",
               marginBottom: "48px",
             }}
           >
@@ -894,9 +911,41 @@ export default function Home() {
                 curated cities
               </h2>
             </div>
+
+            {/* Continent filter pills */}
+            <div
+              className="continent-pills"
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "8px",
+              }}
+            >
+              {CONTINENTS.map((cont) => (
+                <button
+                  key={cont}
+                  onClick={() => setActiveContinent(cont)}
+                  style={{
+                    padding: "8px 20px",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    letterSpacing: "0.08em",
+                    border: "1px solid",
+                    borderColor: activeContinent === cont ? "var(--gold)" : "var(--cream-border)",
+                    background: activeContinent === cont ? "var(--gold)" : "transparent",
+                    color: activeContinent === cont ? "var(--white)" : "var(--ink-mid)",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  {cont}
+                </button>
+              ))}
+            </div>
           </motion.div>
 
-          {/* City cards grid */}
+          {/* City cards — grouped by continent sub-divisions */}
           {loading ? (
             <div className="destinations-grid" style={{
               display: "grid",
@@ -912,40 +961,69 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <motion.div
-              className="destinations-grid"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6 }}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "20px",
-              }}
-            >
-              {featured.map((city) => (
-                <DestinationCard key={city.city_slug} city={city} />
-              ))}
-            </motion.div>
-          )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeContinent}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35 }}
+                style={{ display: "flex", flexDirection: "column", gap: "56px" }}
+              >
+                {sortedContinents.map((continent) => (
+                  <div key={continent}>
+                    {/* Continent sub-division header */}
+                    {activeContinent === "All" && (
+                      <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "16px",
+                        marginBottom: "24px",
+                      }}>
+                        <h3 style={{
+                          fontFamily: "var(--font-display)",
+                          fontSize: "22px",
+                          fontWeight: 400,
+                          fontStyle: "italic",
+                          color: "var(--ink)",
+                          whiteSpace: "nowrap",
+                        }}>
+                          {continent}
+                        </h3>
+                        <div style={{
+                          flex: 1,
+                          height: "1px",
+                          background: "var(--cream-border)",
+                        }} />
+                        <span style={{
+                          fontSize: "11px",
+                          color: "var(--ink-light)",
+                          letterSpacing: "0.06em",
+                          whiteSpace: "nowrap",
+                        }}>
+                          {continentGroups[continent].length} {continentGroups[continent].length === 1 ? "city" : "cities"}
+                        </span>
+                      </div>
+                    )}
 
-          {/* View all link */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            style={{ marginTop: "48px", textAlign: "center" }}
-          >
-            <Link
-              href="#destinations"
-              className="btn-primary"
-              style={{ textDecoration: "none" }}
-            >
-              View all {totalCities || 50} cities
-            </Link>
-          </motion.div>
+                    {/* City cards grid */}
+                    <div
+                      className="destinations-grid"
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(3, 1fr)",
+                        gap: "20px",
+                      }}
+                    >
+                      {continentGroups[continent].map((city) => (
+                        <DestinationCard key={city.city_slug} city={city} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          )}
         </div>
       </section>
 
