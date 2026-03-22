@@ -10,9 +10,10 @@ interface NavLink {
 
 interface MobileNavProps {
   links: NavLink[];
+  menuLinks?: NavLink[];
 }
 
-export default function MobileNav({ links }: MobileNavProps) {
+export default function MobileNav({ links, menuLinks }: MobileNavProps) {
   const [open, setOpen] = useState(false);
 
   // Lock body scroll when menu is open
@@ -35,6 +36,8 @@ export default function MobileNav({ links }: MobileNavProps) {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+
+  const allLinks = menuLinks ? [...links, ...menuLinks] : links;
 
   return (
     <>
@@ -147,7 +150,7 @@ export default function MobileNav({ links }: MobileNavProps) {
           gap: "4px",
         }}
       >
-        {links.map((link) => {
+        {allLinks.map((link, index) => {
           const isExternal =
             link.href.startsWith("http") || link.href.startsWith("tel:");
           const Tag = isExternal ? "a" : Link;
@@ -155,28 +158,57 @@ export default function MobileNav({ links }: MobileNavProps) {
             ? { target: "_blank", rel: "noopener noreferrer" }
             : {};
 
+          const showSeparator =
+            menuLinks && index === links.length;
+
           return (
-            <Tag
-              key={link.label}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              {...(extraProps as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
-              style={{
-                display: "block",
-                padding: "14px 0",
-                fontFamily: "var(--font-body)",
-                fontSize: "13px",
-                fontWeight: 500,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--ink)",
-                textDecoration: "none",
-                borderBottom: "1px solid var(--cream-border)",
-                transition: "color 0.2s",
-              }}
-            >
-              {link.label}
-            </Tag>
+            <div key={link.label}>
+              {showSeparator && (
+                <div
+                  style={{
+                    height: "1px",
+                    background: "var(--gold-pale)",
+                    margin: "8px 0 4px",
+                  }}
+                />
+              )}
+              <Tag
+                href={link.href}
+                onClick={() => setOpen(false)}
+                {...(extraProps as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "14px 0",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "var(--ink)",
+                  textDecoration: "none",
+                  borderBottom: "1px solid var(--cream-border)",
+                  transition: "color 0.2s",
+                }}
+              >
+                {link.label === "Profile" && (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                )}
+                {link.label === "Booking History" && (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                )}
+                {link.label}
+              </Tag>
+            </div>
           );
         })}
       </div>

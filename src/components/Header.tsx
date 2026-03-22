@@ -6,11 +6,10 @@ import { usePathname } from "next/navigation";
 import MobileNav from "./MobileNav";
 
 const NAV_LINKS = [
-  { label: "HOME", href: "/" },
+  { label: "THE LOBBY", href: "/" },
   { label: "SEARCH", href: "/search" },
-  { label: "DESTINATIONS", href: "/locations" },
-  { label: "HOW IT WORKS", href: "/#how-it-works" },
-  { label: "PREFERRED RATES", href: "/#the-proof" },
+  { label: "PREFERRED RATES", href: "/preferred-rates" },
+  { label: "MATCH MY RATES", href: "/match-my-rates" },
 ];
 
 export default function Header() {
@@ -156,12 +155,14 @@ export default function Header() {
         {/* Mobile hamburger menu */}
         <MobileNav
           links={[
-            { label: "Home", href: "/" },
+            { label: "The Lobby", href: "/" },
             { label: "Search", href: "/search" },
-            { label: "Destinations", href: "/locations" },
-            { label: "How It Works", href: "/#how-it-works" },
-            { label: "Preferred Rates", href: "/#the-proof" },
-            { label: "WhatsApp", href: "https://wa.me/919876543210" },
+            { label: "Preferred Rates", href: "/preferred-rates" },
+            { label: "Match My Rates", href: "/match-my-rates" },
+          ]}
+          menuLinks={[
+            { label: "Profile", href: "/profile" },
+            { label: "Booking History", href: "/booking-history" },
           ]}
         />
       </div>
