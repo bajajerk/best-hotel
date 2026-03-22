@@ -638,9 +638,14 @@ nav {
 
 /* ── Mobile responsive overrides for homepage (below 768px) ── */
 @media (max-width: 767px) {
-  /* 1. Nav — hide links on mobile */
+  /* 1. Nav — hide links, show hamburger on mobile */
   .nav-links {
     display: none !important;
+  }
+  .mobile-nav-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
   }
 
   /* 2. Hero — single column, hide image */
@@ -942,9 +947,14 @@ nav {
    HOME PAGE — mobile overrides
    ═══════════════════════════════════════ */
 @media (max-width: 767px) {
-  /* Hide nav links on mobile */
+  /* Hide nav links, show hamburger on mobile */
   .nav-links {
     display: none !important;
+  }
+  .mobile-nav-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Stack search form vertically */

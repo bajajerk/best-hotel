@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { fetchCityCurations, CuratedHotel } from "@/lib/api";
 import { CATEGORIES } from "@/lib/constants";
+import MobileNav from "@/components/MobileNav";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -706,7 +707,16 @@ export default function CityPage() {
           ))}
         </div>
 
-        {/* Right: CTA */}
+        {/* Right: CTA + mobile menu */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <MobileNav
+          links={[
+            { label: "Destinations", href: "/" },
+            { label: "Rates", href: "#" },
+            { label: "About", href: "#" },
+            { label: "Contact", href: "https://wa.me/919876543210" },
+          ]}
+        />
         <a
           href="tel:+919876543210"
           className="city-nav-cta"
@@ -739,6 +749,7 @@ export default function CityPage() {
         >
           Book Now
         </a>
+        </div>
       </nav>
 
       {/* ================================================================

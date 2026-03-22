@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import Link from "next/link";
 import { CONTINENTS, CATEGORIES, SAMPLE_CITIES } from "@/lib/constants";
 import { fetchCuratedCities, CuratedCity } from "@/lib/api";
+import MobileNav from "@/components/MobileNav";
 
 // ---------------------------------------------------------------------------
 // Hero background images (cinematic hotel/travel shots)
@@ -345,6 +346,15 @@ export default function Home() {
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
             </svg>
           </div>
+
+          {/* Mobile hamburger menu */}
+          <MobileNav
+            links={[
+              { label: "Destinations", href: "#destinations" },
+              { label: "How It Works", href: "#how-it-works" },
+              { label: "Contact", href: "https://wa.me/919876543210" },
+            ]}
+          />
         </div>
       </nav>
 

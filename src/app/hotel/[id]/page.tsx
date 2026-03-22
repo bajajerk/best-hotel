@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import MobileNav from "@/components/MobileNav";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -585,6 +586,12 @@ export default function HotelPage() {
           >
             Book Now
           </a>
+          <MobileNav
+            links={[
+              { label: "Destinations", href: "/" },
+              { label: "Contact", href: "https://wa.me/919876543210" },
+            ]}
+          />
         </div>
       </nav>
 
