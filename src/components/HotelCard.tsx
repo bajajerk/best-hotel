@@ -169,7 +169,7 @@ export default function HotelCard({ hotel }: { hotel: HotelCardData }) {
                   fontFamily: "var(--font-display)",
                   fontSize: "22px",
                   fontWeight: 500,
-                  color: "var(--ink)",
+                  color: "var(--our-rate)",
                   lineHeight: 1.2,
                 }}
               >

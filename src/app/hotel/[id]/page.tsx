@@ -1086,7 +1086,7 @@ export default function HotelPage() {
                         className="mb-1"
                         style={{
                           fontSize: "13px",
-                          color: "var(--ink-light)",
+                          color: "var(--market-rate)",
                           textDecoration: "line-through",
                         }}
                       >
@@ -1097,7 +1097,7 @@ export default function HotelPage() {
                       <span
                         className="type-price-lg"
                         style={{
-                          color: "var(--ink)",
+                          color: "var(--our-rate)",
                         }}
                       >
                         {formatCurrency(hotel.rates_from, hotel.rates_currency)}
@@ -1259,7 +1259,7 @@ export default function HotelPage() {
                     <div
                       className="type-price-lg"
                       style={{
-                        color: "var(--ink)",
+                        color: "var(--our-rate)",
                       }}
                     >
                       {formatCurrency(hotel.rates_from, hotel.rates_currency)}
@@ -1272,7 +1272,7 @@ export default function HotelPage() {
                       <div
                         style={{
                           fontSize: "13px",
-                          color: "var(--ink-light)",
+                          color: "var(--market-rate)",
                           textDecoration: "line-through",
                           marginTop: "10px",
                         }}

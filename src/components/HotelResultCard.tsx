@@ -224,7 +224,7 @@ export default function HotelResultCard({
                   style={{
                     fontSize: 13,
                     textDecoration: "line-through",
-                    color: "var(--ink-light)",
+                    color: "var(--market-rate)",
                   }}
                 >
                   {formatCurrency(marketRate, hotel.rates_currency)}
@@ -246,7 +246,7 @@ export default function HotelResultCard({
                 <div className="type-label" style={{ color: "var(--gold)" }}>
                   Voyagr Rate
                 </div>
-                <div className="type-price" style={{ color: "var(--ink)" }}>
+                <div className="type-price" style={{ color: "var(--our-rate)" }}>
                   {formatCurrency(hotel.rates_from, hotel.rates_currency)}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--ink-light)" }}>
@@ -425,7 +425,7 @@ export default function HotelResultCard({
                         fontFamily: "var(--font-display)",
                         fontSize: 24,
                         fontWeight: 500,
-                        color: "var(--ink)",
+                        color: "var(--our-rate)",
                       }}
                     >
                       {formatCurrency(hotel.rates_from, hotel.rates_currency)}
@@ -454,7 +454,7 @@ export default function HotelResultCard({
                   style={{
                     fontSize: 12,
                     textDecoration: "line-through",
-                    color: "var(--ink-light)",
+                    color: "var(--market-rate)",
                   }}
                 >
                   {formatCurrency(marketRate, hotel.rates_currency)}

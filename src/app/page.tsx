@@ -2028,7 +2028,7 @@ export default function Home() {
                     <div style={{
                       fontSize: "13px",
                       textDecoration: "line-through",
-                      color: "var(--ink-light)",
+                      color: "var(--market-rate)",
                     }}>
                       &#8377;{deal.marketRate.toLocaleString("en-IN")}
                     </div>
@@ -2046,7 +2046,7 @@ export default function Home() {
                       VOYAGR RATE
                     </div>
                     <div className="type-price" style={{
-                      color: "var(--ink)",
+                      color: "var(--our-rate)",
                     }}>
                       &#8377;{deal.voyagrRate.toLocaleString("en-IN")}
                     </div>
