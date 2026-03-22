@@ -678,9 +678,17 @@ export default function CityPage() {
             alignItems: "center",
           }}
         >
-          {["Destinations", "Rates", "About"].map((label) => (
-            <span
-              key={label}
+          {[
+              { label: "Home", href: "/" },
+              { label: "Search", href: "#search" },
+              { label: "Account", href: "#account" },
+              { label: "Preferred Rates", href: "#preferred-rates" },
+              { label: "Match My Price", href: "#match-my-price" },
+              { label: "Booking History", href: "#booking-history" },
+            ].map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
               style={{
                 fontFamily: "var(--sans)",
                 fontSize: 12,
@@ -692,6 +700,7 @@ export default function CityPage() {
                 transition: "color 0.2s",
                 paddingBottom: 2,
                 borderBottom: "1px solid transparent",
+                textDecoration: "none",
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLElement).style.color = "var(--gold)";
@@ -702,8 +711,8 @@ export default function CityPage() {
                 (e.currentTarget as HTMLElement).style.borderBottomColor = "transparent";
               }}
             >
-              {label}
-            </span>
+              {link.label}
+            </a>
           ))}
         </div>
 
@@ -711,10 +720,12 @@ export default function CityPage() {
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         <MobileNav
           links={[
-            { label: "Destinations", href: "/" },
-            { label: "Rates", href: "#" },
-            { label: "About", href: "#" },
-            { label: "Contact", href: "https://wa.me/919876543210" },
+            { label: "Home", href: "/" },
+            { label: "Search", href: "#search" },
+            { label: "Account", href: "#account" },
+            { label: "Preferred Rates", href: "#preferred-rates" },
+            { label: "Match My Price", href: "#match-my-price" },
+            { label: "Booking History", href: "#booking-history" },
           ]}
         />
         <a

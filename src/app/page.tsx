@@ -281,15 +281,18 @@ export default function Home() {
         </Link>
 
         {/* Nav links + basket */}
-        <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
           <div
             className="nav-links"
-            style={{ display: "flex", gap: "32px", alignItems: "center" }}
+            style={{ display: "flex", gap: "24px", alignItems: "center" }}
           >
             {[
-              { label: "DESTINATIONS", href: "#destinations" },
-              { label: "HOW IT WORKS", href: "#how-it-works" },
-              { label: "CONTACT", href: "https://wa.me/919876543210" },
+              { label: "HOME", href: "/" },
+              { label: "SEARCH", href: "#search" },
+              { label: "ACCOUNT", href: "#account" },
+              { label: "PREFERRED RATES", href: "#preferred-rates" },
+              { label: "MATCH MY PRICE", href: "#match-my-price" },
+              { label: "BOOKING HISTORY", href: "#booking-history" },
             ].map((link) => (
               <a
                 key={link.label}
@@ -350,9 +353,12 @@ export default function Home() {
           {/* Mobile hamburger menu */}
           <MobileNav
             links={[
-              { label: "Destinations", href: "#destinations" },
-              { label: "How It Works", href: "#how-it-works" },
-              { label: "Contact", href: "https://wa.me/919876543210" },
+              { label: "Home", href: "/" },
+              { label: "Search", href: "#search" },
+              { label: "Account", href: "#account" },
+              { label: "Preferred Rates", href: "#preferred-rates" },
+              { label: "Match My Price", href: "#match-my-price" },
+              { label: "Booking History", href: "#booking-history" },
             ]}
           />
         </div>

@@ -560,6 +560,49 @@ export default function HotelPage() {
           </span>
         </Link>
 
+        {/* Desktop nav links */}
+        <div
+          className="nav-links"
+          style={{ display: "flex", gap: "24px", alignItems: "center" }}
+        >
+          {[
+            { label: "HOME", href: "/" },
+            { label: "SEARCH", href: "#search" },
+            { label: "ACCOUNT", href: "#account" },
+            { label: "PREFERRED RATES", href: "#preferred-rates" },
+            { label: "MATCH MY PRICE", href: "#match-my-price" },
+            { label: "BOOKING HISTORY", href: "#booking-history" },
+          ].map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "12px",
+                fontWeight: 500,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase" as const,
+                color: "var(--ink-mid)",
+                textDecoration: "none",
+                paddingBottom: "2px",
+                borderBottom: "1px solid transparent",
+                transition: "color 0.2s, border-color 0.2s",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={(e) => {
+                (e.target as HTMLAnchorElement).style.color = "var(--gold)";
+                (e.target as HTMLAnchorElement).style.borderBottomColor = "var(--gold)";
+              }}
+              onMouseLeave={(e) => {
+                (e.target as HTMLAnchorElement).style.color = "var(--ink-mid)";
+                (e.target as HTMLAnchorElement).style.borderBottomColor = "transparent";
+              }}
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+
         {/* Sticky hotel name + book button appear after scrolling past hero */}
         <div
           className="flex items-center gap-4 transition-all duration-500"
@@ -588,8 +631,12 @@ export default function HotelPage() {
           </a>
           <MobileNav
             links={[
-              { label: "Destinations", href: "/" },
-              { label: "Contact", href: "https://wa.me/919876543210" },
+              { label: "Home", href: "/" },
+              { label: "Search", href: "#search" },
+              { label: "Account", href: "#account" },
+              { label: "Preferred Rates", href: "#preferred-rates" },
+              { label: "Match My Price", href: "#match-my-price" },
+              { label: "Booking History", href: "#booking-history" },
             ]}
           />
         </div>
