@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import CompareBar from "@/components/CompareBar";
 
 const cormorant = Cormorant_Garamond({
   weight: ["300", "400", "500", "600"],
@@ -46,6 +47,7 @@ export default function RootLayout({
       >
         <Providers>
         {children}
+        <CompareBar />
         </Providers>
 
         {/* Floating WhatsApp Button */}
