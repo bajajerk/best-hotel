@@ -8,6 +8,7 @@ import { fetchCuratedCities, CuratedCity } from "@/lib/api";
 import MobileNav from "@/components/MobileNav";
 import HotelCard from "@/components/HotelCard";
 import type { HotelCardData } from "@/components/HotelCard";
+import DestinationSearch from "@/components/DestinationSearch";
 import { useBooking } from "@/context/BookingContext";
 
 // ---------------------------------------------------------------------------
@@ -1221,7 +1222,7 @@ export default function Home() {
               boxShadow: "0 4px 32px rgba(26,23,16,0.06)",
             }}
           >
-            {/* Destination field */}
+            {/* Destination field with autocomplete */}
             <div
               className="search-field"
               style={{
@@ -1237,28 +1238,9 @@ export default function Home() {
               }}>
                 DESTINATION
               </div>
-              <input
-                type="text"
+              <DestinationSearch
+                variant="light"
                 placeholder="City or hotel"
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  fontSize: "13px",
-                  color: "var(--ink)",
-                  fontFamily: "var(--font-body)",
-                  fontWeight: 400,
-                  width: "100%",
-                  outline: "none",
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const val = (e.target as HTMLInputElement).value.trim().toLowerCase();
-                    if (val) {
-                      const slug = val.replace(/\s+/g, "-");
-                      window.location.href = `/city/${slug}`;
-                    }
-                  }
-                }}
               />
             </div>
 

@@ -8,6 +8,7 @@ import { searchHotels, fetchCuratedCities, CuratedCity } from "@/lib/api";
 import { SAMPLE_CITIES } from "@/lib/constants";
 import MobileNav from "@/components/MobileNav";
 import DateBar from "@/components/DateBar";
+import DestinationSearch from "@/components/DestinationSearch";
 
 // ---------------------------------------------------------------------------
 // City image map (shared with home page)
@@ -302,7 +303,7 @@ export default function SearchPage() {
             </p>
           </motion.div>
 
-          {/* Search form */}
+          {/* Search form with autocomplete */}
           <motion.form
             onSubmit={handleSubmit}
             initial={{ opacity: 0, y: 16 }}
@@ -317,35 +318,18 @@ export default function SearchPage() {
               boxShadow: "0 8px 40px rgba(0,0,0,0.2)",
             }}
           >
-            <div style={{ flex: 1, position: "relative" }}>
-              <div style={{
-                position: "absolute",
-                left: "18px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                pointerEvents: "none",
-              }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-light)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              </div>
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={(e) => handleInputChange(e.target.value)}
+            <div style={{ flex: 1, padding: "18px 18px 18px 18px" }}>
+              <DestinationSearch
+                variant="light"
                 placeholder="Search by city, hotel name, or country..."
-                style={{
-                  width: "100%",
-                  border: "none",
-                  background: "transparent",
-                  padding: "18px 18px 18px 48px",
-                  fontSize: "15px",
-                  fontFamily: "var(--font-body)",
-                  fontWeight: 400,
-                  color: "var(--ink)",
-                  outline: "none",
+                autoFocus
+                defaultValue={initialQuery}
+                onValueChange={(val) => {
+                  setQuery(val);
+                  if (debounceRef.current) clearTimeout(debounceRef.current);
+                  debounceRef.current = setTimeout(() => {
+                    performSearch(val);
+                  }, 400);
                 }}
               />
             </div>
