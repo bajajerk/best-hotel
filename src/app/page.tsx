@@ -10,6 +10,7 @@ import HotelCard from "@/components/HotelCard";
 import type { HotelCardData } from "@/components/HotelCard";
 import DestinationSearch from "@/components/DestinationSearch";
 import { useBooking } from "@/context/BookingContext";
+import VoyagerClubComparison from "@/components/VoyagerClubComparison";
 
 // ---------------------------------------------------------------------------
 // Hero background images (cinematic hotel/travel shots)
@@ -1538,6 +1539,11 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ================================================================
+          VOYAGER CLUB — market rate vs club rate comparison
+      ================================================================ */}
+      <VoyagerClubComparison />
 
       {/* ================================================================
           SEASONAL TRIPS — travel by season

@@ -1358,4 +1358,17 @@ nav {
   .locations-city-section h3 + span {
     display: none !important;
   }
+
+  /* Voyager Club comparison cards — mobile */
+  .section-voyager-club {
+    padding: 48px 20px !important;
+  }
+  .section-voyager-club .card-hover > div:first-child {
+    flex-direction: column !important;
+  }
+  .section-voyager-club .card-hover > div:first-child > div:first-child {
+    width: 100% !important;
+    min-height: 160px !important;
+    height: 160px !important;
+  }
 }
