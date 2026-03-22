@@ -109,6 +109,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Hamburger nav — always visible, desktop nav links hidden ── */
+.nav-links {
+  display: none !important;
+}
+
 /* ── Typography hierarchy ── */
 .type-display-1 {
   font-family: var(--font-display);
@@ -786,17 +791,7 @@ nav {
 
 /* ── Mobile responsive overrides for homepage (below 768px) ── */
 @media (max-width: 767px) {
-  /* 1. Nav — hide links, show hamburger on mobile */
-  .nav-links {
-    display: none !important;
-  }
-  .mobile-nav-toggle {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* 2. Hero — single column, hide image */
+  /* Hero — single column, hide image */
   .hero-section {
     grid-template-columns: 1fr !important;
     min-height: auto !important;
@@ -1154,16 +1149,6 @@ nav {
    HOME PAGE — mobile overrides
    ═══════════════════════════════════════ */
 @media (max-width: 767px) {
-  /* Hide nav links, show hamburger on mobile */
-  .nav-links {
-    display: none !important;
-  }
-  .mobile-nav-toggle {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-  }
-
   /* Stack search form vertically */
   .hero-search-form {
     grid-template-columns: 1fr !important;

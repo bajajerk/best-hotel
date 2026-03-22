@@ -45,7 +45,9 @@ export default function MobileNav({ links }: MobileNavProps) {
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         style={{
-          display: "none", // shown via CSS on mobile
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           background: "none",
           border: "none",
           cursor: "pointer",
