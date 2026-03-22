@@ -62,7 +62,7 @@ export default function Header() {
           className="type-logo"
           style={{ letterSpacing: "0.08em", color: "var(--ink)" }}
         >
-          <span style={{ color: "var(--gold)" }}>V</span>oyagr
+          <span style={{ color: "var(--gold)" }}>V</span>oyagr Club
         </span>
       </Link>
 

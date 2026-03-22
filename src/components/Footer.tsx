@@ -63,7 +63,7 @@ export default function Footer() {
                   letterSpacing: "0.08em",
                 }}
               >
-                <span style={{ color: "var(--gold)" }}>V</span>oyagr
+                <span style={{ color: "var(--gold)" }}>V</span>oyagr Club
               </span>
             </Link>
             <p
@@ -307,7 +307,7 @@ export default function Footer() {
               letterSpacing: "0.05em",
             }}
           >
-            &copy; 2026 Voyagr. All rights reserved.
+            &copy; 2026 Voyagr Club. All rights reserved.
           </p>
           <div
             style={{

@@ -1610,7 +1610,7 @@ export default function Home() {
             <h2 className="type-display-2" style={{
               color: "var(--cream)",
             }}>
-              Why travellers choose <em style={{ fontStyle: "italic", color: "var(--gold)" }}>Voyagr</em>
+              Why travellers choose <em style={{ fontStyle: "italic", color: "var(--gold)" }}>Voyagr Club</em>
             </h2>
           </motion.div>
 
@@ -2024,7 +2024,7 @@ export default function Home() {
             style={{ textAlign: "center", marginBottom: "56px" }}
           >
             <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
-              The Voyagr Difference
+              The Voyagr Club Difference
             </div>
             <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
               Why book with <em style={{ fontStyle: "italic", color: "var(--gold)" }}>us?</em>

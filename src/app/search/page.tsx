@@ -1328,7 +1328,7 @@ export default function SearchPage() {
             color: "var(--ink-light)",
             letterSpacing: "0.05em",
           }}>
-            &copy; 2026 Voyagr
+            &copy; 2026 Voyagr Club
           </p>
         </div>
       </footer>

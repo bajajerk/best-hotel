@@ -24,12 +24,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Voyagr — Preferred Hotel Rates",
+  title: "Voyagr Club — Preferred Hotel Rates",
   description:
     "Get B2B wholesale hotel rates across 50+ cities worldwide. We negotiate directly with hotels so you save 20-40% on every booking. No markup, no hidden fees.",
-  keywords: ["hotel deals", "B2B hotel rates", "cheap hotels", "wholesale hotel booking", "hotel price comparison", "voyagr"],
+  keywords: ["hotel deals", "B2B hotel rates", "cheap hotels", "wholesale hotel booking", "hotel price comparison", "voyagr club"],
   openGraph: {
-    title: "Voyagr — Preferred Hotel Rates",
+    title: "Voyagr Club — Preferred Hotel Rates",
     description: "Get B2B wholesale hotel rates across 50+ cities worldwide. Save 20-40% on every booking.",
     type: "website",
   },

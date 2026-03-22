@@ -860,7 +860,7 @@ export default function LocationsPage() {
             color: "var(--ink-light)",
             letterSpacing: "0.05em",
           }}>
-            &copy; 2026 Voyagr
+            &copy; 2026 Voyagr Club
           </p>
         </div>
       </footer>
