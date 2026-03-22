@@ -757,13 +757,12 @@ export default function Home() {
           >
             {[
               { label: "HOME", href: "/" },
-              { label: "SEARCH", href: "#search" },
-              { label: "ACCOUNT", href: "#account" },
+              { label: "SEARCH", href: "/search" },
+              { label: "LOCATIONS", href: "/locations" },
               { label: "PREFERRED RATES", href: "#preferred-rates" },
               { label: "MATCH MY PRICE", href: "#match-my-price" },
-              { label: "BOOKING HISTORY", href: "#booking-history" },
             ].map((link) => (
-              <a
+              <Link
                 key={link.label}
                 href={link.href}
                 className="type-nav"
@@ -784,7 +783,7 @@ export default function Home() {
                 }}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -819,11 +818,10 @@ export default function Home() {
           <MobileNav
             links={[
               { label: "Home", href: "/" },
-              { label: "Search", href: "#search" },
-              { label: "Account", href: "#account" },
+              { label: "Search", href: "/search" },
+              { label: "Locations", href: "/locations" },
               { label: "Preferred Rates", href: "#preferred-rates" },
               { label: "Match My Price", href: "#match-my-price" },
-              { label: "Booking History", href: "#booking-history" },
             ]}
           />
         </div>
@@ -2162,11 +2160,11 @@ export default function Home() {
           {/* Footer links */}
           <div className="footer-links" style={{ display: "flex", alignItems: "center", gap: "32px" }}>
             {[
-              { label: "Destinations", href: "#destinations" },
-              { label: "How It Works", href: "#how-it-works" },
+              { label: "Locations", href: "/locations" },
+              { label: "Search", href: "/search" },
               { label: "WhatsApp", href: "https://wa.me/919876543210" },
             ].map((link) => (
-              <a
+              <Link
                 key={link.label}
                 href={link.href}
                 className="type-caption"
@@ -2177,15 +2175,9 @@ export default function Home() {
                   textDecoration: "none",
                   transition: "color 0.2s",
                 }}
-                onMouseEnter={(e) => {
-                  (e.target as HTMLAnchorElement).style.color = "var(--gold)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.target as HTMLAnchorElement).style.color = "var(--ink-light)";
-                }}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </div>
 
