@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { CuratedHotel } from "@/lib/api";
+import { AmenityChips } from "@/components/AmenityIcons";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -189,6 +190,11 @@ export default function HotelResultCard({
                 </span>
               )}
             </div>
+            {hotel.overview && (
+              <div style={{ marginTop: 8 }}>
+                <AmenityChips overview={hotel.overview} max={4} />
+              </div>
+            )}
           </div>
 
           {/* Right: Pricing */}
@@ -372,11 +378,16 @@ export default function HotelResultCard({
                 style={{
                   fontSize: 12,
                   color: "var(--ink-light)",
-                  marginBottom: 12,
+                  marginBottom: 8,
                 }}
               >
                 {hotel.addressline1}
               </p>
+            )}
+            {hotel.overview && (
+              <div style={{ marginBottom: 12 }}>
+                <AmenityChips overview={hotel.overview} max={3} />
+              </div>
             )}
 
             {/* Price row */}

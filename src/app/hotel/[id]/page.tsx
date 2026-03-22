@@ -8,6 +8,7 @@ import MobileNav from "@/components/MobileNav";
 import BackButton from "@/components/BackButton";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import DateBar from "@/components/DateBar";
+import { AmenityGrid } from "@/components/AmenityIcons";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -951,6 +952,14 @@ export default function HotelPage() {
                     </div>
                   ))}
                 </div>
+              </motion.div>
+            )}
+
+            {/* ── Amenities ── */}
+            {hotel.overview && (
+              <motion.div variants={fadeUp} custom={3.5} className="mb-10">
+                <SectionLabel>Amenities</SectionLabel>
+                <AmenityGrid overview={hotel.overview} />
               </motion.div>
             )}
 
