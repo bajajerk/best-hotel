@@ -91,6 +91,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
 function CardSkeleton() {
   return (
     <div
+      className="city-hotel-card"
       style={{
         background: "var(--white)",
         border: "1px solid var(--cream-border)",
@@ -169,7 +170,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
       <Link href={`/hotel/${hotel.hotel_id}`} className="block group">
         {/* Desktop: horizontal 3-column card */}
         <div
-          className="hidden md:grid"
+          className="hidden md:grid city-hotel-card"
           style={{
             background: "var(--white)",
             border: "1px solid var(--cream-border)",

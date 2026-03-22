@@ -355,16 +355,94 @@ nav {
   content: "";
 }
 
-/* ── Tablet overrides for homepage (below 1024px) ── */
-@media (max-width: 1024px) {
+/* ══════════════════════════════════════════════════════════════
+   Tablet overrides (768px – 1024px)
+   Targets: iPad Mini (768), iPad (810), iPad Air (820),
+            iPad Pro 11" (834), iPad Pro 12.9" (1024)
+   ══════════════════════════════════════════════════════════════ */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* ── Home: Hero — keep 2-col but tighter padding ── */
+  .hero-section {
+    grid-template-columns: 1.1fr 1fr !important;
+  }
+  .hero-text-container {
+    padding: 60px 36px !important;
+  }
+
+  /* ── Home: Search form — 2×2 grid ── */
+  .hero-search-form {
+    grid-template-columns: 1fr 1fr !important;
+    max-width: 100% !important;
+  }
+
+  /* ── Home: Featured grid — 2 equal columns ── */
+  .featured-grid {
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: auto !important;
+  }
+  .featured-grid > * {
+    grid-row: span 1 !important;
+    min-height: 220px !important;
+  }
+
+  /* ── Home: Why grid — 2 columns ── */
   .why-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 32px !important;
   }
+
+  /* ── Home: Destinations grid — 2 columns ── */
+  .destinations-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ── Home: Price cards — keep horizontal, smaller image ── */
+  .price-card {
+    grid-template-columns: 200px 1fr auto !important;
+  }
+
+  /* ── Home: Section padding — moderate ── */
+  .section-featured,
+  .section-destinations,
+  .section-proof,
+  .section-trust,
+  .section-testimonials {
+    padding-left: 36px !important;
+    padding-right: 36px !important;
+  }
+  .section-why {
+    padding: 64px 36px !important;
+  }
+
+  /* ── Home: Section header — allow wrapping ── */
+  .section-header {
+    gap: 16px !important;
+  }
+
+  /* ── City page: hotel cards — smaller image on tablet ── */
+  .city-hotel-card {
+    grid-template-columns: 180px 1fr auto !important;
+  }
+
+  /* ── Hotel page: reduce padding ── */
+  .hotel-hero-overlay {
+    padding: 32px 36px 40px !important;
+  }
+  .hotel-tabs-bar {
+    padding: 0 36px !important;
+  }
+  .hotel-footer {
+    padding: 40px 36px 72px !important;
+  }
+
+  /* ── Hotel page: gallery — 2 columns on tablet ── */
+  .hotel-gallery-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 
 /* ── Mobile responsive overrides for homepage (below 768px) ── */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   /* 1. Nav — hide links on mobile */
   .nav-links {
     display: none !important;
