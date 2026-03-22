@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,6 +10,8 @@ import Header from "@/components/Header";
 import DateBar from "@/components/DateBar";
 import DestinationSearch from "@/components/DestinationSearch";
 import RegionFilterTabs from "@/components/RegionFilterTabs";
+
+const SearchMapView = lazy(() => import("@/components/SearchMapView"));
 
 const FALLBACK_IMAGE = FALLBACK_CITY_IMAGE;
 
@@ -44,7 +46,14 @@ interface HotelResult {
   country: string;
   star_rating: number | null;
   photo1: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
+
+// ---------------------------------------------------------------------------
+// View mode
+// ---------------------------------------------------------------------------
+type ViewMode = "list" | "map";
 
 // ---------------------------------------------------------------------------
 // Recent searches (localStorage)
@@ -114,6 +123,7 @@ export default function SearchPage() {
   const [regionFilter, setRegionFilter] = useState<string>("All");
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load cities for matching
@@ -519,39 +529,105 @@ export default function SearchPage() {
                 )}
               </div>
 
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                style={{
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {/* View mode toggle */}
+                <div style={{
                   display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 16px",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  letterSpacing: "0.06em",
-                  border: showFilters ? "1px solid var(--gold)" : "1px solid var(--cream-border)",
-                  background: showFilters ? "var(--gold)" : "transparent",
-                  color: showFilters ? "var(--white)" : "var(--ink-mid)",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-body)",
-                  transition: "all 0.2s",
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="4" y1="6" x2="20" y2="6" />
-                  <line x1="8" y1="12" x2="20" y2="12" />
-                  <line x1="12" y1="18" x2="20" y2="18" />
-                </svg>
-                Filters
-                {(starFilter > 0 || regionFilter !== "All") && (
-                  <span style={{
-                    width: "6px",
-                    height: "6px",
-                    borderRadius: "50%",
-                    background: showFilters ? "var(--white)" : "var(--gold)",
-                  }} />
-                )}
-              </button>
+                  border: "1px solid var(--cream-border)",
+                  overflow: "hidden",
+                }}>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    aria-label="List view"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      padding: "8px 14px",
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      letterSpacing: "0.06em",
+                      border: "none",
+                      background: viewMode === "list" ? "var(--ink)" : "transparent",
+                      color: viewMode === "list" ? "var(--cream)" : "var(--ink-mid)",
+                      cursor: "pointer",
+                      fontFamily: "var(--font-body)",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="8" y1="6" x2="21" y2="6" />
+                      <line x1="8" y1="12" x2="21" y2="12" />
+                      <line x1="8" y1="18" x2="21" y2="18" />
+                      <line x1="3" y1="6" x2="3.01" y2="6" />
+                      <line x1="3" y1="12" x2="3.01" y2="12" />
+                      <line x1="3" y1="18" x2="3.01" y2="18" />
+                    </svg>
+                    List
+                  </button>
+                  <button
+                    onClick={() => setViewMode("map")}
+                    aria-label="Map view"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      padding: "8px 14px",
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      letterSpacing: "0.06em",
+                      border: "none",
+                      borderLeft: "1px solid var(--cream-border)",
+                      background: viewMode === "map" ? "var(--ink)" : "transparent",
+                      color: viewMode === "map" ? "var(--cream)" : "var(--ink-mid)",
+                      cursor: "pointer",
+                      fontFamily: "var(--font-body)",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+                      <line x1="8" y1="2" x2="8" y2="18" />
+                      <line x1="16" y1="6" x2="16" y2="22" />
+                    </svg>
+                    Map
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "8px 16px",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    letterSpacing: "0.06em",
+                    border: showFilters ? "1px solid var(--gold)" : "1px solid var(--cream-border)",
+                    background: showFilters ? "var(--gold)" : "transparent",
+                    color: showFilters ? "var(--white)" : "var(--ink-mid)",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-body)",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="4" y1="6" x2="20" y2="6" />
+                    <line x1="8" y1="12" x2="20" y2="12" />
+                    <line x1="12" y1="18" x2="20" y2="18" />
+                  </svg>
+                  Filters
+                  {(starFilter > 0 || regionFilter !== "All") && (
+                    <span style={{
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      background: showFilters ? "var(--white)" : "var(--gold)",
+                    }} />
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Expanded filter bar */}
@@ -763,7 +839,31 @@ export default function SearchPage() {
           </div>
         )}
 
-        {!searching && hasSearched && filteredHotels.length > 0 && (
+        {!searching && hasSearched && filteredHotels.length > 0 && viewMode === "map" && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "24px" }}>
+              <div className="type-eyebrow">
+                Hotels on Map
+              </div>
+              <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>
+                {filteredHotels.length} result{filteredHotels.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <Suspense fallback={
+              <div style={{ height: "600px", background: "var(--cream-deep)", border: "1px solid var(--cream-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>Loading map...</p>
+              </div>
+            }>
+              <SearchMapView hotels={filteredHotels} />
+            </Suspense>
+          </motion.div>
+        )}
+
+        {!searching && hasSearched && filteredHotels.length > 0 && viewMode === "list" && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
