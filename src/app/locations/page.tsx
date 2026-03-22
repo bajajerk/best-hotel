@@ -7,6 +7,7 @@ import { fetchCuratedCities, CuratedCity } from "@/lib/api";
 import { CONTINENTS, SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import MobileNav from "@/components/MobileNav";
 import DateBar from "@/components/DateBar";
+import RegionFilterTabs from "@/components/RegionFilterTabs";
 
 const FALLBACK_IMAGE = FALLBACK_CITY_IMAGE;
 
@@ -415,29 +416,12 @@ export default function LocationsPage() {
           flexWrap: "wrap",
           gap: "16px",
         }}>
-          <div className="locations-filter-pills" style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {CONTINENTS.map((cont) => (
-              <button
-                key={cont}
-                onClick={() => setActiveContinent(cont)}
-                style={{
-                  padding: "8px 20px",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  letterSpacing: "0.08em",
-                  border: "1px solid",
-                  borderColor: activeContinent === cont ? "var(--gold)" : "var(--cream-border)",
-                  background: activeContinent === cont ? "var(--gold)" : "transparent",
-                  color: activeContinent === cont ? "var(--white)" : "var(--ink-mid)",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                {cont}
-              </button>
-            ))}
-          </div>
+          <RegionFilterTabs
+            active={activeContinent}
+            onChange={setActiveContinent}
+            counts={continentCounts}
+            variant="pills"
+          />
 
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             {/* View toggle */}

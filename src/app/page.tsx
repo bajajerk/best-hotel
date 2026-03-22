@@ -11,6 +11,7 @@ import type { HotelCardData } from "@/components/HotelCard";
 import DestinationSearch from "@/components/DestinationSearch";
 import { useBooking } from "@/context/BookingContext";
 import VoyagerClubComparison from "@/components/VoyagerClubComparison";
+import RegionFilterTabs from "@/components/RegionFilterTabs";
 
 // ---------------------------------------------------------------------------
 // Hero background images (cinematic hotel/travel shots)
@@ -1787,36 +1788,12 @@ export default function Home() {
             </div>
 
             {/* Continent filter pills */}
-            <div
-              className="continent-pills"
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "8px",
-              }}
-            >
-              {CONTINENTS.map((cont) => (
-                <button
-                  key={cont}
-                  onClick={() => setActiveContinent(cont)}
-                  style={{
-                    padding: "8px 20px",
-                    fontSize: "12px",
-                    fontWeight: 500,
-                    letterSpacing: "0.08em",
-                    border: "1px solid",
-                    borderColor: activeContinent === cont ? "var(--gold)" : "var(--cream-border)",
-                    background: activeContinent === cont ? "var(--gold)" : "transparent",
-                    color: activeContinent === cont ? "var(--white)" : "var(--ink-mid)",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  {cont}
-                </button>
-              ))}
-            </div>
+            <RegionFilterTabs
+              active={activeContinent}
+              onChange={setActiveContinent}
+              variant="pills"
+              showIcons
+            />
           </motion.div>
 
           {/* City cards — grouped by continent sub-divisions */}

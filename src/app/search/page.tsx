@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { searchHotels, fetchCuratedCities, CuratedCity } from "@/lib/api";
-import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE } from "@/lib/constants";
+import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE, CONTINENTS } from "@/lib/constants";
 import MobileNav from "@/components/MobileNav";
 import DateBar from "@/components/DateBar";
 import DestinationSearch from "@/components/DestinationSearch";
+import RegionFilterTabs from "@/components/RegionFilterTabs";
 
 const FALLBACK_IMAGE = FALLBACK_CITY_IMAGE;
 
@@ -110,6 +111,7 @@ export default function SearchPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [starFilter, setStarFilter] = useState(0);
+  const [regionFilter, setRegionFilter] = useState<string>("All");
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [showFilters, setShowFilters] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -205,12 +207,32 @@ export default function SearchPage() {
       )
     : [];
 
-  // Apply star filter + sort to hotel results
+  // Build a lookup: city name → continent (for region filtering hotel results)
+  const cityToContinentMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const c of cities) {
+      map[c.city_name.toLowerCase()] = c.continent;
+    }
+    return map;
+  }, [cities]);
+
+  // Filter matching cities by region too
+  const regionFilteredCities = regionFilter === "All"
+    ? matchingCities
+    : matchingCities.filter((c) => c.continent === regionFilter);
+
+  // Apply star filter + region filter + sort to hotel results
   const filteredHotels = hotelResults
     .filter((h) => {
-      if (starFilter === 0) return true;
-      if (starFilter === 5) return h.star_rating === 5;
-      return (h.star_rating || 0) >= starFilter;
+      if (starFilter > 0) {
+        if (starFilter === 5 && h.star_rating !== 5) return false;
+        if (starFilter !== 5 && (h.star_rating || 0) < starFilter) return false;
+      }
+      if (regionFilter !== "All") {
+        const continent = cityToContinentMap[h.city?.toLowerCase() || ""];
+        if (continent && continent !== regionFilter) return false;
+      }
+      return true;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -226,7 +248,7 @@ export default function SearchPage() {
     });
 
   // Total city results + hotel results for stats
-  const totalResults = matchingCities.length + filteredHotels.length;
+  const totalResults = regionFilteredCities.length + filteredHotels.length;
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
@@ -506,7 +528,7 @@ export default function SearchPage() {
       <section className="search-results-section" style={{ padding: "60px 60px 100px", maxWidth: "1400px", margin: "0 auto" }}>
 
         {/* Results toolbar — filters + sort (only when we have results) */}
-        {hasSearched && (matchingCities.length > 0 || hotelResults.length > 0) && (
+        {hasSearched && (regionFilteredCities.length > 0 || hotelResults.length > 0) && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -530,7 +552,7 @@ export default function SearchPage() {
                 }}>
                   {totalResults} result{totalResults !== 1 ? "s" : ""} for &ldquo;{query.trim()}&rdquo;
                 </span>
-                {matchingCities.length > 0 && (
+                {regionFilteredCities.length > 0 && (
                   <span style={{
                     fontSize: "11px",
                     color: "var(--ink-light)",
@@ -538,7 +560,7 @@ export default function SearchPage() {
                     background: "var(--cream-deep)",
                     borderRadius: "2px",
                   }}>
-                    {matchingCities.length} {matchingCities.length === 1 ? "city" : "cities"}
+                    {regionFilteredCities.length} {regionFilteredCities.length === 1 ? "city" : "cities"}
                   </span>
                 )}
                 {filteredHotels.length > 0 && (
@@ -578,7 +600,7 @@ export default function SearchPage() {
                   <line x1="12" y1="18" x2="20" y2="18" />
                 </svg>
                 Filters
-                {starFilter > 0 && (
+                {(starFilter > 0 || regionFilter !== "All") && (
                   <span style={{
                     width: "6px",
                     height: "6px",
@@ -601,14 +623,26 @@ export default function SearchPage() {
                 >
                   <div className="search-filters" style={{
                     display: "flex",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                    gap: "24px",
+                    flexDirection: "column",
+                    gap: "16px",
                     padding: "20px 24px",
                     background: "var(--white)",
                     border: "1px solid var(--cream-border)",
                     marginBottom: "8px",
                   }}>
+                    {/* Region filter tabs */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "11px", color: "var(--ink-light)", letterSpacing: "0.06em", fontWeight: 500, whiteSpace: "nowrap" }}>
+                        REGION
+                      </span>
+                      <RegionFilterTabs
+                        active={regionFilter}
+                        onChange={setRegionFilter}
+                        variant="pills"
+                      />
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "24px" }}>
                     {/* Star rating filter */}
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <span style={{ fontSize: "11px", color: "var(--ink-light)", letterSpacing: "0.06em", fontWeight: 500 }}>
@@ -667,9 +701,9 @@ export default function SearchPage() {
                     </div>
 
                     {/* Clear filters */}
-                    {(starFilter > 0 || sortBy !== "relevance") && (
+                    {(starFilter > 0 || sortBy !== "relevance" || regionFilter !== "All") && (
                       <button
-                        onClick={() => { setStarFilter(0); setSortBy("relevance"); }}
+                        onClick={() => { setStarFilter(0); setSortBy("relevance"); setRegionFilter("All"); }}
                         style={{
                           fontSize: "11px",
                           color: "var(--gold)",
@@ -683,6 +717,7 @@ export default function SearchPage() {
                         Clear filters
                       </button>
                     )}
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -691,7 +726,7 @@ export default function SearchPage() {
         )}
 
         {/* City matches */}
-        {matchingCities.length > 0 && (
+        {regionFilteredCities.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -706,7 +741,7 @@ export default function SearchPage() {
               gridTemplateColumns: "repeat(4, 1fr)",
               gap: "16px",
             }}>
-              {matchingCities.slice(0, 8).map((city) => (
+              {regionFilteredCities.slice(0, 8).map((city) => (
                 <Link
                   key={city.city_slug}
                   href={`/city/${city.city_slug}`}
@@ -935,7 +970,7 @@ export default function SearchPage() {
               No hotels match your current filters.
             </p>
             <button
-              onClick={() => { setStarFilter(0); setSortBy("relevance"); }}
+              onClick={() => { setStarFilter(0); setSortBy("relevance"); setRegionFilter("All"); }}
               style={{
                 fontSize: "13px",
                 color: "var(--gold)",
@@ -951,7 +986,7 @@ export default function SearchPage() {
           </motion.div>
         )}
 
-        {!searching && hasSearched && hotelResults.length === 0 && matchingCities.length === 0 && (
+        {!searching && hasSearched && filteredHotels.length === 0 && regionFilteredCities.length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1010,15 +1045,25 @@ export default function SearchPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <div className="type-eyebrow" style={{ marginBottom: "24px" }}>
-              Trending Destinations
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px", marginBottom: "24px" }}>
+              <div className="type-eyebrow">
+                Trending Destinations
+              </div>
+            </div>
+            <div style={{ marginBottom: "24px" }}>
+              <RegionFilterTabs
+                active={regionFilter}
+                onChange={setRegionFilter}
+                variant="underline"
+                showIcons
+              />
             </div>
             <div className="search-trending-grid" style={{
               display: "grid",
               gridTemplateColumns: "repeat(4, 1fr)",
               gap: "16px",
             }}>
-              {cities.slice(0, 12).map((city, i) => (
+              {(regionFilter === "All" ? cities : cities.filter((c) => c.continent === regionFilter)).slice(0, 12).map((city, i) => (
                 <Link
                   key={city.city_slug}
                   href={`/city/${city.city_slug}`}
