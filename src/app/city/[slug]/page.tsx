@@ -173,21 +173,14 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
       <Link href={`/hotel/${hotel.hotel_id}`} className="block group">
         {/* Desktop: horizontal 3-column card */}
         <div
-          className="hidden md:grid city-hotel-card"
+          className="hidden md:grid city-hotel-card card-hover"
           style={{
             background: "var(--white)",
             border: "1px solid var(--cream-border)",
             gridTemplateColumns: "240px 1fr auto",
             gap: "0 20px",
             overflow: "hidden",
-            transition: "box-shadow 0.2s",
             cursor: "pointer",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 24px rgba(26,23,16,0.08)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.boxShadow = "none";
           }}
         >
           {/* Left: Image */}
@@ -202,9 +195,8 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
                 objectFit: "cover",
                 display: "block",
                 filter: "saturate(0.88)",
-                transition: "transform 0.6s ease",
               }}
-              className="group-hover:scale-105"
+              className="card-img group-hover:scale-105"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = PLACEHOLDER_IMG;
               }}
@@ -408,7 +400,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
 
         {/* Mobile: stacked card */}
         <div
-          className="md:hidden"
+          className="md:hidden card-hover"
           style={{
             background: "var(--white)",
             border: "1px solid var(--cream-border)",
@@ -421,6 +413,7 @@ function HotelResultCard({ hotel, index }: { hotel: CuratedHotel; index: number 
               src={photo}
               alt={hotel.hotel_name}
               loading="lazy"
+              className="card-img"
               style={{
                 width: "100%",
                 height: "100%",

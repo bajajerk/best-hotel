@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { CONTINENTS, CATEGORIES, SAMPLE_CITIES } from "@/lib/constants";
@@ -317,6 +317,330 @@ const WHY_STEPS = [
     desc: "Save 20-40% on every booking. Same hotel, same room, same dates. Just a better rate.",
   },
 ];
+
+// ---------------------------------------------------------------------------
+// Carousel arrow SVG
+// ---------------------------------------------------------------------------
+function ChevronLeft() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  );
+}
+function ChevronRight() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 6 15 12 9 18" />
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// useCarousel hook
+// ---------------------------------------------------------------------------
+function useCarousel(itemCount: number, visibleCount: number = 4) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const maxIdx = Math.max(0, itemCount - visibleCount);
+
+  const scrollTo = useCallback((idx: number) => {
+    const track = trackRef.current;
+    if (!track || !track.children[0]) return;
+    const child = track.children[0] as HTMLElement;
+    const gap = 20;
+    const cardWidth = child.offsetWidth + gap;
+    track.scrollTo({ left: cardWidth * idx, behavior: "smooth" });
+    setActiveIdx(idx);
+  }, []);
+
+  const prev = useCallback(() => {
+    scrollTo(Math.max(0, activeIdx - 1));
+  }, [activeIdx, scrollTo]);
+
+  const next = useCallback(() => {
+    scrollTo(Math.min(maxIdx, activeIdx + 1));
+  }, [activeIdx, maxIdx, scrollTo]);
+
+  // Sync active dot on manual scroll
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(() => {
+          if (!track.children[0]) { ticking = false; return; }
+          const child = track.children[0] as HTMLElement;
+          const gap = 20;
+          const cardWidth = child.offsetWidth + gap;
+          const newIdx = Math.round(track.scrollLeft / cardWidth);
+          setActiveIdx(Math.min(newIdx, maxIdx));
+          ticking = false;
+        });
+      }
+    };
+    track.addEventListener("scroll", onScroll, { passive: true });
+    return () => track.removeEventListener("scroll", onScroll);
+  }, [maxIdx]);
+
+  const dotCount = maxIdx + 1;
+
+  return { trackRef, activeIdx, dotCount, prev, next, scrollTo, maxIdx };
+}
+
+// ---------------------------------------------------------------------------
+// Popular Properties Carousel
+// ---------------------------------------------------------------------------
+type PopularProp = (typeof POPULAR_PROPERTIES)[number];
+
+function PopularCarousel({ properties }: { properties: PopularProp[] }) {
+  const { trackRef, activeIdx, dotCount, prev, next, scrollTo, maxIdx } =
+    useCarousel(properties.length, 4);
+
+  return (
+    <motion.div
+      className="carousel-container"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6 }}
+    >
+      {/* Arrows */}
+      <button className="carousel-btn carousel-btn-prev" onClick={prev} disabled={activeIdx === 0} aria-label="Previous">
+        <ChevronLeft />
+      </button>
+      <button className="carousel-btn carousel-btn-next" onClick={next} disabled={activeIdx >= maxIdx} aria-label="Next">
+        <ChevronRight />
+      </button>
+
+      {/* Track */}
+      <div className="carousel-track" ref={trackRef}>
+        {properties.map((prop) => (
+          <div key={prop.name} style={{ width: "calc(25% - 15px)" }}>
+            <Link href={`/city/${prop.citySlug}`} style={{ textDecoration: "none", display: "block" }}>
+              <div
+                className="card-hover"
+                style={{
+                  background: "var(--white)",
+                  border: "1px solid var(--cream-border)",
+                  overflow: "hidden",
+                  cursor: "pointer",
+                }}
+              >
+                {/* Image */}
+                <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
+                  <img
+                    className="card-img"
+                    src={safeImageSrc(prop.img)}
+                    alt={prop.name}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                      filter: "saturate(0.88)",
+                    }}
+                    loading="lazy"
+                    onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
+                  />
+                  {prop.rating >= 8.5 && (
+                    <div style={{
+                      position: "absolute", top: "12px", right: "12px",
+                      background: "var(--gold)", color: "var(--white)",
+                      fontSize: "12px", fontWeight: 600, padding: "4px 10px",
+                      fontFamily: "var(--font-mono)",
+                    }}>
+                      {prop.rating.toFixed(1)}
+                    </div>
+                  )}
+                  <div style={{
+                    position: "absolute", bottom: "12px", left: "12px",
+                    background: "var(--success)", color: "var(--cream)",
+                    fontSize: "10px", fontWeight: 500, padding: "4px 10px",
+                    letterSpacing: "0.04em",
+                  }}>
+                    Save up to {prop.savePercent}%
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div style={{ padding: "18px 20px 22px" }}>
+                  <div style={{ color: "var(--gold)", fontSize: "10px", letterSpacing: "2px", marginBottom: "6px" }}>
+                    {"★".repeat(prop.stars)}
+                  </div>
+                  <h3 className="type-heading-3" style={{ color: "var(--ink)", marginBottom: "4px", fontSize: "16px" }}>
+                    {prop.name}
+                  </h3>
+                  <p style={{ fontSize: "12px", color: "var(--ink-light)", letterSpacing: "0.04em", marginBottom: "14px" }}>
+                    {prop.city}
+                  </p>
+                  <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginBottom: "16px" }}>
+                    {prop.tags.map((tag) => (
+                      <span key={tag} style={{
+                        fontSize: "9px", padding: "3px 8px",
+                        background: "var(--cream)", color: "var(--ink-mid)",
+                        border: "1px solid var(--cream-border)", letterSpacing: "0.04em",
+                      }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div style={{
+                    borderTop: "1px solid var(--cream-border)", paddingTop: "14px",
+                    display: "flex", alignItems: "baseline", justifyContent: "space-between",
+                  }}>
+                    <div>
+                      <span style={{ fontSize: "10px", color: "var(--ink-light)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                        From
+                      </span>
+                      <div style={{
+                        fontFamily: "var(--font-display)", fontSize: "22px",
+                        fontWeight: 500, color: "var(--ink)", lineHeight: 1.2,
+                      }}>
+                        &#8377;{prop.priceFrom.toLocaleString("en-IN")}
+                      </div>
+                      <span style={{ fontSize: "10px", color: "var(--ink-light)" }}>per night</span>
+                    </div>
+                    <span className="card-arrow" style={{
+                      fontSize: "11px", color: "var(--gold)", fontWeight: 500, letterSpacing: "0.04em",
+                    }}>
+                      View &rarr;
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </div>
+        ))}
+      </div>
+
+      {/* Dots */}
+      {dotCount > 1 && (
+        <div className="carousel-dots">
+          {Array.from({ length: dotCount }).map((_, i) => (
+            <button
+              key={i}
+              className={`carousel-dot${i === activeIdx ? " active" : ""}`}
+              onClick={() => scrollTo(i)}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Seasonal Trips Carousel
+// ---------------------------------------------------------------------------
+type SeasonalTrip = (typeof SEASONAL_TRIPS)[number];
+
+function SeasonalCarousel({ trips }: { trips: SeasonalTrip[] }) {
+  const { trackRef, activeIdx, dotCount, prev, next, scrollTo, maxIdx } =
+    useCarousel(trips.length, 4);
+
+  return (
+    <motion.div
+      className="carousel-container"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6 }}
+    >
+      <button className="carousel-btn carousel-btn-prev" onClick={prev} disabled={activeIdx === 0} aria-label="Previous">
+        <ChevronLeft />
+      </button>
+      <button className="carousel-btn carousel-btn-next" onClick={next} disabled={activeIdx >= maxIdx} aria-label="Next">
+        <ChevronRight />
+      </button>
+
+      <div className="carousel-track" ref={trackRef}>
+        {trips.map((trip) => (
+          <div key={trip.season} style={{ width: "calc(25% - 15px)" }}>
+            <div
+              className="card-hover"
+              style={{
+                background: "var(--white)",
+                border: "1px solid var(--cream-border)",
+                overflow: "hidden",
+              }}
+            >
+              <div style={{ position: "relative", height: "180px", overflow: "hidden" }}>
+                <img
+                  className="card-img"
+                  src={safeImageSrc(trip.img)}
+                  alt={trip.season}
+                  style={{
+                    width: "100%", height: "100%", objectFit: "cover",
+                    display: "block", filter: "saturate(0.88)",
+                  }}
+                  loading="lazy"
+                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
+                />
+                <div style={{
+                  position: "absolute", top: "12px", left: "12px",
+                  background: "var(--ink)", color: "var(--cream)",
+                  fontSize: "10px", fontWeight: 600, padding: "5px 12px",
+                  letterSpacing: "0.08em", textTransform: "uppercase",
+                }}>
+                  {trip.season}
+                </div>
+                <div style={{
+                  position: "absolute", bottom: "12px", right: "12px",
+                  background: "rgba(26,23,16,0.7)", color: "var(--cream)",
+                  fontSize: "10px", fontWeight: 500, padding: "4px 10px",
+                  letterSpacing: "0.04em", backdropFilter: "blur(4px)",
+                }}>
+                  {trip.label}
+                </div>
+              </div>
+
+              <div style={{ padding: "20px 20px 24px" }}>
+                <p className="type-body-sm" style={{ color: "var(--ink-mid)", lineHeight: 1.7, marginBottom: "18px" }}>
+                  {trip.description}
+                </p>
+                <div style={{
+                  borderTop: "1px solid var(--cream-border)", paddingTop: "16px",
+                  display: "flex", flexDirection: "column", gap: "8px",
+                }}>
+                  {trip.destinations.map((dest) => (
+                    <Link key={dest.slug} href={`/city/${dest.slug}`} style={{
+                      textDecoration: "none", display: "flex",
+                      alignItems: "center", justifyContent: "space-between",
+                    }}>
+                      <span style={{ fontSize: "13px", fontWeight: 500, color: "var(--ink)" }}>
+                        {dest.name}
+                      </span>
+                      <span className="card-arrow" style={{ fontSize: "11px", color: "var(--ink-light)" }}>
+                        {dest.country} &rarr;
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {dotCount > 1 && (
+        <div className="carousel-dots">
+          {Array.from({ length: dotCount }).map((_, i) => (
+            <button
+              key={i}
+              className={`carousel-dot${i === activeIdx ? " active" : ""}`}
+              onClick={() => scrollTo(i)}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+}
 
 // ============================================================================
 // Main Page
@@ -932,211 +1256,8 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Property cards — 4-column grid */}
-          <div
-            className="popular-grid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: "20px",
-            }}
-          >
-            {POPULAR_PROPERTIES.map((prop, i) => (
-              <motion.div
-                key={prop.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.08 }}
-              >
-                <Link
-                  href={`/city/${prop.citySlug}`}
-                  style={{ textDecoration: "none", display: "block" }}
-                >
-                  <div
-                    style={{
-                      background: "var(--white)",
-                      border: "1px solid var(--cream-border)",
-                      overflow: "hidden",
-                      cursor: "pointer",
-                      transition: "box-shadow 0.3s, border-color 0.3s",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLDivElement).style.boxShadow =
-                        "0 8px 32px rgba(26,23,16,0.08)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
-                    }}
-                  >
-                    {/* Image */}
-                    <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
-                      <img
-                        src={safeImageSrc(prop.img)}
-                        alt={prop.name}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          transition: "transform 0.6s ease",
-                          display: "block",
-                          filter: "saturate(0.88)",
-                        }}
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
-                        }}
-                      />
-                      {/* Rating badge */}
-                      {prop.rating >= 8.5 && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: "12px",
-                            right: "12px",
-                            background: "var(--gold)",
-                            color: "var(--white)",
-                            fontSize: "12px",
-                            fontWeight: 600,
-                            padding: "4px 10px",
-                            fontFamily: "var(--font-mono)",
-                          }}
-                        >
-                          {prop.rating.toFixed(1)}
-                        </div>
-                      )}
-                      {/* Savings badge */}
-                      <div
-                        style={{
-                          position: "absolute",
-                          bottom: "12px",
-                          left: "12px",
-                          background: "var(--success)",
-                          color: "var(--cream)",
-                          fontSize: "10px",
-                          fontWeight: 500,
-                          padding: "4px 10px",
-                          letterSpacing: "0.04em",
-                        }}
-                      >
-                        Save up to {prop.savePercent}%
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div style={{ padding: "18px 20px 22px" }}>
-                      {/* Stars */}
-                      <div
-                        style={{
-                          color: "var(--gold)",
-                          fontSize: "10px",
-                          letterSpacing: "2px",
-                          marginBottom: "6px",
-                        }}
-                      >
-                        {"★".repeat(prop.stars)}
-                      </div>
-
-                      <h3
-                        className="type-heading-3"
-                        style={{
-                          color: "var(--ink)",
-                          marginBottom: "4px",
-                          fontSize: "16px",
-                        }}
-                      >
-                        {prop.name}
-                      </h3>
-
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: "var(--ink-light)",
-                          letterSpacing: "0.04em",
-                          marginBottom: "14px",
-                        }}
-                      >
-                        {prop.city}
-                      </p>
-
-                      {/* Tags */}
-                      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginBottom: "16px" }}>
-                        {prop.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            style={{
-                              fontSize: "9px",
-                              padding: "3px 8px",
-                              background: "var(--cream)",
-                              color: "var(--ink-mid)",
-                              border: "1px solid var(--cream-border)",
-                              letterSpacing: "0.04em",
-                            }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Price */}
-                      <div
-                        style={{
-                          borderTop: "1px solid var(--cream-border)",
-                          paddingTop: "14px",
-                          display: "flex",
-                          alignItems: "baseline",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <div>
-                          <span
-                            style={{
-                              fontSize: "10px",
-                              color: "var(--ink-light)",
-                              letterSpacing: "0.06em",
-                              textTransform: "uppercase",
-                            }}
-                          >
-                            From
-                          </span>
-                          <div
-                            style={{
-                              fontFamily: "var(--font-display)",
-                              fontSize: "22px",
-                              fontWeight: 500,
-                              color: "var(--ink)",
-                              lineHeight: 1.2,
-                            }}
-                          >
-                            &#8377;{prop.priceFrom.toLocaleString("en-IN")}
-                          </div>
-                          <span
-                            style={{
-                              fontSize: "10px",
-                              color: "var(--ink-light)",
-                            }}
-                          >
-                            per night
-                          </span>
-                        </div>
-
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            color: "var(--gold)",
-                            fontWeight: 500,
-                            letterSpacing: "0.04em",
-                          }}
-                        >
-                          View &rarr;
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+          {/* Property cards — carousel */}
+          <PopularCarousel properties={POPULAR_PROPERTIES} />
         </div>
       </section>
 
@@ -1175,150 +1296,7 @@ export default function Home() {
             </div>
           </motion.div>
 
-          <div
-            className="seasonal-grid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: "20px",
-            }}
-          >
-            {SEASONAL_TRIPS.map((trip, i) => (
-              <motion.div
-                key={trip.season}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
-              >
-                <div
-                  style={{
-                    background: "var(--white)",
-                    border: "1px solid var(--cream-border)",
-                    overflow: "hidden",
-                    transition: "box-shadow 0.3s, border-color 0.3s",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.boxShadow =
-                      "0 8px 32px rgba(26,23,16,0.08)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
-                  }}
-                >
-                  {/* Season image */}
-                  <div style={{ position: "relative", height: "180px", overflow: "hidden" }}>
-                    <img
-                      src={safeImageSrc(trip.img)}
-                      alt={trip.season}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        transition: "transform 0.6s ease",
-                        display: "block",
-                        filter: "saturate(0.88)",
-                      }}
-                      loading="lazy"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
-                      }}
-                    />
-                    {/* Season badge */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "12px",
-                        left: "12px",
-                        background: "var(--ink)",
-                        color: "var(--cream)",
-                        fontSize: "10px",
-                        fontWeight: 600,
-                        padding: "5px 12px",
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      {trip.season}
-                    </div>
-                    {/* Months label */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: "12px",
-                        right: "12px",
-                        background: "rgba(26,23,16,0.7)",
-                        color: "var(--cream)",
-                        fontSize: "10px",
-                        fontWeight: 500,
-                        padding: "4px 10px",
-                        letterSpacing: "0.04em",
-                        backdropFilter: "blur(4px)",
-                      }}
-                    >
-                      {trip.label}
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div style={{ padding: "20px 20px 24px" }}>
-                    <p
-                      className="type-body-sm"
-                      style={{
-                        color: "var(--ink-mid)",
-                        lineHeight: 1.7,
-                        marginBottom: "18px",
-                      }}
-                    >
-                      {trip.description}
-                    </p>
-
-                    {/* Destination links */}
-                    <div
-                      style={{
-                        borderTop: "1px solid var(--cream-border)",
-                        paddingTop: "16px",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "8px",
-                      }}
-                    >
-                      {trip.destinations.map((dest) => (
-                        <Link
-                          key={dest.slug}
-                          href={`/city/${dest.slug}`}
-                          style={{
-                            textDecoration: "none",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize: "13px",
-                              fontWeight: 500,
-                              color: "var(--ink)",
-                            }}
-                          >
-                            {dest.name}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: "11px",
-                              color: "var(--ink-light)",
-                            }}
-                          >
-                            {dest.country} &rarr;
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          <SeasonalCarousel trips={SEASONAL_TRIPS} />
         </div>
       </section>
 
@@ -1705,7 +1683,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: i * 0.1 }}
-                className="price-card"
+                className="price-card card-hover"
                 style={{
                   background: "var(--white)",
                   border: "1px solid var(--cream-border)",
@@ -1713,15 +1691,12 @@ export default function Home() {
                   gridTemplateColumns: "240px 1fr auto",
                   overflow: "hidden",
                   cursor: "pointer",
-                  transition: "box-shadow 0.2s",
-                }}
-                whileHover={{
-                  boxShadow: "0 4px 24px rgba(26,23,16,0.08)",
                 }}
               >
                 {/* Image */}
                 <div style={{ height: "180px", overflow: "hidden" }}>
                   <img
+                    className="card-img"
                     src={safeImageSrc(deal.img)}
                     alt={deal.hotel}
                     style={{
@@ -2260,23 +2235,27 @@ function HotelCard({
       <img
         src={safeImageSrc(img)}
         alt={city.city_name}
+        className="card-img"
         style={{
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          transition: "transform 0.6s ease",
+          transition: "transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.6s ease",
           display: "block",
           minHeight: "200px",
+          filter: "saturate(0.88)",
         }}
         loading="lazy"
         onError={(e) => {
           (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
         }}
         onMouseEnter={(e) => {
-          (e.target as HTMLImageElement).style.transform = "scale(1.04)";
+          (e.target as HTMLImageElement).style.transform = "scale(1.06)";
+          (e.target as HTMLImageElement).style.filter = "saturate(1)";
         }}
         onMouseLeave={(e) => {
           (e.target as HTMLImageElement).style.transform = "scale(1)";
+          (e.target as HTMLImageElement).style.filter = "saturate(0.88)";
         }}
       />
 
@@ -2344,6 +2323,7 @@ function DestinationCard({ city }: { city: CuratedCity }) {
       style={{ textDecoration: "none", display: "block" }}
     >
       <motion.div
+        className="card-hover"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -2353,22 +2333,18 @@ function DestinationCard({ city }: { city: CuratedCity }) {
           border: "1px solid var(--cream-border)",
           overflow: "hidden",
           cursor: "pointer",
-          transition: "box-shadow 0.3s, border-color 0.3s",
-        }}
-        whileHover={{
-          boxShadow: "0 8px 32px rgba(26,23,16,0.08)",
         }}
       >
         {/* Image */}
         <div style={{ height: "220px", overflow: "hidden" }}>
           <img
+            className="card-img"
             src={safeImageSrc(img)}
             alt={city.city_name}
             style={{
               width: "100%",
               height: "100%",
               objectFit: "cover",
-              transition: "transform 0.6s ease",
               display: "block",
               filter: "saturate(0.88)",
             }}
@@ -2404,7 +2380,7 @@ function DestinationCard({ city }: { city: CuratedCity }) {
             }}>
               {city.hotel_count > 0 ? `${city.hotel_count}+ hotels` : "Explore stays"}
             </span>
-            <span style={{
+            <span className="card-arrow" style={{
               fontSize: "11px",
               color: "var(--gold)",
               fontWeight: 500,

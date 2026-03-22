@@ -506,6 +506,133 @@ nav {
   border: 1px solid var(--cream-border);
 }
 
+/* ── Card hover micro-interactions ── */
+.card-hover {
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              border-color 0.35s ease;
+}
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 40px rgba(26, 23, 16, 0.10), 0 4px 12px rgba(184, 149, 90, 0.08);
+  border-color: var(--gold-light);
+}
+.card-hover .card-img {
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              filter 0.6s ease;
+}
+.card-hover:hover .card-img {
+  transform: scale(1.06);
+  filter: saturate(1) !important;
+}
+.card-hover .card-arrow {
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+.card-hover:hover .card-arrow {
+  transform: translateX(4px);
+  color: var(--gold) !important;
+}
+
+/* ── Carousel ── */
+.carousel-container {
+  position: relative;
+}
+.carousel-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  gap: 20px;
+}
+.carousel-track::-webkit-scrollbar {
+  display: none;
+}
+.carousel-track > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1px solid var(--cream-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.25s;
+  box-shadow: 0 2px 12px rgba(26, 23, 16, 0.08);
+  color: var(--ink);
+}
+.carousel-btn:hover {
+  background: var(--ink);
+  color: var(--cream);
+  border-color: var(--ink);
+  box-shadow: 0 4px 20px rgba(26, 23, 16, 0.15);
+}
+.carousel-btn:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+.carousel-btn-prev {
+  left: -22px;
+}
+.carousel-btn-next {
+  right: -22px;
+}
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 32px;
+}
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cream-border);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+.carousel-dot:hover {
+  background: var(--gold-light);
+}
+.carousel-dot.active {
+  background: var(--gold);
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* Carousel responsive */
+@media (max-width: 767px) {
+  .carousel-btn {
+    display: none;
+  }
+  .carousel-track > * {
+    width: calc(100vw - 56px) !important;
+  }
+}
+@media (min-width: 768px) and (max-width: 1024px) {
+  .carousel-track > * {
+    width: calc(50% - 10px) !important;
+  }
+  .carousel-btn-prev {
+    left: -16px;
+  }
+  .carousel-btn-next {
+    right: -16px;
+  }
+}
+
 /* ── Line clamp utilities ── */
 .line-clamp-1 {
   display: -webkit-box;
