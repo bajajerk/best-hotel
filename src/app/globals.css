@@ -585,6 +585,11 @@ nav {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 
+  /* ── Home: Seasonal grid — 2 columns on tablet ── */
+  .seasonal-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
   /* ── Home: Why grid — 2 columns ── */
   .why-grid {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -604,6 +609,7 @@ nav {
   /* ── Home: Section padding — moderate ── */
   .section-featured,
   .section-popular,
+  .section-seasonal,
   .section-destinations,
   .section-proof,
   .section-trust,
@@ -724,6 +730,11 @@ nav {
 
   /* 7b. Popular grid — single column on mobile */
   .popular-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 7c. Seasonal grid — single column on mobile */
+  .seasonal-grid {
     grid-template-columns: 1fr !important;
   }
 

@@ -188,6 +188,60 @@ const POPULAR_PROPERTIES = [
 ];
 
 // ---------------------------------------------------------------------------
+// Seasonal trips data
+// ---------------------------------------------------------------------------
+const SEASONAL_TRIPS = [
+  {
+    season: "Summer",
+    label: "Jun – Aug",
+    description: "Escape the heat with mountain retreats and coastal breezes.",
+    destinations: [
+      { name: "Santorini", slug: "santorini", country: "Greece" },
+      { name: "Bali", slug: "bali", country: "Indonesia" },
+      { name: "Cape Town", slug: "cape-town", country: "South Africa" },
+    ],
+    img: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800&q=80",
+    accent: "#e8a87c",
+  },
+  {
+    season: "Autumn",
+    label: "Sep – Nov",
+    description: "Golden foliage, harvest festivals, and shoulder-season savings.",
+    destinations: [
+      { name: "Kyoto", slug: "kyoto", country: "Japan" },
+      { name: "Prague", slug: "prague", country: "Czech Republic" },
+      { name: "Budapest", slug: "budapest", country: "Hungary" },
+    ],
+    img: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80",
+    accent: "#c97b3d",
+  },
+  {
+    season: "Winter",
+    label: "Dec – Feb",
+    description: "Festive cities, alpine luxury, and tropical winter sun.",
+    destinations: [
+      { name: "Dubai", slug: "dubai", country: "UAE" },
+      { name: "Maldives", slug: "maldives", country: "Maldives" },
+      { name: "Vienna", slug: "vienna", country: "Austria" },
+    ],
+    img: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=800&q=80",
+    accent: "#7bafd4",
+  },
+  {
+    season: "Spring",
+    label: "Mar – May",
+    description: "Cherry blossoms, mild weather, and vibrant cityscapes.",
+    destinations: [
+      { name: "Tokyo", slug: "tokyo", country: "Japan" },
+      { name: "Amsterdam", slug: "amsterdam", country: "Netherlands" },
+      { name: "Lisbon", slug: "lisbon", country: "Portugal" },
+    ],
+    img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80",
+    accent: "#8fbc8f",
+  },
+];
+
+// ---------------------------------------------------------------------------
 // Animation variants
 // ---------------------------------------------------------------------------
 const orchestrate = {
@@ -1080,6 +1134,188 @@ export default function Home() {
                     </div>
                   </div>
                 </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================
+          SEASONAL TRIPS — travel by season
+      ================================================================ */}
+      <section
+        className="section-seasonal"
+        style={{
+          padding: "80px 60px",
+          background: "var(--cream)",
+        }}
+      >
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+            className="section-header"
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              marginBottom: "48px",
+            }}
+          >
+            <div>
+              <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
+                Seasonal Trips
+              </div>
+              <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
+                Travel by{" "}
+                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>season</em>
+              </h2>
+            </div>
+          </motion.div>
+
+          <div
+            className="seasonal-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: "20px",
+            }}
+          >
+            {SEASONAL_TRIPS.map((trip, i) => (
+              <motion.div
+                key={trip.season}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+              >
+                <div
+                  style={{
+                    background: "var(--white)",
+                    border: "1px solid var(--cream-border)",
+                    overflow: "hidden",
+                    transition: "box-shadow 0.3s, border-color 0.3s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.boxShadow =
+                      "0 8px 32px rgba(26,23,16,0.08)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+                  }}
+                >
+                  {/* Season image */}
+                  <div style={{ position: "relative", height: "180px", overflow: "hidden" }}>
+                    <img
+                      src={safeImageSrc(trip.img)}
+                      alt={trip.season}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        transition: "transform 0.6s ease",
+                        display: "block",
+                        filter: "saturate(0.88)",
+                      }}
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+                      }}
+                    />
+                    {/* Season badge */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "12px",
+                        left: "12px",
+                        background: "var(--ink)",
+                        color: "var(--cream)",
+                        fontSize: "10px",
+                        fontWeight: 600,
+                        padding: "5px 12px",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {trip.season}
+                    </div>
+                    {/* Months label */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: "12px",
+                        right: "12px",
+                        background: "rgba(26,23,16,0.7)",
+                        color: "var(--cream)",
+                        fontSize: "10px",
+                        fontWeight: 500,
+                        padding: "4px 10px",
+                        letterSpacing: "0.04em",
+                        backdropFilter: "blur(4px)",
+                      }}
+                    >
+                      {trip.label}
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div style={{ padding: "20px 20px 24px" }}>
+                    <p
+                      className="type-body-sm"
+                      style={{
+                        color: "var(--ink-mid)",
+                        lineHeight: 1.7,
+                        marginBottom: "18px",
+                      }}
+                    >
+                      {trip.description}
+                    </p>
+
+                    {/* Destination links */}
+                    <div
+                      style={{
+                        borderTop: "1px solid var(--cream-border)",
+                        paddingTop: "16px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "8px",
+                      }}
+                    >
+                      {trip.destinations.map((dest) => (
+                        <Link
+                          key={dest.slug}
+                          href={`/city/${dest.slug}`}
+                          style={{
+                            textDecoration: "none",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "13px",
+                              fontWeight: 500,
+                              color: "var(--ink)",
+                            }}
+                          >
+                            {dest.name}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              color: "var(--ink-light)",
+                            }}
+                          >
+                            {dest.country} &rarr;
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
