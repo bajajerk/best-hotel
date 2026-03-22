@@ -1028,6 +1028,97 @@ export default function HotelPage() {
 
             {/* Amenities section consolidated into Property Highlights above */}
 
+            {/* ── Room Types ── */}
+            <motion.div variants={fadeUp} custom={3.5} className="mb-10">
+              <SectionLabel>Room Types</SectionLabel>
+              <div className="flex flex-col gap-px" style={{ background: "var(--cream-border)", border: "1px solid var(--cream-border)" }}>
+                {((): { name: string; beds: string; bedIcon: string; guests: number; size: string }[] => {
+                  const stars = hotel.star_rating || 3;
+                  if (stars >= 5) return [
+                    { name: "Deluxe Room", beds: "1 King Bed", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "35 m\u00B2" },
+                    { name: "Deluxe Twin", beds: "2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 2, size: "35 m\u00B2" },
+                    { name: "Premier Suite", beds: "1 King Bed + Living Area", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 3, size: "55 m\u00B2" },
+                    { name: "Family Room", beds: "1 King + 2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 4, size: "50 m\u00B2" },
+                    { name: "Presidential Suite", beds: "1 King Bed + Lounge", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "80 m\u00B2" },
+                  ];
+                  if (stars >= 4) return [
+                    { name: "Superior Room", beds: "1 King Bed", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "30 m\u00B2" },
+                    { name: "Superior Twin", beds: "2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 2, size: "30 m\u00B2" },
+                    { name: "Deluxe Room", beds: "1 King Bed", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "38 m\u00B2" },
+                    { name: "Family Suite", beds: "1 King + 2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 4, size: "45 m\u00B2" },
+                  ];
+                  return [
+                    { name: "Standard Room", beds: "1 Queen Bed", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "22 m\u00B2" },
+                    { name: "Standard Twin", beds: "2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 2, size: "22 m\u00B2" },
+                    { name: "Triple Room", beds: "1 Queen + 1 Single Bed", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 3, size: "28 m\u00B2" },
+                  ];
+                })().map((room, i, arr) => (
+                  <div
+                    key={room.name}
+                    className="flex items-center gap-4 p-5"
+                    style={{ background: "var(--white)" }}
+                  >
+                    {/* Bed icon */}
+                    <div
+                      className="shrink-0 w-10 h-10 flex items-center justify-center"
+                      style={{ background: "var(--gold-pale)", borderRadius: "6px" }}
+                    >
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--gold)" }}>
+                        <path d={room.bedIcon} />
+                      </svg>
+                    </div>
+
+                    {/* Room details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span
+                          className="text-sm font-medium"
+                          style={{ color: "var(--ink)" }}
+                        >
+                          {room.name}
+                        </span>
+                        <span
+                          className="text-[11px]"
+                          style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
+                        >
+                          {room.size}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-xs" style={{ color: "var(--ink-mid)" }}>
+                          {room.beds}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Guest count */}
+                    <div
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-1.5"
+                      style={{
+                        background: "var(--cream)",
+                        border: "1px solid var(--cream-border)",
+                        borderRadius: "4px",
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--ink-light)" }}>
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: "var(--ink-mid)", fontFamily: "var(--font-mono)" }}
+                      >
+                        {room.guests}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-[11px]" style={{ color: "var(--ink-light)" }}>
+                Room availability varies by date. Contact us for specific options.
+              </p>
+            </motion.div>
+
             {/* ── Policies ── */}
             {(hotel.checkin || hotel.checkout) && (
               <motion.div variants={fadeUp} custom={4} className="mb-10">
