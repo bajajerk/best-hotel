@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import Providers from "@/components/Providers";
 
 const cormorant = Cormorant_Garamond({
   weight: ["300", "400", "500", "600"],
@@ -43,7 +44,9 @@ export default function RootLayout({
       <body
         className={`${cormorant.variable} ${dmSans.variable} ${jetbrainsMono.variable} antialiased`}
       >
+        <Providers>
         {children}
+        </Providers>
 
         {/* Floating WhatsApp Button */}
         <a

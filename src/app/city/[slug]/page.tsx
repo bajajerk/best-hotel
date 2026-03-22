@@ -9,6 +9,7 @@ import { CATEGORIES } from "@/lib/constants";
 import MobileNav from "@/components/MobileNav";
 import BackButton from "@/components/BackButton";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import DateBar from "@/components/DateBar";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -781,12 +782,17 @@ export default function CityPage() {
         ]}
       />
 
+      {/* ════════ Check-in / Check-out date bar ════════ */}
+      <div style={{ paddingTop: 96 }}>
+        <DateBar variant="light" />
+      </div>
+
       {/* ================================================================
           CITY HERO — large italic serif name, tagline
           ================================================================ */}
       <header
         style={{
-          paddingTop: 136,
+          paddingTop: 24,
           paddingBottom: 0,
           paddingLeft: 60,
           paddingRight: 60,

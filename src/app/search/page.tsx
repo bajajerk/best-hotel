@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { searchHotels, fetchCuratedCities, CuratedCity } from "@/lib/api";
 import { SAMPLE_CITIES } from "@/lib/constants";
 import MobileNav from "@/components/MobileNav";
+import DateBar from "@/components/DateBar";
 
 // ---------------------------------------------------------------------------
 // City image map (shared with home page)
@@ -255,10 +256,15 @@ export default function SearchPage() {
         </div>
       </nav>
 
+      {/* ── Date bar ── */}
+      <div style={{ paddingTop: 60 }}>
+        <DateBar variant="dark" />
+      </div>
+
       {/* ── Hero search area ── */}
       <section
         style={{
-          paddingTop: "60px",
+          paddingTop: "0px",
           background: "var(--ink)",
           position: "relative",
           overflow: "hidden",

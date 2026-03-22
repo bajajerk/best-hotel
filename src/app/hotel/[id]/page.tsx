@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import MobileNav from "@/components/MobileNav";
 import BackButton from "@/components/BackButton";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import DateBar from "@/components/DateBar";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -645,10 +646,15 @@ export default function HotelPage() {
         ]}
       />
 
+      {/* ═══════════════════ Check-in / Check-out ═══════════════════ */}
+      <div style={{ paddingTop: 96 }}>
+        <DateBar variant="light" />
+      </div>
+
       {/* ═══════════════════ Back Button ═══════════════════ */}
       <div
         style={{
-          paddingTop: 104,
+          paddingTop: 12,
           paddingLeft: 24,
           paddingRight: 24,
           paddingBottom: 0,

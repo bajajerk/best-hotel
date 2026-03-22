@@ -6,6 +6,7 @@ import Link from "next/link";
 import { CONTINENTS, CATEGORIES, SAMPLE_CITIES } from "@/lib/constants";
 import { fetchCuratedCities, CuratedCity } from "@/lib/api";
 import MobileNav from "@/components/MobileNav";
+import { useBooking } from "@/context/BookingContext";
 
 // ---------------------------------------------------------------------------
 // Hero background images (cinematic hotel/travel shots)
@@ -646,6 +647,7 @@ function SeasonalCarousel({ trips }: { trips: SeasonalTrip[] }) {
 // Main Page
 // ============================================================================
 export default function Home() {
+  const { checkIn, checkOut, setCheckIn, setCheckOut, formatDate } = useBooking();
   const [cities, setCities] = useState<CuratedCity[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroIdx, setHeroIdx] = useState(0);
@@ -951,12 +953,13 @@ export default function Home() {
             </div>
 
             {/* Check in */}
-            <div
+            <label
               className="search-field"
               style={{
                 padding: "12px 16px",
                 borderRight: "1px solid var(--cream-border)",
                 cursor: "pointer",
+                position: "relative",
               }}
             >
               <div className="type-micro" style={{
@@ -965,17 +968,31 @@ export default function Home() {
               }}>
                 CHECK IN
               </div>
-              <div style={{ fontSize: "13px", color: "var(--ink-light)", fontWeight: 400 }}>
-                Select date
+              <div style={{ fontSize: "13px", color: checkIn ? "var(--ink)" : "var(--ink-light)", fontWeight: 400 }}>
+                {formatDate(checkIn)}
               </div>
-            </div>
+              <input
+                type="date"
+                value={checkIn}
+                onChange={(e) => setCheckIn(e.target.value)}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  opacity: 0,
+                  cursor: "pointer",
+                  width: "100%",
+                  height: "100%",
+                }}
+              />
+            </label>
 
             {/* Check out */}
-            <div
+            <label
               className="search-field"
               style={{
                 padding: "12px 16px",
                 cursor: "pointer",
+                position: "relative",
               }}
             >
               <div className="type-micro" style={{
@@ -984,10 +1001,24 @@ export default function Home() {
               }}>
                 CHECK OUT
               </div>
-              <div style={{ fontSize: "13px", color: "var(--ink-light)", fontWeight: 400 }}>
-                Select date
+              <div style={{ fontSize: "13px", color: checkOut ? "var(--ink)" : "var(--ink-light)", fontWeight: 400 }}>
+                {formatDate(checkOut)}
               </div>
-            </div>
+              <input
+                type="date"
+                value={checkOut}
+                min={checkIn || undefined}
+                onChange={(e) => setCheckOut(e.target.value)}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  opacity: 0,
+                  cursor: "pointer",
+                  width: "100%",
+                  height: "100%",
+                }}
+              />
+            </label>
 
             {/* Search button */}
             <button

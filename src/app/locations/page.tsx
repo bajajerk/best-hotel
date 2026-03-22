@@ -6,6 +6,7 @@ import Link from "next/link";
 import { fetchCuratedCities, CuratedCity } from "@/lib/api";
 import { CONTINENTS, SAMPLE_CITIES } from "@/lib/constants";
 import MobileNav from "@/components/MobileNav";
+import DateBar from "@/components/DateBar";
 
 // ---------------------------------------------------------------------------
 // City image map
@@ -220,10 +221,15 @@ export default function LocationsPage() {
         </div>
       </nav>
 
+      {/* ── Date bar ── */}
+      <div style={{ paddingTop: 60 }}>
+        <DateBar variant="dark" />
+      </div>
+
       {/* ── Hero banner ── */}
       <section
         style={{
-          paddingTop: "60px",
+          paddingTop: "0px",
           position: "relative",
           overflow: "hidden",
           background: "var(--ink)",

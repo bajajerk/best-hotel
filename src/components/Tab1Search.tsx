@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useBooking } from "@/context/BookingContext";
 
 const featuredHotels = [
   {
@@ -67,6 +68,8 @@ const fadeInUp = {
 };
 
 export default function Tab1Search() {
+  const { checkIn, checkOut, setCheckIn, setCheckOut, formatDate } = useBooking();
+
   return (
     <div
       className="h-full overflow-y-auto"
@@ -197,13 +200,15 @@ export default function Tab1Search() {
 
         {/* Dates Row */}
         <div className="flex gap-2.5" style={{ marginBottom: 10 }}>
-          <div
+          <label
             className="flex-1"
             style={{
               background: "var(--bg-input)",
               border: "1px solid var(--border)",
               borderRadius: 12,
               padding: "12px 14px",
+              position: "relative",
+              cursor: "pointer",
             }}
           >
             <div
@@ -223,19 +228,34 @@ export default function Tab1Search() {
                 fontFamily: "var(--font-dm-sans)",
                 fontSize: 14,
                 fontWeight: 400,
-                color: "var(--white-80)",
+                color: checkIn ? "var(--white-80)" : "var(--white-30)",
               }}
             >
-              Mar 15
+              {formatDate(checkIn, "Select date")}
             </div>
-          </div>
-          <div
+            <input
+              type="date"
+              value={checkIn}
+              onChange={(e) => setCheckIn(e.target.value)}
+              style={{
+                position: "absolute",
+                inset: 0,
+                opacity: 0,
+                cursor: "pointer",
+                width: "100%",
+                height: "100%",
+              }}
+            />
+          </label>
+          <label
             className="flex-1"
             style={{
               background: "var(--bg-input)",
               border: "1px solid var(--border)",
               borderRadius: 12,
               padding: "12px 14px",
+              position: "relative",
+              cursor: "pointer",
             }}
           >
             <div
@@ -255,12 +275,26 @@ export default function Tab1Search() {
                 fontFamily: "var(--font-dm-sans)",
                 fontSize: 14,
                 fontWeight: 400,
-                color: "var(--white-80)",
+                color: checkOut ? "var(--white-80)" : "var(--white-30)",
               }}
             >
-              Mar 18
+              {formatDate(checkOut, "Select date")}
             </div>
-          </div>
+            <input
+              type="date"
+              value={checkOut}
+              min={checkIn || undefined}
+              onChange={(e) => setCheckOut(e.target.value)}
+              style={{
+                position: "absolute",
+                inset: 0,
+                opacity: 0,
+                cursor: "pointer",
+                width: "100%",
+                height: "100%",
+              }}
+            />
+          </label>
         </div>
 
         {/* Guests */}

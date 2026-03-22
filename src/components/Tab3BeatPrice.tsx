@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useBooking } from "@/context/BookingContext";
 
 type AppState = "upload" | "processing" | "result";
 type EntryMode = "screenshot" | "manual";
@@ -30,6 +31,7 @@ const SCANNING_STEPS = [
 ];
 
 export default function Tab3BeatPrice() {
+  const booking = useBooking();
   const [state, setState] = useState<AppState>("upload");
   const [entryMode, setEntryMode] = useState<EntryMode>("screenshot");
   const [isDragging, setIsDragging] = useState(false);
@@ -38,8 +40,8 @@ export default function Tab3BeatPrice() {
     hotelName: "",
     bookingSite: "MakeMyTrip",
     pricePerNight: "",
-    checkIn: "",
-    checkOut: "",
+    checkIn: booking.checkIn,
+    checkOut: booking.checkOut,
     guests: "",
   });
 
@@ -329,7 +331,10 @@ export default function Tab3BeatPrice() {
             type="date"
             placeholder="Check-in"
             value={form.checkIn}
-            onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
+            onChange={(e) => {
+              setForm({ ...form, checkIn: e.target.value });
+              booking.setCheckIn(e.target.value);
+            }}
             style={{
               flex: 1,
               padding: "14px 12px",
@@ -346,7 +351,11 @@ export default function Tab3BeatPrice() {
             type="date"
             placeholder="Check-out"
             value={form.checkOut}
-            onChange={(e) => setForm({ ...form, checkOut: e.target.value })}
+            min={form.checkIn || undefined}
+            onChange={(e) => {
+              setForm({ ...form, checkOut: e.target.value });
+              booking.setCheckOut(e.target.value);
+            }}
             style={{
               flex: 1,
               padding: "14px 12px",
