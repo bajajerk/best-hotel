@@ -287,9 +287,46 @@ export default function SearchPage() {
     <div style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
       <Header />
 
-      {/* ── Date bar ── */}
-      <div style={{ paddingTop: 60 }}>
-        <DateBar variant="dark" />
+      {/* ── Booking bar (destination + dates + guests) ── */}
+      <div style={{ paddingTop: 60, background: "rgba(0,0,0,0.03)", borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
+        {/* Destination row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px 0" }}>
+          <div
+            style={{
+              flex: 1,
+              background: "rgba(0,0,0,0.04)",
+              border: "1px solid rgba(0,0,0,0.08)",
+              borderRadius: 10,
+              padding: "8px 12px",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--font-body), sans-serif",
+                fontSize: 9,
+                letterSpacing: 1,
+                textTransform: "uppercase",
+                color: "#7a7465",
+                marginBottom: 2,
+              }}
+            >
+              DESTINATION
+            </div>
+            <DestinationSearch
+              variant="light"
+              placeholder="City, hotel, or country..."
+              defaultValue={initialQuery}
+              onValueChange={(val) => {
+                setQuery(val);
+                if (debounceRef.current) clearTimeout(debounceRef.current);
+                debounceRef.current = setTimeout(() => {
+                  performSearch(val);
+                }, 400);
+              }}
+            />
+          </div>
+        </div>
+        <DateBar variant="light" />
       </div>
 
       {/* ── Hero search area ── */}
@@ -333,60 +370,6 @@ export default function SearchPage() {
               Search across 1,500+ hotels in 50+ cities worldwide
             </p>
           </motion.div>
-
-          {/* Search form with autocomplete */}
-          <motion.form
-            onSubmit={handleSubmit}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="search-form-bar"
-            style={{
-              display: "flex",
-              background: "var(--white)",
-              border: "1px solid var(--cream-border)",
-              maxWidth: "680px",
-              margin: "0 auto",
-              boxShadow: "0 8px 40px rgba(0,0,0,0.2)",
-            }}
-          >
-            <div style={{ flex: 1, padding: "18px 18px 18px 18px" }}>
-              <DestinationSearch
-                variant="light"
-                placeholder="Search by city, hotel name, or country..."
-                autoFocus
-                defaultValue={initialQuery}
-                onValueChange={(val) => {
-                  setQuery(val);
-                  if (debounceRef.current) clearTimeout(debounceRef.current);
-                  debounceRef.current = setTimeout(() => {
-                    performSearch(val);
-                  }, 400);
-                }}
-              />
-            </div>
-            <button
-              type="submit"
-              className="search-submit-btn"
-              style={{
-                padding: "18px 32px",
-                background: "var(--ink)",
-                color: "var(--cream)",
-                border: "none",
-                fontFamily: "var(--font-body)",
-                fontSize: "13px",
-                fontWeight: 500,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                cursor: "pointer",
-                transition: "background 0.2s",
-              }}
-              onMouseEnter={(e) => { (e.currentTarget).style.background = "var(--gold)"; }}
-              onMouseLeave={(e) => { (e.currentTarget).style.background = "var(--ink)"; }}
-            >
-              Search
-            </button>
-          </motion.form>
 
           {/* Popular searches + recent searches */}
           {!query.trim() && (
