@@ -67,12 +67,21 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} — Preferred Hotel Rates`,
     description:
       "Get B2B wholesale hotel rates across 50+ cities worldwide. Save 20-40% on every booking.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} — Preferred Hotel Rates`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: `${SITE_NAME} — Preferred Hotel Rates`,
     description:
       "Get B2B wholesale hotel rates across 50+ cities worldwide. Save 20-40% on every booking.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -89,8 +98,12 @@ export const metadata: Metadata = {
     canonical: SITE_URL,
   },
   icons: {
-    icon: "/favicon.svg",
-    apple: "/favicon.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
 };
 
