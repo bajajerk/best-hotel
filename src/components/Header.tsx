@@ -153,18 +153,7 @@ export default function Header() {
         </a>
 
         {/* Mobile hamburger menu */}
-        <MobileNav
-          links={[
-            { label: "Preferred Rates", href: "/preferred-rates" },
-            { label: "The Lobby", href: "/" },
-            { label: "Search", href: "/search" },
-            { label: "Match My Rates", href: "/match-my-rates" },
-          ]}
-          menuLinks={[
-            { label: "Profile", href: "/profile" },
-            { label: "Booking History", href: "/booking-history" },
-          ]}
-        />
+        <MobileNav />
       </div>
     </nav>
   );
