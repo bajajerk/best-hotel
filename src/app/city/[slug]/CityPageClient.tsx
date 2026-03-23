@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { fetchCityCurations, CuratedHotel } from "@/lib/api";
 import { rankHotels, sortRankedHotels, SORT_STRATEGY_LABELS, type SortStrategy, type RankedHotel } from "@/lib/ranking";
-import { CATEGORIES } from "@/lib/constants";
 import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
 import { trackCityViewed } from "@/lib/analytics";
@@ -83,14 +82,6 @@ function slugToName(s: string): string {
     .join(" ");
 }
 
-// ---------------------------------------------------------------------------
-// Category labels
-// ---------------------------------------------------------------------------
-const CATEGORY_LABELS: Record<Category, string> = {
-  singles: "for singles",
-  couples: "for couples",
-  families: "for families",
-};
 
 // ---------------------------------------------------------------------------
 // Skeleton — Horizontal card shimmer
@@ -162,7 +153,6 @@ function CardSkeletonMobile() {
 export default function CityPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const [activeCategory, setActiveCategory] = useState<Category>("couples");
   const [curations, setCurations] = useState<Record<Category, CuratedHotel[]>>({
     singles: [],
     couples: [],
@@ -203,9 +193,13 @@ export default function CityPage() {
       .finally(() => setLoading(false));
   }, [slug]);
 
-  // Compute price bounds whenever curations or active category changes
+  // Compute price bounds whenever curations change
   useEffect(() => {
-    const allHotels = curations[activeCategory] || [];
+    const allHotels = [
+      ...curations.couples,
+      ...curations.singles,
+      ...curations.families,
+    ];
     const prices = allHotels
       .map((h) => h.rates_from)
       .filter((p): p is number => p !== null && p > 0);
@@ -222,7 +216,7 @@ export default function CityPage() {
       setFilterMin(0);
       setFilterMax(0);
     }
-  }, [curations, activeCategory]);
+  }, [curations]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -230,7 +224,14 @@ export default function CityPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const allHotels = curations[activeCategory] || [];
+  // Combine all categories and deduplicate by hotel_id
+  const allHotels = Array.from(
+    new Map(
+      [...curations.couples, ...curations.singles, ...curations.families].map(
+        (h) => [h.hotel_id, h]
+      )
+    ).values()
+  );
 
   // Rank all hotels, then filter by price, then sort by chosen strategy
   const rankedAll = rankHotels(allHotels);
@@ -247,7 +248,6 @@ export default function CityPage() {
   for (const r of sortedRanked) valueScoreMap.set(r.hotel.hotel_id, r.valueScore);
 
   const displayName = cityName || slugToName(slug);
-  const categoryKeys: Category[] = ["singles", "couples", "families"];
   const isFilterActive = filterMin > priceMin || filterMax < priceMax;
   const isSortActive = sortBy !== "recommended";
   const currency = allHotels.find((h) => h.rates_currency)?.rates_currency || null;
@@ -367,69 +367,6 @@ export default function CityPage() {
               }}
             />
 
-            {/* Category selector tabs */}
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.5 }}
-              className="city-category-tabs"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                marginTop: 24,
-                paddingBottom: 0,
-              }}
-            >
-              {categoryKeys.map((key, i) => {
-                const isActive = activeCategory === key;
-                return (
-                  <span key={key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    {i > 0 && (
-                      <span
-                        style={{
-                          fontSize: 14,
-                          color: "var(--cream-border)",
-                          userSelect: "none",
-                          margin: "0 8px",
-                        }}
-                      >
-                        &middot;
-                      </span>
-                    )}
-                    <button
-                      onClick={() => setActiveCategory(key)}
-                      style={{
-                        position: "relative",
-                        fontSize: 13,
-                        fontFamily: "var(--font-body)",
-                        fontWeight: isActive ? 500 : 400,
-                        color: isActive ? "var(--ink)" : "var(--ink-light)",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        padding: "8px 16px 16px",
-                        borderBottom: isActive ? "2px solid var(--gold)" : "2px solid transparent",
-                        transition: "all 0.2s",
-                        letterSpacing: "0.02em",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          (e.currentTarget as HTMLElement).style.color = "var(--gold)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          (e.currentTarget as HTMLElement).style.color = "var(--ink-light)";
-                        }
-                      }}
-                    >
-                      {CATEGORY_LABELS[key]}
-                    </button>
-                  </span>
-                );
-              })}
-            </motion.div>
           </motion.div>
         </div>
       </header>
@@ -854,7 +791,7 @@ export default function CityPage() {
               ) : (
                 <AnimatePresence mode="wait">
                   <motion.div
-                    key={activeCategory}
+                    key="hotels"
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -12 }}
@@ -869,8 +806,7 @@ export default function CityPage() {
                       }}
                     >
                       <p style={{ fontSize: 13, color: "var(--ink-light)" }}>
-                        {hotels.length} curated {hotels.length === 1 ? "stay" : "stays"}{" "}
-                        {CATEGORY_LABELS[activeCategory]}
+                        {hotels.length} curated {hotels.length === 1 ? "stay" : "stays"}
                         {isFilterActive && (
                           <span style={{ color: "var(--gold)" }}> &middot; price filtered</span>
                         )}
@@ -951,8 +887,7 @@ export default function CityPage() {
                               Coming soon
                             </p>
                             <p style={{ fontSize: 14, color: "var(--ink-light)" }}>
-                              We are curating {CATEGORIES[activeCategory].label.toLowerCase()} stays
-                              in {displayName}.
+                              We are curating stays in {displayName}.
                             </p>
                           </>
                         )}
@@ -975,7 +910,7 @@ export default function CityPage() {
             ) : (
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={activeCategory}
+                  key="hotels"
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -12 }}
@@ -983,8 +918,7 @@ export default function CityPage() {
                 >
                   <div style={{ marginBottom: 16 }}>
                     <p style={{ fontSize: 13, color: "var(--ink-light)" }}>
-                      {hotels.length} curated {hotels.length === 1 ? "stay" : "stays"}{" "}
-                      {CATEGORY_LABELS[activeCategory]}
+                      {hotels.length} curated {hotels.length === 1 ? "stay" : "stays"}
                       {isFilterActive && (
                         <span style={{ color: "var(--gold)" }}> &middot; price filtered</span>
                       )}
@@ -1038,7 +972,7 @@ export default function CityPage() {
                             Coming soon
                           </p>
                           <p style={{ fontSize: 14, color: "var(--ink-light)" }}>
-                            We are curating {CATEGORIES[activeCategory].label.toLowerCase()} stays in {displayName}.
+                            We are curating stays in {displayName}.
                           </p>
                         </>
                       )}
