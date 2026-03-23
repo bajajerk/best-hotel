@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -121,6 +121,206 @@ function formatCurrency(amount: number, currency?: string): string {
   return `${sym}${formatted}`;
 }
 
+/* ────────────────────────── Placeholder Reviews ────────────────────────── */
+
+const PLACEHOLDER_REVIEWS: Review[] = [
+  {
+    id: 90001,
+    reviewer_name: "Sarah M.",
+    reviewer_country: "United States",
+    reviewer_avatar_url: null,
+    rating: 9.2,
+    title: "Absolutely stunning property",
+    positive: "The room was immaculate and the view was breathtaking. Staff went above and beyond to make our anniversary special. The concierge arranged a surprise dinner that was unforgettable.",
+    negative: null,
+    trip_type: "couple",
+    stay_date: "February 2026",
+  },
+  {
+    id: 90002,
+    reviewer_name: "James T.",
+    reviewer_country: "United Kingdom",
+    reviewer_avatar_url: null,
+    rating: 8.8,
+    title: "Great location and service",
+    positive: "Perfect location for exploring the city. The breakfast spread was excellent with both local and international options. The pool area was a great place to unwind after a day out.",
+    negative: "Check-in took a bit longer than expected during peak hours.",
+    trip_type: "family",
+    stay_date: "January 2026",
+  },
+  {
+    id: 90003,
+    reviewer_name: "Priya K.",
+    reviewer_country: "India",
+    reviewer_avatar_url: null,
+    rating: 9.5,
+    title: "Best hotel experience we've had",
+    positive: "From the moment we arrived, the hospitality was exceptional. The spa treatment was world-class. The rooms are spacious and beautifully appointed with all modern amenities.",
+    negative: null,
+    trip_type: "couple",
+    stay_date: "December 2025",
+  },
+  {
+    id: 90004,
+    reviewer_name: "Michael R.",
+    reviewer_country: "Australia",
+    reviewer_avatar_url: null,
+    rating: 8.6,
+    title: "Exceeded expectations",
+    positive: "The hotel exceeded all our expectations. Beautiful architecture, comfortable beds, and the restaurant serves amazing food. The gym was well-equipped too.",
+    negative: "Wi-Fi could be faster in the rooms, though it was fine in the lobby.",
+    trip_type: "business",
+    stay_date: "January 2026",
+  },
+  {
+    id: 90005,
+    reviewer_name: "Elena D.",
+    reviewer_country: "Germany",
+    reviewer_avatar_url: null,
+    rating: 9.0,
+    title: "A gem of a hotel",
+    positive: "Wonderful boutique feel with all the amenities of a luxury property. The attention to detail in the room design was impressive. Staff remembered our names from day one.",
+    negative: null,
+    trip_type: "solo",
+    stay_date: "November 2025",
+  },
+  {
+    id: 90006,
+    reviewer_name: "David L.",
+    reviewer_country: "Canada",
+    reviewer_avatar_url: null,
+    rating: 8.9,
+    title: "Perfect family getaway",
+    positive: "Kids loved the pool and the kids' club activities. The family room was spacious enough for all four of us. Great dining options — something for everyone including picky eaters.",
+    negative: "Parking was a bit limited on weekends.",
+    trip_type: "family",
+    stay_date: "December 2025",
+  },
+  {
+    id: 90007,
+    reviewer_name: "Aisha F.",
+    reviewer_country: "UAE",
+    reviewer_avatar_url: null,
+    rating: 9.4,
+    title: "Luxury at its finest",
+    positive: "The suite was absolutely gorgeous. Turn-down service with chocolates was a lovely touch. The bar had an incredible cocktail menu and the rooftop views were spectacular.",
+    negative: null,
+    trip_type: "couple",
+    stay_date: "February 2026",
+  },
+  {
+    id: 90008,
+    reviewer_name: "Tom H.",
+    reviewer_country: "Singapore",
+    reviewer_avatar_url: null,
+    rating: 8.7,
+    title: "Reliable and well-maintained",
+    positive: "Everything worked perfectly — clean rooms, fast check-in, great location near public transport. The business centre was well-equipped for my meetings.",
+    negative: "Restaurant closes a bit early for late-night dining.",
+    trip_type: "business",
+    stay_date: "January 2026",
+  },
+  {
+    id: 90009,
+    reviewer_name: "Sophie B.",
+    reviewer_country: "France",
+    reviewer_avatar_url: null,
+    rating: 9.1,
+    title: "Charming and elegant",
+    positive: "The decor is tasteful and the ambiance is relaxing. I especially enjoyed the garden area and the afternoon tea service. The staff were professional yet warm.",
+    negative: null,
+    trip_type: "solo",
+    stay_date: "October 2025",
+  },
+  {
+    id: 90010,
+    reviewer_name: "Carlos M.",
+    reviewer_country: "Spain",
+    reviewer_avatar_url: null,
+    rating: 8.5,
+    title: "Solid choice for the price",
+    positive: "Great value for money. The room was modern and clean. Breakfast had plenty of variety. We appreciated the free shuttle service to the city centre.",
+    negative: "The gym was on the small side but had the basics covered.",
+    trip_type: "friends",
+    stay_date: "November 2025",
+  },
+];
+
+/* ────────────────────────── Full Amenities Data ────────────────────────── */
+
+interface FullAmenity {
+  key: string;
+  label: string;
+  icon: string;
+  category: string;
+}
+
+const FULL_AMENITIES: FullAmenity[] = [
+  // Room amenities
+  { key: "ac", label: "Air Conditioning", icon: "M12 2v20M2 12h20M12 2a5 5 0 0 1 5 5M12 2a5 5 0 0 0-5 5M12 22a5 5 0 0 0 5-5M12 22a5 5 0 0 1-5-5M17 12a5 5 0 0 1-5 5M7 12a5 5 0 0 1 5-5", category: "Room" },
+  { key: "wifi", label: "Free Wi-Fi", icon: "M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01", category: "Room" },
+  { key: "tv", label: "Flat-screen TV", icon: "M2 7h20v10H2zM7 21h10M12 17v4", category: "Room" },
+  { key: "minibar", label: "Minibar", icon: "M3 3h18v18H3zM3 9h18M9 9v12", category: "Room" },
+  { key: "safe", label: "In-room Safe", icon: "M3 5h18v14H3zM7 5V3h10v2M12 12v2M10 12h4", category: "Room" },
+  { key: "roomservice", label: "Room Service", icon: "M4 18h16M12 4C7 4 3 8 3 13h18c0-5-4-9-9-9zM12 4V2", category: "Room" },
+  // Dining
+  { key: "restaurant", label: "Restaurant", icon: "M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7", category: "Dining" },
+  { key: "bar", label: "Bar / Lounge", icon: "M8 22h8M12 18v4M12 2L4 10h16L12 2zM7.5 10C7.5 14 12 18 12 18s4.5-4 4.5-8", category: "Dining" },
+  { key: "breakfast", label: "Breakfast", icon: "M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3", category: "Dining" },
+  // Wellness
+  { key: "pool", label: "Swimming Pool", icon: "M2 18c.6.5 1.2 1 2.5 1C6.5 19 6.5 17 9 17s2.5 2 4.5 2 2.5-2 5-2c1.3 0 1.9.5 2.5 1M2 14c.6.5 1.2 1 2.5 1C6.5 15 6.5 13 9 13s2.5 2 4.5 2 2.5-2 5-2c1.3 0 1.9.5 2.5 1M8 9V6a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v3M16 9V6a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v3", category: "Wellness" },
+  { key: "spa", label: "Spa & Wellness", icon: "M12 22c-4.97 0-9-2.24-9-5v-1c0-2.76 4.03-5 9-5s9 2.24 9 5v1c0 2.76-4.03 5-9 5zM7 11.5c0-2.5 2-5 5-7.5 3 2.5 5 5 5 7.5", category: "Wellness" },
+  { key: "gym", label: "Fitness Centre", icon: "M6.5 6.5h11M6.5 17.5h11M2 12h3M19 12h3M6.5 6.5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2M17.5 6.5a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2M4 10v4M20 10v4", category: "Wellness" },
+  // Services
+  { key: "concierge", label: "24h Concierge", icon: "M2 18h20M12 4v2M6.34 7.34l1.42 1.42M17.66 7.34l-1.42 1.42M4 14h16a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z", category: "Services" },
+  { key: "parking", label: "Parking", icon: "M9 17V7h4a3 3 0 0 1 0 6H9M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z", category: "Services" },
+  { key: "laundry", label: "Laundry Service", icon: "M3 3h18v18H3zM12 12m-3 0a3 3 0 1 0 6 0 3 3 0 1 0-6 0M6 6h.01M10 6h.01", category: "Services" },
+  { key: "shuttle", label: "Airport Shuttle", icon: "M5 17h14M3 9h18l-2 8H5L3 9zM7 17v2M17 17v2M8 9V5h8v4", category: "Services" },
+  // Other
+  { key: "beach", label: "Beach Access", icon: "M17.5 19H6.5l-.447-2.236A1 1 0 0 1 7.031 15.5h9.938a1 1 0 0 1 .978 1.264L17.5 19zM2 22h20M12 2L8 15M12 2l4 13M12 2l-7 8h14l-7-8", category: "Other" },
+  { key: "petfriendly", label: "Pet Friendly", icon: "M10 5.172C10 3.782 8.884 2.5 7.5 2.5S5 3.782 5 5.172c0 1.39 2.5 4.328 2.5 4.328S10 6.562 10 5.172zM19 5.172C19 3.782 17.884 2.5 16.5 2.5S14 3.782 14 5.172c0 1.39 2.5 4.328 2.5 4.328S19 6.562 19 5.172zM7.5 14.5c0-1.38-1.12-2.5-2.5-2.5S2.5 13.12 2.5 14.5 3.62 17 5 17s2.5-1.12 2.5-2.5zM21.5 14.5c0-1.38-1.12-2.5-2.5-2.5s-2.5 1.12-2.5 2.5S17.62 17 19 17s2.5-1.12 2.5-2.5zM8 18c0 2.21 1.79 4 4 4s4-1.79 4-4-1.79-2-4-2-4-.21-4 2z", category: "Other" },
+  { key: "nosmoking", label: "Non-Smoking", icon: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM4.93 4.93l14.14 14.14M8 12h8M8 16h8", category: "Other" },
+];
+
+/** Match amenities from overview text + always include standard hotel amenities */
+function getHotelAmenities(overview: string | null, starRating: number): FullAmenity[] {
+  const detected = new Set<string>();
+  if (overview) {
+    const text = overview.replace(/<[^>]*>/g, " ");
+    for (const a of FULL_AMENITIES) {
+      const patterns: Record<string, RegExp[]> = {
+        pool: [/\bpool\b/i, /\bswimming\b/i],
+        spa: [/\bspa\b/i, /\bwellness\b/i, /\bsauna\b/i],
+        wifi: [/\bwi-?fi\b/i, /\binternet\b/i],
+        restaurant: [/\brestaurant\b/i, /\bdining\b/i],
+        gym: [/\bgym\b/i, /\bfitness\b/i],
+        parking: [/\bparking\b/i, /\bvalet\b/i],
+        bar: [/\bbar\b/i, /\blounge\b/i, /\bcocktail\b/i],
+        breakfast: [/\bbreakfast\b/i],
+        beach: [/\bbeach\b/i, /\bseaside\b/i, /\boceanfront\b/i],
+        concierge: [/\bconcierge\b/i, /\bbutler\b/i, /\b24.?hour\b/i],
+        roomservice: [/\broom service\b/i],
+        petfriendly: [/\bpet.?friendly\b/i],
+        ac: [/\bair.?condition/i],
+        laundry: [/\blaundry\b/i, /\bdry clean/i],
+        shuttle: [/\bshuttle\b/i, /\btransfer\b/i],
+      };
+      if (patterns[a.key]?.some((p) => p.test(text))) {
+        detected.add(a.key);
+      }
+    }
+  }
+
+  // Standard amenities based on star rating
+  const standard = new Set(["ac", "wifi", "tv", "nosmoking"]);
+  if (starRating >= 3) { standard.add("restaurant"); standard.add("safe"); }
+  if (starRating >= 4) { standard.add("roomservice"); standard.add("gym"); standard.add("concierge"); standard.add("parking"); standard.add("minibar"); }
+  if (starRating >= 5) { standard.add("spa"); standard.add("bar"); standard.add("laundry"); standard.add("breakfast"); }
+
+  const allKeys = new Set([...detected, ...standard]);
+  return FULL_AMENITIES.filter((a) => allKeys.has(a.key));
+}
+
 /* ────────────────────────── Animation variants ────────────────────────── */
 
 const fadeUp = {
@@ -141,6 +341,204 @@ const fadeIn = {
 
 const TABS = ["Overview", "Gallery", "Reviews", "Location"] as const;
 type TabName = (typeof TABS)[number];
+
+/* ────────────────────────── Photo Carousel ────────────────────────── */
+
+function PhotoCarousel({
+  photos,
+  hotelName,
+  onOpenLightbox,
+}: {
+  photos: string[];
+  hotelName: string;
+  onOpenLightbox: (idx: number) => void;
+}) {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (isAutoPlaying && photos.length > 1) {
+      intervalRef.current = setInterval(() => {
+        setCurrentIdx((prev) => (prev + 1) % photos.length);
+      }, 5000);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isAutoPlaying, photos.length]);
+
+  const goTo = useCallback((idx: number) => {
+    setCurrentIdx(idx);
+    setIsAutoPlaying(false);
+  }, []);
+
+  const prev = useCallback(() => {
+    setCurrentIdx((i) => (i - 1 + photos.length) % photos.length);
+    setIsAutoPlaying(false);
+  }, [photos.length]);
+
+  const next = useCallback(() => {
+    setCurrentIdx((i) => (i + 1) % photos.length);
+    setIsAutoPlaying(false);
+  }, [photos.length]);
+
+  if (photos.length === 0) {
+    return (
+      <div
+        className="w-full hotel-hero flex items-center justify-center"
+        style={{ background: "var(--cream-deep)" }}
+      >
+        <p className="text-sm" style={{ color: "var(--ink-light)" }}>No photos available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden hotel-hero group">
+      {/* Main Image */}
+      <AnimatePresence mode="wait">
+        <motion.img
+          key={currentIdx}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
+          src={safePhotoUrl(photos[currentIdx])}
+          alt={`${hotelName} - Photo ${currentIdx + 1}`}
+          loading={currentIdx === 0 ? "eager" : "lazy"}
+          className="w-full h-full object-cover cursor-pointer"
+          style={{ filter: "brightness(0.88) saturate(0.85)" }}
+          onClick={() => onOpenLightbox(currentIdx)}
+          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+        />
+      </AnimatePresence>
+
+      {/* Dark gradient overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "linear-gradient(to top, rgba(26,23,16,0.7) 0%, transparent 40%)",
+        }}
+      />
+
+      {/* Navigation Arrows */}
+      {photos.length > 1 && (
+        <>
+          <button
+            onClick={prev}
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{
+              background: "rgba(26,23,16,0.6)",
+              backdropFilter: "blur(8px)",
+              color: "var(--cream)",
+              fontSize: "20px",
+              border: "none",
+              cursor: "pointer",
+            }}
+            aria-label="Previous photo"
+          >
+            &#8249;
+          </button>
+          <button
+            onClick={next}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{
+              background: "rgba(26,23,16,0.6)",
+              backdropFilter: "blur(8px)",
+              color: "var(--cream)",
+              fontSize: "20px",
+              border: "none",
+              cursor: "pointer",
+            }}
+            aria-label="Next photo"
+          >
+            &#8250;
+          </button>
+        </>
+      )}
+
+      {/* Thumbnail Strip */}
+      {photos.length > 1 && (
+        <div
+          className="absolute bottom-0 left-0 right-0 flex items-end gap-2 px-6 pb-5 pt-10 overflow-x-auto"
+          style={{
+            background: "linear-gradient(to top, rgba(26,23,16,0.8) 0%, transparent 100%)",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+        >
+          {photos.map((photo, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className="shrink-0 overflow-hidden transition-all duration-200"
+              style={{
+                width: 64,
+                height: 44,
+                border: currentIdx === i ? "2px solid var(--gold)" : "2px solid transparent",
+                opacity: currentIdx === i ? 1 : 0.6,
+                cursor: "pointer",
+                padding: 0,
+                background: "none",
+              }}
+            >
+              <img
+                src={safePhotoUrl(photo)}
+                alt=""
+                loading="lazy"
+                className="w-full h-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+              />
+            </button>
+          ))}
+
+          {/* View all button */}
+          <button
+            onClick={() => onOpenLightbox(0)}
+            className="shrink-0 flex items-center justify-center transition-opacity hover:opacity-80"
+            style={{
+              width: 64,
+              height: 44,
+              background: "rgba(184,149,90,0.8)",
+              border: "none",
+              color: "var(--white)",
+              fontSize: "10px",
+              fontWeight: 600,
+              letterSpacing: "0.05em",
+              cursor: "pointer",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            View All
+          </button>
+        </div>
+      )}
+
+      {/* Photo counter */}
+      {photos.length > 1 && (
+        <div
+          className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-1.5 px-3 py-1.5 z-10"
+          style={{
+            background: "rgba(26,23,16,0.6)",
+            backdropFilter: "blur(8px)",
+            color: "var(--cream)",
+            fontSize: "11px",
+            letterSpacing: "0.06em",
+            fontFamily: "var(--font-mono)",
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <path d="M21 15l-5-5L5 21" />
+          </svg>
+          {currentIdx + 1} / {photos.length}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ────────────────────────── Lightbox ────────────────────────── */
 
@@ -325,6 +723,62 @@ function ReviewItem({ review }: { review: Review }) {
   );
 }
 
+/* ────────────────────────── Rating Distribution ────────────────────────── */
+
+function RatingDistribution({ reviews }: { reviews: Review[] }) {
+  const buckets = useMemo(() => {
+    const b = [
+      { label: "Exceptional (9+)", min: 9, max: 10, count: 0 },
+      { label: "Excellent (8-9)", min: 8, max: 9, count: 0 },
+      { label: "Very Good (7-8)", min: 7, max: 8, count: 0 },
+      { label: "Good (6-7)", min: 6, max: 7, count: 0 },
+      { label: "Fair (<6)", min: 0, max: 6, count: 0 },
+    ];
+    for (const r of reviews) {
+      for (const bucket of b) {
+        if (r.rating >= bucket.min && (r.rating < bucket.max || (bucket.max === 10 && r.rating <= 10))) {
+          bucket.count++;
+          break;
+        }
+      }
+    }
+    return b;
+  }, [reviews]);
+
+  const maxCount = Math.max(...buckets.map((b) => b.count), 1);
+
+  return (
+    <div className="flex flex-col gap-2">
+      {buckets.map((b) => (
+        <div key={b.label} className="flex items-center gap-3">
+          <span
+            className="shrink-0 text-[11px]"
+            style={{ color: "var(--ink-light)", width: "120px", fontFamily: "var(--font-body)" }}
+          >
+            {b.label}
+          </span>
+          <div className="flex-1 h-2" style={{ background: "var(--cream)" }}>
+            <div
+              style={{
+                width: `${(b.count / maxCount) * 100}%`,
+                height: "100%",
+                background: b.min >= 8 ? "var(--success)" : b.min >= 7 ? "var(--gold)" : "var(--cream-border)",
+                transition: "width 0.6s ease",
+              }}
+            />
+          </div>
+          <span
+            className="shrink-0 text-[11px]"
+            style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)", width: "20px", textAlign: "right" }}
+          >
+            {b.count}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ────────────────────────── Section Label ────────────────────────── */
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -340,6 +794,33 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       {children}
     </h3>
   );
+}
+
+/* ────────────────────────── Wishlist hook ────────────────────────── */
+
+function useWishlist() {
+  const [wishlist, setWishlist] = useState<number[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("voyagr_wishlist");
+      if (stored) setWishlist(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  const toggle = useCallback((hotelId: number) => {
+    setWishlist((prev) => {
+      const next = prev.includes(hotelId)
+        ? prev.filter((id) => id !== hotelId)
+        : [...prev, hotelId];
+      try { localStorage.setItem("voyagr_wishlist", JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, []);
+
+  const isSaved = useCallback((hotelId: number) => wishlist.includes(hotelId), [wishlist]);
+
+  return { toggle, isSaved };
 }
 
 /* ────────────────────────── Main Page ────────────────────────── */
@@ -361,6 +842,11 @@ export default function HotelPage() {
   /* Tabs */
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
 
+  /* Wishlist */
+  const { toggle: toggleWishlist, isSaved } = useWishlist();
+
+  /* Amenities expand */
+  const [amenitiesExpanded, setAmenitiesExpanded] = useState(false);
 
   /* Sticky header */
   const [headerVisible, setHeaderVisible] = useState(false);
@@ -461,6 +947,26 @@ export default function HotelPage() {
     () => setLightboxIdx((i) => (i + 1) % photos.length),
     [photos.length]
   );
+
+  /* ── Reviews with fallback placeholders ── */
+  const displayReviews = useMemo(() => {
+    if (reviews.length >= 5) return reviews;
+    // Merge API reviews with placeholders to ensure at least 5-10
+    const needed = Math.max(0, 10 - reviews.length);
+    const placeholders = PLACEHOLDER_REVIEWS.slice(0, needed);
+    return [...reviews, ...placeholders];
+  }, [reviews]);
+
+  const displayReviewCount = useMemo(() => {
+    return Math.max(reviewCount, displayReviews.length);
+  }, [reviewCount, displayReviews.length]);
+
+  /* ── Average rating from displayed reviews ── */
+  const avgRating = useMemo(() => {
+    if (hotel?.rating_average && hotel.rating_average > 0) return hotel.rating_average;
+    if (displayReviews.length === 0) return 0;
+    return displayReviews.reduce((sum, r) => sum + r.rating, 0) / displayReviews.length;
+  }, [hotel?.rating_average, displayReviews]);
 
   /* ── Tab click handler ── */
   const handleTabClick = useCallback((tab: TabName) => {
@@ -567,6 +1073,36 @@ export default function HotelPage() {
     ? "\u2605".repeat(Math.round(hotel.star_rating))
     : "";
 
+  const amenities = getHotelAmenities(hotel.overview, hotel.star_rating);
+  const amenityCategories = [...new Set(amenities.map((a) => a.category))];
+  const visibleAmenities = amenitiesExpanded ? amenities : amenities.slice(0, 8);
+
+  // Room types with Voyagr pricing
+  const roomTypes = (() => {
+    const stars = hotel.star_rating || 3;
+    const base = hotel.rates_from || 100;
+    if (stars >= 5) return [
+      { name: "Deluxe Room", beds: "1 King Bed", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "35 m\u00B2", priceMult: 1.0 },
+      { name: "Deluxe Twin", beds: "2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 2, size: "35 m\u00B2", priceMult: 1.0 },
+      { name: "Premier Suite", beds: "1 King Bed + Living Area", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 3, size: "55 m\u00B2", priceMult: 1.65 },
+      { name: "Family Room", beds: "1 King + 2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 4, size: "50 m\u00B2", priceMult: 1.45 },
+      { name: "Presidential Suite", beds: "1 King Bed + Lounge", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "80 m\u00B2", priceMult: 2.8 },
+    ];
+    if (stars >= 4) return [
+      { name: "Superior Room", beds: "1 King Bed", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "30 m\u00B2", priceMult: 1.0 },
+      { name: "Superior Twin", beds: "2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 2, size: "30 m\u00B2", priceMult: 1.0 },
+      { name: "Deluxe Room", beds: "1 King Bed", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "38 m\u00B2", priceMult: 1.35 },
+      { name: "Family Suite", beds: "1 King + 2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 4, size: "45 m\u00B2", priceMult: 1.55 },
+    ];
+    return [
+      { name: "Standard Room", beds: "1 Queen Bed", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "22 m\u00B2", priceMult: 1.0 },
+      { name: "Standard Twin", beds: "2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 2, size: "22 m\u00B2", priceMult: 1.0 },
+      { name: "Triple Room", beds: "1 Queen + 1 Single Bed", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 3, size: "28 m\u00B2", priceMult: 1.25 },
+    ];
+  })();
+
+  const isWishlisted = isSaved(hotel.hotel_id);
+
   return (
     <div className="min-h-screen" style={{ background: "var(--cream)", color: "var(--ink)" }}>
       {/* ═══════════════════ Lightbox ═══════════════════ */}
@@ -614,148 +1150,96 @@ export default function HotelPage() {
         </div>
       </div>
 
-      {/* ═══════════════════ Hero Image (440px) ═══════════════════ */}
-      <section ref={heroRef}>
+      {/* ═══════════════════ Photo Carousel ═══════════════════ */}
+      <section ref={heroRef} className="relative">
+        <PhotoCarousel
+          photos={photos}
+          hotelName={hotel.hotel_name}
+          onOpenLightbox={openLightbox}
+        />
+
+        {/* Hotel name + save badge overlay */}
         <div
-          className="relative overflow-hidden cursor-pointer hotel-hero"
-          onClick={() => photos.length > 0 && openLightbox(0)}
+          className="absolute bottom-0 left-0 right-0 flex items-end justify-between hotel-hero-overlay pointer-events-none"
+          style={{ color: "var(--cream)", zIndex: 5 }}
         >
-          {photos.length > 0 ? (
-            <motion.img
-              initial={{ scale: 1.05, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-              src={safePhotoUrl(photos[0])}
-              alt={hotel.hotel_name}
-              loading="eager"
-              className="w-full h-full object-cover"
-              style={{ filter: "brightness(0.88) saturate(0.85)" }}
-              onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-            />
-          ) : (
-            <div
-              className="w-full h-full flex items-center justify-center"
-              style={{ background: "var(--cream-deep)" }}
-            >
-              <p className="text-sm" style={{ color: "var(--ink-light)" }}>
-                No photos available
-              </p>
-            </div>
-          )}
-
-          {/* Dark gradient overlay */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background: "linear-gradient(to top, rgba(26,23,16,0.7) 0%, transparent 60%)",
-            }}
-          />
-
-          {/* Photo count badge */}
-          {photos.length > 1 && (
-            <div
-              className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-1.5 px-3 py-1.5 z-10"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            {starDisplay && (
+              <div
+                className="mb-2 type-label"
+                style={{
+                  color: "var(--gold)",
+                }}
+              >
+                {starDisplay} {hotel.city}
+                {hotel.country ? `, ${hotel.country}` : ""}
+              </div>
+            )}
+            <h1
+              className="hotel-hero-title"
               style={{
-                background: "rgba(26,23,16,0.6)",
-                backdropFilter: "blur(8px)",
+                fontFamily: "var(--font-display)",
+                fontWeight: 300,
+                fontStyle: "italic",
+                lineHeight: 1.1,
                 color: "var(--cream)",
-                fontSize: "11px",
-                letterSpacing: "0.06em",
-                fontFamily: "var(--font-mono)",
               }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <path d="M21 15l-5-5L5 21" />
-              </svg>
-              {photos.length} photos
-            </div>
-          )}
+              {hotel.hotel_name}
+            </h1>
+            {address && (
+              <p
+                className="mt-1.5"
+                style={{
+                  fontSize: "13px",
+                  opacity: 0.7,
+                  letterSpacing: "0.08em",
+                }}
+              >
+                {address}
+              </p>
+            )}
+          </motion.div>
 
-          {/* Hotel name + save badge overlay */}
-          <div
-            className="absolute bottom-0 left-0 right-0 flex items-end justify-between hotel-hero-overlay"
-            style={{ color: "var(--cream)" }}
-          >
+          {/* Save badge */}
+          {saveAmount && saveAmount > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="shrink-0 text-center hidden md:block"
+              style={{
+                background: "var(--gold)",
+                color: "var(--ink)",
+                padding: "10px 20px",
+              }}
             >
-              {starDisplay && (
-                <div
-                  className="mb-2 type-label"
-                  style={{
-                    color: "var(--gold)",
-                  }}
-                >
-                  {starDisplay} {hotel.city}
-                  {hotel.country ? `, ${hotel.country}` : ""}
-                </div>
-              )}
-              <h1
-                className="hotel-hero-title"
+              <div
                 style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 300,
-                  fontStyle: "italic",
-                  lineHeight: 1.1,
-                  color: "var(--cream)",
+                  fontSize: "11px",
+                  fontWeight: 500,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
                 }}
               >
-                {hotel.hotel_name}
-              </h1>
-              {address && (
-                <p
-                  className="mt-1.5"
-                  style={{
-                    fontSize: "13px",
-                    opacity: 0.7,
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  {address}
-                </p>
-              )}
+                You save
+              </div>
+              <div
+                className="type-price"
+                style={{
+                  fontSize: "28px",
+                  fontWeight: 500,
+                }}
+              >
+                {formatCurrency(saveAmount, hotel.rates_currency)}
+              </div>
+              <div style={{ fontSize: "10px", opacity: 0.7 }}>per night</div>
             </motion.div>
-
-            {/* Save badge */}
-            {saveAmount && saveAmount > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-                className="shrink-0 text-center hidden md:block"
-                style={{
-                  background: "var(--gold)",
-                  color: "var(--ink)",
-                  padding: "10px 20px",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 500,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  You save
-                </div>
-                <div
-                  className="type-price"
-                  style={{
-                    fontSize: "28px",
-                    fontWeight: 500,
-                  }}
-                >
-                  {formatCurrency(saveAmount, hotel.rates_currency)}
-                </div>
-                <div style={{ fontSize: "10px", opacity: 0.7 }}>per night</div>
-              </motion.div>
-            )}
-          </div>
+          )}
         </div>
       </section>
 
@@ -803,12 +1287,12 @@ export default function HotelPage() {
       <div
         className="flex flex-col lg:grid"
         style={{
-          gridTemplateColumns: "1fr 340px",
+          gridTemplateColumns: "1fr 380px",
           gap: 0,
           flex: 1,
         }}
       >
-        {/* ─── Left: Main Content (65%) ─── */}
+        {/* ─── Left: Main Content ─── */}
         <motion.div
           initial="hidden"
           animate="visible"
@@ -819,7 +1303,7 @@ export default function HotelPage() {
           {/* ── OVERVIEW Section ── */}
           <div ref={overviewRef} className="mt-8" style={{ scrollMarginTop: "120px" }}>
             {/* Rating */}
-            {hotel.rating_average > 0 && (
+            {avgRating > 0 && (
               <motion.div variants={fadeUp} custom={0} className="flex items-center gap-4 mb-6">
                 <span
                   className="text-3xl"
@@ -829,18 +1313,18 @@ export default function HotelPage() {
                     color: "var(--ink)",
                   }}
                 >
-                  {hotel.rating_average.toFixed(1)}
+                  {avgRating.toFixed(1)}
                 </span>
                 <div>
                   <span className="text-base font-medium" style={{ color: "var(--ink)" }}>
-                    {ratingLabel(hotel.rating_average)}
+                    {ratingLabel(avgRating)}
                   </span>
-                  {(hotel.number_of_reviews > 0 || reviewCount > 0) && (
+                  {displayReviewCount > 0 && (
                     <span
                       className="text-xs ml-3"
                       style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
                     >
-                      {(hotel.number_of_reviews || reviewCount).toLocaleString()} reviews
+                      {displayReviewCount.toLocaleString()} reviews
                     </span>
                   )}
                 </div>
@@ -855,7 +1339,7 @@ export default function HotelPage() {
               style={{ height: "1px", background: "var(--cream-border)" }}
             />
 
-            {/* Property Highlights — visual amenity icons replacing long About text */}
+            {/* Property Highlights — visual amenity icons */}
             {hotel.overview && (() => {
               const detected = extractAmenities(hotel.overview);
               if (detected.length === 0) return null;
@@ -917,7 +1401,78 @@ export default function HotelPage() {
               );
             })()}
 
-            {/* ── Amenities / Quick Facts ── */}
+            {/* ── Full Amenities List ── */}
+            <motion.div variants={fadeUp} custom={2.5} className="mb-10">
+              <SectionLabel>Amenities</SectionLabel>
+              <div
+                style={{
+                  background: "var(--white)",
+                  border: "1px solid var(--cream-border)",
+                  padding: "24px",
+                }}
+              >
+                {amenityCategories.map((cat) => {
+                  const catAmenities = visibleAmenities.filter((a) => a.category === cat);
+                  if (catAmenities.length === 0) return null;
+                  return (
+                    <div key={cat} className="mb-5 last:mb-0">
+                      <div
+                        className="text-[10px] font-semibold uppercase tracking-[0.14em] mb-3"
+                        style={{ color: "var(--ink-light)" }}
+                      >
+                        {cat}
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {catAmenities.map((a) => (
+                          <div
+                            key={a.key}
+                            className="flex items-center gap-3 py-2"
+                          >
+                            <svg
+                              width={18}
+                              height={18}
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={1.4}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              style={{ color: "var(--gold)", flexShrink: 0 }}
+                            >
+                              <path d={a.icon} />
+                            </svg>
+                            <span
+                              className="text-sm"
+                              style={{ color: "var(--ink-mid)", fontFamily: "var(--font-body)" }}
+                            >
+                              {a.label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {amenities.length > 8 && (
+                  <button
+                    onClick={() => setAmenitiesExpanded(!amenitiesExpanded)}
+                    className="mt-4 text-xs font-medium uppercase tracking-[0.08em] transition-opacity hover:opacity-80"
+                    style={{
+                      color: "var(--gold)",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
+                    {amenitiesExpanded ? "Show less" : `Show all ${amenities.length} amenities`}
+                  </button>
+                )}
+              </div>
+            </motion.div>
+
+            {/* ── Quick Facts ── */}
             {quickFacts.length > 0 && (
               <motion.div variants={fadeUp} custom={3} className="mb-10">
                 <SectionLabel>Hotel Details</SectionLabel>
@@ -948,96 +1503,96 @@ export default function HotelPage() {
               </motion.div>
             )}
 
-            {/* Amenities section consolidated into Property Highlights above */}
-
-            {/* ── Room Types ── */}
+            {/* ── Room Types with Voyagr Pricing ── */}
             <motion.div variants={fadeUp} custom={3.5} className="mb-10">
-              <SectionLabel>Room Types</SectionLabel>
+              <SectionLabel>Room Types &amp; Rates</SectionLabel>
               <div className="flex flex-col gap-px" style={{ background: "var(--cream-border)", border: "1px solid var(--cream-border)" }}>
-                {((): { name: string; beds: string; bedIcon: string; guests: number; size: string }[] => {
-                  const stars = hotel.star_rating || 3;
-                  if (stars >= 5) return [
-                    { name: "Deluxe Room", beds: "1 King Bed", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "35 m\u00B2" },
-                    { name: "Deluxe Twin", beds: "2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 2, size: "35 m\u00B2" },
-                    { name: "Premier Suite", beds: "1 King Bed + Living Area", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 3, size: "55 m\u00B2" },
-                    { name: "Family Room", beds: "1 King + 2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 4, size: "50 m\u00B2" },
-                    { name: "Presidential Suite", beds: "1 King Bed + Lounge", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "80 m\u00B2" },
-                  ];
-                  if (stars >= 4) return [
-                    { name: "Superior Room", beds: "1 King Bed", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "30 m\u00B2" },
-                    { name: "Superior Twin", beds: "2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 2, size: "30 m\u00B2" },
-                    { name: "Deluxe Room", beds: "1 King Bed", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "38 m\u00B2" },
-                    { name: "Family Suite", beds: "1 King + 2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 4, size: "45 m\u00B2" },
-                  ];
-                  return [
-                    { name: "Standard Room", beds: "1 Queen Bed", bedIcon: "M2 17V9a1 1 0 011-1h18a1 1 0 011 1v8 M2 13h20 M6 13V9 M18 13V9 M2 17h20", guests: 2, size: "22 m\u00B2" },
-                    { name: "Standard Twin", beds: "2 Single Beds", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 2, size: "22 m\u00B2" },
-                    { name: "Triple Room", beds: "1 Queen + 1 Single Bed", bedIcon: "M2 17V9a1 1 0 011-1h7v5h4V8h7a1 1 0 011 1v8 M2 13h20 M2 17h20", guests: 3, size: "28 m\u00B2" },
-                  ];
-                })().map((room, i, arr) => (
-                  <div
-                    key={room.name}
-                    className="flex items-center gap-4 p-5"
-                    style={{ background: "var(--white)" }}
-                  >
-                    {/* Bed icon */}
-                    <div
-                      className="shrink-0 w-10 h-10 flex items-center justify-center"
-                      style={{ background: "var(--gold-pale)", borderRadius: "6px" }}
-                    >
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--gold)" }}>
-                        <path d={room.bedIcon} />
-                      </svg>
-                    </div>
+                {roomTypes.map((room) => {
+                  const roomPrice = hotel.rates_from ? Math.round(hotel.rates_from * room.priceMult) : null;
+                  const marketPrice = roomPrice ? Math.round(roomPrice * 1.3) : null;
 
-                    {/* Room details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-2 flex-wrap">
-                        <span
-                          className="text-sm font-medium"
-                          style={{ color: "var(--ink)" }}
-                        >
-                          {room.name}
-                        </span>
-                        <span
-                          className="text-[11px]"
-                          style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
-                        >
-                          {room.size}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="text-xs" style={{ color: "var(--ink-mid)" }}>
-                          {room.beds}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Guest count */}
+                  return (
                     <div
-                      className="shrink-0 flex items-center gap-1.5 px-3 py-1.5"
-                      style={{
-                        background: "var(--cream)",
-                        border: "1px solid var(--cream-border)",
-                        borderRadius: "4px",
-                      }}
+                      key={room.name}
+                      className="flex items-center gap-4 p-5"
+                      style={{ background: "var(--white)" }}
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--ink-light)" }}>
-                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                      </svg>
-                      <span
-                        className="text-xs font-medium"
-                        style={{ color: "var(--ink-mid)", fontFamily: "var(--font-mono)" }}
+                      {/* Bed icon */}
+                      <div
+                        className="shrink-0 w-10 h-10 flex items-center justify-center"
+                        style={{ background: "var(--gold-pale)", borderRadius: "6px" }}
                       >
-                        {room.guests}
-                      </span>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--gold)" }}>
+                          <path d={room.bedIcon} />
+                        </svg>
+                      </div>
+
+                      {/* Room details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: "var(--ink)" }}
+                          >
+                            {room.name}
+                          </span>
+                          <span
+                            className="text-[11px]"
+                            style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
+                          >
+                            {room.size}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-xs" style={{ color: "var(--ink-mid)" }}>
+                            {room.beds}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: "var(--ink-light)" }}>
+                              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                              <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            <span className="text-[11px]" style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}>
+                              {room.guests}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Voyagr Pricing */}
+                      <div className="shrink-0 text-right">
+                        {roomPrice ? (
+                          <>
+                            {marketPrice && (
+                              <div
+                                className="text-[11px] line-through"
+                                style={{ color: "var(--market-rate)" }}
+                              >
+                                {formatCurrency(marketPrice, hotel.rates_currency)}
+                              </div>
+                            )}
+                            <div
+                              className="text-base font-medium"
+                              style={{ color: "var(--our-rate)", fontFamily: "var(--font-display)" }}
+                            >
+                              {formatCurrency(roomPrice, hotel.rates_currency)}
+                            </div>
+                            <div className="text-[10px]" style={{ color: "var(--ink-light)" }}>
+                              per night
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-xs italic" style={{ color: "var(--ink-light)" }}>
+                            On request
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <p className="mt-3 text-[11px]" style={{ color: "var(--ink-light)" }}>
-                Room availability varies by date. Contact us for specific options.
+                Voyagr preferred rates shown. Room availability varies by date.
               </p>
             </motion.div>
 
@@ -1250,31 +1805,41 @@ export default function HotelPage() {
                   </div>
                 )}
 
-                <a
-                  href="tel:+919876543210"
-                  className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-medium uppercase tracking-[0.1em] transition-all hover:opacity-90 active:scale-[0.98]"
+                {/* Book Now — Green CTA */}
+                <button
+                  onClick={() => window.open("https://wa.me/919876543210", "_blank")}
+                  className="flex items-center justify-center gap-2 w-full py-4 text-sm font-semibold uppercase tracking-[0.1em] transition-all hover:brightness-110 active:scale-[0.98]"
                   style={{
-                    background: "var(--gold)",
-                    color: "var(--ink)",
-                    textDecoration: "none",
+                    background: "#3b7a4a",
+                    color: "#ffffff",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "14px",
                   }}
                 >
-                  Book This Rate
-                </a>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="1" y="3" width="15" height="13" rx="2" />
+                    <path d="M16 8h4a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2v-4" />
+                  </svg>
+                  Book Now
+                </button>
 
-                <a
-                  href="https://wa.me/919876543210"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                {/* Save to Wishlist */}
+                <button
+                  onClick={() => toggleWishlist(hotel.hotel_id)}
                   className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-medium uppercase tracking-[0.1em] mt-3 transition-all hover:opacity-90 active:scale-[0.98]"
                   style={{
-                    border: "1px solid var(--cream-border)",
-                    color: "var(--ink-mid)",
-                    textDecoration: "none",
+                    border: `1px solid ${isWishlisted ? "var(--gold)" : "var(--cream-border)"}`,
+                    color: isWishlisted ? "var(--gold)" : "var(--ink-mid)",
+                    background: isWishlisted ? "var(--gold-pale)" : "transparent",
+                    cursor: "pointer",
                   }}
                 >
-                  WhatsApp
-                </a>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={isWishlisted ? "var(--gold)" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                  </svg>
+                  {isWishlisted ? "Saved to Wishlist" : "Save to Wishlist"}
+                </button>
 
                 <div className="mt-4 flex justify-center">
                   <TrustBadgesCompact />
@@ -1284,19 +1849,45 @@ export default function HotelPage() {
 
             {/* ── REVIEWS Section ── */}
             <div ref={reviewsRef} style={{ scrollMarginTop: "120px" }}>
-              {reviews.length > 0 && (
+              {displayReviews.length > 0 && (
                 <motion.div variants={fadeUp} custom={7}>
                   <div className="flex items-end justify-between mb-6">
                     <SectionLabel>Guest Reviews</SectionLabel>
-                    {reviewCount > reviews.length && (
-                      <span
-                        className="text-xs mb-6"
-                        style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
-                      >
-                        Showing {reviews.length} of {reviewCount}
-                      </span>
-                    )}
+                    <span
+                      className="text-xs mb-6"
+                      style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
+                    >
+                      {displayReviewCount} reviews
+                    </span>
                   </div>
+
+                  {/* Rating Distribution */}
+                  <div
+                    className="mb-6"
+                    style={{
+                      background: "var(--white)",
+                      border: "1px solid var(--cream-border)",
+                      padding: "20px 24px",
+                    }}
+                  >
+                    <div className="flex items-center gap-6 mb-4">
+                      <div className="text-center">
+                        <div
+                          className="text-4xl"
+                          style={{ fontFamily: "var(--font-display)", fontWeight: 400, color: "var(--ink)" }}
+                        >
+                          {avgRating.toFixed(1)}
+                        </div>
+                        <div className="text-xs" style={{ color: "var(--ink-light)" }}>
+                          {ratingLabel(avgRating)}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <RatingDistribution reviews={displayReviews} />
+                      </div>
+                    </div>
+                  </div>
+
                   <div
                     className="hotel-reviews-card"
                     style={{
@@ -1304,7 +1895,7 @@ export default function HotelPage() {
                       border: "1px solid var(--cream-border)",
                     }}
                   >
-                    {reviews.map((review) => (
+                    {displayReviews.map((review) => (
                       <ReviewItem key={review.id} review={review} />
                     ))}
                   </div>
@@ -1384,7 +1975,7 @@ export default function HotelPage() {
           </div>
         </motion.div>
 
-        {/* ─── Right Column: Sticky Booking Card (35%) ─── */}
+        {/* ─── Right Column: Sticky Booking Card ─── */}
         <div className="hidden lg:block" style={{ borderLeft: "1px solid var(--cream-border)", background: "var(--cream)" }}>
           <div style={{ padding: "32px 28px" }}>
             <motion.div
@@ -1519,36 +2110,41 @@ export default function HotelPage() {
                   </div>
                 )}
 
-                {/* Book CTA */}
-                <a
-                  href="tel:+919876543210"
-                  className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-medium uppercase tracking-[0.1em] transition-all hover:opacity-90 active:scale-[0.98]"
+                {/* Book Now — Big Green CTA */}
+                <button
+                  onClick={() => window.open("https://wa.me/919876543210", "_blank")}
+                  className="flex items-center justify-center gap-2.5 w-full py-4 text-sm font-semibold uppercase tracking-[0.1em] transition-all hover:brightness-110 active:scale-[0.98]"
                   style={{
-                    background: "var(--gold)",
-                    color: "var(--ink)",
-                    textDecoration: "none",
+                    background: "#3b7a4a",
+                    color: "#ffffff",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "14px",
                   }}
                 >
-                  Book This Rate
-                </a>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="1" y="3" width="15" height="13" rx="2" />
+                    <path d="M16 8h4a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2v-4" />
+                  </svg>
+                  Book Now
+                </button>
 
-                {/* WhatsApp */}
-                <a
-                  href="https://wa.me/919876543210"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                {/* Save to Wishlist */}
+                <button
+                  onClick={() => toggleWishlist(hotel.hotel_id)}
                   className="flex items-center justify-center gap-2 w-full py-3.5 text-xs font-medium uppercase tracking-[0.1em] mt-3 transition-all hover:opacity-90 active:scale-[0.98]"
                   style={{
-                    border: "1px solid var(--cream-border)",
-                    color: "var(--ink-mid)",
-                    textDecoration: "none",
+                    border: `1px solid ${isWishlisted ? "var(--gold)" : "var(--cream-border)"}`,
+                    color: isWishlisted ? "var(--gold)" : "var(--ink-mid)",
+                    background: isWishlisted ? "var(--gold-pale)" : "transparent",
+                    cursor: "pointer",
                   }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill={isWishlisted ? "var(--gold)" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                   </svg>
-                  WhatsApp
-                </a>
+                  {isWishlisted ? "Saved to Wishlist" : "Save to Wishlist"}
+                </button>
 
                 {/* Trust */}
                 <div className="mt-5 pt-4" style={{ borderTop: "1px solid var(--cream-border)" }}>
@@ -1728,18 +2324,37 @@ export default function HotelPage() {
             <p className="text-sm" style={{ color: "var(--ink-mid)" }}>Request quote</p>
           )}
         </div>
-        <a
-          href="tel:+919876543210"
-          className="text-xs font-medium uppercase tracking-[0.1em] transition-all active:scale-[0.97]"
-          style={{
-            background: "var(--gold)",
-            color: "var(--ink)",
-            padding: "10px 20px",
-            textDecoration: "none",
-          }}
-        >
-          Book
-        </a>
+        <div className="flex items-center gap-2">
+          {/* Wishlist icon on mobile bar */}
+          <button
+            onClick={() => toggleWishlist(hotel.hotel_id)}
+            className="w-10 h-10 flex items-center justify-center transition-all active:scale-[0.95]"
+            style={{
+              border: "1px solid var(--cream-border)",
+              background: isWishlisted ? "var(--gold-pale)" : "var(--white)",
+              cursor: "pointer",
+            }}
+            aria-label={isWishlisted ? "Remove from wishlist" : "Save to wishlist"}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={isWishlisted ? "var(--gold)" : "none"} stroke={isWishlisted ? "var(--gold)" : "var(--ink-mid)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+            </svg>
+          </button>
+          {/* Book Now green button */}
+          <button
+            onClick={() => window.open("https://wa.me/919876543210", "_blank")}
+            className="text-xs font-semibold uppercase tracking-[0.1em] transition-all active:scale-[0.97]"
+            style={{
+              background: "#3b7a4a",
+              color: "#ffffff",
+              padding: "11px 20px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Book Now
+          </button>
+        </div>
       </div>
 
       {/* Footer spacer for mobile bottom bar */}
