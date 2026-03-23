@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { searchHotels, fetchCuratedCities, CuratedCity } from "@/lib/api";
 import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE, CONTINENTS } from "@/lib/constants";
+import { trackSearch, trackSearchFilterApplied } from "@/lib/analytics";
 import Header from "@/components/Header";
 import DateBar from "@/components/DateBar";
 import DestinationSearch from "@/components/DestinationSearch";
@@ -177,12 +178,18 @@ export default function SearchPage() {
     try {
       const results = await searchHotels(q, 30);
       setHotelResults(results || []);
+      trackSearch({
+        query: q,
+        result_count: results?.length || 0,
+        source: 'search_page',
+        filters: { star_rating: starFilter, sort_by: sortBy, region: regionFilter },
+      });
     } catch {
       setHotelResults([]);
     } finally {
       setSearching(false);
     }
-  }, []);
+  }, [starFilter, sortBy, regionFilter]);
 
   const handleInputChange = (value: string) => {
     setQuery(value);
@@ -553,7 +560,7 @@ export default function SearchPage() {
                   overflow: "hidden",
                 }}>
                   <button
-                    onClick={() => setViewMode("list")}
+                    onClick={() => { setViewMode("list"); trackSearchFilterApplied({ filter_type: 'view_mode', filter_value: 'list', result_count: hotelResults.length }); }}
                     aria-label="List view"
                     style={{
                       display: "flex",
@@ -582,7 +589,7 @@ export default function SearchPage() {
                     List
                   </button>
                   <button
-                    onClick={() => setViewMode("map")}
+                    onClick={() => { setViewMode("map"); trackSearchFilterApplied({ filter_type: 'view_mode', filter_value: 'map', result_count: hotelResults.length }); }}
                     aria-label="Map view"
                     style={{
                       display: "flex",
@@ -672,7 +679,7 @@ export default function SearchPage() {
                       </span>
                       <RegionFilterTabs
                         active={regionFilter}
-                        onChange={setRegionFilter}
+                        onChange={(v: string) => { setRegionFilter(v); trackSearchFilterApplied({ filter_type: 'region', filter_value: v, result_count: hotelResults.length }); }}
                         variant="pills"
                       />
                     </div>
@@ -687,7 +694,7 @@ export default function SearchPage() {
                         {STAR_FILTERS.map((sf) => (
                           <button
                             key={sf.value}
-                            onClick={() => setStarFilter(sf.value)}
+                            onClick={() => { setStarFilter(sf.value); trackSearchFilterApplied({ filter_type: 'star_rating', filter_value: sf.value, result_count: hotelResults.length }); }}
                             style={{
                               padding: "6px 14px",
                               fontSize: "12px",
@@ -717,7 +724,7 @@ export default function SearchPage() {
                       </span>
                       <select
                         value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as SortOption)}
+                        onChange={(e) => { const v = e.target.value as SortOption; setSortBy(v); trackSearchFilterApplied({ filter_type: 'sort_by', filter_value: v, result_count: hotelResults.length }); }}
                         style={{
                           padding: "6px 12px",
                           fontSize: "12px",

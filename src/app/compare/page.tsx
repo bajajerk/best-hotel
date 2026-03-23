@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useCompare } from "@/context/CompareContext";
 import { extractAmenities } from "@/components/AmenityIcons";
 import Header from "@/components/Header";
+import { trackCompareViewed } from "@/lib/analytics";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -56,6 +58,16 @@ function ratingLabel(avg: number | null): string {
 export default function ComparePage() {
   const { hotels, remove } = useCompare();
   const router = useRouter();
+
+  // Track compare page view
+  useEffect(() => {
+    if (hotels.length >= 2) {
+      trackCompareViewed({
+        hotel_count: hotels.length,
+        hotel_names: hotels.map((h) => h.hotel_name),
+      });
+    }
+  }, [hotels]);
 
   // Not enough hotels to compare
   if (hotels.length < 2) {

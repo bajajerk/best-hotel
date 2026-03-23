@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { trackPreferredRatesViewed, trackCtaClicked } from "@/lib/analytics";
 
 const perks = [
   {
@@ -32,6 +34,10 @@ const perks = [
 ];
 
 export default function PreferredRatesPage() {
+  useEffect(() => {
+    trackPreferredRatesViewed();
+  }, []);
+
   return (
     <>
       <Header />
@@ -101,6 +107,7 @@ export default function PreferredRatesPage() {
                 textTransform: "uppercase",
                 transition: "opacity 0.2s",
               }}
+              onClick={() => trackCtaClicked({ cta_name: 'enquire_now', cta_location: 'preferred_rates_hero', destination_url: '/search' })}
               onMouseEnter={(e) =>
                 ((e.currentTarget as HTMLElement).style.opacity = "0.85")
               }

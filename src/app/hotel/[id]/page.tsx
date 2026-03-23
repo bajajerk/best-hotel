@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
+import { trackHotelViewed, trackHotelTabClicked, trackHotelGalleryOpened } from "@/lib/analytics";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import DateBar from "@/components/DateBar";
 import { extractAmenities } from "@/components/AmenityIcons";
@@ -385,6 +386,17 @@ export default function HotelPage() {
         setHotel(hotelData);
         setReviews(reviewData.reviews || []);
         setReviewCount(reviewData.count || 0);
+        if (hotelData) {
+          trackHotelViewed({
+            hotel_id: hotelData.hotel_id,
+            hotel_name: hotelData.hotel_name,
+            city: hotelData.city,
+            country: hotelData.country,
+            star_rating: hotelData.star_rating,
+            price_from: hotelData.rates_from,
+            currency: hotelData.rates_currency,
+          });
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -436,7 +448,10 @@ export default function HotelPage() {
   const openLightbox = useCallback((idx: number) => {
     setLightboxIdx(idx);
     setLightboxOpen(true);
-  }, []);
+    if (hotel) {
+      trackHotelGalleryOpened({ hotel_id: hotel.hotel_id, hotel_name: hotel.hotel_name, photo_index: idx });
+    }
+  }, [hotel]);
   const closeLightbox = useCallback(() => setLightboxOpen(false), []);
   const prevLightbox = useCallback(
     () => setLightboxIdx((i) => (i - 1 + photos.length) % photos.length),
@@ -450,6 +465,9 @@ export default function HotelPage() {
   /* ── Tab click handler ── */
   const handleTabClick = useCallback((tab: TabName) => {
     setActiveTab(tab);
+    if (hotel) {
+      trackHotelTabClicked({ hotel_id: hotel.hotel_id, hotel_name: hotel.hotel_name, tab_name: tab });
+    }
     const refMap: Record<TabName, React.RefObject<HTMLDivElement | null>> = {
       Overview: overviewRef,
       Gallery: galleryRef,
@@ -460,7 +478,7 @@ export default function HotelPage() {
     if (ref.current) {
       ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, []);
+  }, [hotel]);
 
   /* ── Loading ── */
   if (loading) {

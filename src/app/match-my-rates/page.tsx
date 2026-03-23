@@ -4,6 +4,15 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import {
+  trackMatchMyRateStarted,
+  trackScreenshotUploaded,
+  trackExtractionCompleted,
+  trackManualFormSubmitted,
+  trackOtpRequested,
+  trackOtpVerified,
+  trackRateComparisonViewed,
+} from "@/lib/analytics";
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
@@ -124,6 +133,8 @@ export default function MatchMyRatesPage() {
   /* ── File handling ── */
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
+    trackMatchMyRateStarted({ method: 'screenshot' });
+    trackScreenshotUploaded({ file_size_kb: Math.round(file.size / 1024), file_type: file.type });
     const url = URL.createObjectURL(file);
     setScreenshotUrl(url);
     setScreenshotFile(file);
@@ -144,12 +155,21 @@ export default function MatchMyRatesPage() {
         if (json.success && json.data) {
           setExtracted(json.data);
           setStep("verify");
+          trackExtractionCompleted({
+            success: true,
+            hotel_name: json.data.hotelName,
+            ota_name: json.data.otaName,
+            ota_price: json.data.otaPrice,
+            confidence: json.data.confidence,
+          });
         } else {
+          trackExtractionCompleted({ success: false, error_message: 'extraction_failed' });
           setExtractError("Could not extract details. Please enter manually.");
           setStep("upload");
           setIsManual(true);
         }
       } catch {
+        trackExtractionCompleted({ success: false, error_message: 'network_error' });
         setExtractError("Analysis failed. Please enter details manually.");
         setStep("upload");
         setIsManual(true);
@@ -181,6 +201,7 @@ export default function MatchMyRatesPage() {
   /* ── Manual form submit ── */
   const handleManualSubmit = () => {
     if (!manualForm.hotelName || !manualForm.pricePerNight) return;
+    trackMatchMyRateStarted({ method: 'manual' });
 
     const price = parseInt(manualForm.pricePerNight.replace(/,/g, ""), 10);
     const checkIn = manualForm.checkIn;
@@ -208,6 +229,12 @@ export default function MatchMyRatesPage() {
     setExtracted(data);
     setIsManual(true);
     setStep("verify");
+    trackManualFormSubmitted({
+      hotel_name: manualForm.hotelName,
+      booking_site: manualForm.bookingSite,
+      price_per_night: price,
+      has_dates: !!(manualForm.checkIn && manualForm.checkOut),
+    });
   };
 
   /* ── Confirm extracted data & search wholesale ── */
@@ -229,6 +256,7 @@ export default function MatchMyRatesPage() {
       if (json.success) {
         setOtpSent(true);
         setOtpError("");
+        trackOtpRequested({ phone_country_length: phone.length });
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
       }
     } catch {
@@ -250,6 +278,7 @@ export default function MatchMyRatesPage() {
       });
       const json = await res.json();
       if (json.success && json.verified) {
+        trackOtpVerified({ success: true });
         // Now search for wholesale rates
         setStep("extracting");
         try {
@@ -262,11 +291,20 @@ export default function MatchMyRatesPage() {
           if (searchJson.success && searchJson.data) {
             setResult(searchJson.data);
             setStep("result");
+            trackRateComparisonViewed({
+              hotel_name: searchJson.data.hotelName,
+              ota_name: searchJson.data.otaName,
+              ota_price: searchJson.data.otaPrice,
+              our_price: searchJson.data.ourPrice,
+              savings_percent: searchJson.data.savingsPercent,
+              currency: searchJson.data.currency,
+            });
           }
         } catch {
           setStep("result");
         }
       } else {
+        trackOtpVerified({ success: false });
         setOtpError("Invalid OTP. Please try again.");
       }
     } catch {

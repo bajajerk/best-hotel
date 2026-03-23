@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import type { CuratedHotel } from "@/lib/api";
+import { trackCompareHotelAdded, trackCompareHotelRemoved } from "@/lib/analytics";
 
 const MAX_COMPARE = 4;
 
@@ -23,12 +24,30 @@ export function CompareProvider({ children }: { children: ReactNode }) {
     setHotels((prev) => {
       if (prev.length >= MAX_COMPARE) return prev;
       if (prev.some((h) => h.hotel_id === hotel.hotel_id)) return prev;
-      return [...prev, hotel];
+      const next = [...prev, hotel];
+      trackCompareHotelAdded({
+        hotel_id: hotel.hotel_id,
+        hotel_name: hotel.hotel_name,
+        city: hotel.city_name,
+        compare_count: next.length,
+      });
+      return next;
     });
   }, []);
 
   const remove = useCallback((hotelId: number) => {
-    setHotels((prev) => prev.filter((h) => h.hotel_id !== hotelId));
+    setHotels((prev) => {
+      const removed = prev.find((h) => h.hotel_id === hotelId);
+      const next = prev.filter((h) => h.hotel_id !== hotelId);
+      if (removed) {
+        trackCompareHotelRemoved({
+          hotel_id: removed.hotel_id,
+          hotel_name: removed.hotel_name,
+          compare_count: next.length,
+        });
+      }
+      return next;
+    });
   }, []);
 
   const clear = useCallback(() => setHotels([]), []);

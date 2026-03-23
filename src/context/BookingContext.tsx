@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { trackBookingDatesChanged, trackGuestsChanged } from "@/lib/analytics";
 
 interface BookingDates {
   checkIn: string;   // ISO date string YYYY-MM-DD or ""
@@ -128,11 +129,18 @@ export function BookingProvider({ children }: { children: ReactNode }) {
 
   const setDates = useCallback((checkIn: string, checkOut: string) => {
     updateDates({ checkIn, checkOut });
+    if (checkIn && checkOut) {
+      const nights = Math.max(1, Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24)));
+      trackBookingDatesChanged({ check_in: checkIn, check_out: checkOut, nights, source: 'date_picker' });
+    }
   }, [updateDates]);
 
   const setRooms = useCallback((newRooms: RoomGuests[]) => {
     setRoomsState(newRooms);
     saveRooms(newRooms);
+    const adults = newRooms.reduce((s, r) => s + r.adults, 0);
+    const children = newRooms.reduce((s, r) => s + r.children, 0);
+    trackGuestsChanged({ rooms: newRooms.length, adults, children, source: 'guest_picker' });
   }, []);
 
   const addRoom = useCallback(() => {

@@ -11,6 +11,7 @@ import HotelCard from "@/components/HotelCard";
 import type { HotelCardData } from "@/components/HotelCard";
 import DestinationSearch from "@/components/DestinationSearch";
 import { useBooking } from "@/context/BookingContext";
+import { trackCtaClicked, trackWhatsAppClicked } from "@/lib/analytics";
 import VoyagerClubComparison from "@/components/VoyagerClubComparison";
 import FeaturedPropertiesCarousel from "@/components/FeaturedPropertiesCarousel";
 
@@ -1075,6 +1076,7 @@ export default function Home() {
             <Link
               href="/search"
               className="btn-outline"
+              onClick={() => trackCtaClicked({ cta_name: 'view_all_hotels', cta_location: 'home_curated_section', destination_url: '/search' })}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -1550,6 +1552,7 @@ export default function Home() {
               <a
                 href="#hero-search"
                 className="btn-gold"
+                onClick={() => trackCtaClicked({ cta_name: 'search_hotels', cta_location: 'home_how_it_works', destination_url: '#hero-search' })}
                 style={{
                   padding: "14px 36px",
                   fontSize: "12px",
@@ -1565,6 +1568,7 @@ export default function Home() {
               <a
                 href="https://wa.me/919876543210"
                 className="btn-outline"
+                onClick={() => trackWhatsAppClicked({ page: 'home' })}
                 style={{
                   padding: "14px 36px",
                   fontSize: "12px",

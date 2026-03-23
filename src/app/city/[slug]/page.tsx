@@ -9,6 +9,7 @@ import { rankHotels, sortRankedHotels, SORT_STRATEGY_LABELS, type SortStrategy, 
 import { CATEGORIES } from "@/lib/constants";
 import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
+import { trackCityViewed } from "@/lib/analytics";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import DateBar from "@/components/DateBar";
 import HotelResultCard from "@/components/HotelResultCard";
@@ -191,6 +192,12 @@ export default function CityPage() {
         setCityName(data.city.city_name);
         setCityCountry(data.city.country);
         setTagline(data.city.tagline);
+        trackCityViewed({
+          city_slug: slug,
+          city_name: data.city.city_name,
+          country: data.city.country,
+          continent: data.city.continent || '',
+        });
       })
       .catch(console.error)
       .finally(() => setLoading(false));
