@@ -113,26 +113,20 @@ body {
 /* ── Header nav links — show on desktop, hide on mobile ── */
 .header-nav-links {
   display: none;
-  gap: 16px;
+  gap: 24px;
   align-items: center;
-}
-.header-account-btn {
-  display: none;
 }
 @media (min-width: 769px) {
   .header-nav-links {
     display: flex;
   }
-  .header-account-btn {
-    display: flex !important;
-  }
   .mobile-nav-toggle {
     display: none !important;
   }
 }
-@media (min-width: 1100px) {
-  .header-nav-links {
-    gap: 22px;
+@media (max-width: 768px) {
+  .header-cta-btn {
+    display: none !important;
   }
 }
 
