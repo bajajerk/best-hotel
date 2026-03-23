@@ -765,11 +765,7 @@ export default function Home() {
               marginBottom: "24px",
             }}
           >
-            The rates hotels{" "}
-            <em style={{ fontStyle: "italic", color: "var(--gold)" }}>
-              don&apos;t want
-            </em>{" "}
-            you to see
+            Curated properties. Privileged access. Effortless arrangements.
           </motion.h1>
 
           <motion.p
