@@ -1426,8 +1426,15 @@ nav {
     padding: 60px 36px 32px !important;
   }
   .footer-grid {
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
     gap: 40px !important;
+  }
+  #about-us {
+    padding: 60px 36px !important;
+  }
+  .about-us-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
   }
 }
 
@@ -1443,6 +1450,13 @@ nav {
     flex-direction: column !important;
     align-items: center !important;
     text-align: center !important;
+  }
+  #about-us {
+    padding: 48px 20px !important;
+  }
+  .about-us-grid {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
   }
 }
 

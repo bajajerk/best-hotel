@@ -2279,6 +2279,128 @@ export default function Home() {
       </section>
 
       {/* ================================================================
+          ABOUT US — company story section
+      ================================================================ */}
+      <section
+        id="about-us"
+        style={{
+          padding: "80px 60px",
+          background: "var(--ink)",
+          borderTop: "1px solid rgba(245, 240, 232, 0.08)",
+        }}
+      >
+        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.8 }}
+          >
+            <div
+              className="type-eyebrow"
+              style={{ marginBottom: "8px", color: "var(--gold)" }}
+            >
+              About Us
+            </div>
+            <h2
+              className="type-display-2"
+              style={{ color: "var(--cream)", marginBottom: "24px" }}
+            >
+              The team behind{" "}
+              <em style={{ fontStyle: "italic", color: "var(--gold)" }}>
+                Voyagr Club
+              </em>
+            </h2>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "48px",
+                marginTop: "40px",
+              }}
+              className="about-us-grid"
+            >
+              <div>
+                <p
+                  className="type-body"
+                  style={{
+                    color: "rgba(245, 240, 232, 0.7)",
+                    lineHeight: 1.8,
+                    marginBottom: "20px",
+                  }}
+                >
+                  Voyagr Club was built on a simple idea — luxury travel shouldn't cost a
+                  fortune. We leverage B2B wholesale hotel networks to bring you the same
+                  rooms, same dates, at 20-40% less than what you'd pay on retail booking
+                  platforms.
+                </p>
+                <p
+                  className="type-body"
+                  style={{
+                    color: "rgba(245, 240, 232, 0.7)",
+                    lineHeight: 1.8,
+                  }}
+                >
+                  Our curated selection spans 50+ cities worldwide — from the beaches of
+                  Bali to the streets of Paris — handpicked to ensure quality, value, and
+                  unforgettable experiences for every type of traveller.
+                </p>
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "24px",
+                  }}
+                >
+                  {[
+                    { number: "50+", label: "Cities Worldwide" },
+                    { number: "10K+", label: "Hotels Listed" },
+                    { number: "20-40%", label: "Average Savings" },
+                    { number: "24/7", label: "WhatsApp Support" },
+                  ].map((stat) => (
+                    <div
+                      key={stat.label}
+                      style={{
+                        padding: "24px",
+                        border: "1px solid rgba(245, 240, 232, 0.1)",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "28px",
+                          fontFamily: "var(--font-display)",
+                          color: "var(--gold)",
+                          fontWeight: 600,
+                          marginBottom: "4px",
+                        }}
+                      >
+                        {stat.number}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          color: "rgba(245, 240, 232, 0.5)",
+                        }}
+                      >
+                        {stat.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ================================================================
           FOOTER — multi-column layout
       ================================================================ */}
       <Footer />

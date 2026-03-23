@@ -13,10 +13,21 @@ const FOOTER_DESTINATIONS = [
   { label: "Maldives", href: "/city/maldives" },
 ];
 
-const FOOTER_COMPANY = [
-  { label: "Search Hotels", href: "/search" },
+const FOOTER_ABOUT = [
+  { label: "Our Story", href: "/#about-us" },
   { label: "How It Works", href: "/#how-it-works" },
-  { label: "Preferred Rates", href: "/#the-proof" },
+  { label: "Why Voyagr Club", href: "/#the-proof" },
+  { label: "Preferred Rates", href: "/preferred-rates" },
+  { label: "Match My Rate", href: "/match-my-rates" },
+];
+
+const FOOTER_CATEGORIES = [
+  { label: "Singles", href: "/search?category=singles" },
+  { label: "Couples", href: "/search?category=couples" },
+  { label: "Families", href: "/search?category=families" },
+  { label: "Luxury Stays", href: "/search?sort=price-high" },
+  { label: "Budget Friendly", href: "/search?sort=price-low" },
+  { label: "Top Rated", href: "/search?sort=rating" },
 ];
 
 const FOOTER_SUPPORT = [
@@ -47,7 +58,7 @@ export default function Footer() {
           className="footer-grid"
           style={{
             display: "grid",
-            gridTemplateColumns: "1.5fr 1fr 1fr 1fr",
+            gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr",
             gap: "48px",
             marginBottom: "64px",
           }}
@@ -199,7 +210,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Company column */}
+          {/* About Us column */}
           <div>
             <div
               style={{
@@ -211,10 +222,49 @@ export default function Footer() {
                 marginBottom: "20px",
               }}
             >
-              Company
+              About Us
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {FOOTER_COMPANY.map((link) => (
+              {FOOTER_ABOUT.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  style={{
+                    fontSize: "13px",
+                    color: "rgba(245, 240, 232, 0.55)",
+                    textDecoration: "none",
+                    transition: "color 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.target as HTMLAnchorElement).style.color = "var(--cream)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.target as HTMLAnchorElement).style.color =
+                      "rgba(245, 240, 232, 0.55)";
+                  }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Categories column */}
+          <div>
+            <div
+              style={{
+                fontSize: "11px",
+                fontWeight: 500,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: "var(--gold)",
+                marginBottom: "20px",
+              }}
+            >
+              Categories
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {FOOTER_CATEGORIES.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
