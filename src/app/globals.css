@@ -84,6 +84,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 * {
@@ -645,7 +646,8 @@ nav {
     display: none;
   }
   .carousel-track > * {
-    width: calc(100vw - 56px) !important;
+    width: calc(100% - 16px) !important;
+    flex-shrink: 0;
   }
 }
 @media (min-width: 768px) and (max-width: 1024px) {
@@ -774,6 +776,7 @@ nav {
   .section-featured,
   .section-popular,
   .section-top-deals,
+  .section-top-sellers,
   .section-seasonal,
   .section-curated,
   .section-destinations,
@@ -855,6 +858,7 @@ nav {
   .section-featured,
   .section-popular,
   .section-top-deals,
+  .section-top-sellers,
   .section-seasonal,
   .section-curated,
   .section-destinations,
