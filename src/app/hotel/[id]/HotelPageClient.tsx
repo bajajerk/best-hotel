@@ -1348,10 +1348,11 @@ export default function HotelPage() {
                   <SectionLabel>Property Highlights</SectionLabel>
                   <div
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-                      gap: "2px",
-                      background: "var(--cream-border)",
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "16px 24px",
+                      padding: "20px 24px",
+                      background: "var(--white)",
                       border: "1px solid var(--cream-border)",
                     }}
                   >
@@ -1363,9 +1364,9 @@ export default function HotelPage() {
                           flexDirection: "column",
                           alignItems: "center",
                           justifyContent: "center",
-                          gap: 8,
-                          padding: "20px 12px",
-                          background: "var(--white)",
+                          gap: 10,
+                          minWidth: 80,
+                          padding: "8px 12px",
                         }}
                       >
                         <svg
