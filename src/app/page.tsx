@@ -1045,7 +1045,7 @@ export default function Home() {
       {/* ================================================================
           FEATURED HOTELS — asymmetric grid
       ================================================================ */}
-      <section className="section-featured" style={{ padding: "80px 60px" }}>
+      <section id="curated-collections" className="section-featured" style={{ padding: "80px 60px" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           {/* Section header */}
           <motion.div
@@ -1142,6 +1142,7 @@ export default function Home() {
           POPULAR PROPERTIES — individual hotel cards
       ================================================================ */}
       <section
+        id="destinations"
         className="section-popular"
         style={{
           padding: "80px 60px",
@@ -1195,6 +1196,7 @@ export default function Home() {
           TOP DEALS — highest discount %
       ================================================================ */}
       <section
+        id="top-deals"
         className="section-top-deals"
         style={{
           padding: "80px 60px",
@@ -1465,6 +1467,7 @@ export default function Home() {
           SEASONAL TRIPS — travel by season
       ================================================================ */}
       <section
+        id="seasonal-trips"
         className="section-seasonal"
         style={{
           padding: "80px 60px",
@@ -2185,6 +2188,7 @@ export default function Home() {
           NEWSLETTER CTA — before footer
       ================================================================ */}
       <section
+        id="join-club"
         className="newsletter-section"
         style={{
           padding: "80px 60px",
