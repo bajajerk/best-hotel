@@ -3,6 +3,13 @@ import { Cormorant_Garamond, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import CompareBar from "@/components/CompareBar";
+import {
+  SITE_URL,
+  SITE_NAME,
+  DEFAULT_DESCRIPTION,
+  organizationJsonLd,
+  websiteJsonLd,
+} from "@/lib/seo";
 
 const cormorant = Cormorant_Garamond({
   weight: ["300", "400", "500", "600"],
@@ -24,14 +31,66 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Voyagr Club — Preferred Hotel Rates",
-  description:
-    "Get B2B wholesale hotel rates across 50+ cities worldwide. We negotiate directly with hotels so you save 20-40% on every booking. No markup, no hidden fees.",
-  keywords: ["hotel deals", "B2B hotel rates", "cheap hotels", "wholesale hotel booking", "hotel price comparison", "voyagr club"],
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} — Preferred Hotel Rates | Save 20-40% on Hotels Worldwide`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: DEFAULT_DESCRIPTION,
+  keywords: [
+    "hotel deals",
+    "B2B hotel rates",
+    "cheap hotels",
+    "wholesale hotel booking",
+    "hotel price comparison",
+    "voyagr club",
+    "preferred hotel rates",
+    "discount hotels",
+    "luxury hotels cheap",
+    "hotel booking",
+    "best hotel prices",
+    "travel deals",
+  ],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   openGraph: {
-    title: "Voyagr Club — Preferred Hotel Rates",
-    description: "Get B2B wholesale hotel rates across 50+ cities worldwide. Save 20-40% on every booking.",
     type: "website",
+    locale: "en_US",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — Preferred Hotel Rates`,
+    description:
+      "Get B2B wholesale hotel rates across 50+ cities worldwide. Save 20-40% on every booking.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — Preferred Hotel Rates`,
+    description:
+      "Get B2B wholesale hotel rates across 50+ cities worldwide. Save 20-40% on every booking.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
   },
 };
 
@@ -42,6 +101,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Organization + WebSite JSON-LD for sitewide SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd()),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd()),
+          }}
+        />
+      </head>
       <body
         className={`${cormorant.variable} ${dmSans.variable} ${jetbrainsMono.variable} antialiased`}
       >
