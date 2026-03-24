@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, loading, signInWithEmail, signUpWithEmail, signInWithGoogle } =
+  const { user, loading, signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword } =
     useAuth();
 
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -17,6 +17,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetError, setResetError] = useState("");
 
   // After Google OAuth, Supabase redirects here with tokens in the URL hash.
   // The Supabase client picks them up automatically via onAuthStateChange.
@@ -230,10 +232,42 @@ export default function LoginPage() {
         </form>
 
         {mode === "login" && (
-          <p style={styles.footerText}>
-            Forgot password?{" "}
-            <span style={styles.footerLink}>Reset it</span>
-          </p>
+          <div style={{ textAlign: "center" as const, marginTop: 20 }}>
+            {resetSent ? (
+              <p style={{ ...styles.footerText, color: "var(--success)", margin: 0 }}>
+                Reset link sent! Check your email.
+              </p>
+            ) : (
+              <>
+                {resetError && (
+                  <p style={{ ...styles.footerText, color: "var(--error)", margin: "0 0 6px" }}>
+                    {resetError}
+                  </p>
+                )}
+                <p style={{ ...styles.footerText, margin: 0 }}>
+                  Forgot password?{" "}
+                  <span
+                    style={styles.footerLink}
+                    onClick={async () => {
+                      setResetError("");
+                      if (!email) {
+                        setResetError("Enter your email above first");
+                        return;
+                      }
+                      const { error } = await resetPassword(email);
+                      if (error) {
+                        setResetError(error);
+                      } else {
+                        setResetSent(true);
+                      }
+                    }}
+                  >
+                    Reset it
+                  </span>
+                </p>
+              </>
+            )}
+          </div>
         )}
       </div>
     </div>

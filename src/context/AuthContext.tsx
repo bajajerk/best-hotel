@@ -18,6 +18,8 @@ interface AuthState {
   signUpWithEmail: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthState>({
@@ -28,6 +30,8 @@ const AuthContext = createContext<AuthState>({
   signUpWithEmail: async () => ({ error: null }),
   signInWithGoogle: async () => {},
   signOut: async () => {},
+  resetPassword: async () => ({ error: null }),
+  updatePassword: async () => ({ error: null }),
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -93,6 +97,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await getSupabase().auth.signOut();
   };
 
+  const resetPassword = async (email: string) => {
+    const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/profile?tab=security`,
+    });
+    return { error: error?.message ?? null };
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    const { error } = await getSupabase().auth.updateUser({
+      password: newPassword,
+    });
+    return { error: error?.message ?? null };
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -103,6 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUpWithEmail,
         signInWithGoogle,
         signOut,
+        resetPassword,
+        updatePassword,
       }}
     >
       {children}

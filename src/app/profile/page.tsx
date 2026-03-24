@@ -1,15 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, session, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<"profile" | "preferences" | "security">("profile");
+  const searchParams = useSearchParams();
+  const { user, session, loading, signOut, resetPassword, updatePassword } = useAuth();
+  const initialTab = searchParams.get("tab") === "security" ? "security"
+    : searchParams.get("tab") === "preferences" ? "preferences" : "profile";
+  const [activeTab, setActiveTab] = useState<"profile" | "preferences" | "security">(initialTab);
 
   // Editable fields
   const [name, setName] = useState("");
@@ -24,6 +27,15 @@ export default function ProfilePage() {
   const [newsletter, setNewsletter] = useState(true);
   const [prefSaving, setPrefSaving] = useState(false);
   const [prefSaved, setPrefSaved] = useState(false);
+
+  // Password change
+  const [showPwForm, setShowPwForm] = useState(false);
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [resetSent, setResetSent] = useState(false);
 
   // Profile data from backend
   const [profile, setProfile] = useState<Record<string, string | number | null> | null>(null);
@@ -388,12 +400,83 @@ export default function ProfilePage() {
               </div>
 
               {provider !== "google" && (
-                <div style={{ ...s.secRow, borderBottom: "none" }}>
-                  <div>
-                    <span style={s.secLabel}>Password</span>
-                    <span style={s.secValue}>Last changed: Unknown</span>
+                <div style={{ ...s.secRow, borderBottom: "none", flexDirection: "column" as const, alignItems: "stretch" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <span style={s.secLabel}>Password</span>
+                      <span style={s.secValue}>
+                        {resetSent ? "Reset link sent to your email" : "Change your account password"}
+                      </span>
+                    </div>
+                    {!showPwForm && (
+                      <button onClick={() => setShowPwForm(true)} style={s.outlineBtn}>
+                        Change Password
+                      </button>
+                    )}
                   </div>
-                  <button style={s.outlineBtn}>Change Password</button>
+                  {showPwForm && (
+                    <div style={{ marginTop: 16, display: "flex", flexDirection: "column" as const, gap: 12 }}>
+                      <input
+                        type="password"
+                        value={newPw}
+                        onChange={(e) => setNewPw(e.target.value)}
+                        placeholder="New password (min 8 chars)"
+                        style={s.input}
+                        autoComplete="new-password"
+                      />
+                      <input
+                        type="password"
+                        value={confirmPw}
+                        onChange={(e) => setConfirmPw(e.target.value)}
+                        placeholder="Confirm new password"
+                        style={s.input}
+                        autoComplete="new-password"
+                      />
+                      {pwError && <p style={{ margin: 0, fontSize: 13, color: "var(--error)", fontFamily: "var(--font-body)" }}>{pwError}</p>}
+                      {pwMsg && <p style={{ margin: 0, fontSize: 13, color: "var(--success)", fontFamily: "var(--font-body)" }}>{pwMsg}</p>}
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <button
+                          disabled={pwSaving}
+                          onClick={async () => {
+                            setPwError("");
+                            setPwMsg("");
+                            if (newPw.length < 8) { setPwError("Min 8 characters"); return; }
+                            if (newPw !== confirmPw) { setPwError("Passwords don't match"); return; }
+                            setPwSaving(true);
+                            const { error } = await updatePassword(newPw);
+                            if (error) {
+                              setPwError(error);
+                            } else {
+                              setPwMsg("Password updated!");
+                              setNewPw("");
+                              setConfirmPw("");
+                              setTimeout(() => { setShowPwForm(false); setPwMsg(""); }, 2000);
+                            }
+                            setPwSaving(false);
+                          }}
+                          style={{ ...s.primaryBtn, opacity: pwSaving ? 0.6 : 1 }}
+                        >
+                          {pwSaving ? "Updating..." : "Update Password"}
+                        </button>
+                        <button
+                          onClick={() => { setShowPwForm(false); setNewPw(""); setConfirmPw(""); setPwError(""); setPwMsg(""); }}
+                          style={s.outlineBtn}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (!user?.email) return;
+                            const { error } = await resetPassword(user.email);
+                            if (!error) setResetSent(true);
+                          }}
+                          style={{ ...s.outlineBtn, marginLeft: "auto" }}
+                        >
+                          Email reset link instead
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
