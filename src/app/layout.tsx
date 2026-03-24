@@ -140,27 +140,12 @@ export default function RootLayout({
         <CompareBar />
         </Providers>
 
-        {/* Floating WhatsApp Button */}
+        {/* Floating WhatsApp Button — hidden on hotel detail pages via CSS */}
         <a
           href="https://wa.me/919876543210?text=Hi%20Voyagr%2C%20I%27d%20like%20to%20book%20a%20hotel"
           target="_blank"
           rel="noopener noreferrer"
           className="whatsapp-fab"
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            zIndex: 99,
-            width: "56px",
-            height: "56px",
-            borderRadius: "50%",
-            background: "#25D366",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 4px 20px rgba(37, 211, 102, 0.4)",
-            transition: "transform 0.2s ease, box-shadow 0.2s ease",
-          }}
           aria-label="Chat on WhatsApp"
         >
           <svg width="28" height="28" viewBox="0 0 24 24" fill="white">

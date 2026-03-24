@@ -2,14 +2,14 @@
 
 import { useRouter } from "next/navigation";
 
-export type FlowStep = "search" | "results" | "select-room" | "guest-details" | "confirmation";
+export type FlowStep = "search" | "results" | "select-room" | "unlock-rate" | "whatsapp";
 
 const STEPS: { key: FlowStep; label: string }[] = [
   { key: "search", label: "Search" },
   { key: "results", label: "Results" },
   { key: "select-room", label: "Select Room" },
-  { key: "guest-details", label: "Guest Details" },
-  { key: "confirmation", label: "Confirmation" },
+  { key: "unlock-rate", label: "Unlock Rate" },
+  { key: "whatsapp", label: "WhatsApp" },
 ];
 
 interface FlowProgressBarProps {

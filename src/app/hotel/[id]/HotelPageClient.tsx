@@ -5,9 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
-import BookingModal from "@/components/BookingModal";
-import FlowProgressBar from "@/components/FlowProgressBar";
-import { trackHotelViewed, trackHotelGalleryOpened } from "@/lib/analytics";
+import UnlockRateModal from "@/components/UnlockRateModal";
+import { trackHotelViewed, trackHotelGalleryOpened, trackHotelTabClicked } from "@/lib/analytics";
 import { useBooking } from "@/context/BookingContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
@@ -83,6 +82,20 @@ function formatCurrency(amount: number, currency?: string): string {
   return `${sym}${formatted}`;
 }
 
+/* ── Urgency / Social Proof generators (deterministic per hotel_id) ── */
+
+function getUrgencyData(hotelId: number) {
+  const seed = hotelId % 100;
+  const roomsLeft = (seed % 4) + 2; // 2–5
+  const bookedToday = (seed % 8) + 3; // 3–10
+  const viewingNow = (seed % 6) + 4; // 4–9
+  return { roomsLeft, bookedToday, viewingNow };
+}
+
+function getMemberCount(hotelId: number) {
+  return 12400 + (hotelId % 3000);
+}
+
 /* ────────────────────────── Room Generation ────────────────────────── */
 
 function generateRooms(hotel: HotelDetail): RoomDef[] {
@@ -155,7 +168,7 @@ function Lightbox({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center"
+      className="fixed inset-0 z-[10002] flex items-center justify-center"
       style={{ background: "rgba(26,23,16,0.96)", backdropFilter: "blur(32px)" }}
       onClick={onClose}
     >
@@ -226,6 +239,7 @@ function RoomCard({
   onSelect: () => void;
 }) {
   const saving = marketRate - voyagrRate;
+  const savePercent = Math.round((saving / marketRate) * 100);
 
   return (
     <motion.div
@@ -238,10 +252,31 @@ function RoomCard({
         cursor: "pointer",
         transition: "border-color 0.25s, box-shadow 0.25s",
         boxShadow: isSelected ? "0 0 0 3px rgba(212,162,76,0.15)" : "none",
+        position: "relative",
       }}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
+      {/* Save badge */}
+      {savePercent > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 20,
+            background: "var(--success)",
+            color: "#fff",
+            fontSize: "10px",
+            fontWeight: 700,
+            letterSpacing: "0.06em",
+            padding: "4px 10px 5px",
+            fontFamily: "var(--font-body)",
+          }}
+        >
+          SAVE {savePercent}%
+        </div>
+      )}
+
       {/* Room Name + Size */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
@@ -370,6 +405,95 @@ function RoomCard({
   );
 }
 
+/* ────────────────────────── Trust Signals Bar ────────────────────────── */
+
+function TrustSignals({ hotelId, rating, reviewCount }: { hotelId: number; rating: number; reviewCount: number }) {
+  const memberCount = getMemberCount(hotelId);
+
+  return (
+    <div
+      className="flex flex-wrap gap-4 items-center"
+      style={{
+        padding: "14px 20px",
+        background: "var(--white)",
+        border: "1px solid var(--cream-border)",
+        fontSize: "12px",
+        fontFamily: "var(--font-body)",
+        color: "var(--ink-mid)",
+      }}
+    >
+      {/* Rating */}
+      {rating > 0 && (
+        <div className="flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)" stroke="none">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z" />
+          </svg>
+          <span style={{ fontWeight: 600, color: "var(--ink)" }}>{rating.toFixed(1)}</span>
+          {reviewCount > 0 && (
+            <span style={{ color: "var(--ink-light)" }}>({reviewCount.toLocaleString()} reviews)</span>
+          )}
+        </div>
+      )}
+
+      <span style={{ color: "var(--cream-border)" }}>|</span>
+
+      {/* Member count */}
+      <div className="flex items-center gap-1.5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+        <span>{memberCount.toLocaleString()}+ members trust Voyagr</span>
+      </div>
+
+      <span style={{ color: "var(--cream-border)" }}>|</span>
+
+      {/* Verified rates */}
+      <div className="flex items-center gap-1.5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <polyline points="9 12 11 14 15 10" />
+        </svg>
+        <span>Verified wholesale rates</span>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────── Urgency Banner ────────────────────────── */
+
+function UrgencyBanner({ hotelId }: { hotelId: number }) {
+  const { roomsLeft, bookedToday, viewingNow } = getUrgencyData(hotelId);
+
+  return (
+    <div
+      className="flex flex-wrap gap-4 items-center justify-center"
+      style={{
+        padding: "10px 20px",
+        background: "rgba(139, 58, 58, 0.06)",
+        border: "1px solid rgba(139, 58, 58, 0.12)",
+        fontSize: "12px",
+        fontFamily: "var(--font-body)",
+        fontWeight: 500,
+      }}
+    >
+      <span style={{ color: "var(--error)" }}>
+        Only {roomsLeft} rooms left at this rate
+      </span>
+      <span style={{ color: "var(--cream-border)" }}>|</span>
+      <span style={{ color: "var(--ink-mid)" }}>
+        Booked {bookedToday} times today
+      </span>
+      <span style={{ color: "var(--cream-border)" }}>|</span>
+      <span style={{ color: "var(--ink-mid)" }}>
+        {viewingNow} people viewing now
+      </span>
+    </div>
+  );
+}
+
 /* ────────────────────────── Main Page ────────────────────────── */
 
 export default function HotelPage() {
@@ -391,11 +515,22 @@ export default function HotelPage() {
   /* Room selection */
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
 
-  /* Booking modal */
-  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  /* Unlock Rate modal */
+  const [unlockModalOpen, setUnlockModalOpen] = useState(false);
 
-  /* Section refs */
+  /* Section refs for scroll-based tabs */
   const roomsRef = useRef<HTMLDivElement>(null);
+  const overviewRef = useRef<HTMLDivElement>(null);
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const reviewsRef = useRef<HTMLDivElement>(null);
+
+  /* ── Toggle body class to hide WhatsApp FAB on hotel pages ── */
+  useEffect(() => {
+    document.body.classList.add("hotel-detail-active");
+    return () => {
+      document.body.classList.remove("hotel-detail-active");
+    };
+  }, []);
 
   /* ── Fetch data ── */
   useEffect(() => {
@@ -460,20 +595,58 @@ export default function HotelPage() {
   const totalPrice = selectedVoyagrRate * nights;
 
   /* ── Savings for hero badge ── */
-  const heroSaveAmount = hotel?.rates_from ? Math.round(hotel.rates_from * 0.3) : 0;
+  const heroSavePercent = 23; // Fixed "up to" percentage for hero
 
   /* ── Star display ── */
   const starDisplay = hotel && hotel.star_rating > 0
     ? "\u2605".repeat(Math.round(hotel.star_rating))
     : "";
 
-  /* ── Tab click handler ── */
+  /* ── Tab click handler — scrolls to section ── */
   const handleTabClick = useCallback((tab: TabName) => {
     setActiveTab(tab);
-    if (tab === "Rooms" && roomsRef.current) {
-      roomsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (hotel) {
+      trackHotelTabClicked({ hotel_id: hotel.hotel_id, hotel_name: hotel.hotel_name, tab_name: tab });
     }
-  }, []);
+    const refMap: Record<TabName, React.RefObject<HTMLDivElement | null>> = {
+      Rooms: roomsRef,
+      Overview: overviewRef,
+      Gallery: galleryRef,
+      Reviews: reviewsRef,
+    };
+    const ref = refMap[tab];
+    if (ref?.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [hotel]);
+
+  /* ── Scroll-based active tab detection ── */
+  useEffect(() => {
+    const sections = [
+      { ref: roomsRef, tab: "Rooms" as TabName },
+      { ref: overviewRef, tab: "Overview" as TabName },
+      { ref: galleryRef, tab: "Gallery" as TabName },
+      { ref: reviewsRef, tab: "Reviews" as TabName },
+    ];
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const match = sections.find((s) => s.ref.current === entry.target);
+            if (match) setActiveTab(match.tab);
+          }
+        }
+      },
+      { rootMargin: "-120px 0px -60% 0px", threshold: 0.1 }
+    );
+
+    sections.forEach((s) => {
+      if (s.ref.current) observer.observe(s.ref.current);
+    });
+
+    return () => observer.disconnect();
+  }, [hotel]);
 
   /* ── Loading ── */
   if (loading) {
@@ -556,36 +729,14 @@ export default function HotelPage() {
 
       <Header />
 
-      {/* ═══════════════════ Flow Progress Bar ═══════════════════ */}
-      <div
-        style={{
-          position: "fixed",
-          top: 60,
-          left: 0,
-          right: 0,
-          zIndex: 99,
-          background: "rgba(253, 250, 245, 0.95)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          borderBottom: "1px solid var(--cream-border)",
-        }}
-      >
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <FlowProgressBar
-            currentStep="select-room"
-            resultsHref={hotel.city ? `/results?city=${hotel.city.toLowerCase().replace(/\s+/g, "-")}` : "/results"}
-          />
-        </div>
-      </div>
-
       {/* ═══════════════════ Full-Width Hero Image ═══════════════════ */}
-      <section className="relative w-full" style={{ height: "clamp(320px, 50vh, 520px)", marginTop: 116 }}>
+      <section className="relative w-full" style={{ height: "clamp(320px, 50vh, 520px)", marginTop: 60 }}>
         {photos.length > 0 ? (
           <img
             src={safePhotoUrl(photos[0])}
             alt={hotel.hotel_name}
             className="w-full h-full object-cover"
-            style={{ filter: "brightness(0.75) saturate(0.9)" }}
+            style={{ filter: "brightness(0.75) saturate(0.9)", cursor: "pointer" }}
             onClick={() => openLightbox(0)}
             onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
           />
@@ -651,42 +802,40 @@ export default function HotelPage() {
             )}
           </motion.div>
 
-          {/* You save badge */}
-          {heroSaveAmount > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="shrink-0 text-center hidden sm:block"
+          {/* Save up to badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="shrink-0 text-center hidden sm:block"
+            style={{
+              background: "var(--gold)",
+              color: "var(--ink)",
+              padding: "12px 24px",
+            }}
+          >
+            <div
               style={{
-                background: "var(--gold)",
-                color: "var(--ink)",
-                padding: "12px 24px",
+                fontSize: "10px",
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
               }}
             >
-              <div
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 600,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                }}
-              >
-                You save
-              </div>
-              <div
-                style={{
-                  fontSize: "26px",
-                  fontWeight: 500,
-                  fontFamily: "var(--font-display)",
-                  lineHeight: 1.2,
-                }}
-              >
-                {formatCurrency(heroSaveAmount, currency)}
-              </div>
-              <div style={{ fontSize: "10px", opacity: 0.7 }}>per night</div>
-            </motion.div>
-          )}
+              Save up to
+            </div>
+            <div
+              style={{
+                fontSize: "26px",
+                fontWeight: 500,
+                fontFamily: "var(--font-display)",
+                lineHeight: 1.2,
+              }}
+            >
+              {heroSavePercent}%
+            </div>
+            <div style={{ fontSize: "10px", opacity: 0.7 }}>vs. public rates</div>
+          </motion.div>
         </div>
 
         {/* Photo counter */}
@@ -715,7 +864,17 @@ export default function HotelPage() {
         )}
       </section>
 
-      {/* ═══════════════════ Tab Bar below hero ═══════════════════ */}
+      {/* ═══════════════════ Trust Signals ═══════════════════ */}
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+        <TrustSignals hotelId={hotel.hotel_id} rating={hotel.rating_average} reviewCount={hotel.number_of_reviews} />
+      </div>
+
+      {/* ═══════════════════ Urgency Banner ═══════════════════ */}
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+        <UrgencyBanner hotelId={hotel.hotel_id} />
+      </div>
+
+      {/* ═══════════════════ Tab Bar (Sticky) ═══════════════════ */}
       <div
         className="flex gap-0 sticky top-[60px] z-40 overflow-x-auto"
         style={{
@@ -723,6 +882,7 @@ export default function HotelPage() {
           borderBottom: "1px solid var(--cream-border)",
           scrollbarWidth: "none",
           msOverflowStyle: "none",
+          marginTop: 16,
         }}
       >
         <div className="flex gap-0 md:gap-2 mx-auto max-w-[1200px] w-full px-6 md:px-12 lg:px-16">
@@ -754,152 +914,329 @@ export default function HotelPage() {
 
       {/* ═══════════════════ Two-Column Layout ═══════════════════ */}
       <div
-        ref={roomsRef}
         className="flex flex-col lg:grid mx-auto"
         style={{
           maxWidth: 1200,
           gridTemplateColumns: "1fr 380px",
           gap: 0,
-          scrollMarginTop: "120px",
           padding: "0 24px",
         }}
       >
-        {/* ─── Left: Scrollable Room List ─── */}
+        {/* ─── Left: Scrollable Content ─── */}
         <div style={{ padding: "32px 0 120px 0" }} className="lg:pr-10">
-          {/* Stay summary header */}
-          <div
-            className="flex items-center flex-wrap gap-2 mb-6"
-            style={{
-              fontSize: "13px",
-              color: "var(--ink-light)",
-              fontFamily: "var(--font-body)",
-            }}
-          >
-            <span style={{ fontWeight: 500, color: "var(--ink)" }}>
-              {booking.nights > 0 ? `${booking.nights} night${booking.nights > 1 ? "s" : ""}` : "1 night"}
-            </span>
-            {booking.checkIn && booking.checkOut && (
-              <>
-                <span>&middot;</span>
-                <span>{booking.formatDate(booking.checkIn)} &ndash; {booking.formatDate(booking.checkOut)}</span>
-              </>
+
+          {/* ══════ ROOMS SECTION ══════ */}
+          <div ref={roomsRef} style={{ scrollMarginTop: "120px" }}>
+            {/* Stay summary header */}
+            <div
+              className="flex items-center flex-wrap gap-2 mb-6"
+              style={{
+                fontSize: "13px",
+                color: "var(--ink-light)",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              <span style={{ fontWeight: 500, color: "var(--ink)" }}>
+                {booking.nights > 0 ? `${booking.nights} night${booking.nights > 1 ? "s" : ""}` : "1 night"}
+              </span>
+              {booking.checkIn && booking.checkOut && (
+                <>
+                  <span>&middot;</span>
+                  <span>{booking.formatDate(booking.checkIn)} &ndash; {booking.formatDate(booking.checkOut)}</span>
+                </>
+              )}
+              <span>&middot;</span>
+              <span>{booking.guestSummary}</span>
+            </div>
+
+            {/* "Private rates" callout */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "12px 16px",
+                background: "var(--gold-pale)",
+                border: "1px solid var(--gold-light)",
+                marginBottom: 24,
+                fontSize: "13px",
+                fontFamily: "var(--font-body)",
+                color: "var(--ink-mid)",
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span>
+                <strong style={{ color: "var(--ink)" }}>Private rates</strong> — not available on public booking sites. Unlock by sharing your details below.
+              </span>
+            </div>
+
+            {/* ── Preferred Rates Section ── */}
+            {preferredRooms.length > 0 && (
+              <div className="mb-10">
+                <div className="flex items-center gap-3 mb-5">
+                  <div
+                    style={{
+                      width: 4,
+                      height: 24,
+                      background: "var(--gold)",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <h3
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "20px",
+                      fontWeight: 500,
+                      color: "var(--ink)",
+                    }}
+                  >
+                    Preferred Rates
+                  </h3>
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: "var(--gold)",
+                      background: "var(--gold-pale)",
+                      padding: "3px 8px",
+                    }}
+                  >
+                    Voyagr Club
+                  </span>
+                </div>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--ink-light)",
+                    marginBottom: 16,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  Exclusive wholesale rates with premium inclusions, available only to Voyagr Club members.
+                </p>
+
+                <div className="flex flex-col gap-4">
+                  {preferredRooms.map((room) => (
+                    <RoomCard
+                      key={room.id}
+                      room={room}
+                      voyagrRate={getVoyagrRate(room)}
+                      marketRate={getMarketRate(room)}
+                      currency={currency}
+                      isSelected={selectedRoomId === room.id}
+                      onSelect={() => setSelectedRoomId(selectedRoomId === room.id ? null : room.id)}
+                    />
+                  ))}
+                </div>
+              </div>
             )}
-            <span>&middot;</span>
-            <span>{booking.guestSummary}</span>
+
+            {/* ── Standard Rates Section ── */}
+            {standardRooms.length > 0 && (
+              <div className="mb-10">
+                <div className="flex items-center gap-3 mb-5">
+                  <div
+                    style={{
+                      width: 4,
+                      height: 24,
+                      background: "var(--cream-border)",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <h3
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "20px",
+                      fontWeight: 500,
+                      color: "var(--ink)",
+                    }}
+                  >
+                    Standard Rates
+                  </h3>
+                </div>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--ink-light)",
+                    marginBottom: 16,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  Room-only rates at discounted prices.
+                </p>
+
+                <div className="flex flex-col gap-4">
+                  {standardRooms.map((room) => (
+                    <RoomCard
+                      key={room.id}
+                      room={room}
+                      voyagrRate={getVoyagrRate(room)}
+                      marketRate={getMarketRate(room)}
+                      currency={currency}
+                      isSelected={selectedRoomId === room.id}
+                      onSelect={() => setSelectedRoomId(selectedRoomId === room.id ? null : room.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* ── Preferred Rates Section ── */}
-          {preferredRooms.length > 0 && (
-            <div className="mb-10">
-              <div className="flex items-center gap-3 mb-5">
+          {/* ══════ OVERVIEW SECTION ══════ */}
+          <div ref={overviewRef} style={{ scrollMarginTop: "120px", paddingTop: 32 }}>
+            <div className="flex items-center gap-3 mb-5">
+              <div style={{ width: 4, height: 24, background: "var(--ink)", flexShrink: 0 }} />
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 500, color: "var(--ink)" }}>
+                Overview
+              </h3>
+            </div>
+
+            {hotel.overview && (
+              <p style={{ fontSize: "14px", color: "var(--ink-mid)", lineHeight: 1.8, marginBottom: 24 }}>
+                {hotel.overview}
+              </p>
+            )}
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                gap: 16,
+                marginBottom: 24,
+              }}
+            >
+              {hotel.checkin && (
+                <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Check-in</div>
+                  <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.checkin}</div>
+                </div>
+              )}
+              {hotel.checkout && (
+                <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Check-out</div>
+                  <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.checkout}</div>
+                </div>
+              )}
+              {hotel.numberrooms && (
+                <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Total Rooms</div>
+                  <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.numberrooms}</div>
+                </div>
+              )}
+              {hotel.yearrenovated && (
+                <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Last Renovated</div>
+                  <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.yearrenovated}</div>
+                </div>
+              )}
+              {hotel.chain_name && (
+                <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Hotel Chain</div>
+                  <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.chain_name}</div>
+                </div>
+              )}
+              {hotel.accommodation_type && (
+                <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Type</div>
+                  <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.accommodation_type}</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ══════ GALLERY SECTION ══════ */}
+          <div ref={galleryRef} style={{ scrollMarginTop: "120px", paddingTop: 32 }}>
+            <div className="flex items-center gap-3 mb-5">
+              <div style={{ width: 4, height: 24, background: "var(--ink)", flexShrink: 0 }} />
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 500, color: "var(--ink)" }}>
+                Gallery
+              </h3>
+            </div>
+
+            {photos.length > 0 ? (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                  gap: 8,
+                }}
+              >
+                {photos.map((photo, i) => (
+                  <div
+                    key={i}
+                    onClick={() => openLightbox(i)}
+                    style={{
+                      cursor: "pointer",
+                      aspectRatio: "4/3",
+                      overflow: "hidden",
+                      background: "var(--cream-deep)",
+                    }}
+                  >
+                    <img
+                      src={safePhotoUrl(photo)}
+                      alt={`${hotel.hotel_name} photo ${i + 1}`}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s" }}
+                      onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+                      onMouseEnter={(e) => { (e.target as HTMLImageElement).style.transform = "scale(1.05)"; }}
+                      onMouseLeave={(e) => { (e.target as HTMLImageElement).style.transform = "scale(1)"; }}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>No photos available for this property.</p>
+            )}
+          </div>
+
+          {/* ══════ REVIEWS SECTION ══════ */}
+          <div ref={reviewsRef} style={{ scrollMarginTop: "120px", paddingTop: 32 }}>
+            <div className="flex items-center gap-3 mb-5">
+              <div style={{ width: 4, height: 24, background: "var(--ink)", flexShrink: 0 }} />
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 500, color: "var(--ink)" }}>
+                Reviews
+              </h3>
+            </div>
+
+            {hotel.rating_average > 0 ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
                 <div
                   style={{
-                    width: 4,
-                    height: 24,
-                    background: "var(--gold)",
-                    flexShrink: 0,
-                  }}
-                />
-                <h3
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "20px",
-                    fontWeight: 500,
-                    color: "var(--ink)",
-                  }}
-                >
-                  Preferred Rates
-                </h3>
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 600,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "var(--gold)",
+                    width: 64,
+                    height: 64,
+                    borderRadius: "50%",
                     background: "var(--gold-pale)",
-                    padding: "3px 8px",
-                  }}
-                >
-                  Voyagr Club
-                </span>
-              </div>
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "var(--ink-light)",
-                  marginBottom: 16,
-                  lineHeight: 1.6,
-                }}
-              >
-                Exclusive wholesale rates with premium inclusions, available only to Voyagr Club members.
-              </p>
-
-              <div className="flex flex-col gap-4">
-                {preferredRooms.map((room) => (
-                  <RoomCard
-                    key={room.id}
-                    room={room}
-                    voyagrRate={getVoyagrRate(room)}
-                    marketRate={getMarketRate(room)}
-                    currency={currency}
-                    isSelected={selectedRoomId === room.id}
-                    onSelect={() => setSelectedRoomId(selectedRoomId === room.id ? null : room.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Standard Rates Section ── */}
-          {standardRooms.length > 0 && (
-            <div className="mb-10">
-              <div className="flex items-center gap-3 mb-5">
-                <div
-                  style={{
-                    width: 4,
-                    height: 24,
-                    background: "var(--cream-border)",
-                    flexShrink: 0,
-                  }}
-                />
-                <h3
-                  style={{
+                    border: "2px solid var(--gold)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     fontFamily: "var(--font-display)",
-                    fontSize: "20px",
+                    fontSize: "24px",
                     fontWeight: 500,
                     color: "var(--ink)",
                   }}
                 >
-                  Standard Rates
-                </h3>
+                  {hotel.rating_average.toFixed(1)}
+                </div>
+                <div>
+                  <div style={{ fontSize: "16px", fontWeight: 500, color: "var(--ink)" }}>
+                    {hotel.rating_average >= 9 ? "Exceptional" : hotel.rating_average >= 8 ? "Excellent" : hotel.rating_average >= 7 ? "Very Good" : "Good"}
+                  </div>
+                  <div style={{ fontSize: "13px", color: "var(--ink-light)" }}>
+                    Based on {hotel.number_of_reviews.toLocaleString()} verified reviews
+                  </div>
+                </div>
               </div>
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "var(--ink-light)",
-                  marginBottom: 16,
-                  lineHeight: 1.6,
-                }}
-              >
-                Room-only rates at discounted prices.
+            ) : (
+              <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>
+                No reviews available yet for this property.
               </p>
-
-              <div className="flex flex-col gap-4">
-                {standardRooms.map((room) => (
-                  <RoomCard
-                    key={room.id}
-                    room={room}
-                    voyagrRate={getVoyagrRate(room)}
-                    marketRate={getMarketRate(room)}
-                    currency={currency}
-                    isSelected={selectedRoomId === room.id}
-                    onSelect={() => setSelectedRoomId(selectedRoomId === room.id ? null : room.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* ─── Right: Sticky Booking Sidebar ─── */}
@@ -956,7 +1293,7 @@ export default function HotelPage() {
                     <polyline points="9 22 9 12 15 12 15 22" />
                   </svg>
                   <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>
-                    Select a room to see pricing
+                    Select a room to unlock your rate
                   </p>
                 </div>
               ) : (
@@ -982,7 +1319,7 @@ export default function HotelPage() {
 
                   {/* Price per night */}
                   <div className="flex items-baseline justify-between mb-2">
-                    <span style={{ fontSize: "13px", color: "var(--ink-mid)" }}>Price per night</span>
+                    <span style={{ fontSize: "13px", color: "var(--ink-mid)" }}>Preferred rate</span>
                     <span
                       style={{
                         fontSize: "20px",
@@ -997,7 +1334,7 @@ export default function HotelPage() {
 
                   {/* Market rate */}
                   <div className="flex items-baseline justify-between mb-2">
-                    <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>Market rate</span>
+                    <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>Public rate</span>
                     <span
                       style={{
                         fontSize: "13px",
@@ -1116,15 +1453,15 @@ export default function HotelPage() {
                 </motion.div>
               )}
 
-              {/* Reserve button */}
+              {/* Unlock Preferred Rate button */}
               <button
                 disabled={!selectedRoom}
                 onClick={() => {
                   if (selectedRoom) {
-                    setBookingModalOpen(true);
+                    setUnlockModalOpen(true);
                   }
                 }}
-                className={selectedRoom ? "reserve-btn-pulse" : ""}
+                className={selectedRoom ? "unlock-rate-btn-pulse" : ""}
                 style={{
                   width: "100%",
                   marginTop: 24,
@@ -1140,9 +1477,17 @@ export default function HotelPage() {
                   transition: "all 0.3s",
                   fontFamily: "var(--font-body)",
                   opacity: selectedRoom ? 1 : 0.6,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
                 }}
               >
-                {selectedRoom ? "Reserve Now" : "Select a Room"}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                {selectedRoom ? "Unlock Preferred Rate" : "Select a Room"}
               </button>
 
               {/* Trust note */}
@@ -1152,16 +1497,17 @@ export default function HotelPage() {
                   fontSize: "11px",
                   color: "var(--ink-light)",
                   marginTop: 12,
+                  lineHeight: 1.5,
                 }}
               >
-                No payment required now &middot; Free cancellation
+                No payment required &middot; Our concierge will confirm your rate on WhatsApp within 15 mins
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ═══════════════════ Floating Action Bar (Bottom) ═══════════════════ */}
+      {/* ═══════════════════ Sticky Bottom Bar (Mobile + Desktop) ═══════════════════ */}
       <div
         className="fixed bottom-0 left-0 right-0 z-50"
         style={{
@@ -1194,7 +1540,7 @@ export default function HotelPage() {
             </p>
             {selectedRoom ? (
               <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
-                {formatCurrency(selectedVoyagrRate, currency)}/night &middot; {formatCurrency(totalPrice, currency)} total
+                {formatCurrency(selectedVoyagrRate, currency)}/night &middot; Save {formatCurrency(selectedSaving, currency)}
               </p>
             ) : (
               <p style={{ fontSize: "12px", color: "var(--ink-light)", marginTop: 2 }}>
@@ -1203,40 +1549,17 @@ export default function HotelPage() {
             )}
           </div>
 
-          {/* Back to results */}
-          <button
-            onClick={() => router.push(hotel.city ? `/results?city=${hotel.city.toLowerCase().replace(/\s+/g, "-")}` : "/results")}
-            style={{
-              padding: "8px 16px",
-              fontSize: "11px",
-              fontWeight: 500,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              background: "transparent",
-              color: "var(--cream)",
-              border: "1px solid rgba(253,250,245,0.2)",
-              cursor: "pointer",
-              fontFamily: "var(--font-body)",
-              whiteSpace: "nowrap",
-              transition: "border-color 0.2s",
-            }}
-            onMouseEnter={(e) => { (e.target as HTMLButtonElement).style.borderColor = "rgba(253,250,245,0.5)"; }}
-            onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.borderColor = "rgba(253,250,245,0.2)"; }}
-          >
-            Back to Results
-          </button>
-
-          {/* Reserve button */}
+          {/* Unlock Rate button */}
           <button
             disabled={!selectedRoom}
             onClick={() => {
               if (selectedRoom) {
-                setBookingModalOpen(true);
+                setUnlockModalOpen(true);
               }
             }}
-            className={selectedRoom ? "reserve-btn-pulse" : ""}
+            className={selectedRoom ? "unlock-rate-btn-pulse" : ""}
             style={{
-              padding: "10px 28px",
+              padding: "10px 24px",
               fontSize: "12px",
               fontWeight: 600,
               letterSpacing: "0.1em",
@@ -1249,18 +1572,26 @@ export default function HotelPage() {
               whiteSpace: "nowrap",
               transition: "all 0.3s",
               opacity: selectedRoom ? 1 : 0.5,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
             }}
           >
-            Reserve
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            {selectedRoom ? "Unlock Rate" : "Select Room"}
           </button>
         </div>
       </div>
 
-      {/* ═══════════════════ Booking Modal ═══════════════════ */}
-      {selectedRoom && (
-        <BookingModal
-          open={bookingModalOpen}
-          onClose={() => setBookingModalOpen(false)}
+      {/* ═══════════════════ Unlock Rate Modal ═══════════════════ */}
+      {selectedRoom && hotel && (
+        <UnlockRateModal
+          open={unlockModalOpen}
+          onClose={() => setUnlockModalOpen(false)}
+          hotelId={hotel.hotel_id}
           hotelName={hotel.hotel_name}
           roomName={selectedRoom.name}
           rateType={selectedRoom.tier}

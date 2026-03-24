@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import FlowProgressBar from "@/components/FlowProgressBar";
+import { trackCtaClicked, trackWhatsAppClicked } from "@/lib/analytics";
 
 /* ── Types ── */
 
-interface BookingModalProps {
+interface UnlockRateModalProps {
   open: boolean;
   onClose: () => void;
+  hotelId: number;
   hotelName: string;
   roomName: string;
   rateType: "preferred" | "standard";
@@ -58,59 +58,9 @@ function formatDateShort(iso: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function generateBookingId(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let id = "VYG-";
-  for (let i = 0; i < 8; i++) {
-    id += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return id;
-}
+/* ── Toast ── */
 
-/* ── Booking persistence ── */
-
-export interface StoredBooking {
-  bookingId: string;
-  hotelName: string;
-  roomName: string;
-  rateType: "preferred" | "standard";
-  checkIn: string;
-  checkOut: string;
-  nights: number;
-  guests: string;
-  guestName: string;
-  email: string;
-  nightlyRate: number;
-  marketRate: number;
-  currency: string;
-  totalPrice: number;
-  totalSaving: number;
-  bookedAt: string;
-}
-
-const BOOKINGS_KEY = "voyagr_bookings";
-
-function saveBooking(booking: StoredBooking) {
-  try {
-    const existing = JSON.parse(localStorage.getItem(BOOKINGS_KEY) || "[]");
-    existing.unshift(booking);
-    localStorage.setItem(BOOKINGS_KEY, JSON.stringify(existing));
-  } catch {
-    // silently fail if localStorage is unavailable
-  }
-}
-
-export function getStoredBookings(): StoredBooking[] {
-  try {
-    return JSON.parse(localStorage.getItem(BOOKINGS_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-/* ── Toast component ── */
-
-function Toast({ message, visible }: { message: string; visible: boolean }) {
+function Toast({ message, visible, type = "error" }: { message: string; visible: boolean; type?: "error" | "success" }) {
   return (
     <AnimatePresence>
       {visible && (
@@ -124,13 +74,13 @@ function Toast({ message, visible }: { message: string; visible: boolean }) {
             bottom: 32,
             left: "50%",
             transform: "translateX(-50%)",
-            background: "var(--error, #8b3a3a)",
+            background: type === "error" ? "var(--error, #8b3a3a)" : "var(--success, #4a7c59)",
             color: "#fff",
             padding: "12px 24px",
             fontSize: "13px",
             fontWeight: 500,
             fontFamily: "var(--font-body)",
-            zIndex: 10002,
+            zIndex: 10003,
             boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
             letterSpacing: "0.02em",
             whiteSpace: "nowrap",
@@ -143,11 +93,12 @@ function Toast({ message, visible }: { message: string; visible: boolean }) {
   );
 }
 
-/* ── Main BookingModal ── */
+/* ── Main UnlockRateModal ── */
 
-export default function BookingModal({
+export default function UnlockRateModal({
   open,
   onClose,
+  hotelId,
   hotelName,
   roomName,
   rateType,
@@ -159,8 +110,7 @@ export default function BookingModal({
   marketRate,
   currency,
   perks,
-}: BookingModalProps) {
-  const router = useRouter();
+}: UnlockRateModalProps) {
   const [form, setForm] = useState<GuestForm>({
     firstName: "",
     lastName: "",
@@ -169,8 +119,19 @@ export default function BookingModal({
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [toastVisible, setToastVisible] = useState(false);
-  const [bookingState, setBookingState] = useState<"form" | "success">("form");
-  const [bookingId, setBookingId] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"error" | "success">("error");
+  const [submitting, setSubmitting] = useState(false);
+  const [leadState, setLeadState] = useState<"form" | "success">("form");
+  const [leadId, setLeadId] = useState("");
+  const [whatsappLink, setWhatsappLink] = useState("");
+
+  const totalPrice = nightlyRate * nights;
+  const totalMarket = marketRate * nights;
+  const totalSaving = totalMarket - totalPrice;
+  const hasSaving = totalSaving > 0;
+  const isPreferred = rateType === "preferred";
+  const savePercent = hasSaving ? Math.round((totalSaving / totalMarket) * 100) : 0;
 
   // Reset when modal opens
   useEffect(() => {
@@ -178,8 +139,10 @@ export default function BookingModal({
       setForm({ firstName: "", lastName: "", email: "", mobile: "" });
       setErrors({});
       setToastVisible(false);
-      setBookingState("form");
-      setBookingId("");
+      setSubmitting(false);
+      setLeadState("form");
+      setLeadId("");
+      setWhatsappLink("");
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -199,18 +162,19 @@ export default function BookingModal({
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  const totalPrice = nightlyRate * nights;
-  const totalMarket = marketRate * nights;
-  const totalSaving = totalMarket - totalPrice;
-  const hasSaving = totalSaving > 0;
-  const isPreferred = rateType === "preferred";
-
   const updateField = useCallback((field: keyof GuestForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: false }));
   }, []);
 
-  const handleConfirm = useCallback(() => {
+  const showToast = useCallback((message: string, type: "error" | "success" = "error") => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+    setTimeout(() => setToastVisible(false), 4000);
+  }, []);
+
+  const handleUnlock = useCallback(async () => {
     const newErrors: FormErrors = {};
     let hasError = false;
 
@@ -225,36 +189,56 @@ export default function BookingModal({
 
     if (hasError) {
       setErrors(newErrors);
-      setToastVisible(true);
-      setTimeout(() => setToastVisible(false), 3000);
+      showToast("Please fill in all required fields correctly");
       return;
     }
 
-    // Success
-    const id = generateBookingId();
-    setBookingId(id);
-    setBookingState("success");
+    setSubmitting(true);
 
-    // Persist booking to localStorage
-    saveBooking({
-      bookingId: id,
-      hotelName,
-      roomName,
-      rateType,
-      checkIn,
-      checkOut,
-      nights,
-      guests,
-      guestName: `${form.firstName.trim()} ${form.lastName.trim()}`,
-      email: form.email.trim(),
-      nightlyRate,
-      marketRate,
-      currency,
-      totalPrice: nightlyRate * nights,
-      totalSaving: (marketRate - nightlyRate) * nights > 0 ? (marketRate - nightlyRate) * nights : 0,
-      bookedAt: new Date().toISOString(),
-    });
-  }, [form, hotelName, roomName, rateType, checkIn, checkOut, nights, guests, nightlyRate, marketRate, currency]);
+    try {
+      const res = await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          email: form.email.trim(),
+          mobile: form.mobile.trim(),
+          hotelId,
+          hotelName,
+          roomName,
+          rateType,
+          checkIn,
+          checkOut,
+          nights,
+          guests,
+          nightlyRate,
+          marketRate,
+          currency,
+          source: "unlock_rate",
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setLeadId(data.leadId);
+        setWhatsappLink(data.whatsappLink);
+        setLeadState("success");
+        trackCtaClicked({
+          cta_name: "unlock_preferred_rate",
+          cta_location: "hotel_detail_modal",
+          destination_url: "lead_captured",
+        });
+      } else {
+        showToast(data.errors?.[0] || "Something went wrong. Please try again.");
+      }
+    } catch {
+      showToast("Network error. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [form, hotelId, hotelName, roomName, rateType, checkIn, checkOut, nights, guests, nightlyRate, marketRate, currency, showToast]);
 
   const inputStyle = (field: keyof GuestForm): React.CSSProperties => ({
     width: "100%",
@@ -282,10 +266,7 @@ export default function BookingModal({
 
   return (
     <>
-      <Toast
-        message="Please fill in all required fields correctly"
-        visible={toastVisible}
-      />
+      <Toast message={toastMessage} visible={toastVisible} type={toastType} />
       <AnimatePresence>
         {open && (
           <>
@@ -327,21 +308,7 @@ export default function BookingModal({
                 overflow: "hidden",
               }}
             >
-              {/* ═══ Flow Progress Bar ═══ */}
-              <div
-                style={{
-                  flexShrink: 0,
-                  borderBottom: "1px solid var(--cream-border, #e0d8c8)",
-                  background: "var(--white, #fdfaf5)",
-                }}
-              >
-                <FlowProgressBar
-                  currentStep={bookingState === "form" ? "unlock-rate" : "whatsapp"}
-                  onNavigateAway={onClose}
-                />
-              </div>
-
-              {bookingState === "form" ? (
+              {leadState === "form" ? (
                 <>
                   {/* ═══ Header ═══ */}
                   <div
@@ -376,6 +343,25 @@ export default function BookingModal({
                     >
                       &times;
                     </button>
+
+                    {/* Lock icon + Title */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                      <p
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          letterSpacing: "0.12em",
+                          textTransform: "uppercase",
+                          color: "var(--gold, #b8955a)",
+                        }}
+                      >
+                        Unlock Your Preferred Rate
+                      </p>
+                    </div>
 
                     <h2
                       style={{
@@ -435,93 +421,69 @@ export default function BookingModal({
                       padding: "24px",
                     }}
                   >
-                    {/* Price Breakdown */}
-                    <div style={{ marginBottom: 24 }}>
-                      <h3
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          letterSpacing: "0.1em",
-                          textTransform: "uppercase",
-                          color: "var(--ink-light)",
-                          marginBottom: 12,
-                          fontFamily: "var(--font-body)",
-                        }}
-                      >
-                        Price Breakdown
-                      </h3>
-
+                    {/* Savings highlight */}
+                    {hasSaving && (
                       <div
                         style={{
-                          background: "var(--white, #fdfaf5)",
-                          border: "1px solid var(--cream-border, #e0d8c8)",
-                          padding: "16px 20px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "14px 20px",
+                          background: "rgba(74, 124, 89, 0.08)",
+                          border: "1px solid rgba(74, 124, 89, 0.15)",
+                          marginBottom: 20,
                         }}
                       >
-                        {/* Nightly rate */}
-                        <div className="flex items-baseline justify-between" style={{ marginBottom: 8 }}>
-                          <span style={{ fontSize: "13px", color: "var(--ink-mid)" }}>
-                            {formatCurrency(nightlyRate, currency)} &times; {nights} night{nights > 1 ? "s" : ""}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: "13px",
-                              color: "var(--ink)",
-                              fontFamily: "var(--font-mono)",
-                            }}
-                          >
-                            {formatCurrency(totalPrice, currency)}
-                          </span>
-                        </div>
-
-                        {/* Saving row */}
-                        {hasSaving && (
-                          <div className="flex items-baseline justify-between" style={{ marginBottom: 8 }}>
-                            <span style={{ fontSize: "12px", color: "var(--success, #4a7c59)", fontWeight: 600 }}>
-                              You save
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "12px",
-                                color: "var(--success, #4a7c59)",
-                                fontWeight: 600,
-                                fontFamily: "var(--font-mono)",
-                              }}
-                            >
-                              &minus;{formatCurrency(totalSaving, currency)}
-                            </span>
+                        <div>
+                          <div style={{ fontSize: "12px", color: "var(--success)", fontWeight: 600 }}>
+                            You save {savePercent}% vs public rates
                           </div>
-                        )}
-
-                        {/* Total */}
+                          <div style={{ fontSize: "11px", color: "var(--ink-light)", marginTop: 2 }}>
+                            {formatCurrency(totalSaving, currency)} total savings on this stay
+                          </div>
+                        </div>
                         <div
-                          className="flex items-baseline justify-between"
                           style={{
-                            paddingTop: 12,
-                            borderTop: "1px solid var(--cream-border, #e0d8c8)",
-                            marginTop: 4,
+                            fontSize: "22px",
+                            fontWeight: 500,
+                            fontFamily: "var(--font-display)",
+                            color: "var(--success)",
                           }}
                         >
-                          <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--ink)" }}>
-                            Total
-                          </span>
-                          <span
-                            style={{
-                              fontSize: "22px",
-                              fontWeight: 500,
-                              fontFamily: "var(--font-display)",
-                              color: "var(--ink)",
-                            }}
-                          >
-                            {formatCurrency(totalPrice, currency)}
-                          </span>
+                          {formatCurrency(totalPrice, currency)}
                         </div>
                       </div>
+                    )}
+
+                    {/* Private rate callout */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 10,
+                        padding: "12px 16px",
+                        background: "var(--gold-pale)",
+                        border: "1px solid var(--gold-light)",
+                        marginBottom: 20,
+                        fontSize: "12px",
+                        lineHeight: 1.5,
+                        color: "var(--ink-mid)",
+                        fontFamily: "var(--font-body)",
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                      </svg>
+                      <span>
+                        These are <strong style={{ color: "var(--ink)" }}>private wholesale rates</strong> not available on Booking.com, Expedia, or any public OTA. Share your details and our concierge will confirm your rate within 15 minutes on WhatsApp.
+                      </span>
                     </div>
 
                     {/* Preferred Perks */}
                     {isPreferred && perks.length > 0 && (
-                      <div style={{ marginBottom: 24 }}>
+                      <div style={{ marginBottom: 20 }}>
                         <h3
                           style={{
                             fontSize: "11px",
@@ -529,41 +491,33 @@ export default function BookingModal({
                             letterSpacing: "0.1em",
                             textTransform: "uppercase",
                             color: "var(--ink-light)",
-                            marginBottom: 12,
+                            marginBottom: 10,
                             fontFamily: "var(--font-body)",
                           }}
                         >
-                          Preferred Perks Included
+                          Included With Your Rate
                         </h3>
 
-                        <div
-                          style={{
-                            background: "var(--gold-pale, rgba(184,149,90,0.08))",
-                            border: "1px solid var(--gold, #b8955a)",
-                            padding: "16px 20px",
-                          }}
-                        >
-                          <div className="flex flex-col gap-2">
-                            {perks.map((perk) => (
-                              <div key={perk} className="flex items-center gap-2.5">
-                                <svg
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="var(--success, #4a7c59)"
-                                  strokeWidth="2.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                <span style={{ fontSize: "13px", color: "var(--ink)", fontWeight: 500 }}>
-                                  {perk}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
+                        <div className="flex flex-wrap gap-2">
+                          {perks.map((perk) => (
+                            <div
+                              key={perk}
+                              className="flex items-center gap-1.5"
+                              style={{
+                                padding: "5px 10px",
+                                background: "rgba(74, 124, 89, 0.08)",
+                                border: "1px solid rgba(74, 124, 89, 0.12)",
+                                fontSize: "12px",
+                                fontWeight: 500,
+                                color: "var(--success)",
+                              }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                              {perk}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
@@ -581,7 +535,7 @@ export default function BookingModal({
                           fontFamily: "var(--font-body)",
                         }}
                       >
-                        Guest Details
+                        Your Details
                       </h3>
 
                       <div
@@ -641,17 +595,17 @@ export default function BookingModal({
                           </div>
 
                           <div>
-                            <label style={labelStyle}>Mobile *</label>
+                            <label style={labelStyle}>WhatsApp Number *</label>
                             <input
                               type="tel"
                               value={form.mobile}
                               onChange={(e) => updateField("mobile", e.target.value)}
-                              placeholder="+1 234 567 8900"
+                              placeholder="+91 98765 43210"
                               style={inputStyle("mobile")}
                             />
                             {errors.mobile && (
                               <p style={{ fontSize: "11px", color: "var(--error, #8b3a3a)", marginTop: 4 }}>
-                                Valid mobile number is required
+                                Valid WhatsApp number is required
                               </p>
                             )}
                           </div>
@@ -663,7 +617,7 @@ export default function BookingModal({
                     <div style={{ height: 80 }} />
                   </div>
 
-                  {/* ═══ Fixed Confirm Button ═══ */}
+                  {/* ═══ Fixed CTA Button ═══ */}
                   <div
                     style={{
                       flexShrink: 0,
@@ -673,7 +627,8 @@ export default function BookingModal({
                     }}
                   >
                     <button
-                      onClick={handleConfirm}
+                      onClick={handleUnlock}
+                      disabled={submitting}
                       style={{
                         width: "100%",
                         padding: "16px 0",
@@ -684,19 +639,42 @@ export default function BookingModal({
                         background: "var(--gold, #b8955a)",
                         color: "var(--ink, #1a1710)",
                         border: "none",
-                        cursor: "pointer",
+                        cursor: submitting ? "wait" : "pointer",
                         transition: "opacity 0.2s",
                         fontFamily: "var(--font-body)",
+                        opacity: submitting ? 0.7 : 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
                       }}
-                      onMouseEnter={(e) => { (e.target as HTMLButtonElement).style.opacity = "0.9"; }}
-                      onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.opacity = "1"; }}
                     >
-                      Confirm Booking
+                      {submitting ? (
+                        "Unlocking..."
+                      ) : (
+                        <>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                          </svg>
+                          Unlock Preferred Rate
+                        </>
+                      )}
                     </button>
+                    <p
+                      className="text-center"
+                      style={{
+                        fontSize: "11px",
+                        color: "var(--ink-light)",
+                        marginTop: 10,
+                      }}
+                    >
+                      No payment required &middot; Concierge confirms on WhatsApp
+                    </p>
                   </div>
                 </>
               ) : (
-                /* ═══════ Screen 5 — Success State ═══════ */
+                /* ═══════ Success State — Lead Captured ═══════ */
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -717,7 +695,7 @@ export default function BookingModal({
                       textAlign: "center",
                     }}
                   >
-                    {/* Animated green checkmark — bounce in */}
+                    {/* Animated green checkmark */}
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: [0, 1.25, 0.9, 1.05, 1] }}
@@ -762,7 +740,7 @@ export default function BookingModal({
                         fontFamily: "var(--font-body)",
                       }}
                     >
-                      Booking confirmed
+                      Rate Unlocked
                     </p>
 
                     {/* Headline */}
@@ -776,31 +754,29 @@ export default function BookingModal({
                         marginBottom: 10,
                       }}
                     >
-                      You&apos;re all set
+                      You&apos;re almost there
                     </h2>
 
-                    {/* Subtext — email + WhatsApp */}
+                    {/* Subtext */}
                     <p
                       style={{
                         fontSize: "13px",
                         color: "var(--ink-light)",
                         marginBottom: 28,
                         lineHeight: 1.6,
-                        maxWidth: 360,
+                        maxWidth: 380,
                       }}
                     >
-                      A confirmation has been sent to{" "}
-                      <strong style={{ color: "var(--ink)" }}>{form.email}</strong>.
-                      You&apos;ll also receive a WhatsApp notification with your booking details.
+                      Our concierge will reach out on WhatsApp within <strong style={{ color: "var(--ink)" }}>15 minutes</strong> to confirm your preferred rate and complete the booking.
                     </p>
 
-                    {/* Booking Reference — monospace */}
+                    {/* Reference card */}
                     <div
                       style={{
                         background: "var(--white, #fdfaf5)",
                         border: "1px solid var(--cream-border, #e0d8c8)",
                         padding: "16px 32px",
-                        marginBottom: 24,
+                        marginBottom: 20,
                       }}
                     >
                       <p
@@ -813,7 +789,7 @@ export default function BookingModal({
                           marginBottom: 6,
                         }}
                       >
-                        Booking Reference
+                        Your Reference
                       </p>
                       <p
                         style={{
@@ -824,7 +800,7 @@ export default function BookingModal({
                           letterSpacing: "0.08em",
                         }}
                       >
-                        {bookingId}
+                        {leadId}
                       </p>
                     </div>
 
@@ -873,10 +849,9 @@ export default function BookingModal({
                         <span style={{ color: "var(--ink)", fontWeight: 500 }}>{form.firstName} {form.lastName}</span>
                       </div>
 
-                      {/* Saving row (if applicable) */}
                       {hasSaving && (
                         <div className="flex justify-between" style={{ fontSize: "13px", marginBottom: 4 }}>
-                          <span style={{ color: "var(--success, #4a7c59)", fontWeight: 600 }}>You saved</span>
+                          <span style={{ color: "var(--success, #4a7c59)", fontWeight: 600 }}>You save</span>
                           <span
                             style={{
                               color: "var(--success, #4a7c59)",
@@ -889,7 +864,6 @@ export default function BookingModal({
                         </div>
                       )}
 
-                      {/* Total */}
                       <div
                         className="flex justify-between"
                         style={{
@@ -900,14 +874,14 @@ export default function BookingModal({
                           marginTop: 8,
                         }}
                       >
-                        <span style={{ color: "var(--ink)" }}>Total</span>
+                        <span style={{ color: "var(--ink)" }}>Preferred Rate</span>
                         <span style={{ color: "var(--ink)", fontFamily: "var(--font-display)", fontSize: "18px" }}>
                           {formatCurrency(totalPrice, currency)}
                         </span>
                       </div>
                     </div>
 
-                    {/* Two buttons */}
+                    {/* CTA buttons */}
                     <div
                       style={{
                         display: "flex",
@@ -917,11 +891,12 @@ export default function BookingModal({
                         maxWidth: 400,
                       }}
                     >
-                      <button
-                        onClick={() => {
-                          onClose();
-                          router.push("/booking-history");
-                        }}
+                      {/* WhatsApp CTA — primary */}
+                      <a
+                        href={whatsappLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => trackWhatsAppClicked({ page: "unlock_rate_success" })}
                         style={{
                           width: "100%",
                           padding: "14px 0",
@@ -929,18 +904,25 @@ export default function BookingModal({
                           fontWeight: 600,
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
-                          background: "var(--gold, #b8955a)",
-                          color: "var(--ink, #1a1710)",
+                          background: "#25D366",
+                          color: "#ffffff",
                           border: "none",
                           cursor: "pointer",
                           fontFamily: "var(--font-body)",
                           transition: "opacity 0.2s",
+                          textDecoration: "none",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 8,
                         }}
-                        onMouseEnter={(e) => { (e.target as HTMLButtonElement).style.opacity = "0.9"; }}
-                        onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.opacity = "1"; }}
                       >
-                        View in My Trips
-                      </button>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                        </svg>
+                        Chat on WhatsApp Now
+                      </a>
+
                       <button
                         onClick={onClose}
                         style={{
@@ -957,18 +939,23 @@ export default function BookingModal({
                           fontFamily: "var(--font-body)",
                           transition: "all 0.2s",
                         }}
-                        onMouseEnter={(e) => {
-                          (e.target as HTMLButtonElement).style.borderColor = "var(--ink-light)";
-                          (e.target as HTMLButtonElement).style.color = "var(--ink)";
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.target as HTMLButtonElement).style.borderColor = "var(--cream-border)";
-                          (e.target as HTMLButtonElement).style.color = "var(--ink-light)";
-                        }}
                       >
-                        Close
+                        I&apos;ll wait for the call
                       </button>
                     </div>
+
+                    {/* Trust footer */}
+                    <p
+                      style={{
+                        fontSize: "11px",
+                        color: "var(--ink-light)",
+                        marginTop: 20,
+                        lineHeight: 1.5,
+                        maxWidth: 360,
+                      }}
+                    >
+                      Your data is secure. We only use it to confirm your rate and will never share it with third parties.
+                    </p>
                   </div>
                 </motion.div>
               )}

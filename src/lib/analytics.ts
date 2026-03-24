@@ -200,6 +200,41 @@ export function trackGuestsChanged(params: {
   posthog.capture('guests_changed', params);
 }
 
+// Lead Capture / Unlock Rate
+export function trackUnlockRateClicked(params: {
+  hotel_id: number;
+  hotel_name: string;
+  room_name: string;
+  rate_type: 'preferred' | 'standard';
+  nightly_rate: number;
+  currency: string;
+}) {
+  posthog.capture('unlock_rate_clicked', params);
+}
+
+export function trackLeadCaptured(params: {
+  hotel_id: number;
+  hotel_name: string;
+  room_name: string;
+  lead_id: string;
+  nightly_rate: number;
+  market_rate: number;
+  savings_percent: number;
+  currency: string;
+}) {
+  posthog.capture('lead_captured', {
+    ...params,
+    savings_amount: params.market_rate - params.nightly_rate,
+  });
+}
+
+export function trackLeadWhatsAppClicked(params: {
+  lead_id: string;
+  hotel_name: string;
+}) {
+  posthog.capture('lead_whatsapp_clicked', params);
+}
+
 // Preferred Rates
 export function trackPreferredRatesViewed() {
   posthog.capture('preferred_rates_viewed');
