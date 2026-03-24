@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import FlowProgressBar from "@/components/FlowProgressBar";
 
 /* ── Types ── */
 
@@ -326,6 +327,20 @@ export default function BookingModal({
                 overflow: "hidden",
               }}
             >
+              {/* ═══ Flow Progress Bar ═══ */}
+              <div
+                style={{
+                  flexShrink: 0,
+                  borderBottom: "1px solid var(--cream-border, #e0d8c8)",
+                  background: "var(--white, #fdfaf5)",
+                }}
+              >
+                <FlowProgressBar
+                  currentStep={bookingState === "form" ? "guest-details" : "confirmation"}
+                  onNavigateAway={onClose}
+                />
+              </div>
+
               {bookingState === "form" ? (
                 <>
                   {/* ═══ Header ═══ */}

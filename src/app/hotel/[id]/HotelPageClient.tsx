@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import BookingModal from "@/components/BookingModal";
+import FlowProgressBar from "@/components/FlowProgressBar";
 import { trackHotelViewed, trackHotelGalleryOpened } from "@/lib/analytics";
 import { useBooking } from "@/context/BookingContext";
 
@@ -555,8 +556,30 @@ export default function HotelPage() {
 
       <Header />
 
+      {/* ═══════════════════ Flow Progress Bar ═══════════════════ */}
+      <div
+        style={{
+          position: "fixed",
+          top: 60,
+          left: 0,
+          right: 0,
+          zIndex: 99,
+          background: "rgba(253, 250, 245, 0.95)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderBottom: "1px solid var(--cream-border)",
+        }}
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <FlowProgressBar
+            currentStep="select-room"
+            resultsHref={hotel.city ? `/results?city=${hotel.city.toLowerCase().replace(/\s+/g, "-")}` : "/results"}
+          />
+        </div>
+      </div>
+
       {/* ═══════════════════ Full-Width Hero Image ═══════════════════ */}
-      <section className="relative w-full" style={{ height: "clamp(320px, 50vh, 520px)", marginTop: 60 }}>
+      <section className="relative w-full" style={{ height: "clamp(320px, 50vh, 520px)", marginTop: 116 }}>
         {photos.length > 0 ? (
           <img
             src={safePhotoUrl(photos[0])}
@@ -1182,7 +1205,7 @@ export default function HotelPage() {
 
           {/* Back to results */}
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push(hotel.city ? `/results?city=${hotel.city.toLowerCase().replace(/\s+/g, "-")}` : "/results")}
             style={{
               padding: "8px 16px",
               fontSize: "11px",
@@ -1200,7 +1223,7 @@ export default function HotelPage() {
             onMouseEnter={(e) => { (e.target as HTMLButtonElement).style.borderColor = "rgba(253,250,245,0.5)"; }}
             onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.borderColor = "rgba(253,250,245,0.2)"; }}
           >
-            Back
+            Back to Results
           </button>
 
           {/* Reserve button */}

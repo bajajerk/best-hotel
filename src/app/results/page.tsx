@@ -578,7 +578,7 @@ export default function ResultsPage() {
               }}
             >
               <Link href="/" style={{ color: "var(--gold)", textDecoration: "none" }}>
-                Home
+                Search
               </Link>
               <span>&rsaquo;</span>
               {cityInfo ? (
@@ -593,7 +593,7 @@ export default function ResultsPage() {
                   <span>Results</span>
                 </>
               ) : (
-                <span>Browse</span>
+                <span>Results</span>
               )}
             </nav>
 
