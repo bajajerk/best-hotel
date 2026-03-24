@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
+import BookingModal from "@/components/BookingModal";
 import { trackHotelViewed, trackHotelGalleryOpened } from "@/lib/analytics";
 import { useBooking } from "@/context/BookingContext";
 
@@ -388,6 +389,9 @@ export default function HotelPage() {
 
   /* Room selection */
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+
+  /* Booking modal */
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
   /* Section refs */
   const roomsRef = useRef<HTMLDivElement>(null);
@@ -1094,7 +1098,7 @@ export default function HotelPage() {
                 disabled={!selectedRoom}
                 onClick={() => {
                   if (selectedRoom) {
-                    router.push(`/book/rooms?hotel=${hotelId}`);
+                    setBookingModalOpen(true);
                   }
                 }}
                 className={selectedRoom ? "reserve-btn-pulse" : ""}
@@ -1204,7 +1208,7 @@ export default function HotelPage() {
             disabled={!selectedRoom}
             onClick={() => {
               if (selectedRoom) {
-                router.push(`/book/rooms?hotel=${hotelId}`);
+                setBookingModalOpen(true);
               }
             }}
             className={selectedRoom ? "reserve-btn-pulse" : ""}
@@ -1228,6 +1232,25 @@ export default function HotelPage() {
           </button>
         </div>
       </div>
+
+      {/* ═══════════════════ Booking Modal ═══════════════════ */}
+      {selectedRoom && (
+        <BookingModal
+          open={bookingModalOpen}
+          onClose={() => setBookingModalOpen(false)}
+          hotelName={hotel.hotel_name}
+          roomName={selectedRoom.name}
+          rateType={selectedRoom.tier}
+          checkIn={booking.checkIn}
+          checkOut={booking.checkOut}
+          nights={nights}
+          guests={booking.guestSummary}
+          nightlyRate={selectedVoyagrRate}
+          marketRate={selectedMarketRate}
+          currency={currency}
+          perks={selectedRoom.inclusions}
+        />
+      )}
     </div>
   );
 }
