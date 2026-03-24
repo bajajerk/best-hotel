@@ -7,8 +7,8 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { supabase } from "@/lib/supabase";
-import type { User, Session } from "@supabase/supabase-js";
+import { getSupabase } from "@/lib/supabase";
+import type { User, Session, SupabaseClient } from "@supabase/supabase-js";
 
 interface AuthState {
   user: User | null;
@@ -36,6 +36,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let supabase: SupabaseClient;
+    try {
+      supabase = getSupabase();
+    } catch {
+      // Env vars missing (SSG build) — skip auth init
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -56,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithEmail = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await getSupabase().auth.signInWithPassword({
       email,
       password,
     });
@@ -64,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUpWithEmail = async (email: string, password: string, name: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { error } = await getSupabase().auth.signUp({
       email,
       password,
       options: { data: { full_name: name } },
@@ -73,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
+    await getSupabase().auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/login?auth=callback`,
@@ -82,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await getSupabase().auth.signOut();
   };
 
   return (

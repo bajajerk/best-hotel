@@ -1,6 +1,17 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Lazy singleton — only created client-side when env vars are available.
+// During SSG/build, createClient would throw because env vars are empty.
+let _client: SupabaseClient | null = null;
+
+export function getSupabase(): SupabaseClient {
+  if (_client) return _client;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Supabase env vars not set");
+  }
+  _client = createClient(supabaseUrl, supabaseAnonKey);
+  return _client;
+}
