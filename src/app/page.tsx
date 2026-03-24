@@ -14,6 +14,9 @@ import { useBooking } from "@/context/BookingContext";
 import { trackCtaClicked, trackWhatsAppClicked } from "@/lib/analytics";
 import VoyagerClubComparison from "@/components/VoyagerClubComparison";
 import FeaturedPropertiesCarousel from "@/components/FeaturedPropertiesCarousel";
+import Carousel from "@/components/Carousel";
+import CityCard from "@/components/CityCard";
+import type { CityCardData } from "@/components/CityCard";
 
 import TopSellers, { computeTopSellers, type TopSellerHotel } from "@/components/TopSellers";
 
@@ -1039,11 +1042,10 @@ export default function Home() {
       )}
 
       {/* ================================================================
-          FEATURED HOTELS — asymmetric grid
+          FEATURED PROPERTIES — curated stays worldwide (carousel)
       ================================================================ */}
       <section className="section-featured" style={{ padding: "80px 60px" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          {/* Section header */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1058,14 +1060,10 @@ export default function Home() {
             }}
           >
             <div>
-              <div className="type-eyebrow" style={{
-                marginBottom: "8px",
-              }}>
+              <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
                 Featured Properties
               </div>
-              <h2 className="type-display-2" style={{
-                color: "var(--ink)",
-              }}>
+              <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
                 Curated <em style={{ fontStyle: "italic", color: "var(--gold)" }}>stays</em> worldwide
               </h2>
             </div>
@@ -1088,48 +1086,25 @@ export default function Home() {
             </Link>
           </motion.div>
 
-          {/* Hotel grid — asymmetric 2fr 1fr 1fr, 2 rows */}
-          {loading ? (
-            <div className="featured-grid" style={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr 1fr",
-              gridTemplateRows: "260px 260px",
-              gap: "12px",
-            }}>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="shimmer"
-                  style={{
-                    gridRow: i === 0 ? "span 2" : undefined,
-                    minHeight: i === 0 ? "520px" : "200px",
-                    background: "var(--cream-deep)",
-                  }}
-                />
+          {popularProps.length > 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <Carousel ariaLabel="Featured properties" showProgressBar>
+                {popularProps.map((prop) => (
+                  <HotelCard key={prop.name} hotel={prop} />
+                ))}
+              </Carousel>
+            </motion.div>
+          ) : (
+            <div style={{ display: "flex", gap: "20px" }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="shimmer" style={{ height: 360, flex: 1, background: "var(--cream-deep)" }} />
               ))}
             </div>
-          ) : (
-            <motion.div
-              className="featured-grid"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6 }}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "2fr 1fr 1fr",
-                gridTemplateRows: "auto auto",
-                gap: "12px",
-              }}
-            >
-              {featured.slice(0, 5).map((city, i) => (
-                <FeaturedCityCard
-                  key={city.city_slug}
-                  city={city}
-                  isLarge={i === 0}
-                />
-              ))}
-            </motion.div>
           )}
         </div>
       </section>
@@ -1188,7 +1163,7 @@ export default function Home() {
       <TopSellers hotels={topSellers} />
 
       {/* ================================================================
-          FEATURED PROPERTIES — editor's picks
+          FEATURED PROPERTIES — handpicked stays worth booking (carousel)
       ================================================================ */}
       <section
         className="section-top-deals"
@@ -1223,214 +1198,136 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Deals grid — 3 columns */}
-          <div
-            className="top-deals-grid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "20px",
-            }}
-          >
-            {topDeals.map((deal, i) => (
-              <motion.div
-                key={deal.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.08 }}
-              >
-                <Link
-                  href={`/city/${deal.citySlug}`}
-                  style={{ textDecoration: "none", display: "block" }}
-                >
-                  <div
-                    className="card-hover"
-                    style={{
-                      background: "var(--white)",
-                      border: "1px solid var(--cream-border)",
-                      overflow: "hidden",
-                    }}
+          {topDeals.length > 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <Carousel ariaLabel="Handpicked stays" showIndicators>
+                {topDeals.map((deal) => (
+                  <Link
+                    key={deal.name}
+                    href={`/city/${deal.citySlug}`}
+                    style={{ textDecoration: "none", display: "block" }}
                   >
-                    {/* Image with preferred rate badge */}
-                    <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
-                      <img
-                        className="card-img"
-                        src={safeImageSrc(deal.img)}
-                        alt={deal.name}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          display: "block",
-                          filter: "saturate(0.88)",
-                        }}
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
-                        }}
-                      />
-                      {/* Preferred rate badge */}
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "12px",
-                          left: "12px",
-                          background: "var(--success)",
-                          color: "var(--cream)",
-                          padding: "6px 14px",
-                          fontSize: "9px",
-                          fontWeight: 500,
-                          letterSpacing: "0.06em",
-                          textTransform: "uppercase" as const,
-                        }}
-                      >
-                        Preferred Rate
-                      </div>
-                      {/* Rating badge */}
-                      {deal.rating >= 8.5 && (
-                        <div
+                    <div
+                      className="card-hover"
+                      style={{
+                        background: "var(--white)",
+                        border: "1px solid var(--cream-border)",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {/* Image */}
+                      <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
+                        <img
+                          className="card-img"
+                          src={safeImageSrc(deal.img)}
+                          alt={deal.name}
                           style={{
-                            position: "absolute",
-                            top: "12px",
-                            right: "12px",
-                            background: "var(--gold)",
-                            color: "var(--white)",
-                            fontSize: "12px",
-                            fontWeight: 600,
-                            padding: "4px 10px",
-                            fontFamily: "var(--font-mono)",
+                            width: "100%", height: "100%", objectFit: "cover",
+                            display: "block", filter: "saturate(0.88)",
                           }}
-                        >
-                          {deal.rating.toFixed(1)}
+                          loading="lazy"
+                          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
+                        />
+                        <div style={{
+                          position: "absolute", top: "12px", left: "12px",
+                          background: "var(--success)", color: "var(--cream)",
+                          padding: "6px 14px", fontSize: "9px", fontWeight: 500,
+                          letterSpacing: "0.06em", textTransform: "uppercase" as const,
+                        }}>
+                          Preferred Rate
                         </div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div style={{ padding: "18px 20px 22px" }}>
-                      <div
-                        style={{
-                          color: "var(--gold)",
-                          fontSize: "10px",
-                          letterSpacing: "2px",
-                          marginBottom: "6px",
-                        }}
-                      >
-                        {"★".repeat(deal.stars)}
-                      </div>
-                      <h3
-                        className="type-heading-3"
-                        style={{
-                          color: "var(--ink)",
-                          marginBottom: "4px",
-                          fontSize: "16px",
-                        }}
-                      >
-                        {deal.name}
-                      </h3>
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: "var(--ink-light)",
-                          letterSpacing: "0.04em",
-                          marginBottom: "14px",
-                        }}
-                      >
-                        {deal.city}
-                      </p>
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "5px",
-                          flexWrap: "wrap",
-                          marginBottom: "16px",
-                        }}
-                      >
-                        {deal.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            style={{
-                              fontSize: "9px",
-                              padding: "3px 8px",
-                              background: "var(--cream)",
-                              color: "var(--ink-mid)",
-                              border: "1px solid var(--cream-border)",
-                              letterSpacing: "0.04em",
-                            }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                        {deal.rating >= 8.5 && (
+                          <div style={{
+                            position: "absolute", top: "12px", right: "12px",
+                            background: "var(--gold)", color: "var(--white)",
+                            fontSize: "12px", fontWeight: 600, padding: "4px 10px",
+                            fontFamily: "var(--font-mono)",
+                          }}>
+                            {deal.rating.toFixed(1)}
+                          </div>
+                        )}
                       </div>
 
-                      {/* Pricing */}
-                      <div
-                        style={{
+                      {/* Content */}
+                      <div style={{ padding: "18px 20px 22px" }}>
+                        <div style={{ color: "var(--gold)", fontSize: "10px", letterSpacing: "2px", marginBottom: "6px" }}>
+                          {"★".repeat(deal.stars)}
+                        </div>
+                        <h3 className="type-heading-3" style={{ color: "var(--ink)", marginBottom: "4px", fontSize: "16px" }}>
+                          {deal.name}
+                        </h3>
+                        <p style={{ fontSize: "12px", color: "var(--ink-light)", letterSpacing: "0.04em", marginBottom: "14px" }}>
+                          {deal.city}
+                        </p>
+                        <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginBottom: "16px" }}>
+                          {deal.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              style={{
+                                fontSize: "9px",
+                                padding: "3px 8px",
+                                background: "var(--cream)",
+                                color: "var(--ink-mid)",
+                                border: "1px solid var(--cream-border)",
+                                letterSpacing: "0.04em",
+                              }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* Pricing */}
+                        <div style={{
                           borderTop: "1px solid var(--cream-border)",
                           paddingTop: "14px",
                           display: "flex",
                           alignItems: "flex-end",
                           justifyContent: "space-between",
-                        }}
-                      >
-                        <div>
-                          <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-                            <span
-                              style={{
-                                fontSize: "12px",
-                                textDecoration: "line-through",
-                                color: "var(--market-rate)",
-                              }}
-                            >
-                              &#8377;{deal.marketRate.toLocaleString("en-IN")}
+                        }}>
+                          <div>
+                            <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                              <span style={{ fontSize: "12px", textDecoration: "line-through", color: "var(--market-rate)" }}>
+                                &#8377;{deal.marketRate.toLocaleString("en-IN")}
+                              </span>
+                            </div>
+                            <div style={{
+                              fontFamily: "var(--font-display)", fontSize: "22px",
+                              fontWeight: 500, color: "var(--our-rate)", lineHeight: 1.2,
+                            }}>
+                              &#8377;{deal.voyagrRate.toLocaleString("en-IN")}
+                            </div>
+                            <span style={{ fontSize: "10px", color: "var(--ink-light)" }}>per night</span>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--success)", marginBottom: "4px" }}>
+                              Voyagr Rate
+                            </div>
+                            <span className="card-arrow" style={{
+                              fontSize: "11px", color: "var(--gold)", fontWeight: 500, letterSpacing: "0.04em",
+                            }}>
+                              View &rarr;
                             </span>
                           </div>
-                          <div
-                            style={{
-                              fontFamily: "var(--font-display)",
-                              fontSize: "22px",
-                              fontWeight: 500,
-                              color: "var(--our-rate)",
-                              lineHeight: 1.2,
-                            }}
-                          >
-                            &#8377;{deal.voyagrRate.toLocaleString("en-IN")}
-                          </div>
-                          <span style={{ fontSize: "10px", color: "var(--ink-light)" }}>
-                            per night
-                          </span>
-                        </div>
-                        <div style={{ textAlign: "right" }}>
-                          <div
-                            style={{
-                              fontSize: "11px",
-                              fontWeight: 500,
-                              color: "var(--success)",
-                              marginBottom: "4px",
-                            }}
-                          >
-                            Voyagr Rate
-                          </div>
-                          <span
-                            className="card-arrow"
-                            style={{
-                              fontSize: "11px",
-                              color: "var(--gold)",
-                              fontWeight: 500,
-                              letterSpacing: "0.04em",
-                            }}
-                          >
-                            View &rarr;
-                          </span>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+                  </Link>
+                ))}
+              </Carousel>
+            </motion.div>
+          ) : (
+            <div style={{ display: "flex", gap: "20px" }}>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="shimmer" style={{ height: 360, flex: 1, background: "var(--cream-deep)" }} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -1477,6 +1374,84 @@ export default function Home() {
           <SeasonalCarousel trips={SEASONAL_TRIPS} />
         </div>
       </section>
+
+      {/* ================================================================
+          CITY TILES — discover by destination (carousel)
+      ================================================================ */}
+      {cities.length > 0 && (
+        <section
+          className="section-city-tiles"
+          style={{
+            padding: "80px 60px",
+            background: "var(--white)",
+          }}
+        >
+          <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.8 }}
+              className="section-header"
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                marginBottom: "48px",
+              }}
+            >
+              <div>
+                <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
+                  Explore Destinations
+                </div>
+                <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
+                  Discover your next{" "}
+                  <em style={{ fontStyle: "italic", color: "var(--gold)" }}>city</em>
+                </h2>
+              </div>
+              <Link
+                href="/search"
+                className="btn-outline"
+                onClick={() => trackCtaClicked({ cta_name: 'view_all_cities', cta_location: 'home_city_tiles', destination_url: '/search' })}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  textDecoration: "none",
+                }}
+              >
+                All cities
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </Link>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <Carousel ariaLabel="City destinations" showProgressBar>
+                {cities.slice(0, 15).map((city) => (
+                  <CityCard
+                    key={city.city_slug}
+                    city={{
+                      name: city.city_name,
+                      slug: city.city_slug,
+                      country: city.country,
+                      tagline: city.tagline || undefined,
+                      img: getCityImage(city.city_slug),
+                    }}
+                  />
+                ))}
+              </Carousel>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* ================================================================
           CURATED SUB-SECTIONS — Most popular · We suggest · Top curated
