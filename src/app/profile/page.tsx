@@ -21,7 +21,7 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
 
   // Preferences
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState("INR");
   const [travelerType, setTravelerType] = useState("couple");
   const [notifications, setNotifications] = useState(true);
   const [newsletter, setNewsletter] = useState(true);
@@ -65,12 +65,14 @@ export default function ProfilePage() {
         setName((data.name as string) || "");
         setPhone((data.phone as string) || "");
         setTier((data.tier as string) || "basic");
+        return;
       }
     } catch {
-      // Use Supabase user data as fallback
-      if (user) {
-        setName(user.user_metadata?.full_name || user.email?.split("@")[0] || "");
-      }
+      // fall through to Supabase fallback
+    }
+    // Fallback: use Supabase user metadata
+    if (user) {
+      setName(user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "");
     }
   }
 
@@ -81,7 +83,7 @@ export default function ProfilePage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setCurrency(data.currency || "USD");
+        setCurrency(data.currency || "INR");
         setTravelerType(data.traveler_type || "couple");
         setNotifications(data.notifications_enabled ?? true);
         setNewsletter(data.newsletter_enabled ?? true);
@@ -299,14 +301,15 @@ export default function ProfilePage() {
                 <div style={s.field}>
                   <label style={s.label}>Preferred Currency</label>
                   <select
-                    value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
-                    style={s.input}
+                    value="INR"
+                    disabled
+                    style={{ ...s.input, opacity: 0.6, cursor: "not-allowed" }}
                   >
-                    {["USD", "EUR", "GBP", "INR", "SGD", "AED", "THB", "JPY", "AUD"].map((c) => (
+                    {["INR", "USD", "EUR", "GBP", "SGD", "AED", "THB", "JPY", "AUD"].map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
+                  <span style={s.hint}>INR is the default currency for all users</span>
                 </div>
                 <div style={s.field}>
                   <label style={s.label}>Traveler Type</label>
