@@ -11,11 +11,31 @@ import { usePathname } from "next/navigation";
    Rendered via portal to avoid stacking-context issues
    ──────────────────────────────────────────────────────────── */
 
-const PRIMARY_LINKS = [
-  { label: "Home", href: "/", icon: "home" },
-  { label: "Search Hotels", href: "/search", icon: "search" },
+const PRIMARY_LINKS: {
+  label: string;
+  href: string;
+  icon: string;
+  highlighted?: boolean;
+  badge?: string;
+  subtext?: string;
+}[] = [
+  { label: "Search", href: "/search", icon: "search" },
+  {
+    label: "Preferred Rates",
+    href: "/preferred-rates",
+    icon: "star",
+    highlighted: true,
+    badge: "VOYAGR CLUB",
+  },
+  {
+    label: "Rate Check",
+    href: "/match-my-rates",
+    icon: "trending_down",
+    subtext: "See if we can beat your current hotel price",
+  },
   { label: "My Trips", href: "/booking-history", icon: "luggage" },
   { label: "Saved Hotels", href: "/saved", icon: "bookmark" },
+  { label: "Profile", href: "/profile", icon: "person" },
 ];
 
 const TRUST_LINKS = [
@@ -229,6 +249,8 @@ export default function MobileNav() {
         <nav style={{ padding: "8px 0" }}>
           {PRIMARY_LINKS.map((link) => {
             const active = isActive(link.href);
+            const isHighlighted = link.highlighted;
+
             return (
               <Link
                 key={link.label}
@@ -236,19 +258,23 @@ export default function MobileNav() {
                 onClick={() => setOpen(false)}
                 style={{
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: link.subtext ? "flex-start" : "center",
                   gap: "14px",
                   fontFamily: "var(--font-display)",
                   fontSize: "20px",
-                  fontWeight: active ? 500 : 400,
-                  color: active ? "var(--gold, #b8955a)" : "var(--ink, #1a1710)",
+                  fontWeight: active || isHighlighted ? 500 : 400,
+                  color: active || isHighlighted
+                    ? "var(--gold, #b8955a)"
+                    : "var(--ink, #1a1710)",
                   textDecoration: "none",
-                  padding: "14px 24px",
+                  padding: isHighlighted ? "16px 24px" : "14px 24px",
                   transition: "background 0.2s, color 0.2s",
-                  background: active
+                  background: isHighlighted
+                    ? "linear-gradient(90deg, rgba(184, 149, 90, 0.08) 0%, transparent 100%)"
+                    : active
                     ? "linear-gradient(90deg, var(--gold-pale, #f0e6d0) 0%, transparent 100%)"
                     : "transparent",
-                  borderLeft: active
+                  borderLeft: active || isHighlighted
                     ? "3px solid var(--gold, #b8955a)"
                     : "3px solid transparent",
                 }}
@@ -257,83 +283,74 @@ export default function MobileNav() {
                   className="material-symbols-outlined"
                   style={{
                     fontSize: "22px",
-                    color: active ? "var(--gold, #b8955a)" : "var(--ink-light, #7a7465)",
+                    color: active || isHighlighted
+                      ? "var(--gold, #b8955a)"
+                      : "var(--ink-light, #7a7465)",
                     lineHeight: 1,
-                    fontVariationSettings: "'FILL' 0, 'wght' 300",
+                    fontVariationSettings: isHighlighted
+                      ? "'FILL' 1, 'wght' 400"
+                      : "'FILL' 0, 'wght' 300",
+                    marginTop: link.subtext ? "2px" : 0,
                   }}
                   aria-hidden="true"
                 >
                   {link.icon}
                 </span>
-                {link.label}
+                <span style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: 0 }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    {link.label}
+                    {link.badge && (
+                      <span
+                        style={{
+                          fontFamily: "var(--font-body)",
+                          fontSize: "8px",
+                          fontWeight: 600,
+                          letterSpacing: "0.14em",
+                          textTransform: "uppercase",
+                          color: "#ffffff",
+                          background: "var(--gold, #b8955a)",
+                          padding: "3px 7px 2px",
+                          borderRadius: "3px",
+                          lineHeight: 1,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {link.badge}
+                      </span>
+                    )}
+                  </span>
+                  {link.subtext && (
+                    <span
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: "12px",
+                        fontWeight: 400,
+                        color: "var(--ink-light, #7a7465)",
+                        lineHeight: 1.4,
+                        letterSpacing: "0.01em",
+                      }}
+                    >
+                      {link.subtext}
+                    </span>
+                  )}
+                </span>
               </Link>
             );
           })}
         </nav>
 
         {/* ═══════════════════════════════════════════
-            CONVERSION SECTION — highlighted CTA area
+            CONCIERGE — compact CTA
             ═══════════════════════════════════════════ */}
         <div
           style={{
             margin: "4px 16px",
-            padding: "20px",
+            padding: "16px 20px",
             background: "linear-gradient(135deg, #f7f2e8 0%, var(--gold-pale, #f0e6d0) 100%)",
             borderRadius: "12px",
             border: "1px solid var(--gold-light, #d4ae78)",
           }}
         >
-          <div
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "9px",
-              fontWeight: 500,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase" as const,
-              color: "var(--gold, #b8955a)",
-              marginBottom: "14px",
-            }}
-          >
-            Exclusive Access
-          </div>
-
-          {/* Unlock a Preferred Rate */}
-          <Link
-            href="/preferred-rates"
-            onClick={() => setOpen(false)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              width: "100%",
-              padding: "13px 16px",
-              background: "var(--gold, #b8955a)",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: "8px",
-              fontFamily: "var(--font-display)",
-              fontSize: "15px",
-              fontWeight: 500,
-              letterSpacing: "0.04em",
-              textDecoration: "none",
-              cursor: "pointer",
-              transition: "background 0.2s, transform 0.15s",
-              marginBottom: "10px",
-              textAlign: "center" as const,
-            }}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: "18px", lineHeight: 1 }}
-              aria-hidden="true"
-            >
-              lock_open
-            </span>
-            Unlock a Preferred Rate
-          </Link>
-
-          {/* Speak to Concierge */}
           <a
             href={WHATSAPP_URL}
             target="_blank"
@@ -360,7 +377,6 @@ export default function MobileNav() {
               textAlign: "center" as const,
             }}
           >
-            {/* WhatsApp icon */}
             <svg
               width="18"
               height="18"
