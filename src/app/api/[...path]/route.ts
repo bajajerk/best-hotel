@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://134.122.41.91:5000";
 
+function forwardHeaders(request: NextRequest): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  const auth = request.headers.get("authorization");
+  if (auth) headers["Authorization"] = auth;
+  const adminToken = request.headers.get("x-admin-token");
+  if (adminToken) headers["X-Admin-Token"] = adminToken;
+  return headers;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -13,7 +24,7 @@ export async function GET(
 
   try {
     const res = await fetch(url, {
-      headers: { "Content-Type": "application/json" },
+      headers: forwardHeaders(request),
       cache: "no-store",
     });
     const data = await res.json();
@@ -35,12 +46,7 @@ export async function POST(
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(request.headers.get("x-admin-token")
-          ? { "X-Admin-Token": request.headers.get("x-admin-token")! }
-          : {}),
-      },
+      headers: forwardHeaders(request),
       body: JSON.stringify(body),
     });
     const data = await res.json();
@@ -62,12 +68,7 @@ export async function PUT(
   try {
     const res = await fetch(url, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        ...(request.headers.get("x-admin-token")
-          ? { "X-Admin-Token": request.headers.get("x-admin-token")! }
-          : {}),
-      },
+      headers: forwardHeaders(request),
       body: JSON.stringify(body),
     });
     const data = await res.json();
@@ -88,12 +89,7 @@ export async function DELETE(
   try {
     const res = await fetch(url, {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        ...(request.headers.get("x-admin-token")
-          ? { "X-Admin-Token": request.headers.get("x-admin-token")! }
-          : {}),
-      },
+      headers: forwardHeaders(request),
     });
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
