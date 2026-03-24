@@ -33,6 +33,7 @@ const HERO_IMAGES = [
 const FALLBACK_IMAGE = FALLBACK_CITY_IMAGE;
 
 function safeImageSrc(url: string): string {
+  if (!url || !url.trim()) return FALLBACK_IMAGE;
   if (url.startsWith("http://")) return url.replace("http://", "https://");
   return url;
 }
@@ -43,6 +44,11 @@ function sanitizePhoto(url: string | null): string {
   if (!src.startsWith("https://"))
     src = `https://photos.hotelbeds.com/giata/${src}`;
   return src;
+}
+
+/** Returns true if a CuratedHotel has the minimum data needed to render a card */
+function isRenderable(hotel: CuratedHotel): boolean {
+  return Boolean(hotel.hotel_name && hotel.rates_from && hotel.rates_from > 0);
 }
 
 function curatedToCard(hotel: CuratedHotel): HotelCardData {
@@ -411,7 +417,7 @@ function SeasonalCarousel({ trips }: { trips: SeasonalTrip[] }) {
                     display: "block", filter: "saturate(0.88)",
                   }}
                   loading="lazy"
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
+                  onError={(e) => { const img = e.target as HTMLImageElement; if (img.src !== FALLBACK_IMAGE) img.src = FALLBACK_IMAGE; }}
                 />
                 <div style={{
                   position: "absolute", top: "12px", left: "12px",
@@ -478,7 +484,7 @@ function SeasonalCarousel({ trips }: { trips: SeasonalTrip[] }) {
 // ---------------------------------------------------------------------------
 // Curated Sub-Sections: Most popular · We suggest · Top curated
 // ---------------------------------------------------------------------------
-function CuratedSubSections({ tabData }: { tabData: Record<string, HotelCardData[]> }) {
+function CuratedSubSections({ tabData, isLoading, isError }: { tabData: Record<string, HotelCardData[]>; isLoading: boolean; isError: boolean }) {
   const [activeTab, setActiveTab] = useState<string>("popular");
   const activeData = tabData[activeTab] || [];
   const { trackRef, activeIdx, dotCount, prev, next, scrollTo, maxIdx } =
@@ -577,11 +583,17 @@ function CuratedSubSections({ tabData }: { tabData: Record<string, HotelCardData
               </div>
             )}
           </motion.div>
-        ) : (
+        ) : isLoading ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="shimmer" style={{ height: 320, background: "var(--cream)" }} />
             ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--ink-light)" }}>
+            <p style={{ fontSize: "14px" }}>
+              {isError ? "Unable to load curated hotels." : "No curated hotels available for this selection."}
+            </p>
           </div>
         )}
       </div>
@@ -602,6 +614,8 @@ export default function Home() {
   const [topDeals, setTopDeals] = useState<HotelDealData[]>([]);
   const [curatedTabData, setCuratedTabData] = useState<Record<string, HotelCardData[]>>({ popular: [], suggest: [], curated: [] });
   const [featuredCarouselProps, setFeaturedCarouselProps] = useState<HotelCardData[]>([]);
+  const [hotelsLoading, setHotelsLoading] = useState(true);
+  const [hotelsError, setHotelsError] = useState(false);
   const [topSellers, setTopSellers] = useState<TopSellerHotel[]>([]);
   const heroRef = useRef<HTMLElement>(null);
 
@@ -635,24 +649,33 @@ export default function Home() {
       try {
         const hotels = await fetchFeaturedHotels(FEATURED_CITY_SLUGS, "couples");
 
+        if (!hotels || hotels.length === 0) {
+          console.warn("[Voyagr] API returned no hotels for featured sections");
+          setHotelsError(true);
+          setHotelsLoading(false);
+          return;
+        }
+
+        console.log(`[Voyagr] Loaded ${hotels.length} featured hotels from API`);
+
         // Top sellers — most booked properties
         setTopSellers(computeTopSellers(hotels, 8));
 
-        // Sort by rating for popular properties (top 8)
+        // Sort by rating for popular properties (top 8) — only renderable hotels
         const byRating = [...hotels]
-          .filter((h) => h.rating_average && h.rates_from)
+          .filter((h) => isRenderable(h) && h.rating_average)
           .sort((a, b) => (b.rating_average || 0) - (a.rating_average || 0));
         setPopularProps(byRating.slice(0, 8).map(curatedToCard));
 
         // Featured carousel — top 6 highest-rated properties with images
         const featuredSelection = byRating
-          .filter((h) => h.photo1)
+          .filter((h) => h.photo1 && isRenderable(h))
           .slice(0, 6)
           .map(curatedToCard);
         setFeaturedCarouselProps(featuredSelection);
 
         // Top deals — sorted by rates_from (best value)
-        const withRates = hotels.filter((h) => h.rates_from && h.rates_from > 0);
+        const withRates = hotels.filter((h) => isRenderable(h));
         const dealHotels = withRates.slice(0, 6).map((h) => {
           const marketRate = Math.round((h.rates_from || 0) * 1.25);
           const voyagrRate = h.rates_from || 0;
@@ -678,18 +701,21 @@ export default function Home() {
         setCuratedTabData({
           popular: byRating.slice(0, 6).map(curatedToCard),
           suggest: singles
-            .filter((h) => h.rating_average && h.rates_from)
+            .filter((h) => isRenderable(h) && h.rating_average)
             .sort((a, b) => (b.rating_average || 0) - (a.rating_average || 0))
             .slice(0, 6)
             .map(curatedToCard),
           curated: families
-            .filter((h) => h.rating_average && h.rates_from)
+            .filter((h) => isRenderable(h) && h.rating_average)
             .sort((a, b) => (b.rating_average || 0) - (a.rating_average || 0))
             .slice(0, 6)
             .map(curatedToCard),
         });
-      } catch {
-        // Silently fail — sections will show shimmer/empty state
+      } catch (err) {
+        console.error("[Voyagr] Failed to load featured hotels:", err);
+        setHotelsError(true);
+      } finally {
+        setHotelsLoading(false);
       }
     }
     loadFeaturedHotels();
@@ -968,7 +994,8 @@ export default function Home() {
                   }}
                   loading="lazy"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+                    const img = e.target as HTMLImageElement;
+                    if (img.src !== FALLBACK_IMAGE) img.src = FALLBACK_IMAGE;
                   }}
                 />
               ) : null
@@ -1100,11 +1127,26 @@ export default function Home() {
                 ))}
               </Carousel>
             </motion.div>
-          ) : (
+          ) : hotelsLoading ? (
             <div style={{ display: "flex", gap: "20px" }}>
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="shimmer" style={{ height: 360, flex: 1, background: "var(--cream-deep)" }} />
               ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--ink-light)" }}>
+              <p style={{ fontSize: "14px", marginBottom: "12px" }}>
+                {hotelsError ? "Unable to load hotels right now." : "No featured properties available."}
+              </p>
+              {hotelsError && (
+                <button
+                  onClick={() => window.location.reload()}
+                  className="btn-outline"
+                  style={{ fontSize: "12px", padding: "8px 20px", cursor: "pointer" }}
+                >
+                  Try again
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -1147,11 +1189,17 @@ export default function Home() {
           {/* Property cards — carousel */}
           {popularProps.length > 0 ? (
             <PopularCarousel properties={popularProps} />
-          ) : (
+          ) : hotelsLoading ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="shimmer" style={{ height: 320, background: "var(--cream)" }} />
               ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--ink-light)" }}>
+              <p style={{ fontSize: "14px" }}>
+                {hotelsError ? "Unable to load hotels. Please try again later." : "No popular properties found."}
+              </p>
             </div>
           )}
         </div>
@@ -1210,11 +1258,17 @@ export default function Home() {
                 ))}
               </Carousel>
             </motion.div>
-          ) : (
+          ) : hotelsLoading ? (
             <div style={{ display: "flex", gap: "20px" }}>
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="shimmer" style={{ height: 360, flex: 1, background: "var(--cream-deep)" }} />
               ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--ink-light)" }}>
+              <p style={{ fontSize: "14px" }}>
+                {hotelsError ? "Unable to load deals. Please try again later." : "No deals available right now."}
+              </p>
             </div>
           )}
         </div>
@@ -1343,7 +1397,7 @@ export default function Home() {
       {/* ================================================================
           CURATED SUB-SECTIONS — Most popular · We suggest · Top curated
       ================================================================ */}
-      <CuratedSubSections tabData={curatedTabData} />
+      <CuratedSubSections tabData={curatedTabData} isLoading={hotelsLoading} isError={hotelsError} />
 
       {/* ================================================================
           LET'S PLAN YOUR STAY — editorial CTA

@@ -37,6 +37,7 @@ const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&q=80";
 
 function safeImageSrc(url: string): string {
+  if (!url || !url.trim()) return FALLBACK_IMAGE;
   if (url.startsWith("http://")) return url.replace("http://", "https://");
   return url;
 }
@@ -45,6 +46,8 @@ function safeImageSrc(url: string): string {
 // Vertical Hotel Card — used in home page carousels
 // ---------------------------------------------------------------------------
 function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
+  if (!hotel.name) return null;
+
   return (
     <Link href={`/city/${hotel.citySlug}`} style={{ textDecoration: "none", display: "block" }}>
       <div
@@ -71,7 +74,8 @@ function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
             }}
             loading="lazy"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+              const img = e.target as HTMLImageElement;
+              if (img.src !== FALLBACK_IMAGE) img.src = FALLBACK_IMAGE;
             }}
           />
           {hotel.rating >= 8.5 && (
@@ -226,6 +230,8 @@ export default HotelCard;
 // Deal Card variant — shows market-rate strikethrough + Voyagr rate
 // ---------------------------------------------------------------------------
 function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
+  if (!deal.name) return null;
+
   return (
     <Link href={`/city/${deal.citySlug}`} style={{ textDecoration: "none", display: "block" }}>
       <div
@@ -252,7 +258,8 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
             }}
             loading="lazy"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+              const img = e.target as HTMLImageElement;
+              if (img.src !== FALLBACK_IMAGE) img.src = FALLBACK_IMAGE;
             }}
           />
           <div

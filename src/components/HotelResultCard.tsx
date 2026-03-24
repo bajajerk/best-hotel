@@ -164,7 +164,8 @@ export default function HotelResultCard({
               }}
               className="card-img group-hover:scale-105"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = PLACEHOLDER_IMG;
+                const img = e.target as HTMLImageElement;
+                if (img.src !== PLACEHOLDER_IMG) img.src = PLACEHOLDER_IMG;
               }}
             />
             {index === 0 && (
@@ -414,7 +415,8 @@ export default function HotelResultCard({
                 filter: "saturate(0.88)",
               }}
               onError={(e) => {
-                (e.target as HTMLImageElement).src = PLACEHOLDER_IMG;
+                const img = e.target as HTMLImageElement;
+                if (img.src !== PLACEHOLDER_IMG) img.src = PLACEHOLDER_IMG;
               }}
             />
             {index === 0 && (

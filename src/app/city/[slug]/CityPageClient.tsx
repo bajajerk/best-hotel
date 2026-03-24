@@ -162,6 +162,7 @@ export default function CityPage() {
   const [cityCountry, setCityCountry] = useState("");
   const [tagline, setTagline] = useState("");
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [priceMin, setPriceMin] = useState(0);
   const [priceMax, setPriceMax] = useState(0);
@@ -189,7 +190,10 @@ export default function CityPage() {
           continent: data.city.continent || '',
         });
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error("[Voyagr] Failed to load city curations:", err);
+        setFetchError(true);
+      })
       .finally(() => setLoading(false));
   }, [slug]);
 
@@ -870,6 +874,41 @@ export default function CityPage() {
                               }}
                             >
                               Clear filter
+                            </button>
+                          </>
+                        ) : fetchError ? (
+                          <>
+                            <p
+                              style={{
+                                fontFamily: "var(--font-display)",
+                                fontSize: 28,
+                                fontStyle: "italic",
+                                fontWeight: 300,
+                                color: "var(--ink-mid)",
+                                marginBottom: 12,
+                              }}
+                            >
+                              Unable to load hotels
+                            </p>
+                            <p style={{ fontSize: 14, color: "var(--ink-light)", marginBottom: 20 }}>
+                              Something went wrong while loading stays for {displayName}. Please try again.
+                            </p>
+                            <button
+                              onClick={() => window.location.reload()}
+                              style={{
+                                background: "none",
+                                border: "1px solid var(--cream-border)",
+                                padding: "10px 24px",
+                                fontSize: 12,
+                                fontWeight: 500,
+                                letterSpacing: "0.1em",
+                                textTransform: "uppercase",
+                                color: "var(--ink-mid)",
+                                cursor: "pointer",
+                                fontFamily: "var(--font-body)",
+                              }}
+                            >
+                              Try again
                             </button>
                           </>
                         ) : (
