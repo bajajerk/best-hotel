@@ -19,6 +19,7 @@ const PRIMARY_LINKS: {
   badge?: string;
   subtext?: string;
 }[] = [
+  { label: "Home", href: "/", icon: "home" },
   { label: "Search", href: "/search", icon: "search" },
   {
     label: "Preferred Rates",
@@ -38,16 +39,16 @@ const PRIMARY_LINKS: {
   { label: "Profile", href: "/profile", icon: "person" },
 ];
 
-const TRUST_LINKS = [
-  { label: "Why Choose Us", href: "/about#why-us" },
-  { label: "How It Works", href: "/about#how-it-works" },
-  { label: "Reviews", href: "/about#reviews" },
+const SECONDARY_LINKS = [
+  { label: "Featured Properties", href: "/featured", icon: "apartment" },
+  { label: "Explore Cities", href: "/cities", icon: "location_city" },
+  { label: "Offers", href: "/offers", icon: "local_offer" },
 ];
 
-const SECONDARY_LINKS = [
-  { label: "About Us", href: "/about" },
+const BOTTOM_LINKS = [
   { label: "Help & Support", href: "/support" },
-  { label: "Terms & Privacy", href: "/terms" },
+  { label: "Contact Us", href: "/contact" },
+  { label: "Terms & Policies", href: "/terms" },
 ];
 
 const WHATSAPP_URL =
@@ -186,7 +187,7 @@ export default function MobileNav() {
             </button>
           </div>
 
-          {/* User avatar + info */}
+          {/* User avatar + greeting */}
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             <div
               style={{
@@ -208,37 +209,16 @@ export default function MobileNav() {
             >
               VC
             </div>
-            <div>
-              <div
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 500,
-                  fontSize: "18px",
-                  color: "var(--ink, #1a1710)",
-                  lineHeight: 1.3,
-                }}
-              >
-                Welcome back
-              </div>
-              <Link
-                href="/booking-history"
-                onClick={() => setOpen(false)}
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: "13px",
-                  fontWeight: 400,
-                  color: "var(--gold, #b8955a)",
-                  textDecoration: "none",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  marginTop: "2px",
-                  transition: "color 0.2s",
-                }}
-              >
-                My Trips
-                <span style={{ fontSize: "14px", lineHeight: 1 }}>→</span>
-              </Link>
+            <div
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 500,
+                fontSize: "18px",
+                color: "var(--ink, #1a1710)",
+                lineHeight: 1.3,
+              }}
+            >
+              Welcome back
             </div>
           </div>
         </div>
@@ -391,7 +371,7 @@ export default function MobileNav() {
         </div>
 
         {/* ═══════════════════════════════════════════
-            TRUST SECTION
+            SECONDARY SECTION — Discover
             ═══════════════════════════════════════════ */}
         <div style={{ padding: "16px 0 4px" }}>
           <div
@@ -405,9 +385,9 @@ export default function MobileNav() {
               padding: "0 24px 8px",
             }}
           >
-            Learn More
+            Discover
           </div>
-          {TRUST_LINKS.map((link) => (
+          {SECONDARY_LINKS.map((link) => (
             <Link
               key={link.label}
               href={link.href}
@@ -415,7 +395,7 @@ export default function MobileNav() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "10px",
+                gap: "12px",
                 fontFamily: "var(--font-body)",
                 fontSize: "14px",
                 fontWeight: 400,
@@ -425,24 +405,36 @@ export default function MobileNav() {
                 transition: "background 0.2s, color 0.2s",
               }}
             >
+              <span
+                className="material-symbols-outlined"
+                style={{
+                  fontSize: "18px",
+                  color: "var(--ink-light, #7a7465)",
+                  lineHeight: 1,
+                  fontVariationSettings: "'FILL' 0, 'wght' 300",
+                }}
+                aria-hidden="true"
+              >
+                {link.icon}
+              </span>
               {link.label}
             </Link>
           ))}
         </div>
 
-        {/* ── Spacer to push secondary to bottom ── */}
+        {/* ── Spacer to push bottom sections down ── */}
         <div style={{ flex: 1, minHeight: "16px" }} />
 
         {/* ═══════════════════════════════════════════
-            SECONDARY SECTION
+            BOTTOM SECTION — Support & Legal
             ═══════════════════════════════════════════ */}
         <div
           style={{
-            padding: "16px 24px 32px",
+            padding: "16px 24px 12px",
             borderTop: "1px solid var(--cream-border, #ddd5c3)",
           }}
         >
-          {SECONDARY_LINKS.map((link) => (
+          {BOTTOM_LINKS.map((link) => (
             <Link
               key={link.label}
               href={link.href}
@@ -478,6 +470,52 @@ export default function MobileNav() {
           >
             <span style={{ color: "var(--gold-light, #d4ae78)" }}>V</span>oyagr Club
           </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════
+            STICKY BOTTOM CTA
+            ═══════════════════════════════════════════ */}
+        <div
+          style={{
+            position: "sticky",
+            bottom: 0,
+            padding: "12px 16px 20px",
+            background: "linear-gradient(0deg, var(--white, #fdfaf5) 70%, transparent 100%)",
+          }}
+        >
+          <Link
+            href="/preferred-rates"
+            onClick={() => setOpen(false)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              width: "100%",
+              padding: "14px 20px",
+              background: "var(--gold, #b8955a)",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "10px",
+              fontFamily: "var(--font-display)",
+              fontSize: "15px",
+              fontWeight: 600,
+              letterSpacing: "0.06em",
+              textDecoration: "none",
+              cursor: "pointer",
+              transition: "background 0.2s",
+              textAlign: "center" as const,
+            }}
+          >
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: "18px", fontVariationSettings: "'FILL' 1, 'wght' 400" }}
+              aria-hidden="true"
+            >
+              lock_open
+            </span>
+            Unlock Preferred Rates
+          </Link>
         </div>
       </div>
         </>,
