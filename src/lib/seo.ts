@@ -6,7 +6,7 @@ export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://voyagr.club";
 export const SITE_NAME = "Voyagr Club";
 export const DEFAULT_DESCRIPTION =
-  "Get B2B wholesale hotel rates across 50+ cities worldwide. We negotiate directly with hotels so you save 20-40% on every booking. No markup, no hidden fees.";
+  "Access preferred wholesale hotel rates across 50+ cities worldwide. We negotiate directly with hotels and pass insider pricing to our members. No markup, no hidden fees.";
 
 /**
  * Organization JSON-LD — appears on every page via root layout

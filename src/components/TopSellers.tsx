@@ -467,7 +467,7 @@ export default function TopSellers({ hotels }: { hotels: TopSellerHotel[] }) {
                 maxWidth: "480px",
               }}
             >
-              Ranked by bookings and savings — the hotels our travellers choose again and again.
+              Ranked by popularity — the hotels our travellers choose again and again.
             </p>
           </div>
           <div
@@ -489,7 +489,7 @@ export default function TopSellers({ hotels }: { hotels: TopSellerHotel[] }) {
                 display: "inline-block",
               }}
             />
-            Weighted by bookings &amp; savings
+            Ranked by guest bookings
           </div>
         </motion.div>
 

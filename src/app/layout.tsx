@@ -145,6 +145,7 @@ export default function RootLayout({
           href="https://wa.me/919876543210?text=Hi%20Voyagr%2C%20I%27d%20like%20to%20book%20a%20hotel"
           target="_blank"
           rel="noopener noreferrer"
+          className="whatsapp-fab"
           style={{
             position: "fixed",
             bottom: "24px",

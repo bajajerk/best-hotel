@@ -124,7 +124,7 @@ export default function Tab2Premium() {
             lineHeight: 1.5,
           }}
         >
-          exclusive prices. zero markup.
+          insider rates. zero markup.
         </p>
       </motion.div>
 

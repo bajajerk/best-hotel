@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Voyagr Club — Preferred Hotel Rates",
     short_name: "Voyagr",
     description:
-      "Get B2B wholesale hotel rates across 50+ cities worldwide. Save 20-40% on every booking.",
+      "Access preferred wholesale hotel rates across 50+ cities worldwide. No markup, no hidden fees.",
     start_url: "/",
     display: "standalone",
     background_color: "#f5f0e8",

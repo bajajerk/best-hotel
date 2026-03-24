@@ -117,7 +117,7 @@ const SEASONAL_TRIPS = [
   {
     season: "Autumn",
     label: "Sep – Nov",
-    description: "Golden foliage, harvest festivals, and shoulder-season savings.",
+    description: "Golden foliage, harvest festivals, and quieter travel windows.",
     destinations: [
       { name: "Kyoto", slug: "kyoto", country: "Japan" },
       { name: "Prague", slug: "prague", country: "Czech Republic" },
@@ -196,13 +196,13 @@ const fadeSlow = {
 // ---------------------------------------------------------------------------
 const TESTIMONIALS = [
   {
-    quote: "I booked the same suite I found on Booking.com and saved over four thousand rupees a night. I genuinely did not believe it until I checked in.",
+    quote: "I booked the same suite I found on Booking.com — the Voyagr rate was noticeably better. I genuinely did not believe it until I checked in.",
     name: "Priya Mehta",
     location: "Mumbai",
     avatar: "PM",
   },
   {
-    quote: "We planned our honeymoon across three cities. Voyagr saved us enough to add an extra night in Santorini. That is not an exaggeration.",
+    quote: "We planned our honeymoon across three cities. The rates through Voyagr meant we could add an extra night in Santorini. That is not an exaggeration.",
     name: "Arjun & Kavya",
     location: "Bangalore",
     avatar: "AK",
@@ -237,7 +237,7 @@ const WHY_STEPS = [
   {
     num: "04",
     title: "Guaranteed Savings",
-    desc: "Save 20-40% on every booking. Same hotel, same room, same dates. Just a better rate.",
+    desc: "Preferred wholesale rates on every booking. Same hotel, same room, same dates. Just a better rate.",
   },
 ];
 
@@ -631,7 +631,7 @@ export default function Home() {
       try {
         const hotels = await fetchFeaturedHotels(FEATURED_CITY_SLUGS, "couples");
 
-        // Top sellers — weighted by bookings + savings
+        // Top sellers — most booked properties
         setTopSellers(computeTopSellers(hotels, 8));
 
         // Sort by rating for popular properties (top 8)
@@ -777,8 +777,8 @@ export default function Home() {
               marginBottom: "40px",
             }}
           >
-            B2B wholesale pricing on 1,500+ hotels worldwide.
-            Save 20&ndash;40% on every booking. No markup, no hidden fees.
+            Preferred wholesale rates at 1,500+ hotels worldwide.
+            Direct partnerships. No markup, no hidden fees.
           </motion.p>
 
           {/* Search bar */}
@@ -921,7 +921,7 @@ export default function Home() {
           >
             {[
               { num: "1,500+", label: "Hotels" },
-              { num: "20-40%", label: "Average savings" },
+              { num: "50+", label: "Cities" },
             ].map((stat) => (
               <div key={stat.label}>
                 <div className="type-stat" style={{
@@ -1011,10 +1011,10 @@ export default function Home() {
               color: "var(--success)",
               fontWeight: 500,
             }}>
-              Save 28%
+              Voyagr Rate
             </div>
             <div style={{ fontSize: "10px", color: "var(--ink-light)", marginTop: "2px" }}>
-              &#8377;4,000 saved per night
+              &#8377;4,000 less per night
             </div>
           </motion.div>
         </div>
@@ -1183,12 +1183,12 @@ export default function Home() {
       </section>
 
       {/* ================================================================
-          TOP SELLERS — bookings + savings weighted
+          TOP SELLERS — most booked properties
       ================================================================ */}
       <TopSellers hotels={topSellers} />
 
       {/* ================================================================
-          TOP DEALS — highest discount %
+          FEATURED PROPERTIES — editor's picks
       ================================================================ */}
       <section
         className="section-top-deals"
@@ -1213,12 +1213,12 @@ export default function Home() {
           >
             <div>
               <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
-                Top Deals
+                Featured Properties
               </div>
               <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
-                Biggest{" "}
-                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>savings</em>{" "}
-                right now
+                Handpicked{" "}
+                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>stays</em>{" "}
+                worth booking
               </h2>
             </div>
           </motion.div>
@@ -1252,7 +1252,7 @@ export default function Home() {
                       overflow: "hidden",
                     }}
                   >
-                    {/* Image with discount badge */}
+                    {/* Image with preferred rate badge */}
                     <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
                       <img
                         className="card-img"
@@ -1270,7 +1270,7 @@ export default function Home() {
                           (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
                         }}
                       />
-                      {/* Large discount badge */}
+                      {/* Preferred rate badge */}
                       <div
                         style={{
                           position: "absolute",
@@ -1279,31 +1279,13 @@ export default function Home() {
                           background: "var(--success)",
                           color: "var(--cream)",
                           padding: "6px 14px",
-                          display: "flex",
-                          alignItems: "baseline",
-                          gap: "3px",
+                          fontSize: "9px",
+                          fontWeight: 500,
+                          letterSpacing: "0.06em",
+                          textTransform: "uppercase" as const,
                         }}
                       >
-                        <span
-                          style={{
-                            fontFamily: "var(--font-display)",
-                            fontSize: "22px",
-                            fontWeight: 500,
-                            lineHeight: 1,
-                          }}
-                        >
-                          {deal.savePercent}%
-                        </span>
-                        <span
-                          style={{
-                            fontSize: "9px",
-                            fontWeight: 500,
-                            letterSpacing: "0.06em",
-                            textTransform: "uppercase" as const,
-                          }}
-                        >
-                          off
-                        </span>
+                        Preferred Rate
                       </div>
                       {/* Rating badge */}
                       {deal.rating >= 8.5 && (
@@ -1428,7 +1410,7 @@ export default function Home() {
                               marginBottom: "4px",
                             }}
                           >
-                            Save &#8377;{(deal.marketRate - deal.voyagrRate).toLocaleString("en-IN")}
+                            Voyagr Rate
                           </div>
                           <span
                             className="card-arrow"
@@ -2131,7 +2113,7 @@ export default function Home() {
           {[
             { number: "50+", label: "Cities" },
             { number: "1,500+", label: "Hotels" },
-            { number: "20-40%", label: "Savings" },
+            { number: "Direct", label: "Partnerships" },
             { number: "0", label: "Booking fees", prefix: "₹" },
           ].map((stat, i, arr) => (
             <motion.div
@@ -2199,7 +2181,7 @@ export default function Home() {
               Stay Updated
             </div>
             <h2 className="type-display-2" style={{ color: "var(--ink)", marginBottom: "16px" }}>
-              Exclusive <em style={{ fontStyle: "italic", color: "var(--gold)" }}>deals</em> in your inbox
+              Curated <em style={{ fontStyle: "italic", color: "var(--gold)" }}>picks</em> in your inbox
             </h2>
             <p className="type-body" style={{
               color: "var(--ink-light)",
@@ -2208,7 +2190,7 @@ export default function Home() {
               maxWidth: "480px",
               margin: "0 auto 32px",
             }}>
-              Get early access to flash sales, new destination launches, and curated hotel picks
+              Get early access to new destination launches, seasonal highlights, and curated hotel picks
               delivered once a week.
             </p>
 
@@ -2322,9 +2304,9 @@ export default function Home() {
                     marginBottom: "20px",
                   }}
                 >
-                  Voyagr Club was built on a simple idea — luxury travel shouldn't cost a
-                  fortune. We leverage B2B wholesale hotel networks to bring you the same
-                  rooms, same dates, at 20-40% less than what you'd pay on retail booking
+                  Voyagr Club was built on a simple idea — luxury travel should be
+                  accessible. We leverage B2B wholesale hotel networks to bring you the same
+                  rooms, same dates, at rates well below what you'd find on retail booking
                   platforms.
                 </p>
                 <p
@@ -2351,7 +2333,7 @@ export default function Home() {
                   {[
                     { number: "50+", label: "Cities Worldwide" },
                     { number: "10K+", label: "Hotels Listed" },
-                    { number: "20-40%", label: "Average Savings" },
+                    { number: "B2B", label: "Wholesale Rates" },
                     { number: "24/7", label: "WhatsApp Support" },
                   ].map((stat) => (
                     <div

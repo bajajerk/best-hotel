@@ -82,7 +82,7 @@ const SCANNING_STEPS = [
 const SEARCH_STEPS = [
   "Checking direct hotel rates...",
   "Scanning B2B partner networks...",
-  "Negotiating best available price...",
+  "Finding best available rate...",
 ];
 
 /* ─────────────────────────── Helpers ─────────────────────────── */
@@ -429,9 +429,9 @@ export default function MatchMyRatesPage() {
                 margin: "0 auto",
               }}
             >
-              Screenshot any hotel price from any OTA — we&apos;ll beat it
-              with wholesale B2B rates that aren&apos;t available to the
-              public.
+              Screenshot any hotel rate from any booking site — we&apos;ll
+              check it against our wholesale B2B rates that aren&apos;t
+              available to the public.
             </p>
           </div>
 
@@ -2204,13 +2204,13 @@ function ResultStep({
             fontStyle: "italic",
           }}
         >
-          Save ₹{formatCurrency(result.savings)}{" "}
+          ₹{formatCurrency(result.savings)} less{" "}
           <span style={{ fontSize: "0.7em", fontStyle: "normal", fontWeight: 300 }}>
             /night
           </span>
         </h2>
         <p style={{ fontSize: 13, color: "var(--ink-light)", fontWeight: 300 }}>
-          That&apos;s {result.savingsPercent}% less than {result.otaName}
+          Our rate vs {result.otaName}
         </p>
       </motion.div>
 

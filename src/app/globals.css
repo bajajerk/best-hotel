@@ -149,6 +149,20 @@ body {
   }
 }
 
+/* ── WhatsApp FAB — push above mobile tab bar on small screens ── */
+@media (max-width: 639px) {
+  .whatsapp-fab {
+    bottom: 80px !important;
+  }
+}
+
+/* ── CompareBar — push above mobile tab bar on small screens ── */
+@media (max-width: 639px) {
+  .compare-bar-mobile {
+    bottom: 56px !important;
+  }
+}
+
 /* Legacy class — kept for backward compat */
 .nav-links {
   display: none !important;

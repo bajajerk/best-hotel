@@ -137,7 +137,7 @@ export function PriceComparisonBars({
                     fontFamily: "var(--font-body)",
                   }}
                 >
-                  {saving}% more expensive
+                  higher than Voyagr
                 </div>
               )}
             </motion.div>
@@ -202,7 +202,7 @@ export function BestPriceGuarantee() {
           margin: 0,
         }}
       >
-        Found a lower rate elsewhere? We&apos;ll match it and give you an additional 5% off. Our
+        Found a lower rate elsewhere? We&apos;ll match it. Our
         rates are negotiated directly with hotels — no middleman markup.
       </p>
     </div>

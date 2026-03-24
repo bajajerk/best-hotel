@@ -89,7 +89,7 @@ export default function HotelCard({ hotel }: { hotel: HotelCardData }) {
               letterSpacing: "0.04em",
             }}
           >
-            Save up to {hotel.savePercent}%
+            Preferred Rate
           </div>
         </div>
 

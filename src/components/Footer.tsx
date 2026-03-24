@@ -85,8 +85,8 @@ export default function Footer() {
                 maxWidth: "280px",
               }}
             >
-              B2B wholesale hotel rates across 50+ cities worldwide. Same hotel,
-              same room — save 20-40% on every booking.
+              Preferred wholesale hotel rates across 50+ cities worldwide. Same hotel,
+              same room — at rates negotiated directly with our partners.
             </p>
 
             {/* Social links */}

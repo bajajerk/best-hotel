@@ -31,12 +31,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     keywords: [
       `${cityName} hotels`,
-      `${cityName} hotel deals`,
-      `cheap hotels ${cityName}`,
+      `${cityName} preferred rates`,
       `${cityName} accommodation`,
       `best hotels in ${cityName}`,
       `${cityName} travel`,
-      `discount hotels ${cityName}`,
+      `${cityName} hotel booking`,
     ],
     openGraph: {
       title,

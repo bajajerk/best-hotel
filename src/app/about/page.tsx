@@ -26,9 +26,9 @@ export default function AboutPage() {
             className="type-body-lg"
             style={{ color: "var(--ink-light)", marginBottom: "40px", maxWidth: "600px" }}
           >
-            Voyagr Club is a members-only hotel booking platform that unlocks
-            preferred rates at the world&apos;s finest properties. We negotiate
-            exclusive pricing so you can experience luxury for less.
+            Voyagr Club is a members-only hotel booking platform that connects
+            travellers with preferred rates at the world&apos;s finest properties.
+            We negotiate directly with hotels so you can access insider pricing.
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
@@ -40,10 +40,9 @@ export default function AboutPage() {
                 Our Mission
               </h2>
               <p className="type-body" style={{ color: "var(--ink-mid)", lineHeight: 1.7 }}>
-                We believe that exceptional travel shouldn&apos;t come with an
-                exceptional price tag. By building direct relationships with
-                hotels worldwide, we pass insider rates straight to our members —
-                no markups, no hidden fees.
+                We believe exceptional travel should be accessible. By building
+                direct relationships with hotels worldwide, we pass preferred
+                wholesale rates straight to our members — no markups, no hidden fees.
               </p>
             </section>
 
@@ -57,8 +56,8 @@ export default function AboutPage() {
               <p className="type-body" style={{ color: "var(--ink-mid)", lineHeight: 1.7 }}>
                 Browse our curated collection of hotels, compare preferred rates
                 against public prices, and book directly through Voyagr Club.
-                Found a better rate elsewhere? Use our Check my Price tool and
-                we&apos;ll match or beat it.
+                Found a better rate elsewhere? Use our Rate Check tool and
+                we&apos;ll match it.
               </p>
             </section>
 
@@ -71,7 +70,7 @@ export default function AboutPage() {
               </h2>
               <p className="type-body" style={{ color: "var(--ink-mid)", lineHeight: 1.7 }}>
                 With access to preferred rates at thousands of properties across
-                the globe, a dedicated concierge team, and a best-price guarantee,
+                the globe, a dedicated concierge team, and a rate-match guarantee,
                 Voyagr Club is the smartest way to book your next stay.
               </p>
             </section>

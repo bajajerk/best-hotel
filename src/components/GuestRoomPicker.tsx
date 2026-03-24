@@ -142,7 +142,7 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
             top: "calc(100% + 6px)",
             left: 0,
             right: 0,
-            zIndex: 50,
+            zIndex: 1000,
             background: dropdownBg,
             border: `1px solid ${dropdownBorder}`,
             borderRadius: 14,

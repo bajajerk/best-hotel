@@ -143,7 +143,7 @@ function RateTier({
             fontFamily: "var(--font-body)",
           }}
         >
-          Save {savingsVsMarket}%
+          Club Rate
         </div>
       )}
     </div>
@@ -334,11 +334,11 @@ function ComparisonCard({
             <path d="M9 12l2 2 4-4" />
           </svg>
           <span style={{ fontSize: "11px", color: "var(--ink-mid)" }}>
-            Voyager Club members save{" "}
+            Voyager Club members access preferred rates{" "}
             <strong style={{ color: "var(--success)" }}>
-              {formatINR(hotel.marketRate - hotel.clubRate)}
+              negotiated directly
             </strong>
-            {" "}per night vs market rate
+            {" "}with this property
           </span>
         </div>
         <span
@@ -461,7 +461,7 @@ export default function VoyagerClubComparison() {
             marginBottom: "40px",
           }}
         >
-          <StatPill value="40%" label="Avg. savings" />
+          <StatPill value="Direct" label="Hotel partnerships" />
           <StatPill value="1,500+" label="Partner hotels" />
           <StatPill value="120+" label="Destinations" />
           <StatPill value="Free" label="Membership" />
@@ -531,7 +531,7 @@ export default function VoyagerClubComparison() {
                 lineHeight: 1.6,
               }}
             >
-              Free membership. No annual fees. Unlock the best wholesale rates
+              Free membership. No annual fees. Access preferred wholesale rates
               and exclusive perks at 1,500+ hotels worldwide.
             </p>
             <button

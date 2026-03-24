@@ -24,6 +24,7 @@ export default function CompareBar() {
   return (
     <AnimatePresence>
       <motion.div
+        className="compare-bar-mobile"
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
@@ -33,7 +34,7 @@ export default function CompareBar() {
           bottom: 0,
           left: 0,
           right: 0,
-          zIndex: 9998,
+          zIndex: 150,
           background: "var(--ink)",
           borderTop: "1px solid rgba(184, 149, 90, 0.3)",
           padding: "12px 24px",

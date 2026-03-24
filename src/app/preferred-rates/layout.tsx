@@ -2,20 +2,20 @@ import type { Metadata } from "next";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Preferred Rates Program — Exclusive Hotel Discounts",
+  title: "Preferred Rates Program — Insider Hotel Access",
   description:
-    "Join Voyagr Club's Preferred Rates program for exclusive access to wholesale hotel prices. Save 20-40% on 5-star hotels in 50+ cities worldwide.",
+    "Join Voyagr Club's Preferred Rates program for exclusive access to wholesale hotel pricing at 5-star properties in 50+ cities worldwide.",
   keywords: [
     "preferred hotel rates",
-    "exclusive hotel discounts",
+    "insider hotel access",
     "hotel loyalty program",
     "wholesale hotel rates",
     "VIP hotel booking",
   ],
   openGraph: {
-    title: "Preferred Rates Program — Exclusive Hotel Discounts",
+    title: "Preferred Rates Program — Insider Hotel Access",
     description:
-      "Join Voyagr Club's Preferred Rates program. Save 20-40% on 5-star hotels worldwide.",
+      "Join Voyagr Club's Preferred Rates program. Access wholesale rates at 5-star hotels worldwide.",
     url: `${SITE_URL}/preferred-rates`,
     siteName: SITE_NAME,
     type: "website",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "Preferred Rates — Voyagr Club",
-    description: "Save 20-40% on 5-star hotels in 50+ cities worldwide.",
+    description: "Access wholesale rates at 5-star hotels in 50+ cities worldwide.",
   },
   alternates: {
     canonical: `${SITE_URL}/preferred-rates`,

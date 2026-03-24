@@ -27,7 +27,7 @@ const BOOKING_SITES = [
 const SCANNING_STEPS = [
   { text: "Checking direct hotel rates...", delay: 0.5 },
   { text: "Scanning partner networks...", delay: 1.2 },
-  { text: "Negotiating best price...", delay: 2.0 },
+  { text: "Finding best available rate...", delay: 2.0 },
 ];
 
 export default function Tab3BeatPrice() {
@@ -153,7 +153,7 @@ export default function Tab3BeatPrice() {
         >
           upload any hotel screenshot and
           <br />
-          we&apos;ll find a better deal
+          we&apos;ll find a better rate
         </p>
       </div>
 
@@ -404,7 +404,7 @@ export default function Tab3BeatPrice() {
             letterSpacing: 0.3,
           }}
         >
-          Find Better Price
+          Check Our Rate
         </button>
       </div>
     </motion.div>
@@ -607,7 +607,7 @@ export default function Tab3BeatPrice() {
           borderRadius: 6,
         }}
       >
-        &#10003; deal found
+        &#10003; better rate found
       </motion.div>
 
       {/* Price Comparison */}
@@ -691,7 +691,7 @@ export default function Tab3BeatPrice() {
             color: "var(--gold)",
           }}
         >
-          you save &#8377;2,600 per night
+          your rate: &#8377;2,600 less per night
         </div>
       </motion.div>
 
@@ -769,7 +769,7 @@ export default function Tab3BeatPrice() {
             letterSpacing: 0.3,
           }}
         >
-          Book This Deal
+          Book This Rate
         </button>
         <button
           onClick={handleReset}

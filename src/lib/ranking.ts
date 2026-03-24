@@ -225,7 +225,7 @@ export const SORT_STRATEGY_LABELS: { label: string; value: SortStrategy }[] = [
   { label: "Price: High to Low", value: "price_desc" },
   { label: "Guest Rating", value: "rating_desc" },
   { label: "Most Popular", value: "popularity_desc" },
-  { label: "Best Deals", value: "deal_desc" },
+  { label: "Best Value", value: "deal_desc" },
   { label: "Stars: High to Low", value: "stars_desc" },
   { label: "Name A–Z", value: "name_asc" },
   { label: "Name Z–A", value: "name_desc" },

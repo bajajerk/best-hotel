@@ -354,7 +354,7 @@ export default function RoomSelectionPage() {
 
       {/* Sticky footer */}
       {totalRooms > 0 && (
-        <div style={{
+        <div className="compare-bar-mobile" style={{
           position: "fixed",
           bottom: 0,
           left: 0,
@@ -365,7 +365,7 @@ export default function RoomSelectionPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          zIndex: 100,
+          zIndex: 110,
         }}>
           <div>
             <div style={{
