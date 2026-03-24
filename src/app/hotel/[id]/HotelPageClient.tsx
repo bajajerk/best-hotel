@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
@@ -827,6 +827,7 @@ function useWishlist() {
 
 export default function HotelPage() {
   const params = useParams();
+  const bookingRouter = useRouter();
   const hotelId = params.id as string;
 
   const [hotel, setHotel] = useState<HotelDetail | null>(null);
@@ -1808,7 +1809,7 @@ export default function HotelPage() {
 
                 {/* Book Now — Green CTA */}
                 <button
-                  onClick={() => window.open("https://wa.me/919876543210", "_blank")}
+                  onClick={() => bookingRouter.push("/book/rooms")}
                   className="flex items-center justify-center gap-2 w-full py-4 text-sm font-semibold uppercase tracking-[0.1em] transition-all hover:brightness-110 active:scale-[0.98]"
                   style={{
                     background: "#3b7a4a",
@@ -2113,7 +2114,7 @@ export default function HotelPage() {
 
                 {/* Book Now — Big Green CTA */}
                 <button
-                  onClick={() => window.open("https://wa.me/919876543210", "_blank")}
+                  onClick={() => bookingRouter.push("/book/rooms")}
                   className="flex items-center justify-center gap-2.5 w-full py-4 text-sm font-semibold uppercase tracking-[0.1em] transition-all hover:brightness-110 active:scale-[0.98]"
                   style={{
                     background: "#3b7a4a",
@@ -2343,7 +2344,7 @@ export default function HotelPage() {
           </button>
           {/* Book Now green button */}
           <button
-            onClick={() => window.open("https://wa.me/919876543210", "_blank")}
+            onClick={() => bookingRouter.push("/book/rooms")}
             className="text-xs font-semibold uppercase tracking-[0.1em] transition-all active:scale-[0.97]"
             style={{
               background: "#3b7a4a",
