@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 /* ── Types ── */
@@ -65,6 +66,47 @@ function generateBookingId(): string {
   return id;
 }
 
+/* ── Booking persistence ── */
+
+export interface StoredBooking {
+  bookingId: string;
+  hotelName: string;
+  roomName: string;
+  rateType: "preferred" | "standard";
+  checkIn: string;
+  checkOut: string;
+  nights: number;
+  guests: string;
+  guestName: string;
+  email: string;
+  nightlyRate: number;
+  marketRate: number;
+  currency: string;
+  totalPrice: number;
+  totalSaving: number;
+  bookedAt: string;
+}
+
+const BOOKINGS_KEY = "voyagr_bookings";
+
+function saveBooking(booking: StoredBooking) {
+  try {
+    const existing = JSON.parse(localStorage.getItem(BOOKINGS_KEY) || "[]");
+    existing.unshift(booking);
+    localStorage.setItem(BOOKINGS_KEY, JSON.stringify(existing));
+  } catch {
+    // silently fail if localStorage is unavailable
+  }
+}
+
+export function getStoredBookings(): StoredBooking[] {
+  try {
+    return JSON.parse(localStorage.getItem(BOOKINGS_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
 /* ── Toast component ── */
 
 function Toast({ message, visible }: { message: string; visible: boolean }) {
@@ -117,6 +159,7 @@ export default function BookingModal({
   currency,
   perks,
 }: BookingModalProps) {
+  const router = useRouter();
   const [form, setForm] = useState<GuestForm>({
     firstName: "",
     lastName: "",
@@ -190,7 +233,27 @@ export default function BookingModal({
     const id = generateBookingId();
     setBookingId(id);
     setBookingState("success");
-  }, [form]);
+
+    // Persist booking to localStorage
+    saveBooking({
+      bookingId: id,
+      hotelName,
+      roomName,
+      rateType,
+      checkIn,
+      checkOut,
+      nights,
+      guests,
+      guestName: `${form.firstName.trim()} ${form.lastName.trim()}`,
+      email: form.email.trim(),
+      nightlyRate,
+      marketRate,
+      currency,
+      totalPrice: nightlyRate * nights,
+      totalSaving: (marketRate - nightlyRate) * nights > 0 ? (marketRate - nightlyRate) * nights : 0,
+      bookedAt: new Date().toISOString(),
+    });
+  }, [form, hotelName, roomName, rateType, checkIn, checkOut, nights, guests, nightlyRate, marketRate, currency]);
 
   const inputStyle = (field: keyof GuestForm): React.CSSProperties => ({
     width: "100%",
@@ -618,7 +681,7 @@ export default function BookingModal({
                   </div>
                 </>
               ) : (
-                /* ═══════ Success State ═══════ */
+                /* ═══════ Screen 5 — Success State ═══════ */
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -627,181 +690,271 @@ export default function BookingModal({
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "48px 24px",
-                    textAlign: "center",
+                    overflowY: "auto",
                   }}
                 >
-                  {/* Success icon */}
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", delay: 0.15, stiffness: 200 }}
-                    style={{
-                      width: 72,
-                      height: 72,
-                      borderRadius: "50%",
-                      background: "var(--success, #4a7c59)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginBottom: 24,
-                    }}
-                  >
-                    <svg
-                      width="36"
-                      height="36"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="white"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </motion.div>
-
-                  <h2
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "28px",
-                      fontWeight: 400,
-                      fontStyle: "italic",
-                      color: "var(--ink)",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Booking Confirmed
-                  </h2>
-
-                  <p
-                    style={{
-                      fontSize: "13px",
-                      color: "var(--ink-light)",
-                      marginBottom: 24,
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    Your reservation has been confirmed. A confirmation email will be sent to{" "}
-                    <strong style={{ color: "var(--ink)" }}>{form.email}</strong>.
-                  </p>
-
-                  {/* Booking ID */}
                   <div
                     style={{
-                      background: "var(--white, #fdfaf5)",
-                      border: "1px solid var(--cream-border, #e0d8c8)",
-                      padding: "20px 32px",
-                      marginBottom: 32,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      padding: "40px 24px 32px",
+                      textAlign: "center",
                     }}
                   >
+                    {/* Animated green checkmark — bounce in */}
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: [0, 1.25, 0.9, 1.05, 1] }}
+                      transition={{ duration: 0.7, delay: 0.15, ease: "easeOut" }}
+                      style={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: "50%",
+                        background: "var(--success, #4a7c59)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginBottom: 20,
+                      }}
+                    >
+                      <motion.svg
+                        width="36"
+                        height="36"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        initial={{ pathLength: 0, opacity: 0 }}
+                        animate={{ pathLength: 1, opacity: 1 }}
+                        transition={{ delay: 0.5, duration: 0.4 }}
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </motion.svg>
+                    </motion.div>
+
+                    {/* Eyebrow */}
                     <p
                       style={{
-                        fontSize: "10px",
+                        fontSize: "11px",
                         fontWeight: 600,
                         letterSpacing: "0.12em",
                         textTransform: "uppercase",
-                        color: "var(--ink-light)",
+                        color: "var(--success, #4a7c59)",
                         marginBottom: 6,
+                        fontFamily: "var(--font-body)",
                       }}
                     >
-                      Booking Reference
+                      Booking confirmed
                     </p>
-                    <p
-                      style={{
-                        fontSize: "24px",
-                        fontWeight: 500,
-                        fontFamily: "var(--font-mono)",
-                        color: "var(--ink)",
-                        letterSpacing: "0.08em",
-                      }}
-                    >
-                      {bookingId}
-                    </p>
-                  </div>
 
-                  {/* Booking summary card */}
-                  <div
-                    style={{
-                      background: "var(--white, #fdfaf5)",
-                      border: "1px solid var(--cream-border, #e0d8c8)",
-                      padding: "20px 24px",
-                      width: "100%",
-                      maxWidth: 400,
-                      textAlign: "left",
-                      marginBottom: 32,
-                    }}
-                  >
-                    <p
+                    {/* Headline */}
+                    <h2
                       style={{
                         fontFamily: "var(--font-display)",
-                        fontSize: "18px",
-                        fontWeight: 500,
+                        fontSize: "28px",
+                        fontWeight: 400,
                         fontStyle: "italic",
                         color: "var(--ink)",
-                        marginBottom: 4,
+                        marginBottom: 10,
                       }}
                     >
-                      {hotelName}
-                    </p>
-                    <p style={{ fontSize: "13px", color: "var(--ink-mid)", marginBottom: 12 }}>
-                      {roomName} &middot; {isPreferred ? "Preferred Rate" : "Standard Rate"}
-                    </p>
-                    <div className="flex justify-between" style={{ fontSize: "13px", marginBottom: 4 }}>
-                      <span style={{ color: "var(--ink-light)" }}>Check-in</span>
-                      <span style={{ color: "var(--ink)", fontWeight: 500 }}>{formatDateShort(checkIn)}</span>
-                    </div>
-                    <div className="flex justify-between" style={{ fontSize: "13px", marginBottom: 4 }}>
-                      <span style={{ color: "var(--ink-light)" }}>Check-out</span>
-                      <span style={{ color: "var(--ink)", fontWeight: 500 }}>{formatDateShort(checkOut)}</span>
-                    </div>
-                    <div className="flex justify-between" style={{ fontSize: "13px", marginBottom: 4 }}>
-                      <span style={{ color: "var(--ink-light)" }}>Duration</span>
-                      <span style={{ color: "var(--ink)", fontWeight: 500 }}>{nights} night{nights > 1 ? "s" : ""}</span>
-                    </div>
-                    <div className="flex justify-between" style={{ fontSize: "13px", marginBottom: 4 }}>
-                      <span style={{ color: "var(--ink-light)" }}>Guest</span>
-                      <span style={{ color: "var(--ink)", fontWeight: 500 }}>{form.firstName} {form.lastName}</span>
-                    </div>
-                    <div
-                      className="flex justify-between"
+                      You&apos;re all set
+                    </h2>
+
+                    {/* Subtext — email + WhatsApp */}
+                    <p
                       style={{
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        paddingTop: 12,
-                        borderTop: "1px solid var(--cream-border, #e0d8c8)",
-                        marginTop: 8,
+                        fontSize: "13px",
+                        color: "var(--ink-light)",
+                        marginBottom: 28,
+                        lineHeight: 1.6,
+                        maxWidth: 360,
                       }}
                     >
-                      <span style={{ color: "var(--ink)" }}>Total Paid</span>
-                      <span style={{ color: "var(--ink)", fontFamily: "var(--font-display)", fontSize: "18px" }}>
-                        {formatCurrency(totalPrice, currency)}
-                      </span>
+                      A confirmation has been sent to{" "}
+                      <strong style={{ color: "var(--ink)" }}>{form.email}</strong>.
+                      You&apos;ll also receive a WhatsApp notification with your booking details.
+                    </p>
+
+                    {/* Booking Reference — monospace */}
+                    <div
+                      style={{
+                        background: "var(--white, #fdfaf5)",
+                        border: "1px solid var(--cream-border, #e0d8c8)",
+                        padding: "16px 32px",
+                        marginBottom: 24,
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          letterSpacing: "0.12em",
+                          textTransform: "uppercase",
+                          color: "var(--ink-light)",
+                          marginBottom: 6,
+                        }}
+                      >
+                        Booking Reference
+                      </p>
+                      <p
+                        style={{
+                          fontSize: "24px",
+                          fontWeight: 500,
+                          fontFamily: "var(--font-mono)",
+                          color: "var(--ink)",
+                          letterSpacing: "0.08em",
+                        }}
+                      >
+                        {bookingId}
+                      </p>
+                    </div>
+
+                    {/* Summary card */}
+                    <div
+                      style={{
+                        background: "var(--white, #fdfaf5)",
+                        border: "1px solid var(--cream-border, #e0d8c8)",
+                        padding: "20px 24px",
+                        width: "100%",
+                        maxWidth: 400,
+                        textAlign: "left",
+                        marginBottom: 28,
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontSize: "18px",
+                          fontWeight: 500,
+                          fontStyle: "italic",
+                          color: "var(--ink)",
+                          marginBottom: 4,
+                        }}
+                      >
+                        {hotelName}
+                      </p>
+                      <p style={{ fontSize: "13px", color: "var(--ink-mid)", marginBottom: 12 }}>
+                        {roomName} &middot; {isPreferred ? "Preferred Rate" : "Standard Rate"}
+                      </p>
+
+                      <div className="flex justify-between" style={{ fontSize: "13px", marginBottom: 4 }}>
+                        <span style={{ color: "var(--ink-light)" }}>Check-in</span>
+                        <span style={{ color: "var(--ink)", fontWeight: 500 }}>{formatDateShort(checkIn)}</span>
+                      </div>
+                      <div className="flex justify-between" style={{ fontSize: "13px", marginBottom: 4 }}>
+                        <span style={{ color: "var(--ink-light)" }}>Check-out</span>
+                        <span style={{ color: "var(--ink)", fontWeight: 500 }}>{formatDateShort(checkOut)}</span>
+                      </div>
+                      <div className="flex justify-between" style={{ fontSize: "13px", marginBottom: 4 }}>
+                        <span style={{ color: "var(--ink-light)" }}>Duration</span>
+                        <span style={{ color: "var(--ink)", fontWeight: 500 }}>{nights} night{nights > 1 ? "s" : ""}</span>
+                      </div>
+                      <div className="flex justify-between" style={{ fontSize: "13px", marginBottom: 4 }}>
+                        <span style={{ color: "var(--ink-light)" }}>Guest</span>
+                        <span style={{ color: "var(--ink)", fontWeight: 500 }}>{form.firstName} {form.lastName}</span>
+                      </div>
+
+                      {/* Saving row (if applicable) */}
+                      {hasSaving && (
+                        <div className="flex justify-between" style={{ fontSize: "13px", marginBottom: 4 }}>
+                          <span style={{ color: "var(--success, #4a7c59)", fontWeight: 600 }}>You saved</span>
+                          <span
+                            style={{
+                              color: "var(--success, #4a7c59)",
+                              fontWeight: 600,
+                              fontFamily: "var(--font-mono)",
+                            }}
+                          >
+                            {formatCurrency(totalSaving, currency)}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Total */}
+                      <div
+                        className="flex justify-between"
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          paddingTop: 12,
+                          borderTop: "1px solid var(--cream-border, #e0d8c8)",
+                          marginTop: 8,
+                        }}
+                      >
+                        <span style={{ color: "var(--ink)" }}>Total</span>
+                        <span style={{ color: "var(--ink)", fontFamily: "var(--font-display)", fontSize: "18px" }}>
+                          {formatCurrency(totalPrice, currency)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Two buttons */}
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 12,
+                        width: "100%",
+                        maxWidth: 400,
+                      }}
+                    >
+                      <button
+                        onClick={() => {
+                          onClose();
+                          router.push("/booking-history");
+                        }}
+                        style={{
+                          width: "100%",
+                          padding: "14px 0",
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          background: "var(--gold, #b8955a)",
+                          color: "var(--ink, #1a1710)",
+                          border: "none",
+                          cursor: "pointer",
+                          fontFamily: "var(--font-body)",
+                          transition: "opacity 0.2s",
+                        }}
+                        onMouseEnter={(e) => { (e.target as HTMLButtonElement).style.opacity = "0.9"; }}
+                        onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.opacity = "1"; }}
+                      >
+                        View in My Trips
+                      </button>
+                      <button
+                        onClick={onClose}
+                        style={{
+                          width: "100%",
+                          padding: "14px 0",
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          background: "transparent",
+                          color: "var(--ink-light, #7a7465)",
+                          border: "1px solid var(--cream-border, #e0d8c8)",
+                          cursor: "pointer",
+                          fontFamily: "var(--font-body)",
+                          transition: "all 0.2s",
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.target as HTMLButtonElement).style.borderColor = "var(--ink-light)";
+                          (e.target as HTMLButtonElement).style.color = "var(--ink)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.target as HTMLButtonElement).style.borderColor = "var(--cream-border)";
+                          (e.target as HTMLButtonElement).style.color = "var(--ink-light)";
+                        }}
+                      >
+                        Close
+                      </button>
                     </div>
                   </div>
-
-                  <button
-                    onClick={onClose}
-                    style={{
-                      padding: "14px 48px",
-                      fontSize: "13px",
-                      fontWeight: 600,
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      background: "var(--ink, #1a1710)",
-                      color: "var(--cream, #f5f0e8)",
-                      border: "none",
-                      cursor: "pointer",
-                      fontFamily: "var(--font-body)",
-                      transition: "opacity 0.2s",
-                    }}
-                    onMouseEnter={(e) => { (e.target as HTMLButtonElement).style.opacity = "0.9"; }}
-                    onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.opacity = "1"; }}
-                  >
-                    Done
-                  </button>
                 </motion.div>
               )}
             </motion.div>
