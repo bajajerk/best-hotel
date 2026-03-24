@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { RankedHotel } from "@/lib/ranking";
 import { AmenityChips } from "@/components/AmenityIcons";
 import { useCompare } from "@/context/CompareContext";
+import { useBookingFlow } from "@/context/BookingFlowContext";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -106,6 +108,8 @@ export default function ResultCard({
   index: number;
 }) {
   const hotel = ranked.hotel;
+  const router = useRouter();
+  const { setHotel } = useBookingFlow();
   const photo = sanitizePhoto(hotel.photo1);
   const marketRate = hotel.rates_from ? Math.round(hotel.rates_from * 1.25) : null;
   const savePercent =
@@ -114,6 +118,18 @@ export default function ResultCard({
       : null;
   const savingsAmount =
     hotel.rates_from && marketRate ? marketRate - hotel.rates_from : null;
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Store selected hotel in booking flow state
+    setHotel(
+      hotel.hotel_name,
+      sanitizePhoto(hotel.photo1),
+      hotel.city_name,
+      hotel.star_rating || 0,
+    );
+    router.push(`/hotel/${hotel.hotel_id}`);
+  };
 
   return (
     <motion.div
@@ -129,6 +145,7 @@ export default function ResultCard({
         href={`/hotel/${hotel.hotel_id}`}
         className="block group"
         style={{ textDecoration: "none" }}
+        onClick={handleCardClick}
       >
         <div
           className="card-hover"
@@ -457,7 +474,7 @@ export default function ResultCard({
                       padding: "2px 8px",
                     }}
                   >
-                    You save {formatCurrency(savingsAmount, hotel.rates_currency)}
+                    Save {formatCurrency(savingsAmount, hotel.rates_currency)}/night
                   </span>
                 )}
               </div>

@@ -14,6 +14,7 @@ import { SAMPLE_CITIES } from "@/lib/constants";
 import { rankHotels, sortRankedHotels, type RankedHotel, type SortStrategy } from "@/lib/ranking";
 import { trackSearch, trackSearchFilterApplied } from "@/lib/analytics";
 import { extractAmenities } from "@/components/AmenityIcons";
+import { useBooking } from "@/context/BookingContext";
 import Header from "@/components/Header";
 import ResultCard from "./ResultCard";
 
@@ -26,7 +27,7 @@ const RESULTS_PER_PAGE = 24;
 
 const SORT_OPTIONS: { label: string; value: SortStrategy }[] = [
   { label: "Lowest Voyagr Rate", value: "price_asc" },
-  { label: "Biggest % Savings", value: "deal_desc" },
+  { label: "Best Value", value: "deal_desc" },
   { label: "Traveller Favourites", value: "popularity_desc" },
   { label: "Recommended", value: "recommended" },
   { label: "Guest Rating", value: "rating_desc" },
@@ -80,6 +81,7 @@ export default function ResultsPage() {
   const searchParams = useSearchParams();
   const citySlug = searchParams.get("city") || "";
   const queryParam = searchParams.get("q") || "";
+  const { destination, checkIn, checkOut, nights, formatDate } = useBooking();
 
   // Data state
   const [hotels, setHotels] = useState<CuratedHotel[]>([]);
@@ -607,6 +609,65 @@ export default function ResultsPage() {
               {pageTitle}
             </h1>
 
+            {/* Stay summary: destination, date range, nights */}
+            {(destination || checkIn || checkOut) && (
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 10,
+                }}
+              >
+                {(checkIn || checkOut) && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      padding: "4px 12px",
+                      background: "var(--gold-pale)",
+                      color: "var(--gold)",
+                      fontFamily: "var(--font-body)",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    {formatDate(checkIn, "Check-in")} &ndash; {formatDate(checkOut, "Check-out")}
+                  </span>
+                )}
+                {nights > 0 && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      padding: "4px 12px",
+                      background: "var(--cream-deep)",
+                      color: "var(--ink-mid)",
+                      fontFamily: "var(--font-mono)",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                    {nights} night{nights !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+            )}
+
             {!loading && (
               <p style={{ fontSize: 13, color: "var(--ink-light)", margin: 0 }}>
                 {filteredAndRanked.length} hotel{filteredAndRanked.length !== 1 ? "s" : ""} found
@@ -638,7 +699,7 @@ export default function ResultsPage() {
               gap: 16,
             }}
           >
-            {/* Sort pills */}
+            {/* Filter + sort pills */}
             <div
               style={{
                 display: "flex",
@@ -646,8 +707,54 @@ export default function ResultsPage() {
                 overflowX: "auto",
                 scrollbarWidth: "none",
                 flex: 1,
+                alignItems: "center",
               }}
             >
+              {/* Star filter pills */}
+              {STAR_OPTIONS.map((opt) => {
+                const active = starFilter === opt.value;
+                return (
+                  <button
+                    key={`star-${opt.value}`}
+                    onClick={() => {
+                      setStarFilter(active ? 0 : opt.value);
+                      setVisibleCount(RESULTS_PER_PAGE);
+                      trackSearchFilterApplied({
+                        filter_type: "star_rating",
+                        filter_value: active ? 0 : opt.value,
+                        result_count: filteredAndRanked.length,
+                      });
+                    }}
+                    style={{
+                      padding: "6px 14px",
+                      fontSize: 11,
+                      fontWeight: active ? 600 : 400,
+                      letterSpacing: "0.04em",
+                      whiteSpace: "nowrap",
+                      border: active ? "1px solid var(--gold)" : "1px solid var(--cream-border)",
+                      background: active ? "var(--gold-pale)" : "var(--white)",
+                      color: active ? "var(--gold)" : "var(--ink-mid)",
+                      cursor: "pointer",
+                      fontFamily: "var(--font-body)",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    {opt.value > 0 ? `${opt.value}★` : opt.label}
+                  </button>
+                );
+              })}
+
+              {/* Divider */}
+              <div
+                style={{
+                  width: 1,
+                  height: 20,
+                  background: "var(--cream-border)",
+                  flexShrink: 0,
+                }}
+              />
+
+              {/* Sort pills */}
               {SORT_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
