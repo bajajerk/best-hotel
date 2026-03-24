@@ -14,10 +14,13 @@ export interface RoomGuests {
 }
 
 interface BookingState extends BookingDates {
+  destination: string;
+  nights: number;
   rooms: RoomGuests[];
 }
 
 interface BookingContextValue extends BookingState {
+  setDestination: (destination: string) => void;
   setCheckIn: (date: string) => void;
   setCheckOut: (date: string) => void;
   setDates: (checkIn: string, checkOut: string) => void;
@@ -38,8 +41,32 @@ const BookingContext = createContext<BookingContextValue | null>(null);
 
 const STORAGE_KEY = "voyagr_booking_dates";
 const ROOMS_STORAGE_KEY = "voyagr_booking_rooms";
+const DESTINATION_STORAGE_KEY = "voyagr_booking_destination";
 
 const DEFAULT_ROOM: RoomGuests = { adults: 2, children: 0 };
+
+function loadDestination(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    return localStorage.getItem(DESTINATION_STORAGE_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function saveDestination(dest: string) {
+  try {
+    localStorage.setItem(DESTINATION_STORAGE_KEY, dest);
+  } catch {
+    // ignore
+  }
+}
+
+function calculateNights(checkIn: string, checkOut: string): number {
+  if (!checkIn || !checkOut) return 0;
+  const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime();
+  return Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
+}
 
 function loadDates(): BookingDates {
   if (typeof window === "undefined") return { checkIn: "", checkOut: "" };
@@ -97,13 +124,20 @@ function formatDateShort(isoDate: string, fallback = "Select date"): string {
 
 export function BookingProvider({ children }: { children: ReactNode }) {
   const [dates, setDatesState] = useState<BookingDates>({ checkIn: "", checkOut: "" });
+  const [destination, setDestinationState] = useState("");
   const [rooms, setRoomsState] = useState<RoomGuests[]>([{ ...DEFAULT_ROOM }]);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setDatesState(loadDates());
+    setDestinationState(loadDestination());
     setRoomsState(loadRooms());
     setHydrated(true);
+  }, []);
+
+  const setDestination = useCallback((dest: string) => {
+    setDestinationState(dest);
+    saveDestination(dest);
   }, []);
 
   const updateDates = useCallback((next: BookingDates) => {
@@ -199,7 +233,10 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   return (
     <BookingContext.Provider value={{
       ...dates,
+      destination,
+      nights: calculateNights(dates.checkIn, dates.checkOut),
       rooms,
+      setDestination,
       setCheckIn, setCheckOut, setDates,
       setRooms, addRoom, removeRoom, setRoomAdults, setRoomChildren,
       totalAdults, totalChildren, totalGuests, guestSummary,
