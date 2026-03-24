@@ -149,7 +149,7 @@ export default function RootLayout({
             position: "fixed",
             bottom: "24px",
             right: "24px",
-            zIndex: 9999,
+            zIndex: 99,
             width: "56px",
             height: "56px",
             borderRadius: "50%",

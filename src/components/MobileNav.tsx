@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /* ────────────────────────────────────────────────────────────
    Voyagr Club — Premium Side-Drawer Menu (Mobile-first)
-   Slide-in from left, 85vw width, olive/cream/gold palette
+   Slide-in from right, 85vw width, olive/cream/gold palette
+   Rendered via portal to avoid stacking-context issues
    ──────────────────────────────────────────────────────────── */
 
 const PRIMARY_LINKS = [
@@ -33,7 +35,14 @@ const WHATSAPP_URL =
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  /* Portal requires client-side mount */
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   /* Lock body scroll when drawer is open */
   useEffect(() => {
@@ -61,100 +70,66 @@ export default function MobileNav() {
     setOpen(false);
   }, [pathname]);
 
+  /* Focus trap: move focus into drawer when opened */
+  useEffect(() => {
+    if (open && drawerRef.current) {
+      drawerRef.current.focus();
+    }
+  }, [open]);
+
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
   }
 
-  return (
-    <>
-      {/* ── Hamburger button ── */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Close menu" : "Open menu"}
-        aria-expanded={open}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "36px",
-          height: "36px",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          padding: 0,
-          zIndex: 200,
-          position: "relative",
-        }}
-      >
-        <div style={{ width: "20px", height: "14px", position: "relative" }}>
-          {[0, 6, 12].map((top, i) => (
-            <span
-              key={i}
-              style={{
-                display: "block",
-                position: "absolute",
-                left: 0,
-                right: 0,
-                height: "1.5px",
-                background: "var(--ink-mid)",
-                borderRadius: "1px",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                top: open ? "6px" : `${top}px`,
-                transform:
-                  open && i === 0
-                    ? "rotate(45deg)"
-                    : open && i === 2
-                    ? "rotate(-45deg)"
-                    : "none",
-                opacity: open && i === 1 ? 0 : 1,
-              }}
-            />
-          ))}
-        </div>
-      </button>
+  /* Overlay + Drawer rendered via portal to escape header stacking context */
+  const overlay = mounted
+    ? createPortal(
+        <>
+          {/* ── Backdrop overlay ── */}
+          <div
+            onClick={() => setOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 10000,
+              background: "rgba(26, 23, 16, 0.45)",
+              backdropFilter: open ? "blur(4px)" : "none",
+              WebkitBackdropFilter: open ? "blur(4px)" : "none",
+              opacity: open ? 1 : 0,
+              pointerEvents: open ? "auto" : "none",
+              transition: "opacity 0.3s ease",
+            }}
+          />
 
-      {/* ── Backdrop overlay ── */}
-      <div
-        onClick={() => setOpen(false)}
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 149,
-          background: "rgba(26, 23, 16, 0.45)",
-          backdropFilter: open ? "blur(4px)" : "none",
-          WebkitBackdropFilter: open ? "blur(4px)" : "none",
-          opacity: open ? 1 : 0,
-          pointerEvents: open ? "auto" : "none",
-          transition: "opacity 0.3s ease",
-        }}
-      />
-
-      {/* ── Drawer: slides from LEFT, 85vw ── */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Navigation menu"
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          width: "85vw",
-          maxWidth: "380px",
-          zIndex: 150,
-          background: "var(--white, #fdfaf5)",
-          boxShadow: open
-            ? "8px 0 40px rgba(26, 23, 16, 0.12)"
-            : "none",
-          transform: open ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 0.3s ease, box-shadow 0.3s ease",
-          display: "flex",
-          flexDirection: "column",
-          overflowY: "auto",
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
+          {/* ── Drawer: slides from RIGHT, 85vw ── */}
+          <div
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+            tabIndex={-1}
+            style={{
+              position: "fixed",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: "85vw",
+              maxWidth: "380px",
+              zIndex: 10001,
+              background: "var(--white, #fdfaf5)",
+              boxShadow: open
+                ? "-8px 0 40px rgba(26, 23, 16, 0.12)"
+                : "none",
+              transform: open ? "translateX(0)" : "translateX(100%)",
+              transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease",
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "auto",
+              WebkitOverflowScrolling: "touch",
+              outline: "none",
+            }}
+          >
         {/* ═══════════════════════════════════════════
             TOP SECTION — User Area
             ═══════════════════════════════════════════ */}
@@ -489,6 +464,61 @@ export default function MobileNav() {
           </div>
         </div>
       </div>
+        </>,
+        document.body
+      )
+    : null;
+
+  return (
+    <>
+      {/* ── Hamburger button (stays in header flow) ── */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label={open ? "Close menu" : "Open menu"}
+        aria-expanded={open}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "36px",
+          height: "36px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 0,
+          zIndex: 200,
+          position: "relative",
+        }}
+      >
+        <div style={{ width: "20px", height: "14px", position: "relative" }}>
+          {[0, 6, 12].map((top, i) => (
+            <span
+              key={i}
+              style={{
+                display: "block",
+                position: "absolute",
+                left: 0,
+                right: 0,
+                height: "1.5px",
+                background: "var(--ink-mid)",
+                borderRadius: "1px",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                top: open ? "6px" : `${top}px`,
+                transform:
+                  open && i === 0
+                    ? "rotate(45deg)"
+                    : open && i === 2
+                    ? "rotate(-45deg)"
+                    : "none",
+                opacity: open && i === 1 ? 0 : 1,
+              }}
+            />
+          ))}
+        </div>
+      </button>
+
+      {/* Portal-rendered overlay + drawer */}
+      {overlay}
     </>
   );
 }
