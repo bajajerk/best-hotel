@@ -1814,3 +1814,21 @@ nav {
     font-size: 20px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Section padding — responsive utility for homepage sections
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.section-pad {
+  padding: 80px 60px;
+}
+@media (min-width: 640px) and (max-width: 1024px) {
+  .section-pad {
+    padding: 64px 32px;
+  }
+}
+@media (max-width: 639px) {
+  .section-pad {
+    padding: 48px 20px;
+  }
+}

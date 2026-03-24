@@ -8,7 +8,8 @@ import { fetchCuratedCities, fetchFeaturedHotels, CuratedCity, CuratedHotel } fr
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HotelCard from "@/components/HotelCard";
-import type { HotelCardData } from "@/components/HotelCard";
+import { HotelDealCard } from "@/components/HotelCard";
+import type { HotelCardData, HotelDealData } from "@/components/HotelCard";
 import DestinationSearch from "@/components/DestinationSearch";
 import { useBooking } from "@/context/BookingContext";
 import { trackCtaClicked, trackWhatsAppClicked } from "@/lib/analytics";
@@ -598,7 +599,7 @@ export default function Home() {
   const [heroIdx, setHeroIdx] = useState(0);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
   const [popularProps, setPopularProps] = useState<HotelCardData[]>([]);
-  const [topDeals, setTopDeals] = useState<{ name: string; city: string; citySlug: string; stars: number; rating: number; tags: string[]; marketRate: number; voyagrRate: number; savePercent: number; img: string }[]>([]);
+  const [topDeals, setTopDeals] = useState<HotelDealData[]>([]);
   const [curatedTabData, setCuratedTabData] = useState<Record<string, HotelCardData[]>>({ popular: [], suggest: [], curated: [] });
   const [featuredCarouselProps, setFeaturedCarouselProps] = useState<HotelCardData[]>([]);
   const [topSellers, setTopSellers] = useState<TopSellerHotel[]>([]);
@@ -1044,7 +1045,7 @@ export default function Home() {
       {/* ================================================================
           FEATURED PROPERTIES — curated stays worldwide (carousel)
       ================================================================ */}
-      <section className="section-featured" style={{ padding: "80px 60px" }}>
+      <section className="section-featured section-pad">
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -1113,9 +1114,8 @@ export default function Home() {
           POPULAR PROPERTIES — individual hotel cards
       ================================================================ */}
       <section
-        className="section-popular"
+        className="section-popular section-pad"
         style={{
-          padding: "80px 60px",
           background: "var(--white)",
         }}
       >
@@ -1166,9 +1166,8 @@ export default function Home() {
           FEATURED PROPERTIES — handpicked stays worth booking (carousel)
       ================================================================ */}
       <section
-        className="section-top-deals"
+        className="section-top-deals section-pad"
         style={{
-          padding: "80px 60px",
           background: "var(--cream)",
         }}
       >
@@ -1207,117 +1206,7 @@ export default function Home() {
             >
               <Carousel ariaLabel="Handpicked stays" showIndicators>
                 {topDeals.map((deal) => (
-                  <Link
-                    key={deal.name}
-                    href={`/city/${deal.citySlug}`}
-                    style={{ textDecoration: "none", display: "block" }}
-                  >
-                    <div
-                      className="card-hover"
-                      style={{
-                        background: "var(--white)",
-                        border: "1px solid var(--cream-border)",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {/* Image */}
-                      <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
-                        <img
-                          className="card-img"
-                          src={safeImageSrc(deal.img)}
-                          alt={deal.name}
-                          style={{
-                            width: "100%", height: "100%", objectFit: "cover",
-                            display: "block", filter: "saturate(0.88)",
-                          }}
-                          loading="lazy"
-                          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
-                        />
-                        <div style={{
-                          position: "absolute", top: "12px", left: "12px",
-                          background: "var(--success)", color: "var(--cream)",
-                          padding: "6px 14px", fontSize: "9px", fontWeight: 500,
-                          letterSpacing: "0.06em", textTransform: "uppercase" as const,
-                        }}>
-                          Preferred Rate
-                        </div>
-                        {deal.rating >= 8.5 && (
-                          <div style={{
-                            position: "absolute", top: "12px", right: "12px",
-                            background: "var(--gold)", color: "var(--white)",
-                            fontSize: "12px", fontWeight: 600, padding: "4px 10px",
-                            fontFamily: "var(--font-mono)",
-                          }}>
-                            {deal.rating.toFixed(1)}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Content */}
-                      <div style={{ padding: "18px 20px 22px" }}>
-                        <div style={{ color: "var(--gold)", fontSize: "10px", letterSpacing: "2px", marginBottom: "6px" }}>
-                          {"★".repeat(deal.stars)}
-                        </div>
-                        <h3 className="type-heading-3" style={{ color: "var(--ink)", marginBottom: "4px", fontSize: "16px" }}>
-                          {deal.name}
-                        </h3>
-                        <p style={{ fontSize: "12px", color: "var(--ink-light)", letterSpacing: "0.04em", marginBottom: "14px" }}>
-                          {deal.city}
-                        </p>
-                        <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginBottom: "16px" }}>
-                          {deal.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              style={{
-                                fontSize: "9px",
-                                padding: "3px 8px",
-                                background: "var(--cream)",
-                                color: "var(--ink-mid)",
-                                border: "1px solid var(--cream-border)",
-                                letterSpacing: "0.04em",
-                              }}
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-
-                        {/* Pricing */}
-                        <div style={{
-                          borderTop: "1px solid var(--cream-border)",
-                          paddingTop: "14px",
-                          display: "flex",
-                          alignItems: "flex-end",
-                          justifyContent: "space-between",
-                        }}>
-                          <div>
-                            <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-                              <span style={{ fontSize: "12px", textDecoration: "line-through", color: "var(--market-rate)" }}>
-                                &#8377;{deal.marketRate.toLocaleString("en-IN")}
-                              </span>
-                            </div>
-                            <div style={{
-                              fontFamily: "var(--font-display)", fontSize: "22px",
-                              fontWeight: 500, color: "var(--our-rate)", lineHeight: 1.2,
-                            }}>
-                              &#8377;{deal.voyagrRate.toLocaleString("en-IN")}
-                            </div>
-                            <span style={{ fontSize: "10px", color: "var(--ink-light)" }}>per night</span>
-                          </div>
-                          <div style={{ textAlign: "right" }}>
-                            <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--success)", marginBottom: "4px" }}>
-                              Voyagr Rate
-                            </div>
-                            <span className="card-arrow" style={{
-                              fontSize: "11px", color: "var(--gold)", fontWeight: 500, letterSpacing: "0.04em",
-                            }}>
-                              View &rarr;
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
+                  <HotelDealCard key={deal.name} deal={deal} />
                 ))}
               </Carousel>
             </motion.div>
@@ -1340,9 +1229,8 @@ export default function Home() {
           SEASONAL TRIPS — travel by season
       ================================================================ */}
       <section
-        className="section-seasonal"
+        className="section-seasonal section-pad"
         style={{
-          padding: "80px 60px",
           background: "var(--cream)",
         }}
       >
@@ -1380,9 +1268,8 @@ export default function Home() {
       ================================================================ */}
       {cities.length > 0 && (
         <section
-          className="section-city-tiles"
+          className="section-city-tiles section-pad"
           style={{
-            padding: "80px 60px",
             background: "var(--white)",
           }}
         >
