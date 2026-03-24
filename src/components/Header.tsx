@@ -5,11 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MobileNav from "./MobileNav";
 
-const NAV_LINKS = [
-  { label: "PREFERRED RATES", href: "/preferred-rates" },
-  { label: "THE LOBBY", href: "/" },
-  { label: "SEARCH", href: "/search" },
-  { label: "MATCH MY RATES", href: "/match-my-rates" },
+export const NAV_LINKS = [
+  { label: "Search", href: "/search" },
+  { label: "Preferred Rates", href: "/preferred-rates" },
+  { label: "Rate Check", href: "/match-my-rates" },
+  { label: "My Trips", href: "/booking-history" },
 ];
 
 export default function Header() {
@@ -25,48 +25,52 @@ export default function Header() {
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
-    if (href.startsWith("/#")) return pathname === "/";
     return pathname.startsWith(href);
   }
 
   return (
-    <nav
-      className={`site-header${scrolled ? " site-header--scrolled" : ""}`}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        background: scrolled
-          ? "rgba(245, 240, 232, 0.96)"
-          : "rgba(245, 240, 232, 0.92)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        borderBottom: "1px solid var(--cream-border)",
-        height: "60px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 24px",
-        transition: "background 0.3s ease, box-shadow 0.3s ease",
-        boxShadow: scrolled
-          ? "0 2px 20px rgba(26, 23, 16, 0.06)"
-          : "none",
-      }}
-    >
-      {/* Logo */}
-      <Link href="/" style={{ textDecoration: "none" }}>
-        <span
-          className="type-logo"
-          style={{ letterSpacing: "0.08em", color: "var(--ink)" }}
-        >
-          <span style={{ color: "var(--gold)" }}>V</span>oyagr Club
-        </span>
-      </Link>
+    <>
+      <nav
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          background: scrolled
+            ? "rgba(245, 240, 232, 0.96)"
+            : "rgba(245, 240, 232, 0.92)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          borderBottom: "1px solid var(--cream-border)",
+          height: "60px",
+          display: "flex",
+          alignItems: "center",
+          padding: "0 24px",
+          transition: "background 0.3s ease, box-shadow 0.3s ease",
+          boxShadow: scrolled
+            ? "0 2px 20px rgba(26, 23, 16, 0.06)"
+            : "none",
+        }}
+      >
+        {/* Left: Wordmark — italic serif uppercase */}
+        <Link href="/" style={{ textDecoration: "none", flexShrink: 0 }}>
+          <span
+            style={{
+              fontFamily: "var(--font-display)",
+              fontStyle: "italic",
+              fontWeight: 600,
+              fontSize: "20px",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "var(--ink)",
+            }}
+          >
+            <span style={{ color: "var(--gold)" }}>V</span>oyagr Club
+          </span>
+        </Link>
 
-      {/* Desktop nav links + actions */}
-      <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+        {/* Centre: Nav links (hidden on mobile <640px) */}
         <div className="header-nav-links">
           {NAV_LINKS.map((link) => {
             const active = isActive(link.href);
@@ -74,15 +78,19 @@ export default function Header() {
               <Link
                 key={link.label}
                 href={link.href}
-                className="type-nav"
                 style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 400,
+                  fontSize: "15px",
+                  letterSpacing: "0.03em",
                   color: active ? "var(--gold)" : "var(--ink-mid)",
                   textDecoration: "none",
-                  paddingBottom: "2px",
+                  paddingBottom: "4px",
                   borderBottom: active
-                    ? "1.5px solid var(--gold)"
-                    : "1.5px solid transparent",
+                    ? "2px solid var(--gold)"
+                    : "2px solid transparent",
                   transition: "color 0.2s, border-color 0.2s",
+                  whiteSpace: "nowrap",
                 }}
                 onMouseEnter={(e) => {
                   if (!active) {
@@ -106,55 +114,119 @@ export default function Header() {
           })}
         </div>
 
-        {/* WhatsApp CTA button (desktop only) */}
-        <a
-          href="https://wa.me/919876543210?text=Hi%20Voyagr%2C%20I%27d%20like%20to%20book%20a%20hotel"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="header-cta-btn"
+        {/* Right: Avatar + Hamburger */}
+        <div
           style={{
-            display: "inline-flex",
+            display: "flex",
             alignItems: "center",
-            gap: "6px",
-            background: "var(--ink)",
-            color: "var(--cream)",
-            border: "none",
-            padding: "9px 20px",
-            fontSize: "11px",
-            fontWeight: 500,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            textDecoration: "none",
-            cursor: "pointer",
-            transition: "background 0.2s",
-            fontFamily: "var(--font-body)",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLAnchorElement).style.background =
-              "var(--gold)";
-            (e.currentTarget as HTMLAnchorElement).style.color = "var(--ink)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLAnchorElement).style.background =
-              "var(--ink)";
-            (e.currentTarget as HTMLAnchorElement).style.color =
-              "var(--cream)";
+            gap: "12px",
+            marginLeft: "auto",
+            flexShrink: 0,
           }}
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="currentColor"
+          {/* Member avatar initials */}
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "50%",
+              background: "var(--gold-pale)",
+              border: "1.5px solid var(--gold)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: "var(--font-display)",
+              fontWeight: 600,
+              fontSize: "13px",
+              letterSpacing: "0.04em",
+              color: "var(--gold)",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
           >
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-          </svg>
-          Book Now
-        </a>
+            VC
+          </div>
 
-        {/* Mobile hamburger menu */}
-        <MobileNav />
-      </div>
-    </nav>
+          {/* Hamburger / Drawer toggle */}
+          <MobileNav />
+        </div>
+      </nav>
+
+      {/* Mobile bottom tab bar (visible <640px only) */}
+      <MobileTabBar pathname={pathname} />
+    </>
+  );
+}
+
+/* ── Mobile bottom tab bar ── */
+
+const TAB_ICONS: Record<string, React.ReactNode> = {
+  Search: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
+  "Preferred Rates": (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z" />
+    </svg>
+  ),
+  "Rate Check": (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+    </svg>
+  ),
+  "My Trips": (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
+};
+
+function MobileTabBar({ pathname }: { pathname: string }) {
+  function isActive(href: string) {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  }
+
+  return (
+    <div className="mobile-tab-bar">
+      {NAV_LINKS.map((link) => {
+        const active = isActive(link.href);
+        return (
+          <Link
+            key={link.label}
+            href={link.href}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "2px",
+              flex: 1,
+              padding: "6px 0 2px",
+              textDecoration: "none",
+              color: active ? "var(--gold)" : "var(--ink-light)",
+              transition: "color 0.2s",
+            }}
+          >
+            {TAB_ICONS[link.label]}
+            <span
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "10px",
+                fontWeight: active ? 600 : 400,
+                letterSpacing: "0.02em",
+              }}
+            >
+              {link.label}
+            </span>
+          </Link>
+        );
+      })}
+    </div>
   );
 }
