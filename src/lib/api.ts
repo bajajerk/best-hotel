@@ -101,6 +101,53 @@ export async function fetchCityPrices(
   return res.json();
 }
 
+export interface HotelDetail {
+  hotel_id: number;
+  hotel_name: string;
+  hotel_formerly_name: string | null;
+  hotel_translated_name: string | null;
+  city: string;
+  city_id: number;
+  country: string;
+  countryisocode: string;
+  country_id: number;
+  continent_id: number;
+  continent_name: string;
+  star_rating: number;
+  rating_average: number;
+  number_of_reviews: number;
+  rates_from: number | null;
+  rates_currency: string;
+  photo1: string | null;
+  photo2: string | null;
+  photo3: string | null;
+  photo4: string | null;
+  photo5: string | null;
+  overview: string | null;
+  addressline1: string | null;
+  addressline2: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  chain_id: number | null;
+  chain_name: string | null;
+  brand_id: number | null;
+  brand_name: string | null;
+  accommodation_type: string | null;
+  numberrooms: number | null;
+  numberfloors: number | null;
+  yearopened: number | null;
+  yearrenovated: number | null;
+  checkin: string | null;
+  checkout: string | null;
+}
+
+/** Fetch full hotel detail by ID */
+export async function fetchHotelDetail(id: number | string): Promise<HotelDetail> {
+  const res = await fetch(`${API_BASE}/api/hotels/${id}`);
+  if (!res.ok) throw new Error('Failed to fetch hotel detail');
+  return res.json();
+}
+
 export async function searchHotels(query: string, limit: number = 10): Promise<any[]> {
   const params = new URLSearchParams({ q: query, limit: String(limit) });
   const res = await fetch(`${API_BASE}/api/hotels/search?${params}`);
