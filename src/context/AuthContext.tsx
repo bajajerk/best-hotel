@@ -82,11 +82,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    const redirectTo = `${window.location.origin}/login`;
     await getSupabase().auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/login?auth=callback`,
-      },
+      options: { redirectTo },
     });
   };
 

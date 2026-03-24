@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user, loading, signInWithEmail, signUpWithEmail, signInWithGoogle } =
     useAuth();
 
@@ -19,16 +18,14 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
 
-  // If already logged in, redirect
-  const callbackHandled = searchParams.get("auth") === "callback";
-  if (!loading && user && !callbackHandled) {
-    router.replace("/");
-    return null;
-  }
-  if (!loading && user && callbackHandled) {
-    router.replace("/");
-    return null;
-  }
+  // After Google OAuth, Supabase redirects here with tokens in the URL hash.
+  // The Supabase client picks them up automatically via onAuthStateChange.
+  // Once user is set, redirect to home.
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/");
+    }
+  }, [loading, user, router]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
