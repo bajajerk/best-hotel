@@ -3,22 +3,28 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV_LINKS } from "./Header";
 
-/* Primary nav links shown in large serif inside drawer */
-const DRAWER_NAV = NAV_LINKS;
+/* Primary nav links with Material Symbol icon names */
+const PRIMARY_LINKS = [
+  { label: "Search", href: "/search", icon: "search" },
+  { label: "Preferred Rates", href: "/preferred-rates", icon: "star" },
+  { label: "Rate Check", href: "/match-my-rates", icon: "balance" },
+  { label: "My Trips", href: "/booking-history", icon: "luggage" },
+];
 
 /* Secondary account links */
-const ACCOUNT_LINKS = [
-  { label: "Profile", href: "/profile" },
-  { label: "About Us", href: "/about" },
-  { label: "Book via WhatsApp", href: "https://wa.me/919876543210?text=Hi%20Voyagr%2C%20I%27d%20like%20to%20book%20a%20hotel", external: true },
+const SECONDARY_LINKS: { label: string; href: string; red?: boolean }[] = [
+  { label: "My Profile", href: "/profile" },
+  { label: "Membership", href: "/membership" },
+  { label: "Concierge", href: "https://wa.me/919876543210?text=Hi%20Voyagr%2C%20I%27d%20like%20to%20book%20a%20hotel" },
+  { label: "Sign Out", href: "/sign-out", red: true },
 ];
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
+  /* Lock body scroll when drawer is open */
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -30,6 +36,7 @@ export default function MobileNav() {
     };
   }, [open]);
 
+  /* Close on Escape */
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -38,18 +45,14 @@ export default function MobileNav() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  /* Close on route change */
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  function isActive(href: string) {
-    if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
-  }
-
   return (
     <>
-      {/* Hamburger button — always visible */}
+      {/* ── Hamburger button: 36px tap target ── */}
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close menu" : "Open menu"}
@@ -58,75 +61,61 @@ export default function MobileNav() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          width: "36px",
+          height: "36px",
           background: "none",
           border: "none",
           cursor: "pointer",
-          padding: "8px",
+          padding: 0,
           zIndex: 200,
           position: "relative",
         }}
       >
         <div style={{ width: "20px", height: "14px", position: "relative" }}>
-          <span
-            style={{
-              display: "block",
-              position: "absolute",
-              left: 0,
-              right: 0,
-              height: "1.5px",
-              background: "var(--ink)",
-              borderRadius: "1px",
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              top: open ? "6px" : "0",
-              transform: open ? "rotate(45deg)" : "none",
-            }}
-          />
-          <span
-            style={{
-              display: "block",
-              position: "absolute",
-              left: 0,
-              right: 0,
-              height: "1.5px",
-              background: "var(--ink)",
-              borderRadius: "1px",
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              top: "6px",
-              opacity: open ? 0 : 1,
-            }}
-          />
-          <span
-            style={{
-              display: "block",
-              position: "absolute",
-              left: 0,
-              right: 0,
-              height: "1.5px",
-              background: "var(--ink)",
-              borderRadius: "1px",
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              top: open ? "6px" : "12px",
-              transform: open ? "rotate(-45deg)" : "none",
-            }}
-          />
+          {[0, 6, 12].map((top, i) => (
+            <span
+              key={i}
+              style={{
+                display: "block",
+                position: "absolute",
+                left: 0,
+                right: 0,
+                height: "1.5px",
+                background: "var(--ink-mid)",
+                borderRadius: "1px",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                top:
+                  open
+                    ? "6px"
+                    : `${top}px`,
+                transform:
+                  open && i === 0
+                    ? "rotate(45deg)"
+                    : open && i === 2
+                    ? "rotate(-45deg)"
+                    : "none",
+                opacity: open && i === 1 ? 0 : 1,
+              }}
+            />
+          ))}
         </div>
       </button>
 
-      {/* Overlay backdrop */}
+      {/* ── Overlay: 38% opacity dark ── */}
       <div
         onClick={() => setOpen(false)}
         style={{
           position: "fixed",
           inset: 0,
           zIndex: 149,
-          background: "rgba(26, 23, 16, 0.5)",
+          background: "rgba(0, 0, 0, 0.38)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
-          transition: "opacity 0.3s ease",
+          transition: "opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       />
 
-      {/* Slide-in drawer (from right, 320px wide) */}
+      {/* ── Drawer: 320px, white, 1px left border ── */}
       <div
         style={{
           position: "fixed",
@@ -136,7 +125,8 @@ export default function MobileNav() {
           width: "320px",
           maxWidth: "85vw",
           zIndex: 150,
-          background: "var(--cream)",
+          background: "#ffffff",
+          borderLeft: "1px solid var(--cream-border)",
           transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
           display: "flex",
@@ -145,30 +135,14 @@ export default function MobileNav() {
           WebkitOverflowScrolling: "touch",
         }}
       >
-        {/* Drawer header */}
+        {/* ── Close ✕ top-right ── */}
         <div
           style={{
             display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "16px 24px",
-            borderBottom: "1px solid var(--cream-border)",
-            minHeight: "60px",
+            justifyContent: "flex-end",
+            padding: "16px 20px 0",
           }}
         >
-          <span
-            style={{
-              fontFamily: "var(--font-display)",
-              fontStyle: "italic",
-              fontWeight: 600,
-              fontSize: "18px",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "var(--ink)",
-            }}
-          >
-            <span style={{ color: "var(--gold)" }}>V</span>oyagr Club
-          </span>
           <button
             onClick={() => setOpen(false)}
             aria-label="Close menu"
@@ -176,78 +150,70 @@ export default function MobileNav() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              width: "36px",
+              height: "36px",
               background: "none",
               border: "none",
               cursor: "pointer",
-              padding: "4px",
+              padding: 0,
               color: "var(--ink)",
+              fontSize: "22px",
+              lineHeight: 1,
             }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            ✕
           </button>
         </div>
 
-        {/* Primary nav — large serif display type */}
-        <div style={{ padding: "24px 24px 16px" }}>
-          {DRAWER_NAV.map((link) => {
-            const active = isActive(link.href);
-            return (
-              <Link
-                key={link.label}
-                href={link.href}
-                onClick={() => setOpen(false)}
+        {/* ── Primary links: 22px Cormorant Garamond, amber icons ── */}
+        <nav style={{ padding: "12px 24px 0" }}>
+          {PRIMARY_LINKS.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              onClick={() => setOpen(false)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                fontFamily: "var(--font-display)",
+                fontSize: "22px",
+                fontWeight: 400,
+                color: "var(--ink)",
+                textDecoration: "none",
+                padding: "16px 0",
+                borderBottom: "1px solid var(--cream-border)",
+                transition: "color 0.2s",
+              }}
+            >
+              <span
+                className="material-symbols-outlined"
                 style={{
-                  display: "block",
-                  fontFamily: "var(--font-display)",
-                  fontSize: "26px",
-                  fontWeight: 400,
-                  letterSpacing: "0.02em",
-                  color: active ? "var(--gold)" : "var(--ink)",
-                  textDecoration: "none",
-                  padding: "14px 0",
-                  borderBottom: "1px solid var(--cream-border)",
-                  transition: "color 0.2s",
+                  fontSize: "22px",
+                  color: "var(--gold)",
+                  lineHeight: 1,
                 }}
+                aria-hidden="true"
               >
-                {link.label}
-                {active && (
-                  <span
-                    style={{
-                      display: "inline-block",
-                      width: "6px",
-                      height: "6px",
-                      borderRadius: "50%",
-                      background: "var(--gold)",
-                      marginLeft: "10px",
-                      verticalAlign: "middle",
-                    }}
-                  />
-                )}
-              </Link>
-            );
-          })}
-        </div>
+                {link.icon}
+              </span>
+              {link.label}
+            </Link>
+          ))}
+        </nav>
 
-        {/* Secondary account links */}
-        <div style={{ padding: "8px 24px", flex: 1 }}>
-          <div
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "10px",
-              fontWeight: 600,
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              color: "var(--ink-light)",
-              marginBottom: "12px",
-            }}
-          >
-            Account
-          </div>
-          {ACCOUNT_LINKS.map((link) => {
-            const isExternal = link.external;
+        {/* ── Divider ── */}
+        <div
+          style={{
+            margin: "16px 24px 0",
+            borderTop: "1px solid var(--cream-border)",
+          }}
+        />
+
+        {/* ── Secondary links: 10px uppercase tracking-wide ── */}
+        <div style={{ padding: "16px 24px", flex: 1 }}>
+          {SECONDARY_LINKS.map((link) => {
+            const isExternal = link.href.startsWith("http");
             const Tag = isExternal ? "a" : Link;
             const extraProps = isExternal
               ? { target: "_blank" as const, rel: "noopener noreferrer" }
@@ -260,65 +226,22 @@ export default function MobileNav() {
                 onClick={() => setOpen(false)}
                 {...(extraProps as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
+                  display: "block",
                   fontFamily: "var(--font-body)",
-                  fontSize: "14px",
-                  fontWeight: 400,
-                  color: "var(--ink-mid)",
+                  fontSize: "10px",
+                  fontWeight: 500,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase" as const,
+                  color: link.red ? "#a3543a" : "var(--ink-mid)",
                   textDecoration: "none",
                   padding: "10px 0",
                   transition: "color 0.2s",
                 }}
               >
                 {link.label}
-                {isExternal && (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                )}
               </Tag>
             );
           })}
-        </div>
-
-        {/* Bottom CTA */}
-        <div
-          style={{
-            padding: "16px 24px 24px",
-            borderTop: "1px solid var(--cream-border)",
-          }}
-        >
-          <button
-            onClick={() => {
-              setOpen(false);
-              window.location.hash = "waitlist";
-            }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              width: "100%",
-              padding: "14px 24px",
-              background: "var(--ink)",
-              color: "var(--cream)",
-              border: "none",
-              borderRadius: "4px",
-              fontFamily: "var(--font-body)",
-              fontSize: "13px",
-              fontWeight: 500,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              cursor: "pointer",
-              transition: "background 0.2s",
-            }}
-          >
-            Join Waitlist
-          </button>
         </div>
       </div>
     </>

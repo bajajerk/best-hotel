@@ -33,23 +33,21 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — Preferred Hotel Rates | Save 20-40% on Hotels Worldwide`,
+    default: `${SITE_NAME} — Preferred Hotel Rates | Wholesale Access to 1,500+ Hotels Worldwide`,
     template: `%s | ${SITE_NAME}`,
   },
   description: DEFAULT_DESCRIPTION,
   keywords: [
-    "hotel deals",
+    "preferred hotel rates",
     "B2B hotel rates",
-    "cheap hotels",
     "wholesale hotel booking",
     "hotel price comparison",
     "voyagr club",
-    "preferred hotel rates",
-    "discount hotels",
-    "luxury hotels cheap",
+    "luxury hotel access",
     "hotel booking",
-    "best hotel prices",
-    "travel deals",
+    "curated hotels",
+    "members hotel rates",
+    "insider hotel rates",
   ],
   authors: [{ name: SITE_NAME, url: SITE_URL }],
   creator: SITE_NAME,
@@ -66,7 +64,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} — Preferred Hotel Rates`,
     description:
-      "Get B2B wholesale hotel rates across 50+ cities worldwide. Save 20-40% on every booking.",
+      "Access preferred wholesale hotel rates across 50+ cities worldwide. No markup, no hidden fees.",
     images: [
       {
         url: "/og-image.png",
@@ -80,7 +78,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${SITE_NAME} — Preferred Hotel Rates`,
     description:
-      "Get B2B wholesale hotel rates across 50+ cities worldwide. Save 20-40% on every booking.",
+      "Access preferred wholesale hotel rates across 50+ cities worldwide. No markup, no hidden fees.",
     images: ["/og-image.png"],
   },
   robots: {
@@ -115,6 +113,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Material Symbols for drawer nav icons */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0&display=swap"
+        />
         {/* Organization + WebSite JSON-LD for sitewide SEO */}
         <script
           type="application/ld+json"
