@@ -81,7 +81,7 @@ const SCANNING_STEPS = [
 
 const SEARCH_STEPS = [
   "Checking direct hotel rates...",
-  "Scanning partner networks...",
+  "Scanning B2B partner networks...",
   "Finding best available rate...",
 ];
 
@@ -237,7 +237,7 @@ export default function MatchMyRatesPage() {
     });
   };
 
-  /* ── Confirm extracted data & search rates ── */
+  /* ── Confirm extracted data & search wholesale ── */
   const handleConfirmAndSearch = async () => {
     if (!extracted) return;
     setStep("otp");
@@ -279,7 +279,7 @@ export default function MatchMyRatesPage() {
       const json = await res.json();
       if (json.success && json.verified) {
         trackOtpVerified({ success: true });
-        // Now search for member rates
+        // Now search for wholesale rates
         setStep("extracting");
         try {
           const searchRes = await fetch("/api/match-my-rate/search", {
@@ -430,7 +430,7 @@ export default function MatchMyRatesPage() {
               }}
             >
               Screenshot any hotel rate from any booking site — we&apos;ll
-              check it against our member rates that aren&apos;t
+              check it against our wholesale B2B rates that aren&apos;t
               available to the public.
             </p>
           </div>
@@ -1204,8 +1204,8 @@ function UploadStep({
                   <polyline points="17 6 23 6 23 12" />
                 </svg>
               ),
-              title: "Preferred Access",
-              desc: "Member rates from our direct hotel partnerships",
+              title: "Save 15–40%",
+              desc: "Get B2B wholesale rates that OTAs mark up",
             },
           ].map((item) => (
             <div

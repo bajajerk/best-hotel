@@ -194,7 +194,7 @@ function TopSellerCard({ hotel }: { hotel: TopSellerHotel }) {
             </div>
           )}
 
-          {/* Curated badge */}
+          {/* Savings badge */}
           <div
             style={{
               position: "absolute",
@@ -208,7 +208,7 @@ function TopSellerCard({ hotel }: { hotel: TopSellerHotel }) {
               letterSpacing: "0.04em",
             }}
           >
-            Member Access
+            Save up to {hotel.savePercent}%
           </div>
         </div>
 

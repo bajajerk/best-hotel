@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Business Class Flights — Premium Travel with Mer Voyage Club",
+  title: "Business Class Flights — Luxury Travel at Economy Prices",
   description:
-    "Fly business and first class with Mer Voyage Club. Exclusive airline partnerships, premium seats, and curated experiences from India to 30+ global destinations.",
+    "Fly business & first class at up to 70% off with Mer Voyage Club. Exclusive airline partnerships, wholesale airmile rates, and premium seats from India to 30+ global destinations.",
   keywords: [
     "business class flights",
     "cheap business class",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Business Class Flights — Mer Voyage Club",
     description:
-      "Fly business and first class with Mer Voyage Club. Premium seats from India to 30+ global destinations.",
+      "Fly business & first class at up to 70% off. Premium seats from India to 30+ global destinations.",
     url: `${SITE_URL}/business-class-flights`,
     siteName: SITE_NAME,
     type: "website",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Business Class Flights — Mer Voyage Club",
     description:
-      "Luxury travel with Mer Voyage Club. Premium business and first class flights.",
+      "Luxury travel at economy prices. Save up to 70% on business & first class flights.",
   },
   alternates: {
     canonical: `${SITE_URL}/business-class-flights`,

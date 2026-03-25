@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   keywords: [
     "preferred hotel rates",
     "B2B hotel rates",
-    "curated hotel collection",
+    "wholesale hotel booking",
     "hotel price comparison",
     "voyagr club",
     "luxury hotel access",
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} — Preferred Hotel Rates`,
     description:
-      "Access handpicked hotels across 50+ cities worldwide. Personally vetted stays with dedicated concierge.",
+      "Access preferred wholesale hotel rates across 50+ cities worldwide. No markup, no hidden fees.",
     images: [
       {
         url: "/og-image.png",
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${SITE_NAME} — Preferred Hotel Rates`,
     description:
-      "Access handpicked hotels across 50+ cities worldwide. Personally vetted stays with dedicated concierge.",
+      "Access preferred wholesale hotel rates across 50+ cities worldwide. No markup, no hidden fees.",
     images: ["/og-image.png"],
   },
   robots: {

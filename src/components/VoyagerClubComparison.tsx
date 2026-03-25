@@ -127,13 +127,25 @@ function RateTier({
             : isClub
             ? "var(--our-rate)"
             : "var(--ink)",
-          textDecoration: "none",
+          textDecoration: isMarket ? "line-through" : "none",
           lineHeight: 1.1,
         }}
       >
         {formatINR(price)}
       </div>
       <div style={{ fontSize: "9px", color: "var(--ink-light)" }}>per night</div>
+      {savingsVsMarket != null && savingsVsMarket > 0 && (
+        <div
+          style={{
+            fontSize: "10px",
+            fontWeight: 600,
+            color: isClub ? "var(--success)" : "var(--ink-mid)",
+            fontFamily: "var(--font-body)",
+          }}
+        >
+          Club Rate
+        </div>
+      )}
     </div>
   );
 }
@@ -229,18 +241,20 @@ function ComparisonCard({
             }}
           >
             <RateTier
-              label="Standard Rate"
+              label="Market Rate"
               price={hotel.marketRate}
               isMarket
             />
             <RateTier
-              label="Member Rate"
+              label="Voyagr Rate"
               price={hotel.voyagrRate}
+              savingsVsMarket={standardSave}
             />
             <RateTier
-              label="Club Rate"
+              label="Voyager Club"
               price={hotel.clubRate}
               isClub
+              savingsVsMarket={clubSave}
             />
           </div>
 
@@ -320,11 +334,11 @@ function ComparisonCard({
             <path d="M9 12l2 2 4-4" />
           </svg>
           <span style={{ fontSize: "11px", color: "var(--ink-mid)" }}>
-            Voyager Club members enjoy{" "}
+            Voyager Club members access preferred rates{" "}
             <strong style={{ color: "var(--success)" }}>
-              preferred access
+              negotiated directly
             </strong>
-            {" "}and perks at this property
+            {" "}with this property
           </span>
         </div>
         <span
@@ -414,11 +428,11 @@ export default function VoyagerClubComparison() {
             className="type-display-2"
             style={{ color: "var(--ink)", marginBottom: "16px" }}
           >
-            The{" "}
+            Market rate vs{" "}
             <em style={{ fontStyle: "italic", color: "var(--gold)" }}>
               Voyager Club
             </em>{" "}
-            experience
+            rate
           </h2>
           <p
             style={{
@@ -428,8 +442,8 @@ export default function VoyagerClubComparison() {
               lineHeight: 1.7,
             }}
           >
-            Voyager Club members enjoy preferred access to premium hotels
-            worldwide — with complimentary perks and personal concierge on every stay.
+            Voyager Club members unlock exclusive wholesale rates negotiated directly
+            with premium hotels — plus complimentary perks on every stay.
           </p>
         </motion.div>
 
@@ -517,8 +531,8 @@ export default function VoyagerClubComparison() {
                 lineHeight: 1.6,
               }}
             >
-              Free membership. No annual fees. Preferred access
-              and curated perks at 1,500+ hotels worldwide.
+              Free membership. No annual fees. Access preferred wholesale rates
+              and exclusive perks at 1,500+ hotels worldwide.
             </p>
             <button
               className="btn-primary"

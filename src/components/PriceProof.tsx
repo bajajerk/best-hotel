@@ -66,7 +66,7 @@ export function PriceComparisonBars({
           fontFamily: "var(--font-body)",
         }}
       >
-        Rate Overview
+        Price Comparison
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {bars.map((bar, i) => {
@@ -137,7 +137,7 @@ export function PriceComparisonBars({
                     fontFamily: "var(--font-body)",
                   }}
                 >
-                  via public booking
+                  higher than Voyagr
                 </div>
               )}
             </motion.div>
@@ -191,7 +191,7 @@ export function BestPriceGuarantee() {
             fontFamily: "var(--font-body)",
           }}
         >
-          Rate Confidence Guarantee
+          Best Price Guarantee
         </span>
       </div>
       <p
@@ -203,7 +203,7 @@ export function BestPriceGuarantee() {
         }}
       >
         Found a lower rate elsewhere? We&apos;ll match it. Our
-        rates come from direct hotel relationships — transparent and all-inclusive.
+        rates are negotiated directly with hotels — no middleman markup.
       </p>
     </div>
   );
@@ -244,7 +244,7 @@ export function PriceProofCompact({
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
         <path d="M9 12l2 2 4-4" />
       </svg>
-      Preferred rate
+      Verified lowest price
     </div>
   );
 }

@@ -270,6 +270,21 @@ export default function FeaturedPropertiesCarousel({
                   </div>
                 </div>
 
+                {current.savePercent > 0 && (
+                  <div
+                    style={{
+                      background: "var(--success)",
+                      color: "var(--cream)",
+                      fontSize: "11px",
+                      fontWeight: 500,
+                      padding: "6px 14px",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    Save {current.savePercent}%
+                  </div>
+                )}
+
                 <Link
                   href={`/city/${current.citySlug}`}
                   style={{

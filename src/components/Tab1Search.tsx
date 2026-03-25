@@ -100,7 +100,7 @@ export default function Tab1Search() {
             marginBottom: "20px",
           }}
         >
-          Curated Hotel Collection
+          Preferred Hotel Rates
         </motion.p>
 
         <motion.h1
@@ -128,8 +128,8 @@ export default function Tab1Search() {
             marginBottom: "40px",
           }}
         >
-          Handpicked hotels across 1,500+ properties worldwide.
-          Direct relationships. Personally vetted stays.
+          Preferred wholesale rates at 1,500+ hotels worldwide.
+          Direct partnerships. No markup, no hidden fees.
         </motion.p>
 
         {/* ── Search Card ── */}
@@ -347,7 +347,7 @@ export default function Tab1Search() {
           {[
             { num: "1,500+", label: "Hotels" },
             { num: "50+", label: "Cities" },
-            { num: "24/7", label: "Concierge" },
+            { num: "20%+", label: "Avg. Savings" },
           ].map((stat) => (
             <div key={stat.label}>
               <div

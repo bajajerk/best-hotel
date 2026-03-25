@@ -60,7 +60,7 @@ const PERK_OPTIONS = [
   "Free Cancellation",
   "Instant Confirmation",
   "Pay at Hotel",
-  "Rate Confidence Guarantee",
+  "Best Price Guarantee",
 ];
 
 // ---------------------------------------------------------------------------

@@ -120,6 +120,11 @@ export default function HotelResultCard({
   valueScore?: number;
 }) {
   const photo = sanitizePhoto(hotel.photo1);
+  const marketRate = hotel.rates_from ? Math.round(hotel.rates_from * 1.25) : null;
+  const savePercent =
+    hotel.rates_from && marketRate
+      ? Math.round(((marketRate - hotel.rates_from) / marketRate) * 100)
+      : null;
 
   return (
     <motion.div
@@ -205,7 +210,7 @@ export default function HotelResultCard({
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
-                {valueScore >= 85 ? "Top Pick" : valueScore >= 75 ? "Highly Rated" : "Guest Favourite"}
+                {valueScore >= 85 ? "Top Pick" : valueScore >= 75 ? "Great Value" : "Good Value"}
               </div>
             )}
           </div>
@@ -300,11 +305,35 @@ export default function HotelResultCard({
               display: "flex",
               flexDirection: "column",
               alignItems: "flex-end",
-              justifyContent: "center",
+              justifyContent: "space-between",
               minWidth: 180,
-              gap: 6,
             }}
           >
+            {marketRate && hotel.rates_from ? (
+              <div style={{ textAlign: "right" }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: "var(--ink-light)",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  Market rate
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    textDecoration: "line-through",
+                    color: "var(--market-rate)",
+                  }}
+                >
+                  {formatCurrency(marketRate, hotel.rates_currency)}
+                </div>
+              </div>
+            ) : (
+              <div />
+            )}
+
             {hotel.rates_from ? (
               <div
                 style={{
@@ -315,7 +344,7 @@ export default function HotelResultCard({
                 }}
               >
                 <div className="type-label" style={{ color: "var(--gold)" }}>
-                  Member Rate
+                  Voyagr Rate
                 </div>
                 <div className="type-price" style={{ color: "var(--our-rate)" }}>
                   {formatCurrency(hotel.rates_from, hotel.rates_currency)}
@@ -335,8 +364,29 @@ export default function HotelResultCard({
                   fontFamily: "var(--font-body)",
                 }}
               >
-                Enquire for rates
+                Call for rates
               </div>
+            )}
+
+            {savePercent && savePercent > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                <div
+                  style={{
+                    background: "var(--gold-pale)",
+                    color: "var(--success)",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    padding: "4px 10px",
+                    textAlign: "center",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  Save {savePercent}%
+                </div>
+                <PriceProofCompact savePercent={savePercent} />
+              </div>
+            ) : (
+              <div />
             )}
           </div>
         </div>
@@ -388,6 +438,23 @@ export default function HotelResultCard({
                 Preferred
               </div>
             )}
+            {savePercent && savePercent > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  background: "var(--gold-pale)",
+                  color: "var(--success)",
+                  fontSize: 11,
+                  fontWeight: 500,
+                  padding: "4px 10px",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                Save {savePercent}%
+              </div>
+            )}
             {valueScore != null && valueScore >= 60 && (
               <div
                 style={{
@@ -405,7 +472,7 @@ export default function HotelResultCard({
                   fontFamily: "var(--font-body)",
                 }}
               >
-                {valueScore >= 85 ? "Top Pick" : valueScore >= 75 ? "Highly Rated" : "Guest Favourite"}
+                {valueScore >= 85 ? "Top Pick" : valueScore >= 75 ? "Great Value" : "Good Value"}
               </div>
             )}
           </div>
@@ -472,7 +539,7 @@ export default function HotelResultCard({
                       marginBottom: 2,
                     }}
                   >
-                    Member Rate
+                    Voyagr Rate
                   </div>
                   <div
                     style={{
@@ -507,8 +574,24 @@ export default function HotelResultCard({
                     fontFamily: "var(--font-body)",
                   }}
                 >
-                  Enquire for rates
+                  Call for rates
                 </span>
+              )}
+              {marketRate && hotel.rates_from && (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      textDecoration: "line-through",
+                      color: "var(--market-rate)",
+                    }}
+                  >
+                    {formatCurrency(marketRate, hotel.rates_currency)}
+                  </span>
+                  {savePercent && savePercent > 0 && (
+                    <PriceProofCompact savePercent={savePercent} />
+                  )}
+                </div>
               )}
             </div>
           </div>

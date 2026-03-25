@@ -19,7 +19,7 @@ export type HotelCardData = {
   img: string;
 };
 
-/** Featured variant includes curated pricing */
+/** Deal variant includes market-rate vs Voyagr-rate pricing */
 export type HotelDealData = {
   name: string;
   city: string;
@@ -108,7 +108,7 @@ function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
               letterSpacing: "0.04em",
             }}
           >
-            Curated
+            Preferred Rate
           </div>
         </div>
 
@@ -202,17 +202,20 @@ function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
                 per night
               </span>
             </div>
-            <span
-              className="card-arrow"
-              style={{
-                fontSize: "11px",
-                color: "var(--gold)",
-                fontWeight: 500,
-                letterSpacing: "0.04em",
-              }}
-            >
-              View &rarr;
-            </span>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+              <PriceProofCompact savePercent={hotel.savePercent} />
+              <span
+                className="card-arrow"
+                style={{
+                  fontSize: "11px",
+                  color: "var(--gold)",
+                  fontWeight: 500,
+                  letterSpacing: "0.04em",
+                }}
+              >
+                View &rarr;
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -224,7 +227,7 @@ const HotelCard = React.memo(HotelCardInner);
 export default HotelCard;
 
 // ---------------------------------------------------------------------------
-// Featured Card variant — curated property display
+// Deal Card variant — shows market-rate strikethrough + Voyagr rate
 // ---------------------------------------------------------------------------
 function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
   if (!deal.name) return null;
@@ -273,7 +276,7 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
               textTransform: "uppercase",
             }}
           >
-            Curated
+            Preferred Rate
           </div>
           {deal.rating >= 8.5 && (
             <div
@@ -347,7 +350,7 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
             ))}
           </div>
 
-          {/* Pricing */}
+          {/* Deal pricing */}
           <div
             style={{
               borderTop: "1px solid var(--cream-border)",
@@ -358,6 +361,17 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
             }}
           >
             <div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                <span
+                  style={{
+                    fontSize: "12px",
+                    textDecoration: "line-through",
+                    color: "var(--market-rate)",
+                  }}
+                >
+                  &#8377;{deal.marketRate.toLocaleString("en-IN")}
+                </span>
+              </div>
               <div
                 style={{
                   fontFamily: "var(--font-display)",
@@ -382,7 +396,7 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
                   marginBottom: "4px",
                 }}
               >
-                Member Rate
+                Voyagr Rate
               </div>
               <span
                 className="card-arrow"

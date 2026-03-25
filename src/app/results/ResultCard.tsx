@@ -111,6 +111,13 @@ export default function ResultCard({
   const router = useRouter();
   const { setHotel } = useBookingFlow();
   const photo = sanitizePhoto(hotel.photo1);
+  const marketRate = hotel.rates_from ? Math.round(hotel.rates_from * 1.25) : null;
+  const savePercent =
+    hotel.rates_from && marketRate
+      ? Math.round(((marketRate - hotel.rates_from) / marketRate) * 100)
+      : null;
+  const savingsAmount =
+    hotel.rates_from && marketRate ? marketRate - hotel.rates_from : null;
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -206,6 +213,25 @@ export default function ResultCard({
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
                 {ranked.valueScore >= 85 ? "Top Pick" : "Great Value"}
+              </div>
+            )}
+
+            {/* Save badge */}
+            {savePercent && savePercent > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
+                  background: "var(--gold-pale)",
+                  color: "var(--success)",
+                  fontSize: 10,
+                  fontWeight: 600,
+                  padding: "4px 10px",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                Save {savePercent}%
               </div>
             )}
 
@@ -385,7 +411,7 @@ export default function ResultCard({
                       marginBottom: 2,
                     }}
                   >
-                    Member Rate
+                    Voyagr Rate
                   </div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                     <span
@@ -418,6 +444,40 @@ export default function ResultCard({
                 </span>
               )}
 
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  gap: 4,
+                }}
+              >
+                {marketRate && hotel.rates_from && (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      textDecoration: "line-through",
+                      color: "var(--market-rate)",
+                    }}
+                  >
+                    {formatCurrency(marketRate, hotel.rates_currency)}
+                  </span>
+                )}
+                {savingsAmount && savingsAmount > 0 && (
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: "var(--success)",
+                      fontFamily: "var(--font-mono)",
+                      background: "var(--gold-pale)",
+                      padding: "2px 8px",
+                    }}
+                  >
+                    Save {formatCurrency(savingsAmount, hotel.rates_currency)}/night
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Bottom actions */}

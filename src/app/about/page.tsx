@@ -42,7 +42,7 @@ export default function AboutPage() {
               <p className="type-body" style={{ color: "var(--ink-mid)", lineHeight: 1.7 }}>
                 We believe exceptional travel should be accessible. By building
                 direct relationships with hotels worldwide, we pass preferred
-                curated stays directly to our members — personally vetted, thoughtfully selected.
+                wholesale rates straight to our members — no markups, no hidden fees.
               </p>
             </section>
 
