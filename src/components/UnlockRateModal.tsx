@@ -436,7 +436,7 @@ export default function UnlockRateModal({
                       >
                         <div>
                           <div style={{ fontSize: "12px", color: "var(--success)", fontWeight: 600 }}>
-                            You save {savePercent}% vs public rates
+                            Preferred member rate
                           </div>
                           <div style={{ fontSize: "11px", color: "var(--ink-light)", marginTop: 2 }}>
                             {formatCurrency(totalSaving, currency)} total savings on this stay
@@ -477,7 +477,7 @@ export default function UnlockRateModal({
                         <line x1="12" y1="8" x2="12.01" y2="8" />
                       </svg>
                       <span>
-                        These are <strong style={{ color: "var(--ink)" }}>private wholesale rates</strong> not available on Booking.com, Expedia, or any public OTA. Share your details and our concierge will confirm your rate within 15 minutes on WhatsApp.
+                        These are <strong style={{ color: "var(--ink)" }}>preferred rates</strong> available exclusively to Voyagr Club members. Share your details and our concierge will confirm your rate within 15 minutes on WhatsApp.
                       </span>
                     </div>
 

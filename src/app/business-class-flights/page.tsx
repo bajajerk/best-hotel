@@ -52,7 +52,7 @@ const FEATURES = [
       </svg>
     ),
     title: "Premium Business Class",
-    description: "Save up to 70% on Business & First Class flights worldwide with our exclusive member rates.",
+    description: "Access Business & First Class flights worldwide with our exclusive member rates.",
   },
   {
     icon: (
@@ -60,8 +60,8 @@ const FEATURES = [
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
     ),
-    title: "Guaranteed Savings",
-    description: "50–70% off regular business class fares on major airlines. If you find it cheaper, we'll match it.",
+    title: "Preferred Access",
+    description: "Premium business class fares on major airlines through our exclusive partnerships.",
   },
   {
     icon: (
@@ -80,7 +80,7 @@ const FEATURES = [
       </svg>
     ),
     title: "Book After Confirmation",
-    description: "Secure your discounted premium seat first — pay only after we confirm availability.",
+    description: "Secure your premium seat first — pay only after we confirm availability.",
   },
 ];
 
@@ -93,12 +93,12 @@ const HOW_IT_WORKS = [
   {
     step: "02",
     title: "Points Optimisation",
-    description: "We leverage our vast pool of 1M+ airmiles through strategic booking windows and route optimisation to maximise savings for our members.",
+    description: "We leverage our vast pool of 1M+ airmiles through strategic booking windows and route optimisation to maximise value for our members.",
   },
   {
     step: "03",
-    title: "Wholesale Rates",
-    description: "By bulk-purchasing airmiles and maintaining strong relationships with airlines, we secure wholesale rates that translate to incredible savings for you.",
+    title: "Preferred Rates",
+    description: "Through our airline partnerships and industry relationships, we secure access to premium seats that elevate your travel experience.",
   },
 ];
 
@@ -306,7 +306,7 @@ export default function BusinessClassFlightsPage() {
                       marginTop: "6px",
                     }}
                   >
-                    Save {feat.save} off regular price
+                    Preferred rate
                   </p>
                 </div>
               ))}
@@ -709,7 +709,7 @@ export default function BusinessClassFlightsPage() {
                           letterSpacing: "0.04em",
                         }}
                       >
-                        Save {deal.savings}
+                        Member rate
                       </span>
                     </div>
 
@@ -855,7 +855,7 @@ export default function BusinessClassFlightsPage() {
             }}
           >
             Our unique approach combines airline partnerships, points
-            optimisation, and wholesale rates to bring you luxury travel at
+            optimisation, and direct partnerships to bring you luxury travel at
             economy prices.
           </p>
 

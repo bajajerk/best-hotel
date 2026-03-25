@@ -25,9 +25,9 @@ const BOOKING_SITES = [
 ];
 
 const SCANNING_STEPS = [
-  { text: "Checking direct hotel rates...", delay: 0.5 },
-  { text: "Scanning partner networks...", delay: 1.2 },
-  { text: "Finding best available rate...", delay: 2.0 },
+  { text: "Checking direct hotel access...", delay: 0.5 },
+  { text: "Reviewing partner inventory...", delay: 1.2 },
+  { text: "Confirming member rate...", delay: 2.0 },
 ];
 
 export default function Tab3BeatPrice() {
@@ -153,7 +153,7 @@ export default function Tab3BeatPrice() {
         >
           upload any hotel screenshot and
           <br />
-          we&apos;ll find a better rate
+          we&apos;ll check our access
         </p>
       </div>
 
@@ -607,7 +607,7 @@ export default function Tab3BeatPrice() {
           borderRadius: 6,
         }}
       >
-        &#10003; better rate found
+        &#10003; preferred rate available
       </motion.div>
 
       {/* Price Comparison */}
@@ -691,7 +691,7 @@ export default function Tab3BeatPrice() {
             color: "var(--gold)",
           }}
         >
-          your rate: &#8377;2,600 less per night
+          your member rate: &#8377;5,900 per night
         </div>
       </motion.div>
 

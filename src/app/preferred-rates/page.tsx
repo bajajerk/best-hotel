@@ -79,10 +79,10 @@ export default function PreferredRatesPage() {
               lineHeight: 1.7,
             }}
           >
-            Rates that exist outside the public market. Our concierge team holds
-            negotiated contracts with 400+ luxury properties. Members get rates
-            that simply aren&apos;t listed anywhere else — plus perks that
-            elevate every stay.
+            Access beyond the public market. Our concierge team maintains
+            direct relationships with 400+ luxury properties. Members enjoy
+            stays that simply aren&apos;t available elsewhere — with perks that
+            elevate every visit.
           </p>
 
           <div

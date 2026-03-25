@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 const benefits = [
   {
     icon: "\u2726",
-    title: "Guaranteed Lowest Price",
+    title: "Preferred Member Rates",
     description:
-      "If you find a lower rate anywhere, we\u2019ll match it + give you 10% off",
+      "Access rates reserved for our members — negotiated directly with each property",
   },
   {
     icon: "\u21BB",
@@ -35,9 +35,9 @@ const benefits = [
   },
   {
     icon: "\uD83D\uDD12",
-    title: "Price Lock",
+    title: "Rate Hold",
     description:
-      "Lock today\u2019s rate for 48 hours while you decide",
+      "Hold your room for 48 hours while you decide",
   },
 ];
 
@@ -113,7 +113,7 @@ export default function Tab2Premium() {
             marginBottom: 10,
           }}
         >
-          premium rates
+          premium access
         </h1>
         <p
           style={{
@@ -124,7 +124,7 @@ export default function Tab2Premium() {
             lineHeight: 1.5,
           }}
         >
-          insider rates. zero markup.
+          curated stays. personal service.
         </p>
       </motion.div>
 
@@ -313,7 +313,7 @@ export default function Tab2Premium() {
               color: "var(--white-50)",
             }}
           >
-            Average saving{" "}
+            Across{" "}
             <span
               style={{
                 fontFamily: "var(--font-instrument-serif)",
@@ -322,9 +322,9 @@ export default function Tab2Premium() {
                 fontSize: 14,
               }}
             >
-              &#8377;2,800
+              50+
             </span>
-            /night
+            {" "}cities worldwide
           </div>
         </div>
       </motion.div>

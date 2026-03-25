@@ -206,19 +206,19 @@ const fadeSlow = {
 // ---------------------------------------------------------------------------
 const TESTIMONIALS = [
   {
-    quote: "I booked the same suite I found on Booking.com — the Voyagr rate was noticeably better. I genuinely did not believe it until I checked in.",
+    quote: "I booked the same suite through Voyagr — the experience from search to check-in was seamless. Their curation genuinely stands apart.",
     name: "Priya Mehta",
     location: "Mumbai",
     avatar: "PM",
   },
   {
-    quote: "We planned our honeymoon across three cities. The rates through Voyagr meant we could add an extra night in Santorini. That is not an exaggeration.",
+    quote: "We planned our honeymoon across three cities. Voyagr's concierge handled every detail — upgrades, transfers, even a surprise anniversary setup.",
     name: "Arjun & Kavya",
     location: "Bangalore",
     avatar: "AK",
   },
   {
-    quote: "As a travel agent myself, I was skeptical. These are genuine B2B rates. I now use Voyagr for all my personal trips.",
+    quote: "As a travel agent myself, I was skeptical. The access Voyagr has to properties and perks is unlike anything I've seen. I now use them for all my personal trips.",
     name: "Rahul Sharma",
     location: "Delhi",
     avatar: "RS",
@@ -232,12 +232,12 @@ const WHY_STEPS = [
   {
     num: "01",
     title: "Direct Partnerships",
-    desc: "We negotiate B2B rates directly with hotels, cutting out the middlemen and their markups.",
+    desc: "We work directly with hotels to secure access that isn't available on public booking platforms.",
   },
   {
     num: "02",
-    title: "Real-Time Comparison",
-    desc: "See the market price alongside our rate instantly. No guesswork, no hidden fees.",
+    title: "Transparent Pricing",
+    desc: "One clear rate, upfront. No hidden fees, no surprise charges at checkout.",
   },
   {
     num: "03",
@@ -246,8 +246,8 @@ const WHY_STEPS = [
   },
   {
     num: "04",
-    title: "Guaranteed Savings",
-    desc: "Preferred wholesale rates on every booking. Same hotel, same room, same dates. Just a better rate.",
+    title: "Elevated Stays",
+    desc: "Preferred access on every booking — room upgrades, late checkouts, and personal touches included.",
   },
 ];
 
@@ -807,8 +807,8 @@ export default function Home() {
               marginBottom: "40px",
             }}
           >
-            Preferred wholesale rates at 1,500+ hotels worldwide.
-            Direct partnerships. No markup, no hidden fees.
+            Handpicked hotels across 1,500+ properties worldwide.
+            Direct relationships. Personally vetted stays.
           </motion.p>
 
           {/* Search bar */}
@@ -1588,7 +1588,7 @@ export default function Home() {
             <h2 className="type-display-2" style={{
               color: "var(--ink)",
             }}>
-              Same hotel, same room &mdash; <em style={{ fontStyle: "italic", color: "var(--gold)" }}>better rate</em>
+              Same hotel, same room &mdash; <em style={{ fontStyle: "italic", color: "var(--gold)" }}>elevated experience</em>
             </h2>
           </motion.div>
 
@@ -1701,24 +1701,11 @@ export default function Home() {
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "flex-end",
-                  justifyContent: "space-between",
+                  justifyContent: "center",
                   minWidth: "180px",
+                  gap: "6px",
                 }}>
-                  {/* Market rate */}
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: "10px", color: "var(--ink-light)", letterSpacing: "0.08em" }}>
-                      MARKET RATE
-                    </div>
-                    <div style={{
-                      fontSize: "13px",
-                      textDecoration: "line-through",
-                      color: "var(--market-rate)",
-                    }}>
-                      &#8377;{deal.marketRate.toLocaleString("en-IN")}
-                    </div>
-                  </div>
-
-                  {/* Voyagr rate */}
+                  {/* Member rate */}
                   <div style={{ textAlign: "right" }}>
                     <div style={{
                       fontSize: "10px",
@@ -1727,7 +1714,7 @@ export default function Home() {
                       textTransform: "uppercase" as const,
                       color: "var(--gold)",
                     }}>
-                      VOYAGR RATE
+                      MEMBER RATE
                     </div>
                     <div className="type-price" style={{
                       color: "var(--our-rate)",
@@ -1737,18 +1724,6 @@ export default function Home() {
                     <div style={{ fontSize: "11px", color: "var(--ink-light)" }}>
                       per night
                     </div>
-                  </div>
-
-                  {/* Save badge */}
-                  <div style={{
-                    background: "var(--gold-pale)",
-                    color: "var(--success)",
-                    fontSize: "11px",
-                    fontWeight: 500,
-                    padding: "4px 10px",
-                    textAlign: "center",
-                  }}>
-                    Save {deal.savePercent}%
                   </div>
                 </div>
               </motion.div>
@@ -1931,8 +1906,8 @@ export default function Home() {
           }}>
             {[
               {
-                title: "Rates You Won\u2019t Find Online",
-                desc: "Our prices come from direct B2B contracts with hotels \u2014 the same wholesale rates that travel agencies use internally. These never appear on public booking sites.",
+                title: "Access You Won\u2019t Find Online",
+                desc: "Our relationships with hotels give us access to rooms and rates that aren\u2019t listed on public booking platforms. Direct partnerships, no intermediaries.",
                 accent: "01",
               },
               {
@@ -1957,7 +1932,7 @@ export default function Home() {
               },
               {
                 title: "Loyalty Without Lock-In",
-                desc: "No points programmes that expire, no membership tiers to maintain. Book once or book every month \u2014 you get the same wholesale rate from day one.",
+                desc: "No points programmes that expire, no membership tiers to maintain. Book once or book every month \u2014 you get the same preferred access from day one.",
                 accent: "06",
               },
             ].map((item, i) => (
@@ -2221,9 +2196,8 @@ export default function Home() {
                   }}
                 >
                   Voyagr Club was built on a simple idea — luxury travel should be
-                  accessible. We leverage B2B wholesale hotel networks to bring you the same
-                  rooms, same dates, at rates well below what you'd find on retail booking
-                  platforms.
+                  accessible. We work directly with hotels to curate exceptional stays
+                  that you won't find through conventional booking platforms.
                 </p>
                 <p
                   className="type-body"
@@ -2249,7 +2223,7 @@ export default function Home() {
                   {[
                     { number: "50+", label: "Cities Worldwide" },
                     { number: "10K+", label: "Hotels Listed" },
-                    { number: "B2B", label: "Wholesale Rates" },
+                    { number: "Direct", label: "Hotel Partnerships" },
                     { number: "24/7", label: "WhatsApp Support" },
                   ].map((stat) => (
                     <div
@@ -2309,8 +2283,6 @@ function FeaturedCityCard({
   isLarge?: boolean;
 }) {
   const img = getCityImage(city.city_slug);
-  // Generate a fake savings percentage for display
-  const savePercent = 20 + Math.floor(Math.random() * 21);
 
   return (
     <Link
@@ -2397,7 +2369,7 @@ function FeaturedCityCard({
             padding: "2px 8px",
             fontWeight: 500,
           }}>
-            Save up to {savePercent}%
+            Member Access
           </span>
         </div>
       </div>

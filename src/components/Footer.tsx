@@ -26,7 +26,7 @@ const FOOTER_CATEGORIES = [
   { label: "Couples", href: "/search?category=couples" },
   { label: "Families", href: "/search?category=families" },
   { label: "Luxury Stays", href: "/search?sort=price-high" },
-  { label: "Budget Friendly", href: "/search?sort=price-low" },
+  { label: "Smart Stays", href: "/search?sort=price-low" },
   { label: "Top Rated", href: "/search?sort=rating" },
 ];
 
@@ -85,8 +85,8 @@ export default function Footer() {
                 maxWidth: "280px",
               }}
             >
-              Preferred wholesale hotel rates across 50+ cities worldwide. Same hotel,
-              same room — at rates negotiated directly with our partners.
+              Handpicked hotels across 50+ cities worldwide. Personally vetted properties
+              with dedicated concierge service on every booking.
             </p>
 
             {/* Social links */}

@@ -419,25 +419,10 @@ export default function ComparePage() {
                 hotel.rates_from !== null &&
                 hotel.rates_from === lowestPrice &&
                 lowestPrice < Infinity;
-              const marketRate = hotel.rates_from
-                ? Math.round(hotel.rates_from * 1.25)
-                : null;
               return (
                 <div>
                   {hotel.rates_from ? (
                     <>
-                      {marketRate && (
-                        <div
-                          style={{
-                            fontSize: 12,
-                            textDecoration: "line-through",
-                            color: "var(--market-rate)",
-                            marginBottom: 4,
-                          }}
-                        >
-                          {formatCurrency(marketRate, hotel.rates_currency)}
-                        </div>
-                      )}
                       <span
                         style={{
                           fontFamily: "var(--font-display)",
@@ -473,7 +458,7 @@ export default function ComparePage() {
                             textTransform: "uppercase",
                           }}
                         >
-                          Best Price
+                          Member Rate
                         </div>
                       )}
                     </>
@@ -492,28 +477,6 @@ export default function ComparePage() {
                     </span>
                   )}
                 </div>
-              );
-            }}
-          </CompareRow>
-
-          <CompareRow label="Savings" hotels={hotels}>
-            {(hotel) => {
-              if (!hotel.rates_from) return <span style={{ color: "var(--ink-light)", fontSize: 13 }}>—</span>;
-              const marketRate = Math.round(hotel.rates_from * 1.25);
-              const savePercent = Math.round(
-                ((marketRate - hotel.rates_from) / marketRate) * 100
-              );
-              return (
-                <span
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: "var(--success)",
-                  }}
-                >
-                  Save {savePercent}%
-                </span>
               );
             }}
           </CompareRow>

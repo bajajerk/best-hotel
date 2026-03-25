@@ -226,20 +226,16 @@ function Lightbox({
 function RoomCard({
   room,
   voyagrRate,
-  marketRate,
   currency,
   isSelected,
   onSelect,
 }: {
   room: RoomDef;
   voyagrRate: number;
-  marketRate: number;
   currency: string;
   isSelected: boolean;
   onSelect: () => void;
 }) {
-  const saving = marketRate - voyagrRate;
-  const savePercent = Math.round((saving / marketRate) * 100);
 
   return (
     <motion.div
@@ -257,15 +253,15 @@ function RoomCard({
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Save badge */}
-      {savePercent > 0 && (
+      {/* Tier badge */}
+      {room.tier === "preferred" && (
         <div
           style={{
             position: "absolute",
             top: 0,
             right: 20,
-            background: "var(--success)",
-            color: "#fff",
+            background: "var(--gold)",
+            color: "var(--ink)",
             fontSize: "10px",
             fontWeight: 700,
             letterSpacing: "0.06em",
@@ -273,7 +269,7 @@ function RoomCard({
             fontFamily: "var(--font-body)",
           }}
         >
-          SAVE {savePercent}%
+          MEMBER RATE
         </div>
       )}
 
@@ -346,27 +342,6 @@ function RoomCard({
       {/* Pricing row */}
       <div className="flex items-end justify-between">
         <div>
-          <div className="flex items-baseline gap-2">
-            <span
-              style={{
-                fontSize: "11px",
-                color: "var(--ink-light)",
-                textDecoration: "line-through",
-                fontFamily: "var(--font-mono)",
-              }}
-            >
-              {formatCurrency(marketRate, currency)}
-            </span>
-            <span
-              style={{
-                fontSize: "11px",
-                color: "var(--success)",
-                fontWeight: 600,
-              }}
-            >
-              Save {formatCurrency(saving, currency)}
-            </span>
-          </div>
           <div
             style={{
               fontSize: "22px",
@@ -456,7 +431,7 @@ function TrustSignals({ hotelId, rating, reviewCount }: { hotelId: number; ratin
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           <polyline points="9 12 11 14 15 10" />
         </svg>
-        <span>Verified wholesale rates</span>
+        <span>Preferred member access</span>
       </div>
     </div>
   );
@@ -591,11 +566,8 @@ export default function HotelPage() {
   const nights = booking.nights || 1;
   const selectedVoyagrRate = selectedRoom ? getVoyagrRate(selectedRoom) : 0;
   const selectedMarketRate = selectedRoom ? getMarketRate(selectedRoom) : 0;
-  const selectedSaving = selectedMarketRate - selectedVoyagrRate;
   const totalPrice = selectedVoyagrRate * nights;
 
-  /* ── Savings for hero badge ── */
-  const heroSavePercent = 23; // Fixed "up to" percentage for hero
 
   /* ── Star display ── */
   const starDisplay = hotel && hotel.star_rating > 0
@@ -802,7 +774,7 @@ export default function HotelPage() {
             )}
           </motion.div>
 
-          {/* Save up to badge */}
+          {/* Member badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -822,19 +794,20 @@ export default function HotelPage() {
                 textTransform: "uppercase",
               }}
             >
-              Save up to
+              Voyagr Club
             </div>
             <div
               style={{
-                fontSize: "26px",
+                fontSize: "16px",
                 fontWeight: 500,
                 fontFamily: "var(--font-display)",
-                lineHeight: 1.2,
+                lineHeight: 1.4,
+                marginTop: 2,
               }}
             >
-              {heroSavePercent}%
+              Member Rate
             </div>
-            <div style={{ fontSize: "10px", opacity: 0.7 }}>vs. public rates</div>
+            <div style={{ fontSize: "10px", opacity: 0.7 }}>Exclusive access</div>
           </motion.div>
         </div>
 
@@ -1017,7 +990,7 @@ export default function HotelPage() {
                     lineHeight: 1.6,
                   }}
                 >
-                  Exclusive wholesale rates with premium inclusions, available only to Voyagr Club members.
+                  Premium stays with curated inclusions, available exclusively to Voyagr Club members.
                 </p>
 
                 <div className="flex flex-col gap-4">
@@ -1026,7 +999,7 @@ export default function HotelPage() {
                       key={room.id}
                       room={room}
                       voyagrRate={getVoyagrRate(room)}
-                      marketRate={getMarketRate(room)}
+
                       currency={currency}
                       isSelected={selectedRoomId === room.id}
                       onSelect={() => setSelectedRoomId(selectedRoomId === room.id ? null : room.id)}
@@ -1067,7 +1040,7 @@ export default function HotelPage() {
                     lineHeight: 1.6,
                   }}
                 >
-                  Room-only rates at discounted prices.
+                  Room-only rates for flexible stays.
                 </p>
 
                 <div className="flex flex-col gap-4">
@@ -1076,7 +1049,7 @@ export default function HotelPage() {
                       key={room.id}
                       room={room}
                       voyagrRate={getVoyagrRate(room)}
-                      marketRate={getMarketRate(room)}
+
                       currency={currency}
                       isSelected={selectedRoomId === room.id}
                       onSelect={() => setSelectedRoomId(selectedRoomId === room.id ? null : room.id)}
@@ -1319,7 +1292,7 @@ export default function HotelPage() {
 
                   {/* Price per night */}
                   <div className="flex items-baseline justify-between mb-2">
-                    <span style={{ fontSize: "13px", color: "var(--ink-mid)" }}>Preferred rate</span>
+                    <span style={{ fontSize: "13px", color: "var(--ink-mid)" }}>Member rate</span>
                     <span
                       style={{
                         fontSize: "20px",
@@ -1332,43 +1305,7 @@ export default function HotelPage() {
                     </span>
                   </div>
 
-                  {/* Market rate */}
-                  <div className="flex items-baseline justify-between mb-2">
-                    <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>Public rate</span>
-                    <span
-                      style={{
-                        fontSize: "13px",
-                        color: "var(--ink-light)",
-                        textDecoration: "line-through",
-                        fontFamily: "var(--font-mono)",
-                      }}
-                    >
-                      {formatCurrency(selectedMarketRate, currency)}
-                    </span>
-                  </div>
-
-                  {/* Saving */}
-                  <div
-                    className="flex items-baseline justify-between mb-4"
-                    style={{
-                      paddingBottom: 16,
-                      borderBottom: "1px solid var(--cream-border)",
-                    }}
-                  >
-                    <span style={{ fontSize: "12px", color: "var(--success)", fontWeight: 600 }}>
-                      You save per night
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "14px",
-                        color: "var(--success)",
-                        fontWeight: 600,
-                        fontFamily: "var(--font-mono)",
-                      }}
-                    >
-                      {formatCurrency(selectedSaving, currency)}
-                    </span>
-                  </div>
+                  <div style={{ paddingBottom: 16, borderBottom: "1px solid var(--cream-border)" }} />
 
                   {/* Perks */}
                   {selectedRoom.inclusions.length > 0 && (
@@ -1438,18 +1375,6 @@ export default function HotelPage() {
                     </span>
                   </div>
 
-                  {/* Total saving */}
-                  <p
-                    className="text-right"
-                    style={{
-                      fontSize: "12px",
-                      color: "var(--success)",
-                      fontWeight: 500,
-                      marginTop: 4,
-                    }}
-                  >
-                    Total saving: {formatCurrency(selectedSaving * nights, currency)}
-                  </p>
                 </motion.div>
               )}
 
@@ -1540,7 +1465,7 @@ export default function HotelPage() {
             </p>
             {selectedRoom ? (
               <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
-                {formatCurrency(selectedVoyagrRate, currency)}/night &middot; Save {formatCurrency(selectedSaving, currency)}
+                {formatCurrency(selectedVoyagrRate, currency)}/night &middot; {selectedRoom.name}
               </p>
             ) : (
               <p style={{ fontSize: "12px", color: "var(--ink-light)", marginTop: 2 }}>

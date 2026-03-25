@@ -1074,7 +1074,7 @@ export default function CityPage() {
               marginBottom: 36,
             }}
           >
-            B2B rates. No markup. No hidden fees. Contact us and we will beat any publicly listed rate.
+            Curated stays with preferred access. Contact us for personalised recommendations.
           </p>
 
           <div
