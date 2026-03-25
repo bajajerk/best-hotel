@@ -795,7 +795,7 @@ export default function Home() {
               marginBottom: "24px",
             }}
           >
-            Curated properties. Privileged access. Effortless arrangements.
+            Exclusively Curated properties. Privileged access. Effortless arrangements.
           </motion.h1>
 
           <motion.p
