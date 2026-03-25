@@ -180,3 +180,17 @@ export async function fetchFeaturedHotels(
 
   return hotels;
 }
+
+export interface FeaturedResponse {
+  topRated: CuratedHotel[];
+  bestValue: CuratedHotel[];
+  soloTravel: CuratedHotel[];
+  familyFriendly: CuratedHotel[];
+}
+
+/** Fetch all featured hotel categories from the aggregated endpoint */
+export async function fetchFeaturedAll(): Promise<FeaturedResponse> {
+  const res = await fetch(`${API_BASE}/api/hotels/featured`);
+  if (!res.ok) throw new Error('Failed to fetch featured hotels');
+  return res.json();
+}

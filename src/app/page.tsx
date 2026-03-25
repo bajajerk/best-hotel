@@ -4,17 +4,16 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { CATEGORIES, SAMPLE_CITIES, CITY_IMAGES, FALLBACK_CITY_IMAGE, getCityImage } from "@/lib/constants";
-import { fetchCuratedCities, fetchFeaturedHotels, CuratedCity, CuratedHotel } from "@/lib/api";
+import { fetchCuratedCities, fetchFeaturedAll, CuratedCity, CuratedHotel } from "@/lib/api";
+import type { FeaturedResponse } from "@/lib/api";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HotelCard from "@/components/HotelCard";
-import { HotelDealCard } from "@/components/HotelCard";
-import type { HotelCardData, HotelDealData } from "@/components/HotelCard";
+import type { HotelCardData } from "@/components/HotelCard";
 import DestinationSearch from "@/components/DestinationSearch";
 import { useBooking } from "@/context/BookingContext";
 import { trackCtaClicked, trackWhatsAppClicked } from "@/lib/analytics";
 import VoyagerClubComparison from "@/components/VoyagerClubComparison";
-import FeaturedPropertiesCarousel from "@/components/FeaturedPropertiesCarousel";
 import Carousel from "@/components/Carousel";
 import CityCard from "@/components/CityCard";
 import type { CityCardData } from "@/components/CityCard";
@@ -99,14 +98,6 @@ const EDITORIAL_IMAGES = [
   "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=900&q=80",
 ];
 
-// ---------------------------------------------------------------------------
-// Featured city slugs for fetching real hotel data from the API
-// ---------------------------------------------------------------------------
-const FEATURED_CITY_SLUGS = [
-  "bangkok", "tokyo", "paris", "london", "dubai", "singapore",
-  "bali", "rome", "barcelona", "hong-kong", "mumbai", "delhi",
-  "maldives", "sydney", "marrakech", "cape-town", "jaipur", "phuket",
-];
 
 // ---------------------------------------------------------------------------
 // Seasonal trips data
@@ -168,10 +159,11 @@ const SEASONAL_TRIPS = [
 
 
 
-const CURATED_TAB_KEYS = [
-  { key: "popular", label: "Most popular" },
-  { key: "suggest", label: "We suggest" },
-  { key: "curated", label: "Top curated" },
+const FEATURED_TAB_KEYS = [
+  { key: "topRated", label: "Top Rated" },
+  { key: "bestValue", label: "Best Value" },
+  { key: "soloTravel", label: "Solo Travel" },
+  { key: "familyFriendly", label: "Family Friendly" },
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -323,54 +315,6 @@ function useCarousel(itemCount: number, visibleCount: number = 4) {
   return { trackRef, activeIdx, dotCount, prev, next, scrollTo, maxIdx };
 }
 
-// ---------------------------------------------------------------------------
-// Popular Properties Carousel
-// ---------------------------------------------------------------------------
-function PopularCarousel({ properties }: { properties: HotelCardData[] }) {
-  const { trackRef, activeIdx, dotCount, prev, next, scrollTo, maxIdx } =
-    useCarousel(properties.length, 4);
-
-  return (
-    <motion.div
-      className="carousel-container"
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6 }}
-    >
-      {/* Arrows */}
-      <button className="carousel-btn carousel-btn-prev" onClick={prev} disabled={activeIdx === 0} aria-label="Previous">
-        <ChevronLeft />
-      </button>
-      <button className="carousel-btn carousel-btn-next" onClick={next} disabled={activeIdx >= maxIdx} aria-label="Next">
-        <ChevronRight />
-      </button>
-
-      {/* Track */}
-      <div className="carousel-track" ref={trackRef}>
-        {properties.map((prop) => (
-          <div key={prop.name} style={{ width: "calc(25% - 15px)" }}>
-            <HotelCard hotel={prop} />
-          </div>
-        ))}
-      </div>
-
-      {/* Dots */}
-      {dotCount > 1 && (
-        <div className="carousel-dots">
-          {Array.from({ length: dotCount }).map((_, i) => (
-            <button
-              key={i}
-              className={`carousel-dot${i === activeIdx ? " active" : ""}`}
-              onClick={() => scrollTo(i)}
-              aria-label={`Go to slide ${i + 1}`}
-            />
-          ))}
-        </div>
-      )}
-    </motion.div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Seasonal Trips Carousel
@@ -482,20 +426,17 @@ function SeasonalCarousel({ trips }: { trips: SeasonalTrip[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// Curated Sub-Sections: Most popular · We suggest · Top curated
+// Featured Properties — single tabbed carousel (calls GET /api/hotels/featured)
 // ---------------------------------------------------------------------------
-function CuratedSubSections({ tabData, isLoading, isError }: { tabData: Record<string, HotelCardData[]>; isLoading: boolean; isError: boolean }) {
-  const [activeTab, setActiveTab] = useState<string>("popular");
+function FeaturedPropertiesSection({ tabData, isLoading, isError }: { tabData: Record<string, HotelCardData[]>; isLoading: boolean; isError: boolean }) {
+  const [activeTab, setActiveTab] = useState<string>("topRated");
   const activeData = tabData[activeTab] || [];
-  const { trackRef, activeIdx, dotCount, prev, next, scrollTo, maxIdx } =
-    useCarousel(activeData.length, 4);
 
   return (
     <section
-      className="section-curated"
+      className="section-featured section-pad"
       style={{
-        padding: "80px 60px",
-        background: "var(--white)",
+        background: "var(--cream)",
       }}
     >
       <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
@@ -506,13 +447,40 @@ function CuratedSubSections({ tabData, isLoading, isError }: { tabData: Record<s
           transition={{ duration: 0.8 }}
           style={{ marginBottom: "48px" }}
         >
-          <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
-            Curated Collections
+          <div style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            marginBottom: "32px",
+          }}>
+            <div>
+              <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
+                Featured Properties
+              </div>
+              <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
+                Curated{" "}
+                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>stays</em>{" "}
+                worldwide
+              </h2>
+            </div>
+            <Link
+              href="/search"
+              className="btn-outline"
+              onClick={() => trackCtaClicked({ cta_name: 'view_all_hotels', cta_location: 'home_featured_section', destination_url: '/search' })}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                textDecoration: "none",
+              }}
+            >
+              View all
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </Link>
           </div>
-          <h2 className="type-display-2" style={{ color: "var(--ink)", marginBottom: "32px" }}>
-            Handpicked{" "}
-            <em style={{ fontStyle: "italic", color: "var(--gold)" }}>for you</em>
-          </h2>
 
           {/* Tabs */}
           <div style={{
@@ -521,7 +489,7 @@ function CuratedSubSections({ tabData, isLoading, isError }: { tabData: Record<s
             borderBottom: "1px solid var(--cream-border)",
             paddingBottom: "0",
           }}>
-            {CURATED_TAB_KEYS.map((tab) => (
+            {FEATURED_TAB_KEYS.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
@@ -550,50 +518,36 @@ function CuratedSubSections({ tabData, isLoading, isError }: { tabData: Record<s
         {activeData.length > 0 ? (
           <motion.div
             key={activeTab}
-            className="carousel-container"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <button className="carousel-btn carousel-btn-prev" onClick={prev} disabled={activeIdx === 0} aria-label="Previous">
-              <ChevronLeft />
-            </button>
-            <button className="carousel-btn carousel-btn-next" onClick={next} disabled={activeIdx >= maxIdx} aria-label="Next">
-              <ChevronRight />
-            </button>
-
-            <div className="carousel-track" ref={trackRef}>
+            <Carousel ariaLabel="Featured properties" showProgressBar>
               {activeData.map((prop) => (
-                <div key={`${prop.name}-${prop.citySlug}`} style={{ width: "calc(25% - 15px)" }}>
-                  <HotelCard hotel={prop} />
-                </div>
+                <HotelCard key={`${prop.name}-${prop.citySlug}`} hotel={prop} />
               ))}
-            </div>
-
-            {dotCount > 1 && (
-              <div className="carousel-dots">
-                {Array.from({ length: dotCount }).map((_, i) => (
-                  <button
-                    key={i}
-                    className={`carousel-dot${i === activeIdx ? " active" : ""}`}
-                    onClick={() => scrollTo(i)}
-                    aria-label={`Go to slide ${i + 1}`}
-                  />
-                ))}
-              </div>
-            )}
+            </Carousel>
           </motion.div>
         ) : isLoading ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="shimmer" style={{ height: 320, background: "var(--cream)" }} />
+              <div key={i} className="shimmer" style={{ height: 320, background: "var(--cream-deep)" }} />
             ))}
           </div>
         ) : (
           <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--ink-light)" }}>
-            <p style={{ fontSize: "14px" }}>
-              {isError ? "Unable to load curated hotels." : "No curated hotels available for this selection."}
+            <p style={{ fontSize: "14px", marginBottom: "12px" }}>
+              {isError ? "Unable to load featured hotels." : "No featured properties available."}
             </p>
+            {isError && (
+              <button
+                onClick={() => window.location.reload()}
+                className="btn-outline"
+                style={{ fontSize: "12px", padding: "8px 20px", cursor: "pointer" }}
+              >
+                Try again
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -610,10 +564,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [heroIdx, setHeroIdx] = useState(0);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
-  const [popularProps, setPopularProps] = useState<HotelCardData[]>([]);
-  const [topDeals, setTopDeals] = useState<HotelDealData[]>([]);
-  const [curatedTabData, setCuratedTabData] = useState<Record<string, HotelCardData[]>>({ popular: [], suggest: [], curated: [] });
-  const [featuredCarouselProps, setFeaturedCarouselProps] = useState<HotelCardData[]>([]);
+  const [featuredTabData, setFeaturedTabData] = useState<Record<string, HotelCardData[]>>({ topRated: [], bestValue: [], soloTravel: [], familyFriendly: [] });
   const [hotelsLoading, setHotelsLoading] = useState(true);
   const [hotelsError, setHotelsError] = useState(false);
   const [topSellers, setTopSellers] = useState<TopSellerHotel[]>([]);
@@ -643,73 +594,37 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Fetch featured hotel data from API for home page sections
+  // Fetch featured hotel data from GET /api/hotels/featured
   useEffect(() => {
     async function loadFeaturedHotels() {
       try {
-        const hotels = await fetchFeaturedHotels(FEATURED_CITY_SLUGS, "couples");
+        const data: FeaturedResponse = await fetchFeaturedAll();
 
-        if (!hotels || hotels.length === 0) {
+        const allHotels = [
+          ...data.topRated,
+          ...data.bestValue,
+          ...data.soloTravel,
+          ...data.familyFriendly,
+        ];
+
+        if (allHotels.length === 0) {
           console.warn("[Voyagr] API returned no hotels for featured sections");
           setHotelsError(true);
           setHotelsLoading(false);
           return;
         }
 
-        console.log(`[Voyagr] Loaded ${hotels.length} featured hotels from API`);
+        console.log(`[Voyagr] Loaded featured hotels from GET /api/hotels/featured`);
 
         // Top sellers — most booked properties
-        setTopSellers(computeTopSellers(hotels, 8));
+        setTopSellers(computeTopSellers(data.topRated, 8));
 
-        // Sort by rating for popular properties (top 8) — only renderable hotels
-        const byRating = [...hotels]
-          .filter((h) => isRenderable(h) && h.rating_average)
-          .sort((a, b) => (b.rating_average || 0) - (a.rating_average || 0));
-        setPopularProps(byRating.slice(0, 8).map(curatedToCard));
-
-        // Featured carousel — top 6 highest-rated properties with images
-        const featuredSelection = byRating
-          .filter((h) => h.photo1 && isRenderable(h))
-          .slice(0, 6)
-          .map(curatedToCard);
-        setFeaturedCarouselProps(featuredSelection);
-
-        // Top deals — sorted by rates_from (best value)
-        const withRates = hotels.filter((h) => isRenderable(h));
-        const dealHotels = withRates.slice(0, 6).map((h) => {
-          const marketRate = Math.round((h.rates_from || 0) * 1.25);
-          const voyagrRate = h.rates_from || 0;
-          const savePercent = marketRate > 0 ? Math.round(((marketRate - voyagrRate) / marketRate) * 100) : 20;
-          return {
-            name: h.hotel_name,
-            city: `${h.city_name}, ${h.country}`,
-            citySlug: h.city_slug,
-            stars: h.star_rating || 4,
-            rating: h.rating_average || 8.0,
-            tags: extractTags(h.overview),
-            marketRate,
-            voyagrRate,
-            savePercent,
-            img: sanitizePhoto(h.photo1),
-          };
-        });
-        setTopDeals(dealHotels);
-
-        // Curated tabs — split hotels across the three tabs
-        const singles = await fetchFeaturedHotels(FEATURED_CITY_SLUGS.slice(0, 12), "singles");
-        const families = await fetchFeaturedHotels(FEATURED_CITY_SLUGS.slice(0, 12), "families");
-        setCuratedTabData({
-          popular: byRating.slice(0, 6).map(curatedToCard),
-          suggest: singles
-            .filter((h) => isRenderable(h) && h.rating_average)
-            .sort((a, b) => (b.rating_average || 0) - (a.rating_average || 0))
-            .slice(0, 6)
-            .map(curatedToCard),
-          curated: families
-            .filter((h) => isRenderable(h) && h.rating_average)
-            .sort((a, b) => (b.rating_average || 0) - (a.rating_average || 0))
-            .slice(0, 6)
-            .map(curatedToCard),
+        // Convert each category to card data for tabs
+        setFeaturedTabData({
+          topRated: data.topRated.map(curatedToCard),
+          bestValue: data.bestValue.map(curatedToCard),
+          soloTravel: data.soloTravel.map(curatedToCard),
+          familyFriendly: data.familyFriendly.map(curatedToCard),
         });
       } catch (err) {
         console.error("[Voyagr] Failed to load featured hotels:", err);
@@ -1052,227 +967,14 @@ export default function Home() {
       </section>
 
       {/* ================================================================
-          FEATURED PROPERTIES CAROUSEL — cinematic hero-style slider
+          FEATURED PROPERTIES — unified tabbed carousel (GET /api/hotels/featured)
       ================================================================ */}
-      {featuredCarouselProps.length > 0 && (
-        <section className="section-featured-carousel" style={{ background: "var(--ink)" }}>
-          <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <FeaturedPropertiesCarousel properties={featuredCarouselProps} />
-            </motion.div>
-          </div>
-        </section>
-      )}
-
-      {/* ================================================================
-          FEATURED PROPERTIES — curated stays worldwide (carousel)
-      ================================================================ */}
-      <section className="section-featured section-pad">
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            className="section-header"
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              marginBottom: "48px",
-            }}
-          >
-            <div>
-              <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
-                Featured Properties
-              </div>
-              <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
-                Curated <em style={{ fontStyle: "italic", color: "var(--gold)" }}>stays</em> worldwide
-              </h2>
-            </div>
-            <Link
-              href="/search"
-              className="btn-outline"
-              onClick={() => trackCtaClicked({ cta_name: 'view_all_hotels', cta_location: 'home_curated_section', destination_url: '/search' })}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                textDecoration: "none",
-              }}
-            >
-              View all
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
-            </Link>
-          </motion.div>
-
-          {popularProps.length > 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <Carousel ariaLabel="Featured properties" showProgressBar>
-                {popularProps.map((prop) => (
-                  <HotelCard key={prop.name} hotel={prop} />
-                ))}
-              </Carousel>
-            </motion.div>
-          ) : hotelsLoading ? (
-            <div style={{ display: "flex", gap: "20px" }}>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="shimmer" style={{ height: 360, flex: 1, background: "var(--cream-deep)" }} />
-              ))}
-            </div>
-          ) : (
-            <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--ink-light)" }}>
-              <p style={{ fontSize: "14px", marginBottom: "12px" }}>
-                {hotelsError ? "Unable to load hotels right now." : "No featured properties available."}
-              </p>
-              {hotelsError && (
-                <button
-                  onClick={() => window.location.reload()}
-                  className="btn-outline"
-                  style={{ fontSize: "12px", padding: "8px 20px", cursor: "pointer" }}
-                >
-                  Try again
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ================================================================
-          POPULAR PROPERTIES — individual hotel cards
-      ================================================================ */}
-      <section
-        className="section-popular section-pad"
-        style={{
-          background: "var(--white)",
-        }}
-      >
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            className="section-header"
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              marginBottom: "48px",
-            }}
-          >
-            <div>
-              <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
-                Popular Properties
-              </div>
-              <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
-                Traveller{" "}
-                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>favourites</em>
-              </h2>
-            </div>
-          </motion.div>
-
-          {/* Property cards — carousel */}
-          {popularProps.length > 0 ? (
-            <PopularCarousel properties={popularProps} />
-          ) : hotelsLoading ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="shimmer" style={{ height: 320, background: "var(--cream)" }} />
-              ))}
-            </div>
-          ) : (
-            <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--ink-light)" }}>
-              <p style={{ fontSize: "14px" }}>
-                {hotelsError ? "Unable to load hotels. Please try again later." : "No popular properties found."}
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
+      <FeaturedPropertiesSection tabData={featuredTabData} isLoading={hotelsLoading} isError={hotelsError} />
 
       {/* ================================================================
           TOP SELLERS — most booked properties
       ================================================================ */}
       <TopSellers hotels={topSellers} />
-
-      {/* ================================================================
-          FEATURED PROPERTIES — handpicked stays worth booking (carousel)
-      ================================================================ */}
-      <section
-        className="section-top-deals section-pad"
-        style={{
-          background: "var(--cream)",
-        }}
-      >
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            className="section-header"
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              marginBottom: "48px",
-            }}
-          >
-            <div>
-              <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
-                Featured Properties
-              </div>
-              <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
-                Handpicked{" "}
-                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>stays</em>{" "}
-                worth booking
-              </h2>
-            </div>
-          </motion.div>
-
-          {topDeals.length > 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <Carousel ariaLabel="Handpicked stays" showIndicators>
-                {topDeals.map((deal) => (
-                  <HotelDealCard key={deal.name} deal={deal} />
-                ))}
-              </Carousel>
-            </motion.div>
-          ) : hotelsLoading ? (
-            <div style={{ display: "flex", gap: "20px" }}>
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="shimmer" style={{ height: 360, flex: 1, background: "var(--cream-deep)" }} />
-              ))}
-            </div>
-          ) : (
-            <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--ink-light)" }}>
-              <p style={{ fontSize: "14px" }}>
-                {hotelsError ? "Unable to load deals. Please try again later." : "No deals available right now."}
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
 
       {/* ================================================================
           VOYAGER CLUB — market rate vs club rate comparison
@@ -1393,11 +1095,6 @@ export default function Home() {
           </div>
         </section>
       )}
-
-      {/* ================================================================
-          CURATED SUB-SECTIONS — Most popular · We suggest · Top curated
-      ================================================================ */}
-      <CuratedSubSections tabData={curatedTabData} isLoading={hotelsLoading} isError={hotelsError} />
 
       {/* ================================================================
           LET'S PLAN YOUR STAY — editorial CTA
