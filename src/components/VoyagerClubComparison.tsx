@@ -251,7 +251,7 @@ function ComparisonCard({
               savingsVsMarket={standardSave}
             />
             <RateTier
-              label="Voyager Club"
+              label="Voyagr Club"
               price={hotel.clubRate}
               isClub
               savingsVsMarket={clubSave}
@@ -334,7 +334,7 @@ function ComparisonCard({
             <path d="M9 12l2 2 4-4" />
           </svg>
           <span style={{ fontSize: "11px", color: "var(--ink-mid)" }}>
-            Voyager Club members access preferred rates{" "}
+            Voyagr Club members access preferred rates{" "}
             <strong style={{ color: "var(--success)" }}>
               negotiated directly
             </strong>
@@ -422,7 +422,7 @@ export default function VoyagerClubComparison() {
           style={{ marginBottom: "48px" }}
         >
           <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
-            Voyager Club
+            Voyagr Club
           </div>
           <h2
             className="type-display-2"
@@ -430,7 +430,7 @@ export default function VoyagerClubComparison() {
           >
             Market rate vs{" "}
             <em style={{ fontStyle: "italic", color: "var(--gold)" }}>
-              Voyager Club
+              Voyagr Club
             </em>{" "}
             rate
           </h2>
@@ -442,7 +442,7 @@ export default function VoyagerClubComparison() {
               lineHeight: 1.7,
             }}
           >
-            Voyager Club members unlock exclusive wholesale rates negotiated directly
+            Voyagr Club members unlock exclusive wholesale rates negotiated directly
             with premium hotels — plus complimentary perks on every stay.
           </p>
         </motion.div>
@@ -520,7 +520,7 @@ export default function VoyagerClubComparison() {
                 className="type-heading-3"
                 style={{ color: "var(--ink)" }}
               >
-                Join Voyager Club
+                Join Voyagr Club
               </span>
             </div>
             <p
