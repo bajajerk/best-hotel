@@ -81,11 +81,12 @@ const INITIAL_STATE: BookingFlowState = {
 
 function generateBookingId(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let id = "VYG-";
-  for (let i = 0; i < 8; i++) {
-    id += chars[Math.floor(Math.random() * chars.length)];
+  let code = "";
+  for (let i = 0; i < 4; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
   }
-  return id;
+  const year = new Date().getFullYear();
+  return `VGR-${code}-${year}`;
 }
 
 export function BookingFlowProvider({ children }: { children: ReactNode }) {
