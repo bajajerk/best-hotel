@@ -12,6 +12,7 @@ import HotelCard from "@/components/HotelCard";
 import type { HotelCardData } from "@/components/HotelCard";
 import DestinationSearch from "@/components/DestinationSearch";
 import { useBooking } from "@/context/BookingContext";
+import { getWhyVisitNow } from "@/lib/whyVisitNow";
 import { trackCtaClicked, trackWhatsAppClicked } from "@/lib/analytics";
 import VoyagerClubComparison from "@/components/VoyagerClubComparison";
 import Carousel from "@/components/Carousel";
@@ -71,6 +72,7 @@ function curatedToCard(hotel: CuratedHotel): HotelCardData {
     priceFrom: hotel.rates_from || 0,
     savePercent,
     img: sanitizePhoto(hotel.photo1),
+    whyVisitNow: getWhyVisitNow(hotel.hotel_name) ?? undefined,
   };
 }
 

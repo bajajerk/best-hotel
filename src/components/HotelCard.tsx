@@ -17,6 +17,7 @@ export type HotelCardData = {
   priceFrom: number;
   savePercent: number;
   img: string;
+  whyVisitNow?: string;
 };
 
 /** Deal variant includes market-rate vs Voyagr-rate pricing */
@@ -135,11 +136,26 @@ function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
               fontSize: "12px",
               color: "var(--ink-light)",
               letterSpacing: "0.04em",
-              marginBottom: "14px",
+              marginBottom: hotel.whyVisitNow ? "10px" : "14px",
             }}
           >
             {hotel.city}
           </p>
+          {hotel.whyVisitNow && (
+            <p
+              style={{
+                fontSize: "11px",
+                lineHeight: 1.5,
+                color: "var(--ink-mid)",
+                fontStyle: "italic",
+                marginBottom: "12px",
+                borderLeft: "2px solid var(--gold)",
+                paddingLeft: "10px",
+              }}
+            >
+              {hotel.whyVisitNow}
+            </p>
+          )}
           <div
             style={{
               display: "flex",
