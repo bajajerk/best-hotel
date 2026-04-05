@@ -730,7 +730,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               marginBottom: "24px",
             }}
           >
-            Curated properties. Privileged access. Effortless arrangements.
+            The rates your travel agent will never show you.
           </motion.h1>
 
           <motion.p
@@ -742,8 +742,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               marginBottom: "40px",
             }}
           >
-            Preferred wholesale rates at 1,500+ hotels worldwide.
-            Direct partnerships. No markup, no hidden fees.
+            Wholesale hotel pricing reserved for Voyagr Club members only.
           </motion.p>
 
           {/* Search bar */}
