@@ -1,0 +1,88 @@
+export type PartnerType = "alliance" | "brand";
+
+export interface PreferredPartner {
+  name: string;
+  type: PartnerType;
+}
+
+export const PREFERRED_PARTNERS: PreferredPartner[] = [
+  // Alliances & Programs
+  { name: "Virtuoso", type: "alliance" },
+  { name: "Marriott STARS & Luminous", type: "alliance" },
+  { name: "Hilton Impresario", type: "alliance" },
+  { name: "Hyatt Privé", type: "alliance" },
+  { name: "Four Seasons Preferred Partner", type: "alliance" },
+  { name: "Belmond Bellini Club", type: "alliance" },
+  { name: "Rosewood Elite", type: "alliance" },
+  { name: "Raffles Stars", type: "alliance" },
+  { name: "Accor STEP", type: "alliance" },
+  { name: "IHG Luxury & Lifestyle", type: "alliance" },
+  { name: "Mandarin Oriental Fan Club", type: "alliance" },
+  { name: "Peninsula PenClub", type: "alliance" },
+  { name: "Dorchester Diamond Club", type: "alliance" },
+  { name: "Shangri-La Luxury Circle", type: "alliance" },
+  { name: "LHW", type: "alliance" },
+  { name: "Preferred Hotels & Resorts", type: "alliance" },
+  { name: "Design Hotels", type: "alliance" },
+  { name: "SLH", type: "alliance" },
+  { name: "Relais & Châteaux", type: "alliance" },
+  { name: "Tablet Plus", type: "alliance" },
+
+  // Brands & Groups
+  { name: "Four Seasons", type: "brand" },
+  { name: "Aman", type: "brand" },
+  { name: "Rosewood", type: "brand" },
+  { name: "Belmond", type: "brand" },
+  { name: "Six Senses", type: "brand" },
+  { name: "One&Only", type: "brand" },
+  { name: "Banyan Tree", type: "brand" },
+  { name: "Raffles", type: "brand" },
+  { name: "Fairmont", type: "brand" },
+  { name: "Sofitel", type: "brand" },
+  { name: "Ritz-Carlton", type: "brand" },
+  { name: "St. Regis", type: "brand" },
+  { name: "W Hotels", type: "brand" },
+  { name: "JW Marriott", type: "brand" },
+  { name: "Luxury Collection", type: "brand" },
+  { name: "EDITION", type: "brand" },
+  { name: "Park Hyatt", type: "brand" },
+  { name: "Andaz", type: "brand" },
+  { name: "Alila", type: "brand" },
+  { name: "Waldorf Astoria", type: "brand" },
+  { name: "Conrad", type: "brand" },
+  { name: "LXR", type: "brand" },
+  { name: "Regent", type: "brand" },
+  { name: "InterContinental", type: "brand" },
+  { name: "Kimpton", type: "brand" },
+  { name: "Shangri-La", type: "brand" },
+  { name: "Mandarin Oriental", type: "brand" },
+  { name: "Peninsula", type: "brand" },
+  { name: "Dorchester Collection", type: "brand" },
+  { name: "Langham", type: "brand" },
+  { name: "Oberoi", type: "brand" },
+  { name: "Taj (Taj/SeleQtions/Vivanta)", type: "brand" },
+  { name: "Jumeirah", type: "brand" },
+  { name: "COMO", type: "brand" },
+  { name: "Capella", type: "brand" },
+  { name: "Rocco Forte", type: "brand" },
+  { name: "Auberge", type: "brand" },
+  { name: "Roseate", type: "brand" },
+  { name: "Minor Hotels", type: "brand" },
+  { name: "Anantara", type: "brand" },
+  { name: "The Set Collection", type: "brand" },
+  { name: "Oetker Collection", type: "brand" },
+  { name: "Soneva", type: "brand" },
+  { name: "Viceroy", type: "brand" },
+  { name: "Montage", type: "brand" },
+  { name: "Pendry", type: "brand" },
+  { name: "Thompson", type: "brand" },
+  { name: "Nobu", type: "brand" },
+  { name: "Kempinski", type: "brand" },
+  { name: "NH Collection", type: "brand" },
+  { name: "Rosewood Residences", type: "brand" },
+  { name: "Accor Premium Portfolio", type: "brand" },
+];
+
+export function getPartnersByType(type: PartnerType): PreferredPartner[] {
+  return PREFERRED_PARTNERS.filter((p) => p.type === type);
+}
