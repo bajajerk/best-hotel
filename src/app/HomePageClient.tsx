@@ -721,7 +721,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               marginBottom: "20px",
             }}
           >
-            Preferred Hotel Rate
+            Best Preferred Hotel Rate
           </motion.p>
 
           <motion.h1
