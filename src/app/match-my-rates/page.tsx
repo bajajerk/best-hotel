@@ -1,22 +1,22 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/context/AuthContext";
 import {
   trackMatchMyRateStarted,
   trackScreenshotUploaded,
   trackExtractionCompleted,
   trackManualFormSubmitted,
-  trackOtpRequested,
-  trackOtpVerified,
   trackRateComparisonViewed,
 } from "@/lib/analytics";
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
-type Step = "upload" | "extracting" | "verify" | "otp" | "result";
+type Step = "upload" | "extracting" | "verify" | "searching" | "result";
 
 interface ExtractedData {
   hotelName: string;
@@ -104,16 +104,14 @@ function formatDate(dateStr: string): string {
 /* ─────────────────────────── Component ─────────────────────────── */
 
 export default function MatchMyRatesPage() {
+  const { user, session, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [step, setStep] = useState<Step>("upload");
   const [isDragging, setIsDragging] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
-  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [extracted, setExtracted] = useState<ExtractedData | null>(null);
   const [result, setResult] = useState<WholesaleResult | null>(null);
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpError, setOtpError] = useState("");
   const [isManual, setIsManual] = useState(false);
   const [manualForm, setManualForm] = useState<ManualFormData>({
     hotelName: "",
@@ -128,7 +126,12 @@ export default function MatchMyRatesPage() {
   const [extractError, setExtractError] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [authLoading, user, router]);
 
   /* ── File handling ── */
   const handleFile = useCallback((file: File) => {
@@ -137,7 +140,6 @@ export default function MatchMyRatesPage() {
     trackScreenshotUploaded({ file_size_kb: Math.round(file.size / 1024), file_type: file.type });
     const url = URL.createObjectURL(file);
     setScreenshotUrl(url);
-    setScreenshotFile(file);
     setIsManual(false);
     setStep("extracting");
 
@@ -148,7 +150,10 @@ export default function MatchMyRatesPage() {
         const base64 = (reader.result as string).split(",")[1];
         const res = await fetch("/api/match-my-rate/analyze", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token}`,
+          },
           body: JSON.stringify({ image: base64 }),
         });
         const json = await res.json();
@@ -176,7 +181,7 @@ export default function MatchMyRatesPage() {
       }
     };
     reader.readAsDataURL(file);
-  }, []);
+  }, [session]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -240,98 +245,54 @@ export default function MatchMyRatesPage() {
   /* ── Confirm extracted data & search wholesale ── */
   const handleConfirmAndSearch = async () => {
     if (!extracted) return;
-    setStep("otp");
-  };
-
-  /* ── OTP flow ── */
-  const sendOtp = async () => {
-    if (phone.length < 10) return;
+    setStep("searching");
     try {
-      const res = await fetch("/api/match-my-rate/verify-otp", {
+      const res = await fetch("/api/match-my-rate/search", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, action: "send" }),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify(extracted),
       });
       const json = await res.json();
       if (json.success) {
-        setOtpSent(true);
-        setOtpError("");
-        trackOtpRequested({ phone_country_length: phone.length });
-        setTimeout(() => otpRefs.current[0]?.focus(), 100);
-      }
-    } catch {
-      setOtpError("Failed to send OTP. Try again.");
-    }
-  };
-
-  const verifyOtp = async () => {
-    const otpStr = otp.join("");
-    if (otpStr.length !== 6) {
-      setOtpError("Enter all 6 digits");
-      return;
-    }
-    try {
-      const res = await fetch("/api/match-my-rate/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, otp: otpStr, action: "verify" }),
-      });
-      const json = await res.json();
-      if (json.success && json.verified) {
-        trackOtpVerified({ success: true });
-        // Now search for wholesale rates
-        setStep("extracting");
-        try {
-          const searchRes = await fetch("/api/match-my-rate/search", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(extracted),
-          });
-          const searchJson = await searchRes.json();
-          if (searchJson.success && searchJson.data) {
-            setResult(searchJson.data);
-            setStep("result");
-            trackRateComparisonViewed({
-              hotel_name: searchJson.data.hotelName,
-              ota_name: searchJson.data.otaName,
-              ota_price: searchJson.data.otaPrice,
-              our_price: searchJson.data.ourPrice,
-              savings_percent: searchJson.data.savingsPercent,
-              currency: searchJson.data.currency,
-            });
-          }
-        } catch {
-          setStep("result");
-        }
+        // Map backend response to WholesaleResult shape
+        setResult({
+          hotelName: json.hotel_name || extracted.hotelName,
+          location: json.location || extracted.location,
+          roomType: json.roomType || extracted.roomType,
+          checkIn: json.checkIn || extracted.checkIn,
+          checkOut: json.checkOut || extracted.checkOut,
+          nights: json.nights || extracted.nights,
+          guests: json.guests || extracted.guests,
+          otaName: json.otaName || extracted.otaName,
+          otaPrice: json.otaPrice || extracted.otaPrice,
+          ourPrice: json.agodaRate || 0,
+          savings: json.savings || 0,
+          savingsPercent: json.savingsPercent || 0,
+          totalOta: json.totalOta || extracted.otaPrice * extracted.nights,
+          totalOurs: json.totalAgoda || 0,
+          currency: json.currency || extracted.currency,
+          includesBreakfast: json.includesBreakfast || false,
+          freeCancellation: false,
+        });
+        setStep("result");
+        trackRateComparisonViewed({
+          hotel_name: json.hotel_name || extracted.hotelName,
+          ota_name: json.otaName || extracted.otaName,
+          ota_price: json.otaPrice || extracted.otaPrice,
+          our_price: json.agodaRate || 0,
+          savings_percent: json.savingsPercent || 0,
+          currency: json.currency || extracted.currency,
+        });
       } else {
-        trackOtpVerified({ success: false });
-        setOtpError("Invalid OTP. Please try again.");
+        setExtractError(json.error || "Could not find rates for this hotel");
+        setStep("verify");
       }
     } catch {
-      setOtpError("Verification failed. Try again.");
-    }
-  };
-
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) value = value.slice(-1);
-    if (value && !/^\d$/.test(value)) return;
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-    if (value && index < 5) {
-      otpRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
-    if (e.key === "Enter" && otp.join("").length === 6) {
-      verifyOtp();
+      setExtractError("Search failed. Please try again.");
+      setStep("verify");
     }
   };
 
@@ -339,13 +300,8 @@ export default function MatchMyRatesPage() {
   const handleReset = () => {
     setStep("upload");
     setScreenshotUrl(null);
-    setScreenshotFile(null);
     setExtracted(null);
     setResult(null);
-    setPhone("");
-    setOtp(["", "", "", "", "", ""]);
-    setOtpSent(false);
-    setOtpError("");
     setExtractError("");
     setIsManual(false);
     setManualForm({
@@ -361,13 +317,25 @@ export default function MatchMyRatesPage() {
   };
 
   /* ── Step indicator ── */
-  const stepOrder: Step[] = ["upload", "verify", "otp", "result"];
-  const stepLabels = ["Upload", "Review", "Verify", "Compare"];
+  const stepOrder: Step[] = ["upload", "verify", "result"];
+  const stepLabels = ["Upload", "Review", "Compare"];
   const currentStepIndex = stepOrder.indexOf(
-    step === "extracting" ? "upload" : step
+    step === "extracting" ? "upload" : step === "searching" ? "verify" : step
   );
 
   /* ═══════════════════════════ RENDER ═══════════════════════════ */
+
+  if (authLoading) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen flex items-center justify-center bg-[#FAFAF8]">
+          <div className="text-[#8B7355]">Loading...</div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -559,7 +527,14 @@ export default function MatchMyRatesPage() {
               <ExtractingStep
                 key="extracting"
                 screenshotUrl={screenshotUrl}
-                isSearching={!!extracted}
+                isSearching={false}
+              />
+            )}
+            {step === "searching" && (
+              <ExtractingStep
+                key="searching"
+                screenshotUrl={screenshotUrl}
+                isSearching={true}
               />
             )}
             {step === "verify" && extracted && (
@@ -574,21 +549,6 @@ export default function MatchMyRatesPage() {
                   setStep("upload");
                   setExtracted(null);
                 }}
-              />
-            )}
-            {step === "otp" && (
-              <OTPStep
-                key="otp"
-                phone={phone}
-                setPhone={setPhone}
-                otp={otp}
-                otpSent={otpSent}
-                otpError={otpError}
-                otpRefs={otpRefs}
-                onSendOtp={sendOtp}
-                onVerifyOtp={verifyOtp}
-                onOtpChange={handleOtpChange}
-                onOtpKeyDown={handleOtpKeyDown}
               />
             )}
             {step === "result" && result && (
@@ -1268,7 +1228,7 @@ function UploadStep({
       >
         {[
           "Works with any OTA",
-          "No login required",
+          "Members only",
           "Prices verified in real-time",
         ].map((badge) => (
           <div
@@ -1860,282 +1820,7 @@ function DetailRow({
   );
 }
 
-/* ────────── STEP 4: OTP VERIFICATION ────────── */
-function OTPStep({
-  phone,
-  setPhone,
-  otp,
-  otpSent,
-  otpError,
-  otpRefs,
-  onSendOtp,
-  onVerifyOtp,
-  onOtpChange,
-  onOtpKeyDown,
-}: {
-  phone: string;
-  setPhone: (v: string) => void;
-  otp: string[];
-  otpSent: boolean;
-  otpError: string;
-  otpRefs: React.MutableRefObject<(HTMLInputElement | null)[]>;
-  onSendOtp: () => void;
-  onVerifyOtp: () => void;
-  onOtpChange: (i: number, v: string) => void;
-  onOtpKeyDown: (i: number, e: React.KeyboardEvent<HTMLInputElement>) => void;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div
-        style={{
-          background: "var(--white)",
-          border: "1px solid var(--cream-border)",
-          borderRadius: 16,
-          padding: "40px 32px",
-          textAlign: "center",
-          maxWidth: 420,
-          margin: "0 auto",
-        }}
-      >
-        {/* Lock icon */}
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 16,
-            background: "var(--gold-pale)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 20px",
-          }}
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--gold)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
-        </div>
-
-        <h3
-          className="type-heading-3"
-          style={{
-            color: "var(--ink)",
-            marginBottom: 8,
-            fontStyle: "italic",
-          }}
-        >
-          Verify to see your price
-        </h3>
-        <p
-          style={{
-            fontSize: 13,
-            color: "var(--ink-light)",
-            fontWeight: 300,
-            marginBottom: 28,
-            lineHeight: 1.6,
-          }}
-        >
-          We verify your number to prevent misuse and ensure you get
-          a personalized quote our team can follow up on.
-        </p>
-
-        {!otpSent ? (
-          /* Phone input */
-          <div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0,
-                background: "var(--cream)",
-                border: "1px solid var(--cream-border)",
-                borderRadius: 12,
-                overflow: "hidden",
-                marginBottom: 16,
-              }}
-            >
-              <div
-                style={{
-                  padding: "14px 12px 14px 16px",
-                  fontSize: 14,
-                  color: "var(--ink-light)",
-                  fontWeight: 400,
-                  borderRight: "1px solid var(--cream-border)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                +91
-              </div>
-              <input
-                type="tel"
-                placeholder="Phone number"
-                value={phone}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, "").slice(0, 10);
-                  setPhone(v);
-                }}
-                style={{
-                  flex: 1,
-                  padding: "14px 16px",
-                  background: "transparent",
-                  border: "none",
-                  color: "var(--ink)",
-                  fontSize: 14,
-                  fontFamily: "var(--font-body)",
-                  outline: "none",
-                }}
-              />
-            </div>
-            <button
-              onClick={onSendOtp}
-              disabled={phone.length < 10}
-              style={{
-                width: "100%",
-                padding: 16,
-                background:
-                  phone.length >= 10 ? "var(--gold)" : "var(--cream-deep)",
-                color:
-                  phone.length >= 10 ? "var(--white)" : "var(--ink-light)",
-                fontSize: 14,
-                fontWeight: 500,
-                fontFamily: "var(--font-body)",
-                border: "none",
-                borderRadius: 12,
-                cursor: phone.length >= 10 ? "pointer" : "not-allowed",
-                transition: "all 0.2s ease",
-              }}
-            >
-              Send OTP
-            </button>
-          </div>
-        ) : (
-          /* OTP input */
-          <div>
-            <p
-              style={{
-                fontSize: 12,
-                color: "var(--ink-light)",
-                marginBottom: 20,
-                fontWeight: 300,
-              }}
-            >
-              Enter the 6-digit code sent to +91 {phone}
-            </p>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: 8,
-                marginBottom: 16,
-              }}
-            >
-              {otp.map((digit, i) => (
-                <input
-                  key={i}
-                  ref={(el) => { otpRefs.current[i] = el; }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => onOtpChange(i, e.target.value)}
-                  onKeyDown={(e) => onOtpKeyDown(i, e)}
-                  style={{
-                    width: 44,
-                    height: 52,
-                    textAlign: "center",
-                    fontSize: 20,
-                    fontWeight: 500,
-                    fontFamily: "var(--font-mono)",
-                    color: "var(--ink)",
-                    background: digit ? "var(--gold-pale)" : "var(--cream)",
-                    border: digit
-                      ? "1px solid var(--gold)"
-                      : "1px solid var(--cream-border)",
-                    borderRadius: 10,
-                    outline: "none",
-                    transition: "all 0.2s ease",
-                  }}
-                />
-              ))}
-            </div>
-
-            {otpError && (
-              <p
-                style={{
-                  fontSize: 12,
-                  color: "var(--error)",
-                  marginBottom: 12,
-                }}
-              >
-                {otpError}
-              </p>
-            )}
-
-            <button
-              onClick={onVerifyOtp}
-              disabled={otp.join("").length !== 6}
-              style={{
-                width: "100%",
-                padding: 16,
-                background:
-                  otp.join("").length === 6
-                    ? "var(--gold)"
-                    : "var(--cream-deep)",
-                color:
-                  otp.join("").length === 6
-                    ? "var(--white)"
-                    : "var(--ink-light)",
-                fontSize: 14,
-                fontWeight: 500,
-                fontFamily: "var(--font-body)",
-                border: "none",
-                borderRadius: 12,
-                cursor:
-                  otp.join("").length === 6 ? "pointer" : "not-allowed",
-                transition: "all 0.2s ease",
-              }}
-            >
-              Verify & Reveal Price
-            </button>
-
-            <button
-              onClick={onSendOtp}
-              style={{
-                display: "block",
-                margin: "12px auto 0",
-                background: "none",
-                border: "none",
-                color: "var(--gold)",
-                fontSize: 12,
-                fontFamily: "var(--font-body)",
-                cursor: "pointer",
-                fontWeight: 500,
-              }}
-            >
-              Resend OTP
-            </button>
-          </div>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
-/* ────────── STEP 5: RESULT ────────── */
+/* ────────── STEP 4: RESULT ────────── */
 function ResultStep({
   result,
   onReset,
