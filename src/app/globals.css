@@ -19,9 +19,14 @@
   --gold-pale: #f0e6d0;
   --white: #fdfaf5;
   --success: #4a7c59;
+  --emerald: #10B981;
+  --emerald-dark: #059669;
+  --emerald-light: #d1fae5;
   --error: #8b3a3a;
   --market-rate: #96705e;
   --our-rate: #3b7a4a;
+  --navy: #0F172A;
+  --charcoal: #1e293b;
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'DM Sans', sans-serif;
 
@@ -538,6 +543,103 @@ nav {
   color: var(--cream);
 }
 
+/* ── Emerald CTA variants ── */
+.btn-emerald {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--emerald);
+  color: #fff;
+  border: none;
+  padding: 14px 32px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.25s;
+  border-radius: 2px;
+}
+.btn-emerald:hover {
+  background: var(--emerald-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+.btn-emerald-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--emerald);
+  border: 1.5px solid var(--emerald);
+  padding: 13px 32px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.25s;
+  border-radius: 2px;
+}
+.btn-emerald-outline:hover {
+  background: var(--emerald);
+  color: #fff;
+}
+
+.btn-emerald-soft {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--emerald-light);
+  color: var(--emerald-dark);
+  border: none;
+  padding: 14px 32px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.25s;
+  border-radius: 2px;
+}
+.btn-emerald-soft:hover {
+  background: var(--emerald);
+  color: #fff;
+}
+
+/* ── Sticky mobile bottom CTA bar ── */
+.sticky-mobile-cta {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 95;
+  background: var(--emerald);
+  padding: 12px 20px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
+  box-shadow: 0 -4px 20px rgba(16, 185, 129, 0.25);
+}
+@media (max-width: 639px) {
+  .sticky-mobile-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  /* Push WhatsApp FAB and tab bar above the sticky CTA */
+  .mobile-tab-bar {
+    display: none !important;
+  }
+  .whatsapp-fab {
+    bottom: 80px !important;
+  }
+}
+
 /* ── Form inputs ── */
 .form-group {
   display: flex;
@@ -932,7 +1034,8 @@ nav {
   .section-trust,
   .section-testimonials,
   .section-plan-stay,
-  .section-why-book {
+  .section-why-book,
+  .section-voyager-club {
     padding-left: 20px !important;
     padding-right: 20px !important;
   }

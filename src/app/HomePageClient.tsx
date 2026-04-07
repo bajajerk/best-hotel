@@ -113,7 +113,7 @@ const SEASONAL_TRIPS = [
   {
     season: "Summer",
     label: "Jun – Aug",
-    description: "Escape the heat with mountain retreats and coastal breezes.",
+    description: "Summer escapes that create unforgettable family memories — from sun-kissed coastlines to serene island retreats. Members enjoy complimentary perks at every stop.",
     destinations: [
       { name: "Santorini", slug: "santorini", country: "Greece" },
       { name: "Bali", slug: "bali", country: "Indonesia" },
@@ -125,7 +125,7 @@ const SEASONAL_TRIPS = [
   {
     season: "Autumn",
     label: "Sep – Nov",
-    description: "Golden foliage, harvest festivals, and quieter travel windows.",
+    description: "Golden foliage, harvest festivals, and quieter moments of wonder. Experience autumn\u2019s magic with preferred access to handpicked stays.",
     destinations: [
       { name: "Kyoto", slug: "kyoto", country: "Japan" },
       { name: "Prague", slug: "prague", country: "Czech Republic" },
@@ -137,7 +137,7 @@ const SEASONAL_TRIPS = [
   {
     season: "Winter",
     label: "Dec – Feb",
-    description: "Festive cities, alpine luxury, and tropical winter sun.",
+    description: "Festive cities, alpine luxury, and tropical winter sun — each stay elevated with exclusive member perks and personal concierge care.",
     destinations: [
       { name: "Dubai", slug: "dubai", country: "UAE" },
       { name: "Maldives", slug: "maldives", country: "Maldives" },
@@ -149,7 +149,7 @@ const SEASONAL_TRIPS = [
   {
     season: "Spring",
     label: "Mar – May",
-    description: "Cherry blossoms, mild weather, and vibrant cityscapes.",
+    description: "Cherry blossoms, vibrant cityscapes, and the promise of new beginnings. Discover spring\u2019s finest hotels with perks reserved for members.",
     destinations: [
       { name: "Tokyo", slug: "tokyo", country: "Japan" },
       { name: "Amsterdam", slug: "amsterdam", country: "Netherlands" },
@@ -205,19 +205,19 @@ const fadeSlow = {
 // ---------------------------------------------------------------------------
 const TESTIMONIALS = [
   {
-    quote: "I booked the same suite I found on Booking.com — the Voyagr rate was noticeably better. I genuinely did not believe it until I checked in.",
+    quote: "The perks and personal touch made our anniversary trip truly unforgettable. From the room upgrade to the late checkout, every detail was taken care of.",
     name: "Priya Mehta",
     location: "Mumbai",
     avatar: "PM",
   },
   {
-    quote: "We planned our honeymoon across three cities. The rates through Voyagr meant we could add an extra night in Santorini. That is not an exaggeration.",
+    quote: "We planned our honeymoon across three cities. The exclusive perks through Voyagr Club — spa credits, welcome drinks, early check-in — turned every stay into a celebration.",
     name: "Arjun & Kavya",
     location: "Bangalore",
     avatar: "AK",
   },
   {
-    quote: "As a travel agent myself, I was skeptical. These are genuine B2B rates. I now use Voyagr for all my personal trips.",
+    quote: "What sets Voyagr apart is the human concierge. One WhatsApp message and everything was arranged — upgrades, restaurant reservations, even a surprise for my wife's birthday.",
     name: "Rahul Sharma",
     location: "Delhi",
     avatar: "RS",
@@ -230,23 +230,23 @@ const TESTIMONIALS = [
 const WHY_STEPS = [
   {
     num: "01",
-    title: "Direct Partnerships",
-    desc: "We negotiate B2B rates directly with hotels, cutting out the middlemen and their markups.",
+    title: "Join Free",
+    desc: "Unlock preferred access to a curated collection of luxury hotels with exclusive perks — free forever, no annual fees.",
   },
   {
     num: "02",
-    title: "Real-Time Comparison",
-    desc: "See the market price alongside our rate instantly. No guesswork, no hidden fees.",
+    title: "Share Your Plans",
+    desc: "Tell us where you\u2019re headed and when via WhatsApp. Our concierge listens, understands, and starts curating.",
   },
   {
     num: "03",
-    title: "Concierge Booking",
-    desc: "One call or WhatsApp message, and our team confirms your stay within minutes.",
+    title: "Receive Curated Options",
+    desc: "Get handpicked hotels with exclusive perks — room upgrades, spa credits, late checkout, and more — reserved for members.",
   },
   {
     num: "04",
-    title: "Guaranteed Savings",
-    desc: "Preferred wholesale rates on every booking. Same hotel, same room, same dates. Just a better rate.",
+    title: "Enjoy Your Stay",
+    desc: "Confirm and enjoy your extraordinary stay with full concierge support from booking to checkout and beyond.",
   },
 ];
 
@@ -465,8 +465,8 @@ function FeaturedPropertiesSection({ tabData, isLoading, isError }: { tabData: R
                 Featured Properties
               </div>
               <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
-                Curated{" "}
-                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>stays</em>{" "}
+                Handpicked{" "}
+                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>experiences</em>{" "}
                 worldwide
               </h2>
             </div>
@@ -721,7 +721,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               marginBottom: "20px",
             }}
           >
-            Preferred Hotel Rate
+            Voyagr Club
           </motion.p>
 
           <motion.h1
@@ -732,7 +732,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               marginBottom: "24px",
             }}
           >
-            The rates your travel agent will never show you.
+            Preferred access to hotels that turn every stay into an unforgettable experience.
           </motion.h1>
 
           <motion.p
@@ -740,12 +740,40 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
             className="type-body-lg"
             style={{
               color: "var(--ink-light)",
-              maxWidth: "380px",
-              marginBottom: "40px",
+              maxWidth: "420px",
+              marginBottom: "32px",
             }}
           >
-            We help craft extraordinary moments with exclusive perks — only for Voyagr Club members.
+            We help craft extraordinary moments with exclusive perks &mdash; reserved only for Voyagr Club members.
           </motion.p>
+
+          {/* Join Free CTA + micro-copy */}
+          <motion.div variants={fadeUp} style={{ marginBottom: "32px" }}>
+            <a
+              href="https://wa.me/919876543210?text=Hi%2C%20I%27d%20like%20to%20join%20Voyagr%20Club"
+              className="btn-emerald"
+              onClick={() => trackCtaClicked({ cta_name: 'join_free_hero', cta_location: 'hero', destination_url: 'whatsapp' })}
+              style={{
+                padding: "16px 40px",
+                fontSize: "14px",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              Join Free &rarr; Begin Your Journey
+            </a>
+            <p style={{
+              fontSize: "11px",
+              color: "var(--ink-light)",
+              marginTop: "14px",
+              letterSpacing: "0.02em",
+              lineHeight: 1.6,
+            }}>
+              Free forever &bull; No annual fees &bull; 24/7 personal concierge &bull; Perks included on every stay
+            </p>
+          </motion.div>
 
           {/* Search bar */}
           <motion.div
@@ -948,7 +976,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
             }}
           />
 
-          {/* Floating savings card */}
+          {/* Floating perks card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -960,28 +988,31 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               background: "var(--white)",
               border: "1px solid var(--cream-border)",
               padding: "18px 22px",
-              width: "220px",
+              width: "240px",
               boxShadow: "0 8px 40px rgba(26,23,16,0.12)",
               zIndex: 3,
             }}
           >
             <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--ink)" }}>
-              Siam Kempinski
+              The Ritz-Carlton, Bali
             </div>
             <div style={{ fontSize: "11px", color: "var(--ink-light)", marginTop: "2px" }}>
-              Bangkok, Thailand
+              Member Perks Included
             </div>
             <div style={{
               marginTop: "10px",
-              fontFamily: "var(--font-display)",
-              fontSize: "18px",
-              color: "var(--success)",
-              fontWeight: 500,
+              display: "flex",
+              flexDirection: "column",
+              gap: "4px",
             }}>
-              Voyagr Rate
-            </div>
-            <div style={{ fontSize: "10px", color: "var(--ink-light)", marginTop: "2px" }}>
-              &#8377;4,000 less per night
+              {["Room upgrade", "Late checkout", "Welcome drinks"].map((perk) => (
+                <div key={perk} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "var(--ink-mid)" }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {perk}
+                </div>
+              ))}
             </div>
           </motion.div>
         </div>
@@ -1027,11 +1058,11 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
           >
             <div>
               <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
-                Seasonal Trips
+                Seasonal Escapes
               </div>
               <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
-                Travel by{" "}
-                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>season</em>
+                Extraordinary moments,{" "}
+                <em style={{ fontStyle: "italic", color: "var(--gold)" }}>every season</em>
               </h2>
             </div>
           </motion.div>
@@ -1070,7 +1101,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
                 </div>
                 <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
                   Discover your next{" "}
-                  <em style={{ fontStyle: "italic", color: "var(--gold)" }}>city</em>
+                  <em style={{ fontStyle: "italic", color: "var(--gold)" }}>extraordinary escape</em>
                 </h2>
               </div>
               <Link
@@ -1138,7 +1169,8 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               Your Journey Starts Here
             </div>
             <h2 className="type-display-2" style={{ color: "var(--ink)", marginBottom: "24px" }}>
-              Let&rsquo;s plan your <em style={{ fontStyle: "italic", color: "var(--gold)" }}>stay</em>
+              Let us craft your next{" "}
+              <em style={{ fontStyle: "italic", color: "var(--gold)" }}>unforgettable stay</em>
             </h2>
             <p className="type-body-lg" style={{
               color: "var(--ink-mid)",
@@ -1147,7 +1179,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               margin: "0 auto 16px",
             }}>
               Whether it&rsquo;s a weekend escape, a business trip, or the honeymoon you&rsquo;ve been dreaming of &mdash; we&rsquo;ll
-              match you with the right hotel at a rate that makes sense. No algorithms, no upsells. Just a
+              match you with the right hotel and curate exclusive perks that turn your trip into something extraordinary. No algorithms, no upsells. Just a
               concierge who listens and a network of 1,500+ partner hotels worldwide.
             </p>
             <p className="type-body" style={{
@@ -1157,13 +1189,29 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               margin: "0 auto 40px",
             }}>
               Tell us where you&rsquo;re headed and when. We&rsquo;ll handle the rest &mdash; from
-              sourcing the best available B2B rate to confirming your reservation within minutes
+              curating handpicked options with exclusive perks to confirming your reservation within minutes
               over WhatsApp.
             </p>
             <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" as const }}>
               <a
+                href="https://wa.me/919876543210?text=Hi%2C%20I%27d%20like%20to%20plan%20a%20trip"
+                className="btn-emerald"
+                onClick={() => trackWhatsAppClicked({ page: 'home' })}
+                style={{
+                  padding: "14px 36px",
+                  fontSize: "13px",
+                  textDecoration: "none",
+                  fontWeight: 600,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                Chat on WhatsApp
+              </a>
+              <a
                 href="#hero-search"
-                className="btn-gold"
+                className="btn-outline"
                 onClick={() => trackCtaClicked({ cta_name: 'search_hotels', cta_location: 'home_how_it_works', destination_url: '#hero-search' })}
                 style={{
                   padding: "14px 36px",
@@ -1176,22 +1224,6 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
                 }}
               >
                 Search Hotels
-              </a>
-              <a
-                href="https://wa.me/919876543210"
-                className="btn-outline"
-                onClick={() => trackWhatsAppClicked({ page: 'home' })}
-                style={{
-                  padding: "14px 36px",
-                  fontSize: "12px",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase" as const,
-                  textDecoration: "none",
-                  fontWeight: 500,
-                  display: "inline-block",
-                }}
-              >
-                Chat on WhatsApp
               </a>
             </div>
           </motion.div>
@@ -1225,7 +1257,8 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
             <h2 className="type-display-2" style={{
               color: "var(--cream)",
             }}>
-              Why travellers choose <em style={{ fontStyle: "italic", color: "var(--gold)" }}>Voyagr Club</em>
+              A more rewarding way to{" "}
+              <em style={{ fontStyle: "italic", color: "var(--gold)" }}>travel</em>
             </h2>
           </motion.div>
 
@@ -1280,10 +1313,10 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
 
 
       {/* ================================================================
-          PRICE COMPARISON — "the proof"
+          MEMBER PERKS SHOWCASE — experience-focused hotel highlights
       ================================================================ */}
       <section
-        id="the-proof"
+        id="member-perks"
         className="section-proof"
         style={{
           padding: "80px 60px",
@@ -1301,51 +1334,46 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
             <div className="type-eyebrow" style={{
               marginBottom: "8px",
             }}>
-              The Proof
+              Handpicked Experiences
             </div>
             <h2 className="type-display-2" style={{
               color: "var(--ink)",
             }}>
-              Same hotel, same room &mdash; <em style={{ fontStyle: "italic", color: "var(--gold)" }}>better rate</em>
+              Stays that create{" "}
+              <em style={{ fontStyle: "italic", color: "var(--gold)" }}>lasting memories</em>
             </h2>
           </motion.div>
 
-          {/* Price comparison cards */}
+          {/* Experience-focused hotel cards */}
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             {[
               {
-                hotel: "Siam Kempinski Bangkok",
-                city: "Bangkok, Thailand",
+                hotel: "The Ritz-Carlton Bali",
+                city: "Bali, Indonesia",
                 stars: 5,
-                tags: ["Pool", "Spa", "City Centre"],
-                marketRate: 14500,
-                voyagrRate: 10500,
-                savePercent: 28,
-                img: CITY_IMAGES.bangkok,
+                description: "Oceanfront luxury where every detail creates lasting memories.",
+                perks: ["Preferred room upgrade", "Late checkout", "Welcome drinks"],
+                img: CITY_IMAGES.bali || "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&q=80",
               },
               {
-                hotel: "The Oberoi",
+                hotel: "The Oberoi Mumbai",
                 city: "Mumbai, India",
                 stars: 5,
-                tags: ["Sea View", "Fine Dining", "Heritage"],
-                marketRate: 18200,
-                voyagrRate: 12800,
-                savePercent: 30,
+                description: "Heritage elegance meets the Arabian Sea \u2014 an iconic stay for discerning travellers.",
+                perks: ["Spa credit", "Breakfast included", "Early check-in"],
                 img: CITY_IMAGES.mumbai,
               },
               {
                 hotel: "Park Hyatt Tokyo",
                 city: "Tokyo, Japan",
                 stars: 5,
-                tags: ["Skyline View", "Spa", "Shinjuku"],
-                marketRate: 28000,
-                voyagrRate: 19500,
-                savePercent: 30,
+                description: "Sky-high serenity above Shinjuku \u2014 where Japanese precision meets effortless luxury.",
+                perks: ["Club lounge access", "Late checkout", "Welcome amenity"],
                 img: CITY_IMAGES.tokyo,
               },
-            ].map((deal, i) => (
+            ].map((hotel, i) => (
               <motion.div
-                key={deal.hotel}
+                key={hotel.hotel}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -1355,17 +1383,17 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
                   background: "var(--white)",
                   border: "1px solid var(--cream-border)",
                   display: "grid",
-                  gridTemplateColumns: "240px 1fr auto",
+                  gridTemplateColumns: "240px 1fr",
                   overflow: "hidden",
                   cursor: "pointer",
                 }}
               >
                 {/* Image */}
-                <div style={{ height: "180px", overflow: "hidden" }}>
+                <div style={{ height: "220px", overflow: "hidden" }}>
                   <img
                     className="card-img"
-                    src={safeImageSrc(deal.img)}
-                    alt={deal.hotel}
+                    src={safeImageSrc(hotel.img)}
+                    alt={hotel.hotel}
                     style={{
                       width: "100%",
                       height: "100%",
@@ -1381,93 +1409,69 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
                 </div>
 
                 {/* Body */}
-                <div style={{ padding: "20px 24px" }}>
+                <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                   <div style={{ color: "var(--gold)", fontSize: "11px", letterSpacing: "2px", marginBottom: "6px" }}>
-                    {"★".repeat(deal.stars)}
+                    {"★".repeat(hotel.stars)}
                   </div>
                   <div className="type-heading-3" style={{
                     color: "var(--ink)",
-                    marginBottom: "4px",
+                    marginBottom: "6px",
                   }}>
-                    {deal.hotel}
+                    {hotel.hotel}
                   </div>
                   <div style={{ fontSize: "12px", color: "var(--ink-light)", marginBottom: "12px" }}>
-                    {deal.city}
+                    {hotel.city}
                   </div>
-                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" as const }}>
-                    {deal.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        style={{
-                          fontSize: "10px",
-                          padding: "3px 10px",
-                          background: "var(--cream)",
-                          color: "var(--ink-mid)",
-                          border: "1px solid var(--cream-border)",
-                        }}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+                  <p style={{
+                    fontSize: "13px",
+                    color: "var(--ink-mid)",
+                    lineHeight: 1.7,
+                    marginBottom: "16px",
+                    fontStyle: "italic",
+                  }}>
+                    {hotel.description}
+                  </p>
 
-                {/* Pricing panel */}
-                <div className="price-panel" style={{
-                  padding: "20px",
-                  borderLeft: "1px solid var(--cream-border)",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-end",
-                  justifyContent: "space-between",
-                  minWidth: "180px",
-                }}>
-                  {/* Market rate */}
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: "10px", color: "var(--ink-light)", letterSpacing: "0.08em" }}>
-                      MARKET RATE
-                    </div>
-                    <div style={{
-                      fontSize: "13px",
-                      textDecoration: "line-through",
-                      color: "var(--market-rate)",
-                    }}>
-                      &#8377;{deal.marketRate.toLocaleString("en-IN")}
-                    </div>
-                  </div>
-
-                  {/* Voyagr rate */}
-                  <div style={{ textAlign: "right" }}>
+                  {/* Perks */}
+                  <div style={{ marginBottom: "14px" }}>
                     <div style={{
                       fontSize: "10px",
                       fontWeight: 500,
-                      letterSpacing: "0.1em",
+                      letterSpacing: "0.08em",
                       textTransform: "uppercase" as const,
-                      color: "var(--gold)",
+                      color: "var(--emerald)",
+                      marginBottom: "8px",
                     }}>
-                      VOYAGR RATE
+                      Voyagr Club members enjoy:
                     </div>
-                    <div className="type-price" style={{
-                      color: "var(--our-rate)",
-                    }}>
-                      &#8377;{deal.voyagrRate.toLocaleString("en-IN")}
-                    </div>
-                    <div style={{ fontSize: "11px", color: "var(--ink-light)" }}>
-                      per night
+                    <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "10px" }}>
+                      {hotel.perks.map((perk) => (
+                        <span
+                          key={perk}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            fontSize: "12px",
+                            color: "var(--ink-mid)",
+                          }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                          {perk}
+                        </span>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Save badge */}
-                  <div style={{
-                    background: "var(--gold-pale)",
-                    color: "var(--success)",
+                  <p style={{
                     fontSize: "11px",
-                    fontWeight: 500,
-                    padding: "4px 10px",
-                    textAlign: "center",
+                    color: "var(--ink-light)",
+                    fontStyle: "italic",
                   }}>
-                    Save {deal.savePercent}%
-                  </div>
+                    Experience this iconic stay with handpicked perks reserved for members.
+                  </p>
                 </div>
               </motion.div>
             ))}
@@ -1638,7 +1642,8 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               The Voyagr Club Difference
             </div>
             <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
-              Why book with <em style={{ fontStyle: "italic", color: "var(--gold)" }}>us?</em>
+              A better way to{" "}
+              <em style={{ fontStyle: "italic", color: "var(--gold)" }}>experience luxury</em>
             </h2>
           </motion.div>
 
@@ -1649,33 +1654,33 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
           }}>
             {[
               {
-                title: "Rates You Won\u2019t Find Online",
-                desc: "Our prices come from direct B2B contracts with hotels \u2014 the same wholesale rates that travel agencies use internally. These never appear on public booking sites.",
+                title: "Preferred Access to Top Hotels",
+                desc: "Enjoy elevated access to a curated collection of the world\u2019s finest hotels \u2014 handpicked properties where every stay comes with exclusive member privileges.",
                 accent: "01",
               },
               {
-                title: "No Hidden Fees, Ever",
-                desc: "The price we quote is the price you pay. No resort fees tucked into the fine print, no credit-card surcharges, no last-minute \u201ctaxes\u201d at checkout.",
+                title: "A Real Human Concierge",
+                desc: "Every booking is handled by a real concierge on WhatsApp. Change of plans? Need a late checkout? Just message us \u2014 no hold music, no ticket numbers.",
                 accent: "02",
               },
               {
-                title: "A Human, Not a Chatbot",
-                desc: "Every booking is handled by a real concierge on WhatsApp. Change of plans? Need a late checkout? Just message us \u2014 no hold music, no ticket numbers.",
+                title: "Handpicked Perks on Every Stay",
+                desc: "From room upgrades and spa credits to welcome drinks and early check-in \u2014 enjoy complimentary perks that make every stay feel like a celebration.",
                 accent: "03",
               },
               {
-                title: "Verified Five-Star Partners",
+                title: "Verified Luxury Properties",
                 desc: "We only work with properties we\u2019ve vetted ourselves. Every hotel in our network meets our standards for service, cleanliness, and guest satisfaction.",
                 accent: "04",
               },
               {
-                title: "Flexible Cancellations",
-                desc: "Plans change \u2014 we get it. Most of our partner hotels offer free cancellation up to 48 hours before check-in, and we\u2019ll always fight for the best terms on your behalf.",
+                title: "Flexible Support, Always",
+                desc: "Plans change \u2014 we get it. Our concierge team is available 24/7 to handle modifications, special requests, and anything that comes up during your trip.",
                 accent: "05",
               },
               {
-                title: "Loyalty Without Lock-In",
-                desc: "No points programmes that expire, no membership tiers to maintain. Book once or book every month \u2014 you get the same wholesale rate from day one.",
+                title: "Free Membership, No Lock-In",
+                desc: "No annual fees, no points programmes that expire, no membership tiers. Join free and enjoy the same privileged access from your very first stay.",
                 accent: "06",
               },
             ].map((item, i) => (
@@ -1747,8 +1752,8 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
           {[
             { number: "50+", label: "Cities" },
             { number: "1,500+", label: "Hotels" },
-            { number: "Direct", label: "Partnerships" },
-            { number: "0", label: "Booking fees", prefix: "₹" },
+            { number: "24/7", label: "Concierge" },
+            { number: "Free", label: "Membership" },
           ].map((stat, i, arr) => (
             <motion.div
               key={stat.label}
@@ -1769,7 +1774,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
                   color: "var(--ink)",
                   lineHeight: 1,
                 }}>
-                  {stat.prefix || ""}{stat.number}
+                  {stat.number}
                 </div>
                 <div className="type-label" style={{
                   color: "var(--ink-light)",
@@ -1815,7 +1820,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               Stay Updated
             </div>
             <h2 className="type-display-2" style={{ color: "var(--ink)", marginBottom: "16px" }}>
-              Curated <em style={{ fontStyle: "italic", color: "var(--gold)" }}>picks</em> in your inbox
+              Curated <em style={{ fontStyle: "italic", color: "var(--gold)" }}>experiences</em> in your inbox
             </h2>
             <p className="type-body" style={{
               color: "var(--ink-light)",
@@ -1824,8 +1829,8 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               maxWidth: "480px",
               margin: "0 auto 32px",
             }}>
-              Get early access to new destination launches, seasonal highlights, and curated hotel picks
-              delivered once a week.
+              Get early access to new destinations, seasonal escapes, and handpicked hotels with exclusive member perks
+              &mdash; delivered once a week.
             </p>
 
             <div
@@ -1938,10 +1943,10 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
                     marginBottom: "20px",
                   }}
                 >
-                  Voyagr Club was built on a simple idea — luxury travel should be
-                  accessible. We leverage B2B wholesale hotel networks to bring you the same
-                  rooms, same dates, at rates well below what you'd find on retail booking
-                  platforms.
+                  Voyagr Club was built on a simple idea — luxury travel should come with
+                  extraordinary experiences. We partner directly with the world&rsquo;s finest
+                  hotels to offer our members preferred access, exclusive perks, and a
+                  personal concierge who makes every trip unforgettable.
                 </p>
                 <p
                   className="type-body"
@@ -1951,7 +1956,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
                   }}
                 >
                   Our curated selection spans 50+ cities worldwide — from the beaches of
-                  Bali to the streets of Paris — handpicked to ensure quality, value, and
+                  Bali to the streets of Paris — handpicked to ensure quality and
                   unforgettable experiences for every type of traveller.
                 </p>
               </div>
@@ -1967,8 +1972,8 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
                   {[
                     { number: "50+", label: "Cities Worldwide" },
                     { number: "10K+", label: "Hotels Listed" },
-                    { number: "B2B", label: "Wholesale Rates" },
-                    { number: "24/7", label: "WhatsApp Support" },
+                    { number: "Free", label: "Membership" },
+                    { number: "24/7", label: "WhatsApp Concierge" },
                   ].map((stat) => (
                     <div
                       key={stat.label}
@@ -2007,6 +2012,33 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
           </motion.div>
         </div>
       </section>
+
+      {/* ================================================================
+          STICKY MOBILE BOTTOM CTA — emerald bar
+      ================================================================ */}
+      <div className="sticky-mobile-cta">
+        <div style={{ color: "#fff", flex: 1 }}>
+          <div style={{ fontSize: "13px", fontWeight: 600 }}>Join Voyagr Club</div>
+          <div style={{ fontSize: "10px", opacity: 0.85 }}>Free forever &bull; Perks on every stay</div>
+        </div>
+        <a
+          href="https://wa.me/919876543210?text=Hi%2C%20I%27d%20like%20to%20join%20Voyagr%20Club"
+          onClick={() => trackWhatsAppClicked({ page: 'home_sticky_cta' })}
+          style={{
+            background: "#fff",
+            color: "var(--emerald-dark)",
+            padding: "10px 20px",
+            fontSize: "12px",
+            fontWeight: 700,
+            textDecoration: "none",
+            letterSpacing: "0.04em",
+            whiteSpace: "nowrap",
+            borderRadius: "2px",
+          }}
+        >
+          Join Free &rarr;
+        </a>
+      </div>
 
       {/* ================================================================
           FOOTER — multi-column layout

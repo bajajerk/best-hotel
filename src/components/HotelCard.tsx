@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { PriceProofCompact, TrustBadgesCompact } from "@/components/PriceProof";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -44,10 +43,29 @@ function safeImageSrc(url: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Perk suggestions based on hotel tags/name — gives each card unique perks
+// ---------------------------------------------------------------------------
+const PERK_SETS: Record<string, string[]> = {
+  Spa: ["Spa credit", "Late checkout", "Welcome amenity"],
+  Beach: ["Room upgrade", "Welcome drinks", "Late checkout"],
+  Pool: ["Preferred room upgrade", "Early check-in", "Welcome drinks"],
+  Restaurant: ["Breakfast included", "Room upgrade", "Late checkout"],
+  default: ["Room upgrade", "Late checkout", "Welcome drinks"],
+};
+
+function getPerksForHotel(tags: string[]): string[] {
+  for (const tag of tags) {
+    if (PERK_SETS[tag]) return PERK_SETS[tag];
+  }
+  return PERK_SETS.default;
+}
+
+// ---------------------------------------------------------------------------
 // Vertical Hotel Card — used in home page carousels
 // ---------------------------------------------------------------------------
 function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
   if (!hotel.name) return null;
+  const perks = getPerksForHotel(hotel.tags);
 
   return (
     <Link href={`/city/${hotel.citySlug}`} style={{ textDecoration: "none", display: "block" }}>
@@ -101,15 +119,15 @@ function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
               position: "absolute",
               bottom: "12px",
               left: "12px",
-              background: "var(--success)",
-              color: "var(--cream)",
+              background: "var(--emerald, #10B981)",
+              color: "#fff",
               fontSize: "10px",
               fontWeight: 500,
               padding: "4px 10px",
               letterSpacing: "0.04em",
             }}
           >
-            Preferred Rate
+            Member Perks Included
           </div>
         </div>
 
@@ -156,6 +174,40 @@ function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
               {hotel.whyVisitNow}
             </p>
           )}
+
+          {/* Member perks */}
+          <div style={{ marginBottom: "14px" }}>
+            <div style={{
+              fontSize: "9px",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase" as const,
+              color: "var(--emerald, #10B981)",
+              marginBottom: "6px",
+            }}>
+              Members enjoy:
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+              {perks.map((perk) => (
+                <span
+                  key={perk}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    fontSize: "10px",
+                    color: "var(--ink-mid)",
+                  }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--emerald, #10B981)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {perk}
+                </span>
+              ))}
+            </div>
+          </div>
+
           <div
             style={{
               display: "flex",
@@ -180,58 +232,36 @@ function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
               </span>
             ))}
           </div>
-          <div style={{ marginBottom: 12 }}>
-            <TrustBadgesCompact />
-          </div>
+
           <div
             style={{
               borderTop: "1px solid var(--cream-border)",
               paddingTop: "14px",
               display: "flex",
-              alignItems: "baseline",
+              alignItems: "center",
               justifyContent: "space-between",
             }}
           >
-            <div>
-              <span
-                style={{
-                  fontSize: "10px",
-                  color: "var(--ink-light)",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                }}
-              >
-                From
-              </span>
-              <div
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "22px",
-                  fontWeight: 500,
-                  color: "var(--our-rate)",
-                  lineHeight: 1.2,
-                }}
-              >
-                &#8377;{hotel.priceFrom.toLocaleString("en-IN")}
-              </div>
-              <span style={{ fontSize: "10px", color: "var(--ink-light)" }}>
-                per night
-              </span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-              <PriceProofCompact savePercent={hotel.savePercent} />
-              <span
-                className="card-arrow"
-                style={{
-                  fontSize: "11px",
-                  color: "var(--gold)",
-                  fontWeight: 500,
-                  letterSpacing: "0.04em",
-                }}
-              >
-                View &rarr;
-              </span>
-            </div>
+            <p style={{
+              fontSize: "10px",
+              color: "var(--ink-light)",
+              fontStyle: "italic",
+              maxWidth: "200px",
+              lineHeight: 1.4,
+            }}>
+              Privileged access with exclusive perks reserved for members.
+            </p>
+            <span
+              className="card-arrow"
+              style={{
+                fontSize: "11px",
+                color: "var(--gold)",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
+              }}
+            >
+              View &rarr;
+            </span>
           </div>
         </div>
       </div>
@@ -243,10 +273,11 @@ const HotelCard = React.memo(HotelCardInner);
 export default HotelCard;
 
 // ---------------------------------------------------------------------------
-// Deal Card variant — shows market-rate strikethrough + Voyagr rate
+// Deal Card variant — experience-focused with perks highlight
 // ---------------------------------------------------------------------------
 function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
   if (!deal.name) return null;
+  const perks = getPerksForHotel(deal.tags);
 
   return (
     <Link href={`/city/${deal.citySlug}`} style={{ textDecoration: "none", display: "block" }}>
@@ -283,8 +314,8 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
               position: "absolute",
               top: "12px",
               left: "12px",
-              background: "var(--success)",
-              color: "var(--cream)",
+              background: "var(--emerald, #10B981)",
+              color: "#fff",
               padding: "6px 14px",
               fontSize: "9px",
               fontWeight: 500,
@@ -292,7 +323,7 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
               textTransform: "uppercase",
             }}
           >
-            Preferred Rate
+            Member Perks Included
           </div>
           {deal.rating >= 8.5 && (
             <div
@@ -341,6 +372,40 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
           >
             {deal.city}
           </p>
+
+          {/* Member perks */}
+          <div style={{ marginBottom: "14px" }}>
+            <div style={{
+              fontSize: "9px",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase" as const,
+              color: "var(--emerald, #10B981)",
+              marginBottom: "6px",
+            }}>
+              Members enjoy:
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+              {perks.map((perk) => (
+                <span
+                  key={perk}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    fontSize: "10px",
+                    color: "var(--ink-mid)",
+                  }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--emerald, #10B981)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {perk}
+                </span>
+              ))}
+            </div>
+          </div>
+
           <div
             style={{
               display: "flex",
@@ -366,66 +431,33 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
             ))}
           </div>
 
-          {/* Deal pricing */}
           <div
             style={{
               borderTop: "1px solid var(--cream-border)",
               paddingTop: "14px",
               display: "flex",
-              alignItems: "flex-end",
+              alignItems: "center",
               justifyContent: "space-between",
             }}
           >
-            <div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-                <span
-                  style={{
-                    fontSize: "12px",
-                    textDecoration: "line-through",
-                    color: "var(--market-rate)",
-                  }}
-                >
-                  &#8377;{deal.marketRate.toLocaleString("en-IN")}
-                </span>
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "22px",
-                  fontWeight: 500,
-                  color: "var(--our-rate)",
-                  lineHeight: 1.2,
-                }}
-              >
-                &#8377;{deal.voyagrRate.toLocaleString("en-IN")}
-              </div>
-              <span style={{ fontSize: "10px", color: "var(--ink-light)" }}>
-                per night
-              </span>
+            <div style={{
+              fontSize: "11px",
+              fontWeight: 500,
+              color: "var(--emerald, #10B981)",
+            }}>
+              Preferred Access
             </div>
-            <div style={{ textAlign: "right" }}>
-              <div
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 500,
-                  color: "var(--success)",
-                  marginBottom: "4px",
-                }}
-              >
-                Voyagr Rate
-              </div>
-              <span
-                className="card-arrow"
-                style={{
-                  fontSize: "11px",
-                  color: "var(--gold)",
-                  fontWeight: 500,
-                  letterSpacing: "0.04em",
-                }}
-              >
-                View &rarr;
-              </span>
-            </div>
+            <span
+              className="card-arrow"
+              style={{
+                fontSize: "11px",
+                color: "var(--gold)",
+                fontWeight: 500,
+                letterSpacing: "0.04em",
+              }}
+            >
+              View &rarr;
+            </span>
           </div>
         </div>
       </div>

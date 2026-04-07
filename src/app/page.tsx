@@ -81,25 +81,25 @@ export default async function HomePage() {
           borderWidth: 0,
         }}
       >
-        <h1>{SITE_NAME} — Preferred Hotel Rates | Wholesale Access to 1,500+ Hotels Worldwide</h1>
+        <h1>{SITE_NAME} — Preferred Access to Luxury Hotels | Exclusive Perks on 1,500+ Hotels Worldwide</h1>
         <p>{DEFAULT_DESCRIPTION}</p>
 
         <h2>How It Works</h2>
         <p>
-          Voyagr Club negotiates B2B rates directly with hotels, cutting out middlemen
-          and their markups. See the market price alongside our rate instantly — no
-          guesswork, no hidden fees. One WhatsApp message, and our concierge team
-          confirms your stay within minutes. Preferred wholesale rates on every booking.
+          Join Voyagr Club for free and unlock preferred access to a curated collection
+          of luxury hotels worldwide. Share your travel plans via WhatsApp, receive
+          curated options with exclusive perks — room upgrades, spa credits, late
+          checkout — and enjoy your extraordinary stay with full concierge support.
         </p>
 
-        <h2>Why Book With Voyagr Club</h2>
+        <h2>The Voyagr Club Difference</h2>
         <ul>
-          <li>Rates You Won't Find Online — direct B2B contracts with hotels, the same wholesale rates that travel agencies use internally.</li>
-          <li>No Hidden Fees, Ever — the price we quote is the price you pay.</li>
-          <li>A Human, Not a Chatbot — every booking handled by a real concierge on WhatsApp.</li>
-          <li>Verified Five-Star Partners — only properties we've vetted ourselves.</li>
-          <li>Flexible Cancellations — free cancellation up to 48 hours before check-in at most partner hotels.</li>
-          <li>Loyalty Without Lock-In — no points programs, no membership tiers. Same wholesale rate from day one.</li>
+          <li>Preferred Access to Top Hotels — elevated access to a curated collection of the world's finest hotels with exclusive member privileges.</li>
+          <li>A Real Human Concierge — every booking handled by a real concierge on WhatsApp, available 24/7.</li>
+          <li>Handpicked Perks on Every Stay — room upgrades, spa credits, welcome drinks, early check-in, breakfast, lounge access, and more.</li>
+          <li>Verified Luxury Properties — only properties we've vetted ourselves for service, cleanliness, and guest satisfaction.</li>
+          <li>Flexible Support, Always — 24/7 concierge team for modifications, special requests, and anything that comes up.</li>
+          <li>Free Membership, No Lock-In — no annual fees, no points programs that expire. Same privileged access from day one.</li>
         </ul>
 
         <h2>Featured Destinations</h2>
@@ -126,22 +126,22 @@ export default async function HomePage() {
           ))}
         </ul>
 
-        <h2>Price Comparison Examples</h2>
+        <h2>Handpicked Experiences</h2>
         <p>
-          Siam Kempinski Bangkok — Market rate INR 14,500, Voyagr rate INR 10,500 (save 28%).
-          The Oberoi Mumbai — Market rate INR 18,200, Voyagr rate INR 12,800 (save 30%).
-          Park Hyatt Tokyo — Market rate INR 28,000, Voyagr rate INR 19,500 (save 30%).
+          The Ritz-Carlton Bali — Oceanfront luxury with room upgrade, late checkout, and welcome drinks for members.
+          The Oberoi Mumbai — Heritage elegance with spa credit, breakfast included, and early check-in for members.
+          Park Hyatt Tokyo — Sky-high serenity with club lounge access, late checkout, and welcome amenity for members.
         </p>
 
         <h2>Testimonials</h2>
         <blockquote>
-          "I booked the same suite I found on Booking.com — the Voyagr rate was noticeably better. I genuinely did not believe it until I checked in." — Priya Mehta, Mumbai
+          "The perks and personal touch made our anniversary trip truly unforgettable. From the room upgrade to the late checkout, every detail was taken care of." — Priya Mehta, Mumbai
         </blockquote>
         <blockquote>
-          "We planned our honeymoon across three cities. The rates through Voyagr meant we could add an extra night in Santorini." — Arjun & Kavya, Bangalore
+          "We planned our honeymoon across three cities. The exclusive perks through Voyagr Club — spa credits, welcome drinks, early check-in — turned every stay into a celebration." — Arjun & Kavya, Bangalore
         </blockquote>
         <blockquote>
-          "As a travel agent myself, I was skeptical. These are genuine B2B rates. I now use Voyagr for all my personal trips." — Rahul Sharma, Delhi
+          "What sets Voyagr apart is the human concierge. One WhatsApp message and everything was arranged — upgrades, restaurant reservations, even a surprise for my wife's birthday." — Rahul Sharma, Delhi
         </blockquote>
 
         <h2>Travel by Season</h2>
@@ -154,14 +154,15 @@ export default async function HomePage() {
 
         <h2>About Voyagr Club</h2>
         <p>
-          Voyagr Club was built on a simple idea — luxury travel should be accessible.
-          We leverage B2B wholesale hotel networks to bring you the same rooms, same dates,
-          at rates well below what you'd find on retail booking platforms. Our curated
+          Voyagr Club was built on a simple idea — luxury travel should come with
+          extraordinary experiences. We partner directly with the world's finest
+          hotels to offer our members preferred access, exclusive perks, and a
+          personal concierge who makes every trip unforgettable. Our curated
           selection spans 50+ cities worldwide — from the beaches of Bali to the streets
-          of Paris — handpicked to ensure quality, value, and unforgettable experiences
+          of Paris — handpicked to ensure quality and unforgettable experiences
           for every type of traveller.
         </p>
-        <p>50+ Cities Worldwide | 10,000+ Hotels Listed | B2B Wholesale Rates | 24/7 WhatsApp Support</p>
+        <p>50+ Cities Worldwide | 10,000+ Hotels Listed | Free Membership | 24/7 WhatsApp Concierge</p>
 
         <h2>Contact</h2>
         <p>

@@ -194,21 +194,21 @@ function TopSellerCard({ hotel }: { hotel: TopSellerHotel }) {
             </div>
           )}
 
-          {/* Savings badge */}
+          {/* Perks badge */}
           <div
             style={{
               position: "absolute",
               bottom: "12px",
               left: "12px",
-              background: "var(--success)",
-              color: "var(--cream)",
+              background: "var(--emerald, #10B981)",
+              color: "#fff",
               fontSize: "10px",
               fontWeight: 500,
               padding: "4px 10px",
               letterSpacing: "0.04em",
             }}
           >
-            Save up to {hotel.savePercent}%
+            Exclusive Perks
           </div>
         </div>
 
@@ -314,41 +314,28 @@ function TopSellerCard({ hotel }: { hotel: TopSellerHotel }) {
             ))}
           </div>
 
-          {/* Price */}
+          {/* Preferred access footer */}
           <div
             style={{
               borderTop: "1px solid var(--cream-border)",
               paddingTop: "14px",
               display: "flex",
-              alignItems: "baseline",
+              alignItems: "center",
               justifyContent: "space-between",
             }}
           >
-            <div>
-              <span
-                style={{
-                  fontSize: "10px",
-                  color: "var(--ink-light)",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                }}
-              >
-                From
-              </span>
-              <div
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "22px",
-                  fontWeight: 500,
-                  color: "var(--our-rate)",
-                  lineHeight: 1.2,
-                }}
-              >
-                &#8377;{hotel.priceFrom.toLocaleString("en-IN")}
-              </div>
-              <span style={{ fontSize: "10px", color: "var(--ink-light)" }}>
-                per night
-              </span>
+            <div style={{
+              fontSize: "11px",
+              fontWeight: 500,
+              color: "var(--emerald, #10B981)",
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+            }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Preferred Access
             </div>
             <span
               className="card-arrow"
@@ -453,11 +440,11 @@ export default function TopSellers({ hotels }: { hotels: TopSellerHotel[] }) {
         >
           <div>
             <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
-              Top Sellers
+              Most Loved
             </div>
             <h2 className="type-display-2" style={{ color: "var(--ink)" }}>
-              Most{" "}
-              <em style={{ fontStyle: "italic", color: "var(--gold)" }}>booked</em>
+              Guest{" "}
+              <em style={{ fontStyle: "italic", color: "var(--gold)" }}>favourites</em>
             </h2>
             <p
               className="type-body-sm"
@@ -467,7 +454,7 @@ export default function TopSellers({ hotels }: { hotels: TopSellerHotel[] }) {
                 maxWidth: "480px",
               }}
             >
-              Ranked by popularity — the hotels our travellers choose again and again.
+              The hotels our members return to again and again — with handpicked perks on every stay.
             </p>
           </div>
           <div
@@ -489,7 +476,7 @@ export default function TopSellers({ hotels }: { hotels: TopSellerHotel[] }) {
                 display: "inline-block",
               }}
             />
-            Ranked by guest bookings
+            Ranked by member favourites
           </div>
         </motion.div>
 
