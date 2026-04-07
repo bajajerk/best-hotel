@@ -15,7 +15,7 @@ private-member platform, hotel rates unavailable publicly, affluent Indian trave
 ### 2. Statement
 
 **Headline:** The rates your travel agent will never show you.
-**Subheadline:** Wholesale hotel pricing reserved for Voyagr Club members only.
+**Subheadline:** We help craft extraordinary moments with exclusive perks — only for Voyagr Club members.
 
 ### 3. Imperative
 

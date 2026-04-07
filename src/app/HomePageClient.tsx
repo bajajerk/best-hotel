@@ -744,7 +744,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               marginBottom: "40px",
             }}
           >
-            Wholesale hotel pricing reserved for Voyagr Club members only.
+            We help craft extraordinary moments with exclusive perks — only for Voyagr Club members.
           </motion.p>
 
           {/* Search bar */}
