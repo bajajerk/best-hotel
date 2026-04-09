@@ -11,27 +11,27 @@ const benefitBadges = [
   {
     emoji: "🍳",
     title: "Breakfast included",
-    description: "Full daily breakfast for every guest.",
+    description: "Daily breakfast for two, every morning.",
   },
   {
     emoji: "⬆️",
     title: "Room upgrade on arrival",
-    description: "Best available room, subject to availability.",
+    description: "Best available room at check-in.",
   },
   {
     emoji: "🕐",
     title: "Late checkout",
-    description: "4 PM guaranteed, no need to ask.",
+    description: "4 PM guaranteed — no request needed.",
   },
   {
     emoji: "🎁",
     title: "Welcome amenity from the GM",
-    description: "A personal touch waiting at check-in.",
+    description: "A personal greeting awaits at arrival.",
   },
   {
     emoji: "✕",
     title: "Flexible cancellation",
-    description: "Plans change. Cancel free within 48 hrs.",
+    description: "Cancel free up to 48 hours.",
   },
 ];
 
@@ -81,10 +81,10 @@ export default function PreferredPropertiesPage() {
               lineHeight: 1.7,
             }}
           >
-            A Preferred property is one we know personally. We hold a direct
-            contract with the hotel — no intermediaries, no aggregator markup.
-            When you arrive, the front desk already has your name and your
-            membership status. That relationship is what makes the difference.
+            A Preferred property is one we know by name — and that knows yours.
+            We hold a direct contract with the hotel, with no intermediary
+            between you and the experience. When you arrive, the front desk has
+            your name and membership on file before you reach the counter.
           </p>
           <p
             className="type-body-lg"
@@ -96,11 +96,11 @@ export default function PreferredPropertiesPage() {
               lineHeight: 1.7,
             }}
           >
-            At every Preferred property, Voyagr Club members receive guaranteed
-            perks that standard bookings simply cannot offer — breakfast, upgrades,
-            late checkout, and a personal welcome from the General Manager. These
-            aren&apos;t loyalty-program promises. They&apos;re written into our
-            contract.
+            At every Preferred property, Voyagr Club members receive perks that
+            standard inventory cannot match — breakfast, upgrades, late checkout,
+            and a personal welcome from the General Manager. These aren&apos;t
+            loyalty-program promises. They&apos;re written into our supplier
+            agreement.
           </p>
           <p
             className="type-label"
