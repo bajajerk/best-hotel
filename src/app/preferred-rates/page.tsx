@@ -5,6 +5,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { trackPreferredRatesViewed, trackCtaClicked } from "@/lib/analytics";
+import PreferredPartners from "@/components/PreferredPartners";
 
 const perks = [
   {
@@ -190,6 +191,9 @@ export default function PreferredRatesPage() {
             ))}
           </div>
         </section>
+
+        {/* Preferred Partners directory */}
+        <PreferredPartners />
       </main>
       <Footer />
     </>

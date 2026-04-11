@@ -18,6 +18,7 @@ const FOOTER_ABOUT = [
   { label: "How It Works", href: "/#how-it-works" },
   { label: "Why Voyagr Club", href: "/#the-proof" },
   { label: "Preferred Rates", href: "/preferred-rates" },
+  { label: "Preferred Partners", href: "/preferred-rates#partners" },
   { label: "Match My Rate", href: "/match-my-rates" },
 ];
 
