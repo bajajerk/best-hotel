@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Carousel from "./Carousel";
 
 // ---------------------------------------------------------------------------
 // Data — curated hotel experiences with member perks
@@ -91,147 +92,144 @@ function StatPill({ value, label }: { value: string; label: string }) {
 // ---------------------------------------------------------------------------
 function ExperienceCard({
   hotel,
-  index,
 }: {
   hotel: (typeof FEATURED_EXPERIENCES)[number];
-  index: number;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, delay: index * 0.1 }}
+    <div
       className="card-hover"
       style={{
         background: "var(--white)",
         border: "1px solid var(--cream-border)",
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
       }}
     >
-      {/* Top: Image + hotel info */}
-      <div style={{ display: "flex" }}>
-        <div
+      {/* Image */}
+      <div
+        style={{
+          width: "100%",
+          height: "200px",
+          flexShrink: 0,
+          overflow: "hidden",
+        }}
+      >
+        <img
+          className="card-img"
+          src={hotel.img}
+          alt={hotel.hotel}
           style={{
-            width: "200px",
-            minHeight: "220px",
-            flexShrink: 0,
-            overflow: "hidden",
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+            filter: "saturate(0.88)",
           }}
-        >
-          <img
-            className="card-img"
-            src={hotel.img}
-            alt={hotel.hotel}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-              filter: "saturate(0.88)",
-            }}
-            loading="lazy"
-          />
-        </div>
+          loading="lazy"
+        />
+      </div>
 
-        <div
-          style={{
-            flex: 1,
-            padding: "20px 24px",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          {/* Hotel info */}
-          <div style={{ marginBottom: "12px" }}>
-            <div
-              style={{
-                color: "var(--gold)",
-                fontSize: "10px",
-                letterSpacing: "2px",
-                marginBottom: "4px",
-              }}
-            >
-              {"★".repeat(hotel.stars)}
-            </div>
-            <div
-              className="type-heading-3"
-              style={{ color: "var(--ink)", marginBottom: "2px" }}
-            >
-              {hotel.hotel}
-            </div>
-            <div style={{ fontSize: "12px", color: "var(--ink-light)" }}>
-              {hotel.city}
-            </div>
-          </div>
-
-          {/* Description */}
-          <p
+      {/* Content */}
+      <div
+        style={{
+          flex: 1,
+          padding: "20px 24px",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* Hotel info */}
+        <div style={{ marginBottom: "12px" }}>
+          <div
             style={{
-              fontSize: "13px",
-              color: "var(--ink-mid)",
-              lineHeight: 1.7,
-              marginBottom: "16px",
-              fontStyle: "italic",
+              color: "var(--gold)",
+              fontSize: "10px",
+              letterSpacing: "2px",
+              marginBottom: "4px",
             }}
           >
-            {hotel.description}
-          </p>
+            {"★".repeat(hotel.stars)}
+          </div>
+          <div
+            className="type-heading-3"
+            style={{ color: "var(--ink)", marginBottom: "2px" }}
+          >
+            {hotel.hotel}
+          </div>
+          <div style={{ fontSize: "12px", color: "var(--ink-light)" }}>
+            {hotel.city}
+          </div>
+        </div>
 
-          {/* Club perks */}
+        {/* Description */}
+        <p
+          style={{
+            fontSize: "13px",
+            color: "var(--ink-mid)",
+            lineHeight: 1.7,
+            marginBottom: "16px",
+            fontStyle: "italic",
+          }}
+        >
+          {hotel.description}
+        </p>
+
+        {/* Club perks */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "6px",
+            marginTop: "auto",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "9px",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "var(--emerald, #10B981)",
+            }}
+          >
+            Voyagr Club members enjoy:
+          </span>
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
-              gap: "6px",
+              alignItems: "center",
+              gap: "12px",
+              flexWrap: "wrap",
             }}
           >
-            <span
-              style={{
-                fontSize: "9px",
-                fontWeight: 600,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "var(--emerald, #10B981)",
-              }}
-            >
-              Voyagr Club members enjoy:
-            </span>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                flexWrap: "wrap",
-              }}
-            >
-              {hotel.perks.map((perk) => (
-                <span
-                  key={perk}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    fontSize: "11px",
-                    color: "var(--ink-mid)",
-                  }}
+            {hotel.perks.map((perk) => (
+              <span
+                key={perk}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  fontSize: "11px",
+                  color: "var(--ink-mid)",
+                }}
+              >
+                <svg
+                  width="11"
+                  height="11"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--emerald, #10B981)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="var(--emerald, #10B981)"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  {perk}
-                </span>
-              ))}
-            </div>
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                {perk}
+              </span>
+            ))}
           </div>
         </div>
       </div>
@@ -263,11 +261,10 @@ function ExperienceCard({
             <path d="M9 12l2 2 4-4" />
           </svg>
           <span style={{ fontSize: "11px", color: "var(--ink-mid)" }}>
-            Voyagr Club members enjoy{" "}
             <strong style={{ color: "var(--emerald, #10B981)" }}>
-              privileged access
+              Privileged access
             </strong>{" "}
-            with exclusive perks included
+            &amp; exclusive perks
           </span>
         </div>
         <span
@@ -283,7 +280,7 @@ function ExperienceCard({
           Join Free &rarr;
         </span>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -354,12 +351,12 @@ export default function VoyagerClubComparison() {
           <StatPill value="Free" label="Membership" />
         </motion.div>
 
-        {/* Experience cards */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          {FEATURED_EXPERIENCES.map((hotel, i) => (
-            <ExperienceCard key={hotel.hotel} hotel={hotel} index={i} />
+        {/* Experience cards carousel */}
+        <Carousel ariaLabel="Voyagr Club featured hotels" showProgressBar>
+          {FEATURED_EXPERIENCES.map((hotel) => (
+            <ExperienceCard key={hotel.hotel} hotel={hotel} />
           ))}
-        </div>
+        </Carousel>
 
         {/* Bottom CTA */}
         <motion.div
