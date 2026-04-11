@@ -1935,3 +1935,23 @@ nav {
     padding: 48px 20px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RecommendationHub — responsive grid + scrollbar-hidden tabs
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.recommendation-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 640px) and (max-width: 1024px) {
+  .recommendation-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 639px) {
+  .recommendation-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+}
