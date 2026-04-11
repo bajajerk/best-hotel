@@ -86,8 +86,7 @@ export default function Footer() {
                 maxWidth: "280px",
               }}
             >
-              Preferred wholesale hotel rates across 50+ cities worldwide. Same hotel,
-              same room — at rates negotiated directly with our partners.
+              Enjoy preferred rates at distinguished hotels in over 50 cities worldwide, with uncompromised room quality and a thoughtfully curated travel experience.
             </p>
 
             {/* Social links */}

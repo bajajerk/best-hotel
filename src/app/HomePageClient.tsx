@@ -744,7 +744,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               marginBottom: "32px",
             }}
           >
-            Preferred wholesale hotel rates across 50+ cities worldwide. Same hotel, same room &mdash; at rates negotiated directly with our partners.
+            Enjoy preferred rates at distinguished hotels in over 50 cities worldwide, with uncompromised room quality and a thoughtfully curated travel experience.
           </motion.p>
 
           {/* Join Free CTA + micro-copy */}
