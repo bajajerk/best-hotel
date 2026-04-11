@@ -1937,13 +1937,58 @@ nav {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   RecommendationHub — responsive grid + scrollbar-hidden tabs
+   Curated Collections — editorial tile grid + modal + hotel grid
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.recommendation-tabs::-webkit-scrollbar {
-  display: none;
+/* ── 12-column tile grid ── */
+.curated-collections-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+/* First 3 tiles: featured row (span 4 cols each = full 12) */
+.curated-collections-grid > *:nth-child(-n+3) {
+  grid-column: span 4;
+}
+/* Remaining tiles: compact row (span 3 cols each = full 12) */
+.curated-collections-grid > *:nth-child(n+4) {
+  grid-column: span 3;
 }
 
+/* ── Tile hover / focus ── */
+.collection-tile {
+  outline: none;
+}
+.collection-tile:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+.collection-tile:hover .collection-tile-bg {
+  transform: scale(1.06);
+  filter: brightness(0.65) saturate(1) !important;
+}
+.collection-more-tile:hover {
+  border-color: var(--gold) !important;
+}
+
+/* ── "More" modal ── */
+.more-collections-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.more-collections-modal::-webkit-scrollbar {
+  width: 6px;
+}
+.more-collections-modal::-webkit-scrollbar-thumb {
+  background: var(--cream-border);
+  border-radius: 3px;
+}
+.modal-close-btn:hover {
+  background: var(--cream-deep) !important;
+}
+
+/* ── Hotel results grid (below tiles) ── */
 @media (min-width: 640px) and (max-width: 1024px) {
   .recommendation-grid {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -1953,5 +1998,34 @@ nav {
   .recommendation-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 14px !important;
+  }
+}
+
+/* ── Tablet responsive ── */
+@media (min-width: 640px) and (max-width: 1024px) {
+  .curated-collections-grid {
+    gap: 12px;
+  }
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 639px) {
+  .curated-collections-grid {
+    gap: 10px;
+  }
+  .curated-collections-grid > * {
+    grid-column: span 6 !important;
+  }
+  /* Full-width "More" tile when it's alone on last row */
+  .curated-collections-grid > *:last-child:nth-child(odd) {
+    grid-column: span 12 !important;
+  }
+  .more-collections-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .more-collections-modal {
+    padding: 24px 16px !important;
+    max-height: 85vh !important;
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ---------------------------------------------------------------------------
@@ -82,7 +82,7 @@ const hotels: RecommendationHotel[] = [
 // Season detection
 // ---------------------------------------------------------------------------
 function getCurrentSeason(): string {
-  const month = new Date().getMonth(); // 0-indexed
+  const month = new Date().getMonth();
   if (month >= 2 && month <= 4) return "spring";
   if (month >= 5 && month <= 7) return "summer";
   if (month >= 8 && month <= 10) return "autumn";
@@ -93,150 +93,809 @@ function getSeasonLabel(season: string): string {
   return season.charAt(0).toUpperCase() + season.slice(1);
 }
 
+const currentSeason = getCurrentSeason();
+const seasonLabel = getSeasonLabel(currentSeason);
+
 // ---------------------------------------------------------------------------
-// Tab definitions
+// Collection category data model
 // ---------------------------------------------------------------------------
-interface Tab {
+interface CollectionCategory {
   key: string;
   label: string;
+  description: string;
+  iconKey: string;
+  backgroundImage: string;
   filter: (hotel: RecommendationHotel) => boolean;
 }
 
-const currentSeason = getCurrentSeason();
-
-const TABS: Tab[] = [
+const COLLECTIONS: CollectionCategory[] = [
+  {
+    key: "seasons",
+    label: `Best for ${seasonLabel}`,
+    description: "Seasonal picks by our editors",
+    iconKey: "sun",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80",
+    filter: (h) => h.categoryTags.includes(`season-${currentSeason}`),
+  },
   {
     key: "deals",
     label: "Best Deals",
+    description: "Exceptional value at top properties",
+    iconKey: "tag",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80",
     filter: (h) => h.categoryTags.includes("deal-high"),
-  },
-  {
-    key: "seasons",
-    label: `Best for Seasons`,
-    filter: (h) => h.categoryTags.includes(`season-${currentSeason}`),
   },
   {
     key: "beach",
     label: "Beachfront Bliss",
+    description: "Oceanfront retreats & island escapes",
+    iconKey: "wave",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
     filter: (h) => h.categoryTags.includes("beach"),
   },
   {
     key: "city",
     label: "City Skyline Icons",
+    description: "Iconic stays in world-class cities",
+    iconKey: "building",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800&q=80",
     filter: (h) => h.categoryTags.includes("city"),
   },
   {
     key: "hidden",
     label: "Hidden Gems",
+    description: "Boutique finds off the beaten path",
+    iconKey: "diamond",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1600011689032-26628de3ee78?w=800&q=80",
     filter: (h) => h.categoryTags.includes("hidden"),
   },
   {
+    key: "romantic",
+    label: "Romantic Getaways",
+    description: "Enchanting escapes for two",
+    iconKey: "heart",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=800&q=80",
+    filter: (h) => h.categoryTags.includes("romantic"),
+  },
+  // --- Visible via "More" modal ---
+  {
     key: "sustainable",
     label: "Sustainable Luxury",
+    description: "Eco-conscious five-star stays",
+    iconKey: "leaf",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=800&q=80",
     filter: (h) => h.categoryTags.includes("sustainable"),
   },
   {
     key: "most-loved",
     label: "Most Loved",
+    description: "Guest favorites with top reviews",
+    iconKey: "star",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80",
     filter: () => true,
   },
   {
     key: "wellness",
     label: "Wellness & Spa",
+    description: "Rejuvenate mind, body & soul",
+    iconKey: "droplet",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1540555700478-4be289fbec6d?w=800&q=80",
     filter: (h) => h.categoryTags.includes("wellness"),
-  },
-  {
-    key: "romantic",
-    label: "Romantic Getaways",
-    filter: (h) => h.categoryTags.includes("romantic"),
   },
   {
     key: "family",
     label: "Family Adventures",
+    description: "Space, fun & memories for all ages",
+    iconKey: "users",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800&q=80",
     filter: (h) => h.categoryTags.includes("family"),
   },
   {
     key: "new",
     label: "New Arrivals",
+    description: "Just added to our collection",
+    iconKey: "zap",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80",
     filter: () => true,
   },
   {
     key: "trending",
     label: "Trending Now",
+    description: "What travellers are booking this week",
+    iconKey: "trending",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800&q=80",
     filter: () => true,
   },
   {
     key: "india",
     label: "Best in India",
+    description: "Crown jewels of Indian hospitality",
+    iconKey: "map-pin",
+    backgroundImage:
+      "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&q=80",
     filter: (h) => h.categoryTags.includes("india"),
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Fallback image
-// ---------------------------------------------------------------------------
+const VISIBLE_COUNT = 6;
+
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&q=80";
 
 // ---------------------------------------------------------------------------
-// Component
+// Icons — lightweight inline SVGs (Lucide-inspired)
 // ---------------------------------------------------------------------------
-export default function RecommendationHub() {
-  const [activeTab, setActiveTab] = useState("seasons");
-  const tabsRef = useRef<HTMLDivElement>(null);
+function CollectionIcon({ name, size = 16 }: { name: string; size?: number }) {
+  const common: React.SVGProps<SVGSVGElement> = {
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.5,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  };
 
-  const filteredHotels = useMemo(() => {
-    const tab = TABS.find((t) => t.key === activeTab);
-    if (!tab) return hotels;
-    return hotels.filter(tab.filter);
-  }, [activeTab]);
+  switch (name) {
+    case "sun":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="5" />
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+        </svg>
+      );
+    case "tag":
+      return (
+        <svg {...common}>
+          <path d="m20.59 13.41-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z" />
+          <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    case "wave":
+      return (
+        <svg {...common}>
+          <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+          <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+          <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+        </svg>
+      );
+    case "building":
+      return (
+        <svg {...common}>
+          <rect x="4" y="2" width="16" height="20" rx="2" />
+          <path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M8 10h.01M16 10h.01M12 14h.01M8 14h.01M16 14h.01" />
+        </svg>
+      );
+    case "diamond":
+      return (
+        <svg {...common}>
+          <path d="M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41l-7.59-7.59a2.41 2.41 0 0 0-3.41 0Z" />
+        </svg>
+      );
+    case "heart":
+      return (
+        <svg {...common}>
+          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+        </svg>
+      );
+    case "leaf":
+      return (
+        <svg {...common}>
+          <path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 19 2c1 2 2 4.5 2 8 0 5.5-4.78 10-10 10Z" />
+          <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+        </svg>
+      );
+    case "star":
+      return (
+        <svg {...common}>
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      );
+    case "droplet":
+      return (
+        <svg {...common}>
+          <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
+        </svg>
+      );
+    case "users":
+      return (
+        <svg {...common}>
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      );
+    case "zap":
+      return (
+        <svg {...common}>
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+      );
+    case "trending":
+      return (
+        <svg {...common}>
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+          <polyline points="17 6 23 6 23 12" />
+        </svg>
+      );
+    case "map-pin":
+      return (
+        <svg {...common}>
+          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      );
+    case "grid":
+      return (
+        <svg {...common} strokeWidth={1.3}>
+          <rect x="3" y="3" width="7" height="7" rx="1" />
+          <rect x="14" y="3" width="7" height="7" rx="1" />
+          <rect x="3" y="14" width="7" height="7" rx="1" />
+          <rect x="14" y="14" width="7" height="7" rx="1" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
 
-  // Scroll active tab into view within the pill bar
-  const scrollTabIntoView = useCallback((key: string) => {
-    const container = tabsRef.current;
-    if (!container) return;
-    const btn = container.querySelector(`[data-tab="${key}"]`) as HTMLElement;
-    if (!btn) return;
-    const left = btn.offsetLeft - container.offsetWidth / 2 + btn.offsetWidth / 2;
-    container.scrollTo({ left, behavior: "smooth" });
+// ---------------------------------------------------------------------------
+// Collection Tile
+// ---------------------------------------------------------------------------
+function CollectionTile({
+  category,
+  isActive,
+  onClick,
+  index,
+}: {
+  category: CollectionCategory;
+  isActive: boolean;
+  onClick: () => void;
+  index: number;
+}) {
+  return (
+    <motion.button
+      role="tab"
+      aria-selected={isActive}
+      aria-label={`${category.label} — ${category.description}`}
+      onClick={onClick}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.07 }}
+      className={`collection-tile${isActive ? " collection-tile-active" : ""}`}
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        aspectRatio: "3 / 2",
+        border: isActive
+          ? "2px solid var(--gold)"
+          : "2px solid transparent",
+        borderRadius: 12,
+        cursor: "pointer",
+        background: "var(--ink)",
+        padding: 0,
+        textAlign: "left" as const,
+        display: "flex",
+        flexDirection: "column" as const,
+        justifyContent: "flex-end",
+        fontFamily: "var(--font-body)",
+      }}
+    >
+      {/* Background image */}
+      <div
+        className="collection-tile-bg"
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: `url(${category.backgroundImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          transition: "transform 0.5s ease, filter 0.5s ease",
+          filter: isActive
+            ? "brightness(0.7) saturate(1.1)"
+            : "brightness(0.5) saturate(0.9)",
+        }}
+      />
+
+      {/* Gradient overlay */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: isActive
+            ? "linear-gradient(to top, rgba(184, 149, 90, 0.3) 0%, transparent 60%)"
+            : "linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 50%)",
+          transition: "background 0.4s ease",
+        }}
+      />
+
+      {/* Icon */}
+      <div
+        style={{
+          position: "absolute",
+          top: 12,
+          left: 12,
+          color: isActive
+            ? "var(--gold-light)"
+            : "rgba(255, 255, 255, 0.5)",
+          transition: "color 0.3s ease",
+        }}
+      >
+        <CollectionIcon name={category.iconKey} size={18} />
+      </div>
+
+      {/* Active dot */}
+      {isActive && (
+        <div
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: "var(--gold)",
+            boxShadow: "0 0 8px rgba(184, 149, 90, 0.6)",
+          }}
+        />
+      )}
+
+      {/* Label + description */}
+      <div style={{ position: "relative", padding: "0 16px 14px", zIndex: 1 }}>
+        <h3
+          style={{
+            color: "#fff",
+            fontSize: 15,
+            fontWeight: 600,
+            letterSpacing: "0.01em",
+            marginBottom: 2,
+            lineHeight: 1.3,
+            fontFamily: "var(--font-display)",
+          }}
+        >
+          {category.label}
+        </h3>
+        <p
+          style={{
+            color: isActive
+              ? "rgba(255, 255, 255, 0.9)"
+              : "rgba(255, 255, 255, 0.6)",
+            fontSize: 11,
+            fontWeight: 400,
+            letterSpacing: "0.02em",
+            lineHeight: 1.4,
+            margin: 0,
+            transition: "color 0.3s ease",
+          }}
+        >
+          {category.description}
+        </p>
+      </div>
+    </motion.button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// "More" Tile
+// ---------------------------------------------------------------------------
+function MoreTile({
+  count,
+  isOpen,
+  isActiveHidden,
+  activeLabel,
+  onClick,
+  index,
+}: {
+  count: number;
+  isOpen: boolean;
+  isActiveHidden: boolean;
+  activeLabel?: string;
+  onClick: () => void;
+  index: number;
+}) {
+  return (
+    <motion.button
+      onClick={onClick}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.07 }}
+      className="collection-tile collection-more-tile"
+      aria-expanded={isOpen}
+      aria-haspopup="dialog"
+      aria-label={`Explore ${count} more collections`}
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        aspectRatio: "3 / 2",
+        border: isActiveHidden
+          ? "2px solid var(--gold)"
+          : "2px solid var(--cream-border)",
+        borderRadius: 12,
+        cursor: "pointer",
+        background: isActiveHidden
+          ? "linear-gradient(135deg, var(--gold-pale), var(--cream))"
+          : "linear-gradient(135deg, var(--cream), var(--cream-deep))",
+        padding: 0,
+        display: "flex",
+        flexDirection: "column" as const,
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        fontFamily: "var(--font-body)",
+        transition: "all 0.3s ease",
+      }}
+    >
+      <div
+        style={{
+          color: isActiveHidden ? "var(--gold)" : "var(--ink-light)",
+          transition: "color 0.3s",
+        }}
+      >
+        <CollectionIcon name="grid" size={28} />
+      </div>
+
+      <div style={{ textAlign: "center" }}>
+        <span
+          style={{
+            display: "block",
+            fontSize: 15,
+            fontWeight: 600,
+            color: isActiveHidden ? "var(--gold)" : "var(--ink)",
+            fontFamily: "var(--font-display)",
+            letterSpacing: "0.01em",
+          }}
+        >
+          {isActiveHidden && activeLabel ? activeLabel : "More"}
+        </span>
+        <span
+          style={{
+            display: "block",
+            fontSize: 11,
+            color: "var(--ink-light)",
+            marginTop: 2,
+          }}
+        >
+          {isActiveHidden ? "Change collection" : `+${count} collections`}
+        </span>
+      </div>
+    </motion.button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// "More" Modal — shows all categories
+// ---------------------------------------------------------------------------
+function MoreModal({
+  categories,
+  activeKey,
+  onSelect,
+  onClose,
+}: {
+  categories: CollectionCategory[];
+  activeKey: string;
+  onSelect: (key: string) => void;
+  onClose: () => void;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    panelRef.current?.focus();
   }, []);
 
-  const handleTabClick = useCallback(
-    (key: string) => {
-      setActiveTab(key);
-      scrollTabIntoView(key);
-    },
-    [scrollTabIntoView]
+  return (
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.25 }}
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(26, 23, 16, 0.7)",
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
+          zIndex: 1000,
+        }}
+      />
+
+      {/* Centering wrapper */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1001,
+          padding: 20,
+          pointerEvents: "none",
+        }}
+      >
+        <motion.div
+          ref={panelRef}
+          role="dialog"
+          aria-label="All collections"
+          aria-modal="true"
+          tabIndex={-1}
+          initial={{ opacity: 0, y: 40, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 40, scale: 0.97 }}
+          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+          className="more-collections-modal"
+          style={{
+            width: "100%",
+            maxWidth: 760,
+            maxHeight: "calc(100vh - 80px)",
+            overflow: "auto",
+            background: "var(--white)",
+            borderRadius: 16,
+            padding: "36px 32px",
+            boxShadow:
+              "0 24px 80px rgba(26, 23, 16, 0.25), 0 8px 24px rgba(184, 149, 90, 0.08)",
+            pointerEvents: "auto",
+            outline: "none",
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 28,
+            }}
+          >
+            <div>
+              <h3
+                style={{
+                  fontSize: 24,
+                  fontWeight: 500,
+                  color: "var(--ink)",
+                  fontFamily: "var(--font-display)",
+                  marginBottom: 4,
+                }}
+              >
+                All Collections
+              </h3>
+              <p style={{ fontSize: 13, color: "var(--ink-light)", margin: 0 }}>
+                Choose a collection to explore
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              style={{
+                width: 36,
+                height: 36,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "var(--cream)",
+                border: "none",
+                borderRadius: "50%",
+                cursor: "pointer",
+                color: "var(--ink-mid)",
+                transition: "background 0.2s",
+                flexShrink: 0,
+              }}
+              className="modal-close-btn"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Category grid */}
+          <div className="more-collections-grid">
+            {categories.map((cat) => {
+              const isActive = activeKey === cat.key;
+              return (
+                <button
+                  key={cat.key}
+                  onClick={() => onSelect(cat.key)}
+                  aria-label={`${cat.label} — ${cat.description}`}
+                  className={`collection-tile${isActive ? " collection-tile-active" : ""}`}
+                  style={{
+                    position: "relative",
+                    overflow: "hidden",
+                    aspectRatio: "3 / 2",
+                    borderRadius: 10,
+                    border: isActive
+                      ? "2px solid var(--gold)"
+                      : "2px solid transparent",
+                    cursor: "pointer",
+                    background: "var(--ink)",
+                    padding: 0,
+                    display: "flex",
+                    flexDirection: "column" as const,
+                    justifyContent: "flex-end",
+                    textAlign: "left" as const,
+                    fontFamily: "var(--font-body)",
+                    transition: "border-color 0.2s",
+                  }}
+                >
+                  <div
+                    className="collection-tile-bg"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      backgroundImage: `url(${cat.backgroundImage})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      filter: isActive
+                        ? "brightness(0.65)"
+                        : "brightness(0.45)",
+                      transition: "transform 0.5s, filter 0.3s",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background:
+                        "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 10,
+                      left: 10,
+                      color: isActive
+                        ? "var(--gold-light)"
+                        : "rgba(255,255,255,0.5)",
+                    }}
+                  >
+                    <CollectionIcon name={cat.iconKey} size={14} />
+                  </div>
+                  {isActive && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        right: 10,
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        background: "var(--gold)",
+                        boxShadow: "0 0 6px rgba(184, 149, 90, 0.6)",
+                      }}
+                    />
+                  )}
+                  <div
+                    style={{
+                      position: "relative",
+                      padding: "0 12px 10px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: "block",
+                        color: "#fff",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        fontFamily: "var(--font-display)",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {cat.label}
+                    </span>
+                    <span
+                      style={{
+                        display: "block",
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: 10,
+                        marginTop: 1,
+                      }}
+                    >
+                      {cat.description}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
+      </div>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Component
+// ---------------------------------------------------------------------------
+export default function RecommendationHub() {
+  const [activeKey, setActiveKey] = useState(COLLECTIONS[0].key);
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  const visible = COLLECTIONS.slice(0, VISIBLE_COUNT);
+  const hidden = COLLECTIONS.slice(VISIBLE_COUNT);
+  const hasMore = hidden.length > 0;
+
+  const activeCollection = useMemo(
+    () => COLLECTIONS.find((c) => c.key === activeKey),
+    [activeKey],
   );
 
-  // On mount, scroll "seasons" tab into view
-  useEffect(() => {
-    scrollTabIntoView("seasons");
-  }, [scrollTabIntoView]);
+  const filteredHotels = useMemo(() => {
+    if (!activeCollection) return hotels;
+    return hotels.filter(activeCollection.filter);
+  }, [activeCollection]);
 
-  const seasonLabel = getSeasonLabel(currentSeason);
+  const isActiveHidden = hidden.some((c) => c.key === activeKey);
+
+  const selectCategory = useCallback((key: string) => {
+    setActiveKey(key);
+    setMoreOpen(false);
+  }, []);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (moreOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [moreOpen]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!moreOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMoreOpen(false);
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [moreOpen]);
 
   return (
-    <section
-      className="section-pad"
-      style={{ background: "var(--white)" }}
-    >
-      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+    <section className="section-pad" style={{ background: "var(--white)" }}>
+      <div style={{ maxWidth: 1400, margin: "0 auto" }}>
         {/* ── Header ── */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
-          style={{ textAlign: "center", marginBottom: "40px" }}
+          style={{ textAlign: "center", marginBottom: 48 }}
         >
           <h2
             className="type-display-2"
-            style={{ color: "var(--ink)", marginBottom: "12px" }}
+            style={{ color: "var(--ink)", marginBottom: 12 }}
           >
-            Find Your Perfect Stay —{" "}
+            Curated{" "}
             <em style={{ fontStyle: "italic", color: "var(--gold)" }}>
-              Curated for You
+              Collections
             </em>
           </h2>
           <p
@@ -244,73 +903,113 @@ export default function RecommendationHub() {
             style={{
               color: "var(--ink-light)",
               lineHeight: 1.7,
-              maxWidth: "620px",
+              maxWidth: 580,
               margin: "0 auto",
             }}
           >
-            1,500+ handpicked hotels &bull; Exclusive perks on every booking
-            &bull; Free for members
+            Handpicked hotel experiences across 1,500+ properties — each
+            collection tells a story
           </p>
         </motion.div>
 
-        {/* ── Pill tabs — horizontally scrollable ── */}
+        {/* ── Collection Tiles — 12-col grid ── */}
         <div
-          ref={tabsRef}
-          style={{
-            display: "flex",
-            gap: "10px",
-            overflowX: "auto",
-            paddingBottom: "16px",
-            marginBottom: "36px",
-            scrollbarWidth: "none",
-            WebkitOverflowScrolling: "touch",
-            msOverflowStyle: "none",
-          }}
-          className="recommendation-tabs"
+          className="curated-collections-grid"
+          role="tablist"
+          aria-label="Curated hotel collections"
         >
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.key;
-            const label =
-              tab.key === "seasons"
-                ? `Best for ${seasonLabel}`
-                : tab.label;
-            return (
-              <button
-                key={tab.key}
-                data-tab={tab.key}
-                onClick={() => handleTabClick(tab.key)}
-                style={{
-                  flexShrink: 0,
-                  padding: "9px 22px",
-                  fontSize: "12px",
-                  fontWeight: isActive ? 600 : 400,
-                  letterSpacing: "0.04em",
-                  color: isActive ? "var(--white)" : "var(--ink-mid)",
-                  background: isActive ? "var(--gold)" : "var(--cream)",
-                  border: isActive
-                    ? "1px solid var(--gold)"
-                    : "1px solid var(--cream-border)",
-                  borderRadius: "100px",
-                  cursor: "pointer",
-                  transition: "all 0.25s ease",
-                  fontFamily: "var(--font-body)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
+          {visible.map((cat, i) => (
+            <CollectionTile
+              key={cat.key}
+              category={cat}
+              isActive={activeKey === cat.key}
+              onClick={() => selectCategory(cat.key)}
+              index={i}
+            />
+          ))}
+          {hasMore && (
+            <MoreTile
+              count={hidden.length}
+              isOpen={moreOpen}
+              isActiveHidden={isActiveHidden}
+              activeLabel={activeCollection?.label}
+              onClick={() => setMoreOpen(!moreOpen)}
+              index={VISIBLE_COUNT}
+            />
+          )}
         </div>
 
-        {/* ── Hotel grid ── */}
+        {/* ── Active hidden-category banner ── */}
+        <AnimatePresence>
+          {isActiveHidden && activeCollection && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                padding: "12px 20px",
+                background: "var(--cream)",
+                borderRadius: 8,
+                overflow: "hidden",
+              }}
+            >
+              <span style={{ fontSize: 12, color: "var(--ink-light)" }}>
+                Showing:
+              </span>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--gold)",
+                }}
+              >
+                {activeCollection.label}
+              </span>
+              <button
+                onClick={() => selectCategory(visible[0].key)}
+                style={{
+                  fontSize: 11,
+                  color: "var(--ink-light)",
+                  background: "none",
+                  border: "1px solid var(--cream-border)",
+                  borderRadius: 4,
+                  padding: "3px 10px",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-body)",
+                }}
+                aria-label="Clear filter and return to first collection"
+              >
+                Clear
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── More Modal ── */}
+        <AnimatePresence>
+          {moreOpen && (
+            <MoreModal
+              categories={COLLECTIONS}
+              activeKey={activeKey}
+              onSelect={selectCategory}
+              onClose={() => setMoreOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* ── Hotel Grid ── */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={activeTab}
+            key={activeKey}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.35 }}
+            style={{ marginTop: 40 }}
           >
             {filteredHotels.length > 0 ? (
               <div
@@ -318,7 +1017,7 @@ export default function RecommendationHub() {
                 style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(4, 1fr)",
-                  gap: "24px",
+                  gap: 24,
                 }}
               >
                 {filteredHotels.map((hotel, i) => (
@@ -340,10 +1039,10 @@ export default function RecommendationHub() {
                   color: "var(--ink-light)",
                 }}
               >
-                <p style={{ fontSize: "14px", marginBottom: "8px" }}>
+                <p style={{ fontSize: 14, marginBottom: 8 }}>
                   No hotels match this category yet.
                 </p>
-                <p style={{ fontSize: "12px", opacity: 0.7 }}>
+                <p style={{ fontSize: 12, opacity: 0.7 }}>
                   New properties are added regularly — check back soon.
                 </p>
               </div>
@@ -356,15 +1055,15 @@ export default function RecommendationHub() {
 }
 
 // ---------------------------------------------------------------------------
-// Hotel Card — matches existing homepage card aesthetic
+// Hotel Card — unchanged from original
 // ---------------------------------------------------------------------------
 function HotelRecommendationCard({ hotel }: { hotel: RecommendationHotel }) {
   const whatsappMessage = encodeURIComponent(
-    `Hi, interested in ${hotel.name} in ${hotel.city}. Send Voyagr preferred rate + perks.`
+    `Hi, interested in ${hotel.name} in ${hotel.city}. Send Voyagr preferred rate + perks.`,
   );
   const whatsappUrl = `https://wa.me/919876543210?text=${whatsappMessage}`;
   const conciergeMessage = encodeURIComponent(
-    `Hi, I'd like to learn more about ${hotel.name} in ${hotel.city}. Can you help?`
+    `Hi, I'd like to learn more about ${hotel.name} in ${hotel.city}. Can you help?`,
   );
   const conciergeUrl = `https://wa.me/919876543210?text=${conciergeMessage}`;
 
@@ -382,7 +1081,9 @@ function HotelRecommendationCard({ hotel }: { hotel: RecommendationHotel }) {
       }}
     >
       {/* Image */}
-      <div style={{ position: "relative", height: "200px", overflow: "hidden" }}>
+      <div
+        style={{ position: "relative", height: "200px", overflow: "hidden" }}
+      >
         <img
           className="card-img"
           src={hotel.image}
