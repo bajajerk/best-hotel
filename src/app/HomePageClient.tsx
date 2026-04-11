@@ -744,7 +744,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               marginBottom: "32px",
             }}
           >
-            We help craft extraordinary moments with exclusive perks &mdash; reserved only for Voyagr Club members.
+            Preferred wholesale hotel rates across 50+ cities worldwide. Same hotel, same room &mdash; at rates negotiated directly with our partners.
           </motion.p>
 
           {/* Join Free CTA + micro-copy */}
