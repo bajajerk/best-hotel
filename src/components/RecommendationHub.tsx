@@ -116,16 +116,6 @@ const TABS: Tab[] = [
     filter: (h) => h.categoryTags.includes(`season-${currentSeason}`),
   },
   {
-    key: "use-case",
-    label: "Best by Use Case",
-    filter: (h) =>
-      h.categoryTags.some(
-        (t) =>
-          t.startsWith("use-") ||
-          ["family", "anniversary"].includes(t)
-      ),
-  },
-  {
     key: "beach",
     label: "Beachfront Bliss",
     filter: (h) => h.categoryTags.includes("beach"),
