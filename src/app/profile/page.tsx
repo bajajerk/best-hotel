@@ -66,8 +66,8 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
-        setName((data.name as string) || "");
-        setPhone((data.phone as string) || "");
+        setName((data.name as string) || user?.displayName || "");
+        setPhone((data.phone as string) || user?.phoneNumber || "");
         setTier((data.tier as string) || "basic");
         return;
       }
@@ -77,6 +77,9 @@ export default function ProfilePage() {
     // Fallback: use Firebase user metadata
     if (user) {
       setName(user.displayName || user.email?.split("@")[0] || "");
+      if (user.phoneNumber && !phone) {
+        setPhone(user.phoneNumber);
+      }
     }
   }
 
