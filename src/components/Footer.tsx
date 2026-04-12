@@ -364,24 +364,28 @@ export default function Footer() {
               gap: "24px",
             }}
           >
-            <span
+            <a
+              href="/privacy-policy"
               style={{
                 fontSize: "11px",
                 color: "rgba(245, 240, 232, 0.35)",
                 letterSpacing: "0.04em",
+                textDecoration: "none",
               }}
             >
               Privacy Policy
-            </span>
-            <span
+            </a>
+            <a
+              href="/terms"
               style={{
                 fontSize: "11px",
                 color: "rgba(245, 240, 232, 0.35)",
                 letterSpacing: "0.04em",
+                textDecoration: "none",
               }}
             >
               Terms of Service
-            </span>
+            </a>
           </div>
         </div>
       </div>
