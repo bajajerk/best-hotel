@@ -104,7 +104,7 @@ function formatDate(dateStr: string): string {
 /* ─────────────────────────── Component ─────────────────────────── */
 
 export default function MatchMyRatesPage() {
-  const { user, session, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, getIdToken } = useAuth();
   const router = useRouter();
 
   const [step, setStep] = useState<Step>("upload");
@@ -147,12 +147,13 @@ export default function MatchMyRatesPage() {
     const reader = new FileReader();
     reader.onload = async () => {
       try {
+        const token = await getIdToken();
         const base64 = (reader.result as string).split(",")[1];
         const res = await fetch("/api/match-my-rate/analyze", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.access_token}`,
+            ...(token ? { "Authorization": `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({ image: base64 }),
         });
@@ -181,7 +182,7 @@ export default function MatchMyRatesPage() {
       }
     };
     reader.readAsDataURL(file);
-  }, [session]);
+  }, [getIdToken]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -247,11 +248,12 @@ export default function MatchMyRatesPage() {
     if (!extracted) return;
     setStep("searching");
     try {
+      const token = await getIdToken();
       const res = await fetch("/api/match-my-rate/search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${session?.access_token}`,
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(extracted),
       });

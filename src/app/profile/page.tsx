@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function ProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, session, loading, signOut, resetPassword, updatePassword } = useAuth();
+  const { user, loading, getIdToken, signOut, resetPassword, updatePassword } = useAuth();
   const initialTab = searchParams.get("tab") === "security" ? "security"
     : searchParams.get("tab") === "preferences" ? "preferences" : "profile";
   const [activeTab, setActiveTab] = useState<"profile" | "preferences" | "security">(initialTab);
@@ -46,11 +46,15 @@ export default function ProfilePage() {
       router.replace("/login");
       return;
     }
-    if (session?.access_token) {
-      fetchProfile(session.access_token);
-      fetchPreferences(session.access_token);
+    if (user) {
+      getIdToken().then((token) => {
+        if (token) {
+          fetchProfile(token);
+          fetchPreferences(token);
+        }
+      });
     }
-  }, [loading, user, session, router]);
+  }, [loading, user, router, getIdToken]);
 
   const apiBase = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -70,9 +74,9 @@ export default function ProfilePage() {
     } catch {
       // fall through to Supabase fallback
     }
-    // Fallback: use Supabase user metadata
+    // Fallback: use Firebase user metadata
     if (user) {
-      setName(user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "");
+      setName(user.displayName || user.email?.split("@")[0] || "");
     }
   }
 
@@ -94,14 +98,15 @@ export default function ProfilePage() {
   }
 
   async function saveProfile() {
-    if (!session?.access_token) return;
+    const token = await getIdToken();
+    if (!token) return;
     setSaving(true);
     setSaved(false);
     try {
       await fetch(`${apiBase}/api/account/profile`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ name, phone }),
@@ -115,14 +120,15 @@ export default function ProfilePage() {
   }
 
   async function savePreferences() {
-    if (!session?.access_token) return;
+    const token = await getIdToken();
+    if (!token) return;
     setPrefSaving(true);
     setPrefSaved(false);
     try {
       await fetch(`${apiBase}/api/account/preferences`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -160,18 +166,19 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
-  const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
-  const displayName = name || user.user_metadata?.full_name || user.email?.split("@")[0] || "";
+  const avatarUrl = user.photoURL;
+  const displayName = name || user.displayName || user.email?.split("@")[0] || user.phoneNumber || "";
   const initials = displayName
     .split(" ")
+    .filter((w: string) => w.length > 0)
     .map((w: string) => w[0])
     .join("")
     .toUpperCase()
-    .slice(0, 2);
-  const memberSince = user.created_at
-    ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    .slice(0, 2) || "U";
+  const memberSince = user.metadata.creationTime
+    ? new Date(user.metadata.creationTime).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     : "";
-  const provider = user.app_metadata?.provider || "email";
+  const provider = user.providerData?.[0]?.providerId || "password";
 
   const tierConfig: Record<string, { label: string; color: string; bg: string }> = {
     basic: { label: "Basic", color: "var(--ink-light)", bg: "var(--cream-deep)" },
@@ -207,7 +214,7 @@ export default function ProfilePage() {
                     {t.label} Member
                   </span>
                   <span style={s.badgeLight}>
-                    {provider === "google" ? "Google Account" : "Email Account"}
+                    {provider === "google.com" ? "Google Account" : provider === "phone" ? "Phone Account" : "Email Account"}
                   </span>
                   {memberSince && (
                     <span style={s.badgeLight}>Since {memberSince}</span>
@@ -258,7 +265,7 @@ export default function ProfilePage() {
                     disabled
                     style={{ ...s.input, opacity: 0.6, cursor: "not-allowed" }}
                   />
-                  <span style={s.hint}>Managed by {provider === "google" ? "Google" : "Supabase Auth"}</span>
+                  <span style={s.hint}>Managed by {provider === "google.com" ? "Google" : provider === "phone" ? "Phone login" : "Email login"}</span>
                 </div>
                 <div style={s.field}>
                   <label style={s.label}>Phone</label>
@@ -382,7 +389,11 @@ export default function ProfilePage() {
                 <div>
                   <span style={s.secLabel}>Login Method</span>
                   <span style={s.secValue}>
-                    {provider === "google" ? "Google OAuth (mayank.bajaj@...)" : `Email (${user.email})`}
+                    {provider === "google.com"
+                      ? `Google (${user.email})`
+                      : provider === "phone"
+                      ? `Phone (${user.phoneNumber})`
+                      : `Email (${user.email})`}
                   </span>
                 </div>
                 <span style={s.secBadge}>Active</span>
@@ -392,8 +403,8 @@ export default function ProfilePage() {
                 <div>
                   <span style={s.secLabel}>Last Sign In</span>
                   <span style={s.secValue}>
-                    {user.last_sign_in_at
-                      ? new Date(user.last_sign_in_at).toLocaleString("en-US", {
+                    {user.metadata.lastSignInTime
+                      ? new Date(user.metadata.lastSignInTime).toLocaleString("en-US", {
                           dateStyle: "medium",
                           timeStyle: "short",
                         })
@@ -402,7 +413,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {provider !== "google" && (
+              {provider === "password" && (
                 <div style={{ ...s.secRow, borderBottom: "none", flexDirection: "column" as const, alignItems: "stretch" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
