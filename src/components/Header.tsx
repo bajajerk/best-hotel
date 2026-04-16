@@ -108,7 +108,10 @@ export default function Header() {
                     : `rgba(253,250,245,0.6)`,
                   textDecoration: "none",
                   padding: "8px 0",
-                  transition: "color 0.25s",
+                  borderBottom: isActive(link.href)
+                    ? `2px solid ${GOLD}`
+                    : "2px solid transparent",
+                  transition: "color 0.25s, border-color 0.25s",
                 }}
               >
                 {link.label}
@@ -215,7 +218,10 @@ function MobileTabBar({ pathname }: { pathname: string }) {
               padding: "6px 0 2px",
               textDecoration: "none",
               color: active ? GOLD : "var(--ink-light)",
-              transition: "color 0.2s",
+              borderTop: active
+                ? `2px solid ${GOLD}`
+                : "2px solid transparent",
+              transition: "color 0.2s, border-color 0.2s",
             }}
           >
             {TAB_ICONS[link.label]}
