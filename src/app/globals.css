@@ -201,36 +201,6 @@ body {
   }
 }
 
-/* ── WhatsApp FAB — styled, responsive, hidden on hotel detail pages ── */
-.whatsapp-fab {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 90;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #25D366;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
-}
-.whatsapp-fab:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 28px rgba(37, 211, 102, 0.5);
-}
-/* Hide on hotel detail pages — the sticky bottom bar has its own CTA */
-.hotel-detail-active .whatsapp-fab {
-  opacity: 0;
-  pointer-events: none;
-}
-@media (max-width: 639px) {
-  .whatsapp-fab {
-    bottom: 80px !important;
-  }
-}
 
 /* ── CompareBar — push above mobile tab bar on small screens ── */
 @media (max-width: 639px) {
@@ -673,12 +643,8 @@ main {
     justify-content: space-between;
     gap: 12px;
   }
-  /* Push WhatsApp FAB and tab bar above the sticky CTA */
   .mobile-tab-bar {
     display: none !important;
-  }
-  .whatsapp-fab {
-    bottom: 80px !important;
   }
 }
 

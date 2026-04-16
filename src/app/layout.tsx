@@ -3,7 +3,6 @@ import { Cormorant_Garamond, DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import CompareBar from "@/components/CompareBar";
-import WhatsAppFab from "@/components/WhatsAppFab";
 import {
   SITE_URL,
   SITE_NAME,
@@ -140,9 +139,6 @@ export default function RootLayout({
         {children}
         <CompareBar />
         </Providers>
-
-        {/* Floating WhatsApp Button — hidden on hotel detail pages via CSS */}
-        <WhatsAppFab />
       </body>
     </html>
   );

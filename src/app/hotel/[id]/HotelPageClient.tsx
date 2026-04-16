@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import UnlockRateModal from "@/components/UnlockRateModal";
+import HotelPageWhatsAppTrigger from "@/components/HotelPageWhatsAppTrigger";
 import { trackHotelViewed, trackHotelGalleryOpened, trackHotelTabClicked } from "@/lib/analytics";
 import { useBooking } from "@/context/BookingContext";
 
@@ -523,14 +524,6 @@ export default function HotelPage() {
   const overviewRef = useRef<HTMLDivElement>(null);
   const galleryRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
-
-  /* ── Toggle body class to hide WhatsApp FAB on hotel pages ── */
-  useEffect(() => {
-    document.body.classList.add("hotel-detail-active");
-    return () => {
-      document.body.classList.remove("hotel-detail-active");
-    };
-  }, []);
 
   /* ── Fetch data ── */
   useEffect(() => {
@@ -1605,6 +1598,9 @@ export default function HotelPage() {
           perks={selectedRoom.inclusions}
         />
       )}
+
+      {/* ═══════════════════ WhatsApp Concierge Trigger (40s delay) ═══════════════════ */}
+      {hotel && <HotelPageWhatsAppTrigger hotelName={hotel.hotel_name} />}
     </div>
   );
 }

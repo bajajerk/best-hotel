@@ -24,6 +24,7 @@ import RecommendationHub from "@/components/RecommendationHub";
 import OccasionCarousel from "@/components/OccasionCarousel";
 import FeaturedDestinationsGrid from "@/components/FeaturedDestinationsGrid";
 import RateReveal from "@/components/RateReveal";
+import WhatsAppConcierge from "@/components/WhatsAppConcierge";
 
 export interface HomePageClientProps {
   initialCities: CuratedCity[];
@@ -2063,6 +2064,11 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
           Join Free &rarr;
         </a>
       </div>
+
+      {/* ================================================================
+          WHATSAPP CONCIERGE — contextual section
+      ================================================================ */}
+      <WhatsAppConcierge />
 
       {/* ================================================================
           FOOTER — multi-column layout
