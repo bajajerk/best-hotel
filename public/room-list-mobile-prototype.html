@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=420, initial-scale=1.0, viewport-fit=cover" />
+  <title>Taj Aravali — Room List (Mobile, fixed)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* Voyagr Club tokens — unchanged across prototypes */
+    :root {
+      --navy: #0B1B2B;
+      --navy-deep: #070f1a;
+      --navy-raised: #112740;
+      --gold: #C9A84C;
+      --gold-soft: rgba(201, 168, 76, 0.5);
+      --gold-line: rgba(201, 168, 76, 0.15);
+      --gold-line-strong: rgba(201, 168, 76, 0.35);
+      --gold-pale: rgba(201, 168, 76, 0.08);
+      --ivory: #F5F0E8;
+      --ivory-80: rgba(245, 240, 232, 0.8);
+      --ivory-70: rgba(245, 240, 232, 0.7);
+      --ivory-60: rgba(245, 240, 232, 0.6);
+      --ivory-40: rgba(245, 240, 232, 0.4);
+      --ivory-20: rgba(245, 240, 232, 0.2);
+      --ivory-10: rgba(245, 240, 232, 0.1);
+      --ivory-05: rgba(245, 240, 232, 0.05);
+      --sage: #7FA393;
+      --sage-pill: rgba(127, 163, 147, 0.18);
+      --muted: rgba(245, 240, 232, 0.35);
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'DM Mono', ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--navy);
+      color: var(--ivory);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Sticky header bar style — reused from
+       results page so the chrome stays consistent.
+       ────────────────────────────────────────────── */
+    .rl-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--navy);
+      border-bottom: 1px solid var(--gold-line);
+    }
+    .rl-topbar__row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+    }
+    .rl-back {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ivory-10);
+      border-radius: 999px;
+      color: var(--ivory);
+      flex-shrink: 0;
+    }
+    .rl-summary {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .rl-summary__hotel {
+      font-family: var(--font-display);
+      font-size: 16px;
+      color: var(--ivory);
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rl-summary__meta {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ──────────────────────────────────────────────
+       FIX #7 — Saving summary banner
+       Below the sticky search bar, before room cards.
+       White text, small, centred. Reminds the user
+       why they're seeing these prices.
+       ────────────────────────────────────────────── */
+    .rl-savingnote {
+      padding: 10px 16px;
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--ivory);
+      background: var(--navy-deep);
+      border-bottom: 1px solid var(--ivory-05);
+    }
+    .rl-savingnote em {
+      font-style: normal;
+      color: var(--gold);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      margin-left: 4px;
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Filter pills — same pattern as results
+       Free Cancellation · Bed Type · Meal Plan
+       ────────────────────────────────────────────── */
+    .rl-pillbar {
+      background: var(--navy);
+      border-bottom: 1px solid var(--ivory-10);
+      padding: 10px 0;
+    }
+    .rl-pillbar__scroll {
+      display: flex;
+      gap: 8px;
+      padding: 0 14px;
+      overflow-x: auto;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .rl-pillbar__scroll::-webkit-scrollbar { display: none; }
+    .rl-pill {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: 1px solid var(--ivory-10);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ivory-70);
+      background: transparent;
+      transition: all 0.15s;
+    }
+    .rl-pill:hover { border-color: var(--gold-soft); color: var(--ivory); background: var(--gold-pale); }
+    .rl-pill__caret { color: var(--ivory-40); }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Card grid — single column on mobile
+       Dark card background and rounded corners
+       ────────────────────────────────────────────── */
+    .rl-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 16px 14px 32px;
+    }
+    .rl-card {
+      background: var(--navy-raised);
+      border: 1px solid var(--ivory-10);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* (KEEP) Full-bleed room image style */
+    .rl-card__media {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      background: var(--navy-deep);
+      overflow: hidden;
+    }
+    .rl-card__media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(0.92) brightness(0.94);
+    }
+
+    /* FIX #6 — Photo count badge now reflects ROOM-specific
+       count, not the global hotel "69". Style retained from
+       hotel detail. Card 2 omits the badge entirely (shared
+       hotel gallery, no per-room photos). */
+    .rl-card__count {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: rgba(7, 15, 26, 0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--ivory-10);
+      border-radius: 2px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ivory);
+    }
+    .rl-card__count svg { color: var(--gold); }
+    .rl-card__count b { font-weight: 500; letter-spacing: 0.12em; color: var(--ivory); }
+
+    /* ──────────────────────────────────────────────
+       Card body
+       ────────────────────────────────────────────── */
+    .rl-card__body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* (KEEP) Room name typography — Cormorant.
+       FIX #1 — package suffix differentiates identical
+       room names ("· Room Only" / "· With Breakfast"). */
+    .rl-card__name {
+      font-family: var(--font-display);
+      font-size: 22px;
+      line-height: 1.2;
+      color: var(--ivory);
+      font-weight: 500;
+    }
+    .rl-card__name-pkg {
+      color: var(--gold);
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    /* (KEEP) "350 sqft · Sleeps 2" meta row + icons */
+    .rl-card__meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+    }
+    .rl-card__meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rl-card__meta-item svg { color: var(--gold); }
+
+    /* ──────────────────────────────────────────────
+       FIX #2 — Member saving block on each room card
+       Public rate struck (white 40%, small) above
+       the member rate (kept in current gold style).
+       "Save ₹X/night" line in sage/green — same green
+       as the existing "Taxes & fees included" line.
+       ────────────────────────────────────────────── */
+    .rl-card__rate {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .rl-card__public {
+      font-size: 12px;
+      color: var(--ivory-40);
+      text-decoration: line-through;
+      line-height: 1.1;
+    }
+    .rl-card__member-row {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .rl-card__member {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .rl-card__per {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+    }
+    .rl-card__total {
+      margin-top: 4px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+    }
+    .rl-card__save {
+      margin-top: 6px;
+      font-size: 12.5px;
+      color: var(--sage);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rl-card__save svg { color: var(--sage); }
+
+    /* (KEEP) "✓ Taxes & fees included" — sage/green line */
+    .rl-card__taxes {
+      margin-top: 8px;
+      font-size: 11.5px;
+      color: var(--sage);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .rl-card__taxes svg { color: var(--sage); }
+
+    /* (KEEP) "Breakfast available" supplementary text */
+    .rl-card__supp {
+      margin-top: 4px;
+      font-size: 11.5px;
+      color: var(--ivory-70);
+    }
+
+    /* FIX #3 — "vs. public rate →" link.
+       Renamed from "Price Comparison". Same style/position
+       as the equivalent link on the results card. */
+    .rl-card__vs {
+      align-self: flex-start;
+      margin-top: 10px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ivory-70);
+      border-bottom: 1px solid var(--ivory-10);
+      padding-bottom: 2px;
+      transition: all 0.15s;
+    }
+    .rl-card__vs:hover { color: var(--gold); border-bottom-color: var(--gold-soft); }
+
+    /* FIX #5 — "Room Details >" inline-expand control.
+       Same text-link style as before; behaviour now toggles
+       an expanding section below the card instead of
+       navigating to a new page. */
+    .rl-card__details {
+      align-self: flex-start;
+      margin-top: 10px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ivory-70);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid var(--ivory-10);
+      padding-bottom: 2px;
+      transition: all 0.15s;
+    }
+    .rl-card__details:hover { color: var(--gold); border-bottom-color: var(--gold-soft); }
+    .rl-card__details-caret {
+      display: inline-block;
+      transition: transform 0.2s ease;
+    }
+    .rl-card__details[aria-expanded="true"] .rl-card__details-caret {
+      transform: rotate(90deg);
+    }
+
+    /* Inline-expand region — full description, amenities
+       list, photo strip. Hidden by default; revealed when
+       Room Details is tapped. Lives inside the card so
+       it never navigates away. */
+    .rl-card__expand {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease;
+      border-top: 1px solid transparent;
+    }
+    .rl-card__details[aria-expanded="true"] + .rl-card__expand {
+      max-height: 1200px;
+      border-top-color: var(--ivory-05);
+    }
+    .rl-card__expand-inner {
+      padding: 16px 0 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .rl-card__expand-section h3 {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .rl-card__expand-section p {
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--ivory-80);
+    }
+    .rl-card__amenities {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px 14px;
+      list-style: none;
+    }
+    .rl-card__amenities li {
+      font-size: 12.5px;
+      color: var(--ivory);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rl-card__amenities svg { color: var(--sage); flex-shrink: 0; }
+    .rl-card__photos {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .rl-card__photos img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border: 1px solid var(--ivory-05);
+      filter: saturate(0.92) brightness(0.92);
+    }
+
+    /* FIX #4 — "Select Package →" gold pill CTA.
+       Renamed from "View Rates" — user is already on a
+       rates page, so the action is choosing a package.
+       Exact same gold pill style as before. */
+    .rl-card__cta {
+      margin-top: 16px;
+      width: 100%;
+      padding: 13px 22px;
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--navy);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+    .rl-card__cta:hover { background: #d9b95e; }
+
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════
+       (KEEP) STICKY HEADER — same chrome as results
+       ══════════════════════════════════════════════ -->
+  <header class="rl-topbar">
+    <div class="rl-topbar__row">
+      <a class="rl-back" href="hotel-detail-mobile-prototype.html" aria-label="Back to hotel">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </a>
+      <div class="rl-summary">
+        <span class="rl-summary__hotel">Taj Aravali Resort &amp; Spa</span>
+        <span class="rl-summary__meta">15 Mar – 17 Mar · 2 Nights · 2 Guests</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════
+       FIX #7 — Saving summary banner
+       Below sticky bar, before room cards. One line.
+       Reminds user they're seeing member rates.
+       ══════════════════════════════════════════════ -->
+  <div class="rl-savingnote">
+    Member rates shown <em>· Avg. 28% below public price</em>
+  </div>
+
+  <!-- (KEEP) Filter pills — Free Cancellation · Bed Type · Meal Plan -->
+  <nav class="rl-pillbar" aria-label="Room filters">
+    <div class="rl-pillbar__scroll">
+      <button class="rl-pill" type="button">
+        Free Cancellation
+        <span class="rl-pill__caret" aria-hidden="true">↓</span>
+      </button>
+      <button class="rl-pill" type="button">
+        Bed Type
+        <span class="rl-pill__caret" aria-hidden="true">↓</span>
+      </button>
+      <button class="rl-pill" type="button">
+        Meal Plan
+        <span class="rl-pill__caret" aria-hidden="true">↓</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════
+       ROOM CARDS — 2 sample cards with all 7 fixes
+       ══════════════════════════════════════════════ -->
+  <section class="rl-grid">
+
+    <!-- ─── Card 1 — Royal Suite · Room Only ─── -->
+    <article class="rl-card">
+      <div class="rl-card__media">
+        <img
+          src="https://images.unsplash.com/photo-1590490360182-c33d57733427?w=900&q=70&auto=format&fit=crop"
+          alt="Royal Suite, Lake View"
+          loading="lazy"
+        />
+        <!-- FIX #6: Room-specific count (4 photos), not the
+             global "69". Same badge style retained. -->
+        <span class="rl-card__count" aria-label="4 room photos">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <b>4</b>
+        </span>
+      </div>
+
+      <div class="rl-card__body">
+        <!-- FIX #1: package suffix differentiates the two
+             cards which would otherwise share a name. -->
+        <h2 class="rl-card__name">
+          Royal Suite, 1 Bedroom, Lake View
+          <span class="rl-card__name-pkg">· Room Only</span>
+        </h2>
+
+        <!-- (KEEP) "350 sqft · Sleeps 2" meta row + icons -->
+        <div class="rl-card__meta">
+          <span class="rl-card__meta-item">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="1"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="12" y1="3" x2="12" y2="21"/>
+            </svg>
+            350 sqft
+          </span>
+          <span class="rl-card__meta-item">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 7H4a2 2 0 0 0-2 2v8h2v-3h16v3h2V9a2 2 0 0 0-2-2z"/>
+              <path d="M6 11V7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4"/>
+            </svg>
+            Sleeps 2
+          </span>
+        </div>
+
+        <!-- FIX #2: public rate struck through, member rate
+             gold (kept), Save line in sage/green. -->
+        <div class="rl-card__rate">
+          <span class="rl-card__public">₹32,000 nightly</span>
+          <div class="rl-card__member-row">
+            <span class="rl-card__member">₹25,000</span>
+            <span class="rl-card__per">/ night</span>
+          </div>
+          <span class="rl-card__total">₹50,000 total · 2 nights</span>
+          <span class="rl-card__save">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Save ₹7,000/night
+          </span>
+        </div>
+
+        <!-- (KEEP) Taxes & fees included — sage/green line -->
+        <span class="rl-card__taxes">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Taxes &amp; fees included
+        </span>
+        <!-- (KEEP) Breakfast available supplementary text -->
+        <span class="rl-card__supp">Breakfast available (₹1,200/person)</span>
+
+        <!-- FIX #3: renamed "Price Comparison" → "vs. public rate →" -->
+        <a class="rl-card__vs" href="#">vs. public rate →</a>
+
+        <!-- FIX #5: Room Details now toggles an inline expand
+             instead of navigating to a new page. Text style kept. -->
+        <button
+          class="rl-card__details"
+          type="button"
+          aria-expanded="false"
+          aria-controls="expand-card-1"
+          onclick="(function(b){var open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',(!open).toString());})(this)"
+        >
+          Room Details
+          <span class="rl-card__details-caret" aria-hidden="true">›</span>
+        </button>
+        <div class="rl-card__expand" id="expand-card-1" role="region">
+          <div class="rl-card__expand-inner">
+            <div class="rl-card__expand-section">
+              <h3>Description</h3>
+              <p>
+                Corner suite with floor-to-ceiling windows opening onto Fateh
+                Sagar Lake. Stone flooring, hand-loomed rugs, and a separate
+                living area in restored Mewar style. Mornings here belong to
+                the lake — coffee on the private balcony before anyone else
+                is awake.
+              </p>
+            </div>
+            <div class="rl-card__expand-section">
+              <h3>Amenities</h3>
+              <ul class="rl-card__amenities">
+                <li>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  King bed
+                </li>
+                <li>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Lake view
+                </li>
+                <li>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Private balcony
+                </li>
+                <li>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Marble bathroom
+                </li>
+                <li>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Espresso machine
+                </li>
+                <li>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Free Wi-Fi
+                </li>
+              </ul>
+            </div>
+            <div class="rl-card__expand-section">
+              <h3>Photos</h3>
+              <div class="rl-card__photos">
+                <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?w=400&q=70&auto=format&fit=crop" alt="Suite living area" loading="lazy"/>
+                <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400&q=70&auto=format&fit=crop" alt="Bedroom" loading="lazy"/>
+                <img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&q=70&auto=format&fit=crop" alt="Lake view from balcony" loading="lazy"/>
+                <img src="https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&q=70&auto=format&fit=crop" alt="Marble bathroom" loading="lazy"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FIX #4: renamed "View Rates" → "Select Package →".
+             Exact same gold pill style. -->
+        <button class="rl-card__cta" type="button">
+          Select Package
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
+    </article>
+
+    <!-- ─── Card 2 — Royal Suite · With Breakfast ─── -->
+    <article class="rl-card">
+      <div class="rl-card__media">
+        <img
+          src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=900&q=70&auto=format&fit=crop"
+          alt="Royal Suite, Lake View"
+          loading="lazy"
+        />
+        <!-- FIX #6: this package shares the hotel gallery
+             rather than having its own photo set, so the
+             count badge is removed entirely (per brief). -->
+      </div>
+
+      <div class="rl-card__body">
+        <h2 class="rl-card__name">
+          Royal Suite, 1 Bedroom, Lake View
+          <span class="rl-card__name-pkg">· With Breakfast</span>
+        </h2>
+
+        <div class="rl-card__meta">
+          <span class="rl-card__meta-item">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="1"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="12" y1="3" x2="12" y2="21"/>
+            </svg>
+            350 sqft
+          </span>
+          <span class="rl-card__meta-item">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 7H4a2 2 0 0 0-2 2v8h2v-3h16v3h2V9a2 2 0 0 0-2-2z"/>
+              <path d="M6 11V7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4"/>
+            </svg>
+            Sleeps 2
+          </span>
+        </div>
+
+        <!-- FIX #2 again — slightly higher rate because
+             breakfast is included. Save delta tracks. -->
+        <div class="rl-card__rate">
+          <span class="rl-card__public">₹34,400 nightly</span>
+          <div class="rl-card__member-row">
+            <span class="rl-card__member">₹27,400</span>
+            <span class="rl-card__per">/ night</span>
+          </div>
+          <span class="rl-card__total">₹54,800 total · 2 nights</span>
+          <span class="rl-card__save">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Save ₹7,000/night
+          </span>
+        </div>
+
+        <span class="rl-card__taxes">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Taxes &amp; fees included
+        </span>
+        <span class="rl-card__supp">Breakfast for 2 included</span>
+
+        <a class="rl-card__vs" href="#">vs. public rate →</a>
+
+        <button
+          class="rl-card__details"
+          type="button"
+          aria-expanded="false"
+          aria-controls="expand-card-2"
+          onclick="(function(b){var open=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',(!open).toString());})(this)"
+        >
+          Room Details
+          <span class="rl-card__details-caret" aria-hidden="true">›</span>
+        </button>
+        <div class="rl-card__expand" id="expand-card-2" role="region">
+          <div class="rl-card__expand-inner">
+            <div class="rl-card__expand-section">
+              <h3>Description</h3>
+              <p>
+                Same Royal Suite layout — corner-positioned with lake-facing
+                windows and a private balcony. Includes a daily breakfast for
+                two at Suvarna Mahal, the property's heritage dining room
+                overlooking the gardens.
+              </p>
+            </div>
+            <div class="rl-card__expand-section">
+              <h3>Amenities</h3>
+              <ul class="rl-card__amenities">
+                <li>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  King bed
+                </li>
+                <li>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Lake view
+                </li>
+                <li>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Daily breakfast for 2
+                </li>
+                <li>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Private balcony
+                </li>
+                <li>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Marble bathroom
+                </li>
+                <li>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Free Wi-Fi
+                </li>
+              </ul>
+            </div>
+            <div class="rl-card__expand-section">
+              <h3>Photos</h3>
+              <p style="font-size:12px;color:var(--ivory-40);">
+                Shares the main hotel gallery — view from the property page.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <button class="rl-card__cta" type="button">
+          Select Package
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
+    </article>
+
+  </section>
+
+</body>
+</html>
