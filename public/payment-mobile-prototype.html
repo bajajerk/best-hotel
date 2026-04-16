@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=420, initial-scale=1.0, viewport-fit=cover" />
+  <title>Taj Aravali — Payment (Mobile, fixed)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* Voyagr Club tokens — unchanged across prototypes */
+    :root {
+      --navy: #0B1B2B;
+      --navy-deep: #070f1a;
+      --navy-raised: #112740;
+      --gold: #C9A84C;
+      --gold-soft: rgba(201, 168, 76, 0.5);
+      --gold-line: rgba(201, 168, 76, 0.15);
+      --gold-line-strong: rgba(201, 168, 76, 0.35);
+      --gold-pale: rgba(201, 168, 76, 0.08);
+      --ivory: #F5F0E8;
+      --ivory-80: rgba(245, 240, 232, 0.8);
+      --ivory-70: rgba(245, 240, 232, 0.7);
+      --ivory-60: rgba(245, 240, 232, 0.6);
+      --ivory-50: rgba(245, 240, 232, 0.5);
+      --ivory-40: rgba(245, 240, 232, 0.4);
+      --ivory-30: rgba(245, 240, 232, 0.3);
+      --ivory-20: rgba(245, 240, 232, 0.2);
+      --ivory-10: rgba(245, 240, 232, 0.1);
+      --ivory-05: rgba(245, 240, 232, 0.05);
+      --sage: #7FA393;                              /* same green as "Taxes & fees included" */
+      --sage-pill: rgba(127, 163, 147, 0.18);
+      --muted: rgba(245, 240, 232, 0.35);
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--navy-deep);
+      color: var(--ivory);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ── State gallery — two phone frames side-by-side so the
+         collapsed payment list and the expanded UPI row are
+         both visible without a toggle. ────── */
+    .states {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 28px;
+      padding: 28px 16px 56px;
+    }
+    .state {
+      width: 420px;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .state__label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+      padding: 0 2px;
+    }
+    .state__label b {
+      font-weight: 500;
+      color: var(--ivory);
+    }
+    .phone {
+      background: var(--navy);
+      border: 1px solid var(--ivory-10);
+      border-radius: 22px;
+      overflow: hidden;
+      position: relative;
+      padding-bottom: 132px;   /* space for the sticky Pay footer */
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Sticky header bar — identical chrome to
+       the guest-details / review screens. Back arrow
+       + step label + "Payment" screen title.
+       ────────────────────────────────────────────── */
+    .py-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--navy);
+      border-bottom: 1px solid var(--gold-line);
+    }
+    .py-topbar__row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+    }
+    .py-back {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ivory-10);
+      border-radius: 999px;
+      color: var(--ivory);
+      flex-shrink: 0;
+    }
+    .py-summary {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .py-summary__label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+    }
+    /* (KEEP) "Payment" header style — serif, ivory */
+    .py-summary__title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      color: var(--ivory);
+      line-height: 1.1;
+      font-weight: 500;
+    }
+
+    /* ──────────────────────────────────────────────
+       FIX #5 — Urgency timer recoloured gold (was
+       orange/red). Same gold treatment as the review
+       and guest-details screens. Countdown format +
+       behaviour preserved.
+       ────────────────────────────────────────────── */
+    .py-hold {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--gold-pale);
+      border-bottom: 1px solid var(--gold-line);
+      color: var(--gold);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .py-hold svg { color: var(--gold); }
+    .py-hold__time {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.06em;
+    }
+
+    /* Page container — vertical stack of cards */
+    .py-page {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px 14px 20px;
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Dark card base — same card style used on
+       every other screen in the booking funnel.
+       ────────────────────────────────────────────── */
+    .py-card {
+      background: var(--navy-raised);
+      border: 1px solid var(--ivory-10);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .py-card__body {
+      padding: 14px 14px;
+    }
+
+    .py-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Booking recap — hotel name, dates, rooms,
+       guests. Single compact card, same typography
+       as the review screen summary.
+       ────────────────────────────────────────────── */
+    .py-recap__hotel {
+      font-family: var(--font-display);
+      font-size: 18px;
+      line-height: 1.2;
+      color: var(--ivory);
+      font-weight: 500;
+    }
+    .py-recap__meta {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+    }
+    .py-recap__meta b {
+      font-weight: 500;
+      color: var(--ivory);
+    }
+    .py-recap__meta span + span::before {
+      content: "·";
+      margin-right: 10px;
+      color: var(--ivory-30);
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Total Due card — amount + "Price Breakup"
+       link on a single row. Typography matches the
+       review screen total row.
+       FIX #1 — Coupon banner ("₹6,000 saved with DBS25")
+       REMOVED entirely; no replacement inside this card.
+       FIX #6 — Member saving line added BELOW the total,
+       small, sage/green (same green as "Taxes & fees
+       included" elsewhere in the app). Frames the saving
+       as membership value, not a coupon code.
+       ────────────────────────────────────────────── */
+    .py-total__row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .py-total__label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+    }
+    .py-total__amount {
+      font-family: var(--font-display);
+      font-size: 28px;
+      line-height: 1;
+      color: var(--gold);
+      font-weight: 500;
+    }
+    .py-total__breakup {
+      margin-top: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border-bottom: 1px solid var(--gold-line-strong);
+      padding-bottom: 2px;
+      align-self: flex-start;
+    }
+    /* FIX #6 — Member saving line, sage/green, sits below the
+       total. Same colour as "Taxes & fees included". */
+    .py-total__save {
+      margin-top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--sage);
+      font-size: 12.5px;
+      line-height: 1.3;
+    }
+    .py-total__save svg { color: var(--sage); }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) "How would you like to pay?" heading — the
+       copy is fine per the brief, so keep it exactly.
+       ────────────────────────────────────────────── */
+    .py-methods__heading {
+      font-family: var(--font-display);
+      font-size: 18px;
+      line-height: 1.2;
+      color: var(--ivory);
+      font-weight: 500;
+      padding: 14px 14px 4px;
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Payment method rows — 5 rows, icon +
+       name + sub-label + chevron. Structure untouched.
+       ────────────────────────────────────────────── */
+    .py-methods__list {
+      list-style: none;
+      padding: 6px 0 4px;
+    }
+    .py-method {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 13px 14px;
+      text-align: left;
+      border-top: 1px solid var(--ivory-05);
+    }
+    .py-method:first-child { border-top: none; }
+    .py-method__icon {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ivory-10);
+      border-radius: 6px;
+      background: var(--navy-deep);
+      color: var(--gold);
+    }
+    .py-method__text {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .py-method__title {
+      font-size: 14px;
+      color: var(--ivory);
+    }
+    .py-method__sub {
+      font-size: 11.5px;
+      color: var(--ivory-60);
+      line-height: 1.35;
+    }
+    /* (KEEP) ">" chevron on each row */
+    .py-method__chev {
+      flex-shrink: 0;
+      color: var(--ivory-40);
+    }
+
+    /* ──────────────────────────────────────────────
+       FIX #4 — UPI app shortcuts. Appear BELOW the
+       UPI row when expanded. Small rounded pills, same
+       dark bg, app name in ivory. Tap opens the
+       respective app (intent URL in prototype).
+       Order: GPay · PhonePe · Paytm.
+       ────────────────────────────────────────────── */
+    .py-method--upi.is-expanded {
+      background: var(--ivory-05);
+    }
+    .py-method--upi.is-expanded .py-method__chev {
+      transform: rotate(90deg);
+      color: var(--gold);
+    }
+    .py-upi-apps {
+      display: flex;
+      gap: 8px;
+      padding: 0 14px 14px 62px;  /* aligns pills with the UPI method text column */
+      border-top: none;
+    }
+    .py-upi-app {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border: 1px solid var(--ivory-10);
+      border-radius: 999px;
+      background: var(--navy-deep);   /* same dark bg */
+      color: var(--ivory);
+      font-size: 12px;
+      font-weight: 500;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .py-upi-app:hover {
+      border-color: var(--gold-soft);
+      background: var(--navy);
+    }
+    .py-upi-app__dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    /* Small brand-hint dots — subtle, don't imitate the full logos.
+       Keeps the pills uniform (dark bg + app name text per brief). */
+    .py-upi-app__dot--gpay    { background: linear-gradient(135deg, #4285F4 0%, #34A853 50%, #FBBC04 75%, #EA4335 100%); }
+    .py-upi-app__dot--phonepe { background: #5F259F; }
+    .py-upi-app__dot--paytm   { background: #00BAF2; }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) SSL + Safe Transaction badges — two-line
+       trust block. Copy preserved verbatim per brief.
+       FIX #2 + FIX #8 — Card brand logo strip
+       (Mastercard / Visa / PayPal / Amex / Diners /
+       Discover) removed entirely. These badges alone
+       carry the security message.
+       ────────────────────────────────────────────── */
+    .py-trust {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 14px;
+      color: var(--ivory-60);
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .py-trust__item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .py-trust__item svg { color: var(--sage); }
+
+    /* ──────────────────────────────────────────────
+       FIX #7 — Sticky footer CTA. Label updated to
+       include the amount so the user knows exactly
+       what they're authorising: "Pay ₹2,20,000 Securely →".
+       Same gold pill style, same size, same position
+       as other screens.
+       ────────────────────────────────────────────── */
+    .py-footer {
+      position: absolute;   /* absolute inside the phone frame for gallery */
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--navy);
+      border-top: 1px solid var(--gold-line);
+      padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 30;
+    }
+    .py-footer__meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+    }
+    .py-footer__total {
+      font-family: var(--font-display);
+      font-size: 20px;
+      line-height: 1;
+      color: var(--gold);
+      letter-spacing: 0;
+      text-transform: none;
+      font-weight: 500;
+    }
+    .py-cta {
+      width: 100%;
+      padding: 14px 22px;
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--navy);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+    .py-cta svg { color: var(--navy); }
+    .py-cta:hover { background: #d9b95e; }
+
+    /* Notes rail — short annotation per state for reviewers. */
+    .state__notes {
+      font-size: 11.5px;
+      color: var(--ivory-60);
+      line-height: 1.5;
+      padding: 0 2px;
+    }
+    .state__notes b { color: var(--ivory); font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <section class="states">
+
+    <!-- ════════════════════════════════════════════
+         STATE A — PAYMENT LIST (collapsed)
+         · All 5 payment method rows visible
+         · No UPI apps expanded
+         ════════════════════════════════════════════ -->
+    <div class="state">
+      <div class="state__label">State A · <b>Payment list</b></div>
+
+      <div class="phone">
+        <!-- (KEEP) Sticky header — "Payment" title + back arrow -->
+        <header class="py-topbar">
+          <div class="py-topbar__row">
+            <a class="py-back" href="guest-details-mobile-prototype.html" aria-label="Back">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </a>
+            <div class="py-summary">
+              <span class="py-summary__label">Step 4 of 4 · Payment</span>
+              <span class="py-summary__title">Payment</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- FIX #5 — Urgency timer in gold (was orange/red) -->
+        <div class="py-hold" role="status" aria-live="polite">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <polyline points="12 7 12 12 15.5 13.5"/>
+          </svg>
+          Room(s) held for <span class="py-hold__time" data-countdown>4:53</span>
+        </div>
+
+        <main class="py-page">
+
+          <!-- ─── (KEEP) Booking recap card — hotel, dates, rooms, guests ─── -->
+          <section class="py-card">
+            <div class="py-card__body">
+              <span class="py-eyebrow">Booking Summary</span>
+              <span class="py-recap__hotel">Taj Aravali Resort &amp; Spa</span>
+              <div class="py-recap__meta">
+                <span><b>15–17 Mar 2026</b></span>
+                <span>2 Nights</span>
+                <span>2 Rooms</span>
+                <span>2 Guests</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- ─── Total Due card ───
+               FIX #1: "₹6,000 saved with DBS25" coupon banner REMOVED.
+               FIX #6: "Member saving: −₹30,000 vs. public rate" line
+                       added below the total in sage/green. -->
+          <section class="py-card">
+            <div class="py-card__body">
+              <span class="py-eyebrow">Total Due</span>
+              <div class="py-total__row">
+                <span class="py-total__amount">₹2,20,000</span>
+                <a class="py-total__breakup" href="#">
+                  Price Breakup
+                  <span aria-hidden="true">→</span>
+                </a>
+              </div>
+
+              <!-- FIX #6 — Member saving line (replaces coupon banner).
+                   Sage/green, same as "Taxes & fees included" in app. -->
+              <span class="py-total__save">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Member saving: −₹30,000 vs. public rate
+              </span>
+            </div>
+          </section>
+
+          <!-- ─── (KEEP) Payment methods card ───
+               Heading "How would you like to pay?" is kept verbatim
+               per the brief — the copy is fine. All 5 rows + icons
+               + chevrons preserved. -->
+          <section class="py-card">
+            <h2 class="py-methods__heading">How would you like to pay?</h2>
+            <ul class="py-methods__list">
+
+              <!-- Row 1 — Credit / Debit Card -->
+              <li>
+                <button class="py-method" type="button">
+                  <span class="py-method__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="6" width="18" height="12" rx="2"/>
+                      <path d="M3 10h18"/>
+                      <path d="M7 15h4"/>
+                    </svg>
+                  </span>
+                  <span class="py-method__text">
+                    <span class="py-method__title">Credit / Debit Card</span>
+                    <span class="py-method__sub">Visa, Mastercard, Amex, Diners &amp; more</span>
+                  </span>
+                  <span class="py-method__chev" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </span>
+                </button>
+              </li>
+
+              <!-- Row 2 — UPI Options (collapsed) -->
+              <li>
+                <button class="py-method py-method--upi" type="button">
+                  <span class="py-method__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="4" y="3" width="16" height="18" rx="2"/>
+                      <path d="M9 7h6"/>
+                      <path d="M9 11h6"/>
+                      <circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/>
+                    </svg>
+                  </span>
+                  <span class="py-method__text">
+                    <span class="py-method__title">UPI Options</span>
+                    <span class="py-method__sub">Pay directly from your bank account</span>
+                  </span>
+                  <span class="py-method__chev" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </span>
+                </button>
+              </li>
+
+              <!-- Row 3 — Net Banking -->
+              <li>
+                <button class="py-method" type="button">
+                  <span class="py-method__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 10l9-6 9 6"/>
+                      <path d="M5 10v8"/>
+                      <path d="M19 10v8"/>
+                      <path d="M9 10v8"/>
+                      <path d="M15 10v8"/>
+                      <path d="M3 20h18"/>
+                    </svg>
+                  </span>
+                  <span class="py-method__text">
+                    <span class="py-method__title">Net Banking</span>
+                    <span class="py-method__sub">All major Indian banks supported</span>
+                  </span>
+                  <span class="py-method__chev" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </span>
+                </button>
+              </li>
+
+              <!-- Row 4 — Wallets -->
+              <li>
+                <button class="py-method" type="button">
+                  <span class="py-method__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 7H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-3"/>
+                      <path d="M21 13h-4a2 2 0 0 1 0-4h4z"/>
+                      <path d="M5 7V6a2 2 0 0 1 2-2h10"/>
+                    </svg>
+                  </span>
+                  <span class="py-method__text">
+                    <span class="py-method__title">Wallets</span>
+                    <span class="py-method__sub">Paytm, Amazon Pay, Mobikwik &amp; more</span>
+                  </span>
+                  <span class="py-method__chev" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </span>
+                </button>
+              </li>
+
+              <!-- Row 5 — EMI -->
+              <li>
+                <button class="py-method" type="button">
+                  <span class="py-method__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="9"/>
+                      <path d="M12 7v5l3 2"/>
+                    </svg>
+                  </span>
+                  <span class="py-method__text">
+                    <span class="py-method__title">EMI</span>
+                    <span class="py-method__sub">No-cost &amp; standard EMI on eligible cards</span>
+                  </span>
+                  <span class="py-method__chev" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </span>
+                </button>
+              </li>
+
+            </ul>
+          </section>
+
+          <!-- ─── (KEEP) SSL + Safe Transaction trust badges ───
+               FIX #2 + FIX #8: card logo strip below (Mastercard /
+               Visa / PayPal / Amex / Diners / Discover) REMOVED.
+               Copy preserved verbatim per brief. -->
+          <div class="py-trust">
+            <span class="py-trust__item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="11" width="16" height="10" rx="2"/>
+                <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+              </svg>
+              Secure SSL Encryption
+            </span>
+            <span class="py-trust__item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7z"/>
+                <polyline points="9 12 11 14 15 10"/>
+              </svg>
+              100% Safe Transactions
+            </span>
+          </div>
+
+        </main>
+
+        <!-- (KEEP) Sticky footer / gold pill.
+             FIX #7 — CTA label: "Pay" / "Continue" →
+             "Pay ₹2,20,000 Securely →". Same gold pill, same
+             size, same position. -->
+        <div class="py-footer">
+          <div class="py-footer__meta">
+            <span>Total for 2 nights</span>
+            <span class="py-footer__total">₹2,20,000</span>
+          </div>
+          <button class="py-cta" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="11" width="16" height="10" rx="2"/>
+              <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+            </svg>
+            Pay ₹2,20,000 Securely
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </div>
+
+      <p class="state__notes">
+        <b>Removed:</b> DBS25 coupon banner, card-logo strip &middot;
+        <b>Added:</b> "Member saving: −₹30,000 vs. public rate" line &middot;
+        <b>Recoloured:</b> hold timer (gold) &middot;
+        <b>Relabelled:</b> CTA includes amount.
+      </p>
+    </div>
+
+    <!-- ════════════════════════════════════════════
+         STATE B — UPI EXPANDED
+         · Same screen, UPI row tapped
+         · GPay / PhonePe / Paytm shortcut pills visible
+           beneath the UPI row (FIX #4)
+         ════════════════════════════════════════════ -->
+    <div class="state">
+      <div class="state__label">State B · <b>UPI expanded</b></div>
+
+      <div class="phone">
+        <header class="py-topbar">
+          <div class="py-topbar__row">
+            <a class="py-back" href="guest-details-mobile-prototype.html" aria-label="Back">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </a>
+            <div class="py-summary">
+              <span class="py-summary__label">Step 4 of 4 · Payment</span>
+              <span class="py-summary__title">Payment</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="py-hold" role="status" aria-live="polite">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <polyline points="12 7 12 12 15.5 13.5"/>
+          </svg>
+          Room(s) held for <span class="py-hold__time" data-countdown>4:53</span>
+        </div>
+
+        <main class="py-page">
+
+          <section class="py-card">
+            <div class="py-card__body">
+              <span class="py-eyebrow">Booking Summary</span>
+              <span class="py-recap__hotel">Taj Aravali Resort &amp; Spa</span>
+              <div class="py-recap__meta">
+                <span><b>15–17 Mar 2026</b></span>
+                <span>2 Nights</span>
+                <span>2 Rooms</span>
+                <span>2 Guests</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="py-card">
+            <div class="py-card__body">
+              <span class="py-eyebrow">Total Due</span>
+              <div class="py-total__row">
+                <span class="py-total__amount">₹2,20,000</span>
+                <a class="py-total__breakup" href="#">
+                  Price Breakup
+                  <span aria-hidden="true">→</span>
+                </a>
+              </div>
+              <span class="py-total__save">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Member saving: −₹30,000 vs. public rate
+              </span>
+            </div>
+          </section>
+
+          <section class="py-card">
+            <h2 class="py-methods__heading">How would you like to pay?</h2>
+            <ul class="py-methods__list">
+
+              <li>
+                <button class="py-method" type="button">
+                  <span class="py-method__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="6" width="18" height="12" rx="2"/>
+                      <path d="M3 10h18"/>
+                      <path d="M7 15h4"/>
+                    </svg>
+                  </span>
+                  <span class="py-method__text">
+                    <span class="py-method__title">Credit / Debit Card</span>
+                    <span class="py-method__sub">Visa, Mastercard, Amex, Diners &amp; more</span>
+                  </span>
+                  <span class="py-method__chev" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </span>
+                </button>
+              </li>
+
+              <!-- FIX #4 — UPI row EXPANDED. Same row chrome; chevron
+                   rotates and the row gets a subtle lift. Below it,
+                   three rounded dark pills (GPay / PhonePe / Paytm)
+                   open the respective apps via UPI intent URLs. -->
+              <li>
+                <button class="py-method py-method--upi is-expanded" type="button" aria-expanded="true">
+                  <span class="py-method__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="4" y="3" width="16" height="18" rx="2"/>
+                      <path d="M9 7h6"/>
+                      <path d="M9 11h6"/>
+                      <circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/>
+                    </svg>
+                  </span>
+                  <span class="py-method__text">
+                    <span class="py-method__title">UPI Options</span>
+                    <span class="py-method__sub">Pay directly from your bank account</span>
+                  </span>
+                  <span class="py-method__chev" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </span>
+                </button>
+                <!-- FIX #4 — app shortcut pills -->
+                <div class="py-upi-apps" role="group" aria-label="UPI app shortcuts">
+                  <a class="py-upi-app" href="#" aria-label="Pay with Google Pay">
+                    <span class="py-upi-app__dot py-upi-app__dot--gpay" aria-hidden="true"></span>
+                    GPay
+                  </a>
+                  <a class="py-upi-app" href="#" aria-label="Pay with PhonePe">
+                    <span class="py-upi-app__dot py-upi-app__dot--phonepe" aria-hidden="true"></span>
+                    PhonePe
+                  </a>
+                  <a class="py-upi-app" href="#" aria-label="Pay with Paytm">
+                    <span class="py-upi-app__dot py-upi-app__dot--paytm" aria-hidden="true"></span>
+                    Paytm
+                  </a>
+                </div>
+              </li>
+
+              <li>
+                <button class="py-method" type="button">
+                  <span class="py-method__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 10l9-6 9 6"/>
+                      <path d="M5 10v8"/>
+                      <path d="M19 10v8"/>
+                      <path d="M9 10v8"/>
+                      <path d="M15 10v8"/>
+                      <path d="M3 20h18"/>
+                    </svg>
+                  </span>
+                  <span class="py-method__text">
+                    <span class="py-method__title">Net Banking</span>
+                    <span class="py-method__sub">All major Indian banks supported</span>
+                  </span>
+                  <span class="py-method__chev" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </span>
+                </button>
+              </li>
+
+              <li>
+                <button class="py-method" type="button">
+                  <span class="py-method__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 7H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-3"/>
+                      <path d="M21 13h-4a2 2 0 0 1 0-4h4z"/>
+                      <path d="M5 7V6a2 2 0 0 1 2-2h10"/>
+                    </svg>
+                  </span>
+                  <span class="py-method__text">
+                    <span class="py-method__title">Wallets</span>
+                    <span class="py-method__sub">Paytm, Amazon Pay, Mobikwik &amp; more</span>
+                  </span>
+                  <span class="py-method__chev" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </span>
+                </button>
+              </li>
+
+              <li>
+                <button class="py-method" type="button">
+                  <span class="py-method__icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="9"/>
+                      <path d="M12 7v5l3 2"/>
+                    </svg>
+                  </span>
+                  <span class="py-method__text">
+                    <span class="py-method__title">EMI</span>
+                    <span class="py-method__sub">No-cost &amp; standard EMI on eligible cards</span>
+                  </span>
+                  <span class="py-method__chev" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </span>
+                </button>
+              </li>
+
+            </ul>
+          </section>
+
+          <div class="py-trust">
+            <span class="py-trust__item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="11" width="16" height="10" rx="2"/>
+                <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+              </svg>
+              Secure SSL Encryption
+            </span>
+            <span class="py-trust__item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7z"/>
+                <polyline points="9 12 11 14 15 10"/>
+              </svg>
+              100% Safe Transactions
+            </span>
+          </div>
+
+        </main>
+
+        <div class="py-footer">
+          <div class="py-footer__meta">
+            <span>Total for 2 nights</span>
+            <span class="py-footer__total">₹2,20,000</span>
+          </div>
+          <button class="py-cta" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="11" width="16" height="10" rx="2"/>
+              <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+            </svg>
+            Pay ₹2,20,000 Securely
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </div>
+
+      <p class="state__notes">
+        UPI row tapped &mdash; <b>GPay · PhonePe · Paytm</b> pills appear
+        directly beneath it (same dark bg, app name text per brief). All
+        other rows and visual chrome identical to State A.
+      </p>
+    </div>
+
+  </section>
+
+  <script>
+    // FIX #5 — countdown format/behaviour preserved; only colour/icon
+    // changed to gold. Both timers run in sync so the two states stay
+    // visually aligned across the gallery.
+    (function() {
+      const els = document.querySelectorAll('[data-countdown]');
+      if (!els.length) return;
+      let total = 4 * 60 + 53;
+      const render = () => {
+        const m = Math.floor(total / 60);
+        const s = String(total % 60).padStart(2, '0');
+        const txt = m + ':' + s;
+        els.forEach((el) => { el.textContent = txt; });
+      };
+      render();
+      setInterval(() => {
+        if (total <= 0) return;
+        total -= 1;
+        render();
+      }, 1000);
+    })();
+  </script>
+</body>
+</html>
