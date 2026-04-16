@@ -115,7 +115,37 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Header nav links — centred, show on desktop, hide on mobile <640px ── */
+/* ── Voyagr nav — responsive padding (6px desktop, 5px mobile) ── */
+.voyagr-nav {
+  padding: 6px 24px;
+}
+@media (max-width: 767px) {
+  .voyagr-nav {
+    padding: 5px 16px;
+  }
+}
+
+/* ── Header nav links — centred, show on desktop, hide on mobile <768px ── */
+.header-nav-center {
+  display: none;
+  gap: 32px;
+  align-items: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.header-join-btn {
+  display: none;
+}
+@media (min-width: 768px) {
+  .header-nav-center {
+    display: flex;
+  }
+  .header-join-btn {
+    display: inline-block;
+  }
+}
+/* Legacy compat — old class name */
 .header-nav-links {
   display: none;
   gap: 28px;
@@ -127,6 +157,16 @@ body {
 @media (min-width: 640px) {
   .header-nav-links {
     display: flex;
+  }
+}
+
+/* ── Mega-menu responsive — stack to 2 cols on tablet, 1 col hidden on mobile ── */
+@media (max-width: 767px) {
+  .header-nav-center {
+    display: none !important;
+  }
+  .header-join-btn {
+    display: none !important;
   }
 }
 
@@ -469,12 +509,7 @@ main {
   animation: shimmer 1.5s infinite;
 }
 
-/* ── Nav (reference styles for components) ── */
-nav {
-  background: rgba(245, 240, 232, 0.92);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--cream-border);
-}
+/* ── Nav (reference styles — overridden by inline styles on Header) ── */
 
 /* ── Buttons ── */
 .btn-primary {

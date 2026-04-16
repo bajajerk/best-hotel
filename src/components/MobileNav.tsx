@@ -20,7 +20,14 @@ const PRIMARY_LINKS: {
   subtext?: string;
 }[] = [
   { label: "Home", href: "/", icon: "home" },
-  { label: "Search", href: "/search", icon: "search" },
+  { label: "Hotels", href: "/search", icon: "hotel", highlighted: true, badge: "BROWSE" },
+  {
+    label: "Rate Challenge",
+    href: "/match-my-rates",
+    icon: "trending_down",
+    subtext: "See if we can beat your current hotel price",
+  },
+  { label: "How It Works", href: "/#how-it-works", icon: "info" },
   {
     label: "Preferred Rates",
     href: "/preferred-rates",
@@ -28,14 +35,7 @@ const PRIMARY_LINKS: {
     highlighted: true,
     badge: "VOYAGR CLUB",
   },
-  {
-    label: "Rate Check",
-    href: "/match-my-rates",
-    icon: "trending_down",
-    subtext: "See if we can beat your current hotel price",
-  },
   { label: "My Trips", href: "/booking-history", icon: "luggage" },
-  { label: "Saved Hotels", href: "/saved", icon: "bookmark" },
   { label: "Profile", href: "/profile", icon: "person" },
 ];
 
@@ -468,7 +468,7 @@ export default function MobileNav() {
               color: "var(--cream-border, #ddd5c3)",
             }}
           >
-            <span style={{ color: "var(--gold-light, #d4ae78)" }}>V</span>oyagr Club
+            <span style={{ color: "var(--gold-light, #d4ae78)" }}>V</span>oyagr<span style={{ color: "#B8960C" }}>.</span>Club
           </div>
         </div>
 
@@ -554,7 +554,7 @@ export default function MobileNav() {
                 left: 0,
                 right: 0,
                 height: "1.5px",
-                background: "var(--ink-mid)",
+                background: "#ffffff",
                 borderRadius: "1px",
                 transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 top: open ? "6px" : `${top}px`,

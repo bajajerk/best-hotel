@@ -1,9 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MobileNav from "./MobileNav";
+
+/* ────────────────────────────────────────────────────────────
+   Voyagr.Club — Sticky Navigation Bar + Hotels Mega-Menu
+   ──────────────────────────────────────────────────────────── */
+
+const GOLD = "#B8960C";
+const NAVY = "#0D1B2A";
 
 export const NAV_LINKS = [
   { label: "Search", href: "/search" },
@@ -12,145 +19,372 @@ export const NAV_LINKS = [
   { label: "My Trips", href: "/booking-history" },
 ];
 
+/* ── Mega-menu column data ── */
+const MEGA_COLUMNS = [
+  {
+    title: "By Region",
+    links: [
+      { label: "Southeast Asia", href: "/search?region=southeast-asia" },
+      { label: "Europe", href: "/search?region=europe" },
+      { label: "Middle East", href: "/search?region=middle-east" },
+      { label: "Americas", href: "/search?region=americas" },
+      { label: "Africa & Islands", href: "/search?region=africa" },
+    ],
+  },
+  {
+    title: "By Type",
+    links: [
+      { label: "Luxury & 5-Star", href: "/search?type=luxury" },
+      { label: "Boutique Hotels", href: "/search?type=boutique" },
+      { label: "Beach Resorts", href: "/search?type=beach" },
+      { label: "City Hotels", href: "/search?type=city" },
+      { label: "Villas & Retreats", href: "/search?type=villa" },
+    ],
+  },
+  {
+    title: "Popular Cities",
+    links: [
+      { label: "Bangkok", href: "/city/bangkok" },
+      { label: "Dubai", href: "/city/dubai" },
+      { label: "Bali", href: "/city/bali" },
+      { label: "Paris", href: "/city/paris" },
+      { label: "Singapore", href: "/city/singapore" },
+    ],
+  },
+  {
+    title: "Deals & Collections",
+    links: [
+      { label: "This Week's Top Deals", href: "/search?sort=deal" },
+      { label: "New Arrivals", href: "/search?sort=new" },
+      { label: "Preferred Rate Hotels", href: "/preferred-rates" },
+      { label: "Last-Minute Escapes", href: "/search?sort=lastminute" },
+      { label: "View All Hotels", href: "/search" },
+    ],
+  },
+];
+
 export default function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const [megaOpen, setMegaOpen] = useState(false);
+  const megaTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => setScrolled(window.scrollY > 10);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  /* Close mega-menu on route change */
+  useEffect(() => {
+    setMegaOpen(false);
+  }, [pathname]);
+
+  /* Close mega-menu on Escape */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMegaOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  function openMega() {
+    if (megaTimeout.current) clearTimeout(megaTimeout.current);
+    setMegaOpen(true);
+  }
+
+  function closeMega() {
+    megaTimeout.current = setTimeout(() => setMegaOpen(false), 200);
+  }
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
   }
 
+  const navBg = scrolled
+    ? `rgba(13, 27, 42, 0.95)`
+    : "transparent";
+
   return (
     <>
       <nav
+        ref={navRef}
+        className="voyagr-nav"
         style={{
           position: "fixed",
           top: 0,
           left: 0,
           right: 0,
           zIndex: 100,
-          background: scrolled
-            ? "rgba(245, 240, 232, 0.96)"
-            : "rgba(245, 240, 232, 0.92)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderBottom: "1px solid var(--cream-border)",
-          height: "60px",
-          display: "flex",
-          alignItems: "center",
-          padding: "0 24px",
-          transition: "background 0.3s ease, box-shadow 0.3s ease",
-          boxShadow: scrolled
-            ? "0 2px 20px rgba(26, 23, 16, 0.06)"
-            : "none",
+          background: navBg,
+          backdropFilter: scrolled ? "blur(10px)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(10px)" : "none",
+          transition:
+            "background 0.3s ease, backdrop-filter 0.3s ease, padding 0.3s ease",
+          borderBottom: scrolled
+            ? "1px solid rgba(255,255,255,0.06)"
+            : "1px solid transparent",
         }}
       >
-        {/* Left: Wordmark — italic serif uppercase */}
-        <Link href="/" style={{ textDecoration: "none", flexShrink: 0 }}>
-          <span
-            style={{
-              fontFamily: "var(--font-display)",
-              fontStyle: "italic",
-              fontWeight: 600,
-              fontSize: "20px",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "var(--ink)",
-            }}
-          >
-            <span style={{ color: "var(--gold)" }}>V</span>oyagr Club
-          </span>
-        </Link>
-
-        {/* Centre: Nav links (hidden on mobile <640px) */}
-        <div className="header-nav-links">
-          {NAV_LINKS.map((link) => {
-            const active = isActive(link.href);
-            return (
-              <Link
-                key={link.label}
-                href={link.href}
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 400,
-                  fontSize: "15px",
-                  letterSpacing: "0.03em",
-                  color: active ? "var(--gold)" : "var(--ink-mid)",
-                  textDecoration: "none",
-                  paddingBottom: "4px",
-                  borderBottom: active
-                    ? "2px solid var(--gold)"
-                    : "2px solid transparent",
-                  transition: "color 0.2s, border-color 0.2s",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    (e.target as HTMLAnchorElement).style.color = "var(--gold)";
-                    (e.target as HTMLAnchorElement).style.borderBottomColor =
-                      "var(--gold)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    (e.target as HTMLAnchorElement).style.color =
-                      "var(--ink-mid)";
-                    (e.target as HTMLAnchorElement).style.borderBottomColor =
-                      "transparent";
-                  }
-                }}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Right: Avatar + Hamburger */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "12px",
-            marginLeft: "auto",
-            flexShrink: 0,
+            maxWidth: "1400px",
+            margin: "0 auto",
+            height: "48px",
           }}
         >
-          {/* Member avatar initials */}
+          {/* ── Left: Logo ── */}
+          <Link href="/" style={{ textDecoration: "none", flexShrink: 0 }}>
+            <span
+              style={{
+                fontFamily: "var(--font-display)",
+                fontStyle: "italic",
+                fontWeight: 600,
+                fontSize: "20px",
+                letterSpacing: "0.10em",
+                textTransform: "uppercase",
+                color: "#ffffff",
+                transition: "color 0.3s",
+              }}
+            >
+              Voyagr
+              <span style={{ color: GOLD }}>.</span>
+              Club
+            </span>
+          </Link>
+
+          {/* ── Centre: Desktop nav links (hidden <768px) ── */}
+          <div className="header-nav-center">
+            {/* Hotels — mega-menu trigger */}
+            <div
+              onMouseEnter={openMega}
+              onMouseLeave={closeMega}
+              style={{ position: "relative" }}
+            >
+              <button
+                onClick={() => setMegaOpen((v) => !v)}
+                aria-expanded={megaOpen}
+                aria-haspopup="true"
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-body)",
+                  fontWeight: 500,
+                  fontSize: "12px",
+                  letterSpacing: "0.10em",
+                  textTransform: "uppercase",
+                  color: GOLD,
+                  padding: "8px 0",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  transition: "opacity 0.2s",
+                }}
+              >
+                Hotels
+                <svg
+                  width="10"
+                  height="6"
+                  viewBox="0 0 10 6"
+                  fill="none"
+                  style={{
+                    transition: "transform 0.25s",
+                    transform: megaOpen ? "rotate(180deg)" : "rotate(0)",
+                  }}
+                >
+                  <path
+                    d="M1 1L5 5L9 1"
+                    stroke={GOLD}
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <Link
+              href="/match-my-rates"
+              style={{
+                fontFamily: "var(--font-body)",
+                fontWeight: 500,
+                fontSize: "12px",
+                letterSpacing: "0.10em",
+                textTransform: "uppercase",
+                color: GOLD,
+                textDecoration: "none",
+                padding: "8px 0",
+                transition: "opacity 0.2s",
+              }}
+            >
+              Rate Challenge
+            </Link>
+
+            <Link
+              href="/#how-it-works"
+              style={{
+                fontFamily: "var(--font-body)",
+                fontWeight: 500,
+                fontSize: "12px",
+                letterSpacing: "0.10em",
+                textTransform: "uppercase",
+                color: GOLD,
+                textDecoration: "none",
+                padding: "8px 0",
+                transition: "opacity 0.2s",
+              }}
+            >
+              How It Works
+            </Link>
+          </div>
+
+          {/* ── Right: Join CTA + Avatar + Hamburger ── */}
           <div
             style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "50%",
-              background: "var(--gold-pale)",
-              border: "1.5px solid var(--gold)",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              fontFamily: "var(--font-display)",
-              fontWeight: 600,
-              fontSize: "13px",
-              letterSpacing: "0.04em",
-              color: "var(--gold)",
-              cursor: "pointer",
+              gap: "14px",
+              marginLeft: "auto",
               flexShrink: 0,
             }}
           >
-            VC
-          </div>
+            {/* Join button — desktop only */}
+            <Link
+              href="/preferred-rates"
+              className="header-join-btn"
+              style={{
+                background: GOLD,
+                color: NAVY,
+                fontFamily: "var(--font-body)",
+                fontWeight: 600,
+                fontSize: "12px",
+                letterSpacing: "0.10em",
+                textTransform: "uppercase",
+                textDecoration: "none",
+                padding: "8px 22px",
+                borderRadius: "2px",
+                transition: "background 0.2s, color 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Join
+            </Link>
 
-          {/* Hamburger / Drawer toggle */}
-          <MobileNav />
+            {/* Hamburger / Drawer toggle */}
+            <MobileNav />
+          </div>
         </div>
       </nav>
+
+      {/* ── Mega-menu overlay (full-width, below nav) ── */}
+      <div
+        onMouseEnter={openMega}
+        onMouseLeave={closeMega}
+        style={{
+          position: "fixed",
+          top: "60px",
+          left: 0,
+          right: 0,
+          zIndex: 99,
+          background: NAVY,
+          borderTop: `1px solid rgba(184, 150, 12, 0.15)`,
+          opacity: megaOpen ? 1 : 0,
+          transform: megaOpen ? "translateY(0)" : "translateY(-8px)",
+          pointerEvents: megaOpen ? "auto" : "none",
+          transition:
+            "opacity 0.25s ease, transform 0.25s ease",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "1400px",
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: "40px",
+            padding: "36px 40px 40px",
+          }}
+        >
+          {MEGA_COLUMNS.map((col) => (
+            <div key={col.title}>
+              <div
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "9px",
+                  fontWeight: 600,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: GOLD,
+                  marginBottom: "16px",
+                  paddingBottom: "8px",
+                  borderBottom: "1px solid rgba(184, 150, 12, 0.2)",
+                }}
+              >
+                {col.title}
+              </div>
+              <ul
+                style={{
+                  listStyle: "none",
+                  margin: 0,
+                  padding: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                }}
+              >
+                {col.links.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      onClick={() => setMegaOpen(false)}
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: "13px",
+                        fontWeight: 400,
+                        color: "rgba(255, 255, 255, 0.75)",
+                        textDecoration: "none",
+                        transition: "color 0.2s",
+                        display: "block",
+                        padding: "2px 0",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.target as HTMLAnchorElement).style.color = "#ffffff";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.target as HTMLAnchorElement).style.color =
+                          "rgba(255, 255, 255, 0.75)";
+                      }}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Click-away backdrop for mega-menu ── */}
+      {megaOpen && (
+        <div
+          onClick={() => setMegaOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 98,
+            background: "rgba(0,0,0,0.3)",
+          }}
+        />
+      )}
 
       {/* Mobile bottom tab bar (visible <640px only) */}
       <MobileTabBar pathname={pathname} />
@@ -209,7 +443,7 @@ function MobileTabBar({ pathname }: { pathname: string }) {
               flex: 1,
               padding: "6px 0 2px",
               textDecoration: "none",
-              color: active ? "var(--gold)" : "var(--ink-light)",
+              color: active ? GOLD : "var(--ink-light)",
               transition: "color 0.2s",
             }}
           >
