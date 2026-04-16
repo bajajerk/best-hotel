@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voyagr Club — Search Hotels</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* ──────────────────────────────────────────────────────────
+       Voyagr Club — design tokens
+       ────────────────────────────────────────────────────────── */
+    :root {
+      --navy: #0B1B2B;
+      --navy-deep: #070f1a;
+      --navy-raised: #112740;
+      --gold: #C9A84C;
+      --gold-soft: rgba(201, 168, 76, 0.5);
+      --gold-line: rgba(201, 168, 76, 0.15);
+      --ivory: #F5F0E8;
+      --ivory-70: rgba(245, 240, 232, 0.7);
+      --ivory-40: rgba(245, 240, 232, 0.4);
+      --ivory-20: rgba(245, 240, 232, 0.2);
+      --ivory-10: rgba(245, 240, 232, 0.1);
+      --ivory-05: rgba(245, 240, 232, 0.05);
+      --sage: #7FA393;
+      --sage-pill: rgba(127, 163, 147, 0.18);
+      --muted: rgba(245, 240, 232, 0.35);
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'DM Mono', ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--navy);
+      color: var(--ivory);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+    input, select { font: inherit; color: inherit; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ── Utility type styles ── */
+    .mono {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .serif { font-family: var(--font-display); letter-spacing: -0.01em; }
+
+    /* ──────────────────────────────────────────────────────────
+       Sticky search bar — 72px desktop
+       ────────────────────────────────────────────────────────── */
+    .club-search-bar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      height: 72px;
+      background: var(--navy);
+      border-bottom: 1px solid var(--gold-line);
+      display: flex;
+      align-items: center;
+    }
+    .club-search-bar__inner {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      padding: 0 40px;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .club-logo {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 0.08em;
+      color: var(--ivory);
+      white-space: nowrap;
+    }
+    .club-logo em { font-style: italic; color: var(--gold); font-weight: 400; }
+
+    .club-search-fields {
+      display: flex;
+      align-items: stretch;
+      flex: 1;
+      max-width: 880px;
+      border: 1px solid var(--ivory-10);
+      border-radius: 2px;
+      background: rgba(245, 240, 232, 0.03);
+      position: relative;
+    }
+    .club-field {
+      flex: 1;
+      padding: 10px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .club-field + .club-field { border-left: 1px solid var(--ivory-10); }
+    .club-field:hover { background: rgba(245, 240, 232, 0.04); }
+    .club-field:focus-within { background: rgba(201, 168, 76, 0.06); }
+    .club-field__label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .club-field__input,
+    .club-field__value {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--ivory);
+      font-size: 13px;
+      padding: 2px 0;
+      width: 100%;
+    }
+    .club-field__value { cursor: pointer; }
+    .club-field__input::placeholder { color: var(--ivory-40); }
+
+    /* Typeahead + Date picker + Guest dropdown panels */
+    .club-popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: var(--navy-raised);
+      border: 1px solid var(--gold-line);
+      border-radius: 2px;
+      padding: 12px;
+      z-index: 50;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+      display: none;
+    }
+    .club-popover.is-open { display: block; }
+
+    .club-typeahead-list { list-style: none; max-height: 260px; overflow-y: auto; }
+    .club-typeahead-list li {
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--ivory-70);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 1px;
+    }
+    .club-typeahead-list li:hover,
+    .club-typeahead-list li.is-active {
+      background: rgba(201, 168, 76, 0.08);
+      color: var(--ivory);
+    }
+    .club-typeahead-list li .hint {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    /* Date range picker */
+    .club-calendar { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 8px 4px; }
+    @media (max-width: 640px) { .club-calendar { grid-template-columns: 1fr; } }
+    .club-calendar__month { }
+    .club-calendar__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 6px 12px;
+    }
+    .club-calendar__title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+    .club-calendar__nav {
+      width: 28px; height: 28px;
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      color: var(--ivory-70);
+      border: 1px solid var(--ivory-10);
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+    .club-calendar__nav:hover { color: var(--gold); border-color: var(--gold-soft); }
+    .club-calendar__grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+    .club-calendar__dow {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--muted);
+      text-align: center;
+      padding: 6px 0;
+      letter-spacing: 0.1em;
+    }
+    .club-calendar__day {
+      aspect-ratio: 1 / 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--ivory-70);
+      border-radius: 2px;
+      transition: all 0.15s;
+    }
+    .club-calendar__day:hover { background: var(--ivory-05); color: var(--ivory); }
+    .club-calendar__day--muted { color: var(--muted); pointer-events: none; opacity: 0.5; }
+    .club-calendar__day--in-range { background: rgba(201, 168, 76, 0.12); color: var(--ivory); border-radius: 0; }
+    .club-calendar__day--selected {
+      background: var(--gold);
+      color: var(--navy);
+      font-weight: 600;
+    }
+
+    /* Guest dropdown */
+    .club-guest-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 4px;
+    }
+    .club-guest-row + .club-guest-row { border-top: 1px solid var(--ivory-10); }
+    .club-guest-row__label { font-size: 13px; color: var(--ivory); }
+    .club-guest-row__sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .club-guest-steppers { display: flex; align-items: center; gap: 10px; }
+    .club-guest-step {
+      width: 28px; height: 28px;
+      border: 1px solid var(--ivory-20);
+      border-radius: 50%;
+      color: var(--ivory);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .club-guest-step:not(:disabled):hover { border-color: var(--gold); color: var(--gold); }
+    .club-guest-step:disabled { opacity: 0.3; cursor: not-allowed; }
+    .club-guest-count { min-width: 18px; text-align: center; font-size: 13px; }
+
+    /* Find Rates CTA — gold border, ivory, no fill */
+    .club-cta {
+      padding: 10px 24px;
+      border: 1px solid var(--gold);
+      background: transparent;
+      color: var(--ivory);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .club-cta:hover { background: var(--gold); color: var(--navy); }
+    .club-cta--wide { width: 100%; padding: 14px 24px; }
+
+    /* Mobile collapsed search summary */
+    .club-search-summary {
+      display: none;
+      flex: 1;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--ivory-10);
+      border-radius: 2px;
+      font-size: 13px;
+      color: var(--ivory-70);
+    }
+    .club-search-summary__icon { color: var(--gold); flex-shrink: 0; }
+
+    /* Mobile stacked full search */
+    .club-search-bar--mobile-open .club-search-fields { flex-direction: column; }
+    .club-search-bar--mobile-open .club-field + .club-field { border-left: none; border-top: 1px solid var(--ivory-10); }
+
+    /* ──────────────────────────────────────────────────────────
+       Page layout
+       ────────────────────────────────────────────────────────── */
+    .club-page {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 32px 40px 96px;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       Left filter panel — 240px, sticky
+       ────────────────────────────────────────────────────────── */
+    .club-filters {
+      position: sticky;
+      top: 96px;
+      width: 240px;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+    .club-filters::-webkit-scrollbar { width: 4px; }
+    .club-filters::-webkit-scrollbar-thumb { background: var(--ivory-10); border-radius: 2px; }
+
+    .club-filter-group + .club-filter-group { margin-top: 32px; }
+    .club-filter-group__title {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    /* Budget slider — gold fill + ivory thumb */
+    .club-slider {
+      position: relative;
+      height: 32px;
+      display: flex;
+      align-items: center;
+    }
+    .club-slider__track {
+      width: 100%;
+      height: 2px;
+      background: var(--ivory-10);
+      position: relative;
+    }
+    .club-slider__fill {
+      position: absolute;
+      left: 0;
+      height: 100%;
+      background: var(--gold);
+    }
+    .club-slider input[type="range"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      background: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      pointer-events: none;
+    }
+    .club-slider input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--ivory);
+      border: 2px solid var(--gold);
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+    .club-slider input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--ivory);
+      border: 2px solid var(--gold);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    .club-slider__labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--ivory-70);
+    }
+
+    /* Checkbox rows */
+    .club-check-list { display: flex; flex-direction: column; gap: 2px; }
+    .club-check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--ivory-70);
+      border-left: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .club-check-row:hover { color: var(--ivory); background: var(--ivory-05); }
+    .club-check-row input { accent-color: var(--gold); width: 14px; height: 14px; }
+    .club-check-row.is-checked {
+      color: var(--ivory);
+      border-left-color: var(--gold);
+    }
+    .club-check-row__sub {
+      display: block;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Saving toggle */
+    .club-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .club-toggle-label { font-size: 13px; color: var(--ivory-70); }
+    .club-toggle {
+      position: relative;
+      width: 38px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .club-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .club-toggle__track {
+      position: absolute;
+      inset: 0;
+      background: var(--ivory-10);
+      border-radius: 999px;
+      transition: all 0.2s;
+    }
+    .club-toggle__thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 14px;
+      height: 14px;
+      background: var(--ivory);
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .club-toggle input:checked + .club-toggle__track { background: var(--gold); }
+    .club-toggle input:checked + .club-toggle__track + .club-toggle__thumb {
+      left: 21px;
+      background: var(--navy);
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       Results area
+       ────────────────────────────────────────────────────────── */
+    .club-results { min-width: 0; }
+
+    .club-sort-bar {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--ivory-10);
+      margin-bottom: 28px;
+    }
+    .club-sort-bar__count {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-style: italic;
+      color: var(--ivory);
+    }
+    .club-sort-bar__count em { color: var(--gold); font-style: normal; font-weight: 500; }
+    .club-sort-bar__sort {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .club-sort-bar__label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: var(--ivory-40);
+    }
+    .club-sort {
+      display: flex;
+      gap: 12px;
+    }
+    .club-sort__btn {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--ivory-40);
+      text-transform: uppercase;
+      padding: 4px 0;
+      border-bottom: 1px solid transparent;
+      transition: all 0.15s;
+    }
+    .club-sort__btn:hover { color: var(--ivory-70); }
+    .club-sort__btn.is-active { color: var(--ivory); border-bottom-color: var(--gold); }
+
+    /* Voyagr Collections strip */
+    .club-collections {
+      margin-bottom: 32px;
+    }
+    .club-collections__title {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .club-collections__strip {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scroll-snap-type: x mandatory;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .club-collections__strip::-webkit-scrollbar { display: none; }
+    .club-pill {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      border: 1px solid var(--ivory-10);
+      color: var(--ivory-70);
+      border-radius: 999px;
+      white-space: nowrap;
+      scroll-snap-align: start;
+      transition: all 0.15s;
+    }
+    .club-pill:hover { border-color: var(--gold-soft); color: var(--ivory); }
+    .club-pill.is-active {
+      border-color: var(--gold);
+      color: var(--ivory);
+      background: rgba(201, 168, 76, 0.08);
+    }
+
+    /* Results grid */
+    .club-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    /* Result card */
+    .club-card {
+      background: var(--navy-raised);
+      border: 1px solid var(--ivory-10);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    .club-card:hover {
+      border-color: var(--gold-soft);
+      transform: translateY(-2px);
+    }
+    .club-card__media {
+      position: relative;
+      height: 220px;
+      overflow: hidden;
+      background: var(--navy-deep);
+    }
+    .club-card__media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(0.9) brightness(0.92);
+      transition: transform 0.5s ease;
+    }
+    .club-card:hover .club-card__media img { transform: scale(1.03); }
+    .club-card__badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      padding: 4px 10px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      background: var(--gold);
+      color: var(--navy);
+      font-weight: 500;
+    }
+    .club-card__body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .club-card__loc {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      color: var(--ivory-40);
+      text-transform: uppercase;
+    }
+    .club-card__name {
+      font-family: var(--font-display);
+      font-size: 22px;
+      line-height: 1.2;
+      color: var(--ivory);
+      font-weight: 500;
+    }
+    .club-card__tagline {
+      font-size: 12px;
+      font-style: italic;
+      color: var(--ivory-40);
+      line-height: 1.45;
+      margin-bottom: 4px;
+    }
+    .club-card__rate-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .club-card__public-rate {
+      font-size: 14px;
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+    .club-card__member-rate {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .club-card__saving {
+      font-size: 12px;
+      padding: 3px 10px;
+      background: var(--sage-pill);
+      color: var(--sage);
+      border-radius: 999px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    .club-card__cta {
+      margin-top: 10px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding-top: 12px;
+      border-top: 1px solid var(--ivory-10);
+    }
+    .club-card__cta:hover { color: var(--ivory); }
+
+    /* Load more */
+    .club-load-more {
+      margin-top: 40px;
+      width: 100%;
+      padding: 16px;
+      border: 1px solid var(--gold-soft);
+      background: transparent;
+      color: var(--gold);
+      font-family: var(--font-body);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .club-load-more:hover { background: rgba(201, 168, 76, 0.06); border-color: var(--gold); color: var(--ivory); }
+
+    /* Empty state */
+    .club-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 72px 24px;
+      border: 1px dashed var(--ivory-10);
+    }
+    .club-empty__title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-style: italic;
+      color: var(--ivory);
+      margin-bottom: 12px;
+    }
+    .club-empty__sub {
+      font-size: 13px;
+      color: var(--ivory-70);
+      max-width: 420px;
+      margin: 0 auto 24px;
+    }
+    .club-empty__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border: 1px solid var(--gold);
+      color: var(--ivory);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .club-empty__cta:hover { background: var(--gold); color: var(--navy); }
+
+    /* ──────────────────────────────────────────────────────────
+       Mobile filter FAB + bottom sheet
+       ────────────────────────────────────────────────────────── */
+    .club-filter-fab {
+      display: none;
+      position: fixed;
+      right: 20px;
+      bottom: 24px;
+      z-index: 45;
+      padding: 12px 20px;
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--navy);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 500;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .club-sheet-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: rgba(0, 0, 0, 0.6);
+    }
+    .club-sheet-backdrop.is-open { display: block; }
+
+    .club-sheet {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 61;
+      background: var(--navy);
+      border-top: 1px solid var(--gold-line);
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: 12px 12px 0 0;
+      padding: 24px 20px 120px;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+    .club-sheet.is-open { transform: translateY(0); }
+    .club-sheet__handle {
+      width: 40px;
+      height: 4px;
+      background: var(--ivory-20);
+      border-radius: 999px;
+      margin: 0 auto 20px;
+    }
+    .club-sheet__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .club-sheet__title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-style: italic;
+      color: var(--ivory);
+    }
+    .club-sheet__close {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--ivory-70);
+      text-transform: uppercase;
+    }
+    .club-sheet__apply {
+      position: sticky;
+      bottom: 0;
+      margin: 24px -20px -120px;
+      padding: 16px 20px 24px;
+      background: linear-gradient(to top, var(--navy) 60%, rgba(11, 27, 43, 0));
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       Responsive — mobile-first adjustments
+       ────────────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .club-page {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 20px 16px 80px;
+      }
+      .club-filters { display: none; }
+      .club-grid { grid-template-columns: 1fr; gap: 18px; }
+      .club-card__media { height: 140px; }
+      .club-card__name { font-size: 20px; }
+      .club-filter-fab { display: inline-flex; align-items: center; gap: 8px; }
+
+      .club-search-bar { height: auto; padding: 10px 0; }
+      .club-search-bar__inner {
+        padding: 0 16px;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .club-logo { font-size: 18px; }
+
+      /* Collapsed summary replaces full fields on mobile */
+      .club-search-fields { display: none; }
+      .club-search-summary { display: flex; }
+      .club-cta { display: none; }
+
+      /* When mobile search expanded */
+      .club-search-bar--mobile-open { height: auto; padding: 12px 0 16px; }
+      .club-search-bar--mobile-open .club-search-fields {
+        display: flex;
+        width: 100%;
+        flex-basis: 100%;
+      }
+      .club-search-bar--mobile-open .club-search-summary { display: none; }
+      .club-search-bar--mobile-open .club-cta {
+        display: inline-block;
+        width: 100%;
+        text-align: center;
+        padding: 14px 24px;
+      }
+
+      .club-sort-bar { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .club-sort { flex-wrap: wrap; }
+    }
+
+    @media (min-width: 901px) {
+      .club-filter-fab, .club-sheet, .club-sheet-backdrop { display: none !important; }
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════
+       STICKY SEARCH BAR
+       ══════════════════════════════════════════════════════════ -->
+  <header class="club-search-bar" id="searchBar">
+    <div class="club-search-bar__inner">
+      <a href="#" class="club-logo"><em>V</em>oyagr</a>
+
+      <!-- Mobile collapsed summary -->
+      <button class="club-search-summary" id="mobileSearchTrigger" aria-label="Open search">
+        <svg class="club-search-summary__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <span id="summaryText">Bali · 15–18 Mar · 2 guests</span>
+      </button>
+
+      <!-- Desktop / expanded mobile: 3 inline inputs -->
+      <div class="club-search-fields" id="searchFields">
+
+        <!-- Destination -->
+        <div class="club-field" id="fieldDest">
+          <span class="club-field__label">Destination</span>
+          <input
+            class="club-field__input"
+            type="text"
+            id="destInput"
+            placeholder="Where to?"
+            value="Bali"
+            autocomplete="off"
+            aria-label="Destination"
+          />
+          <div class="club-popover" id="destPopover" role="listbox">
+            <ul class="club-typeahead-list" id="destList"></ul>
+          </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="club-field" id="fieldDates">
+          <span class="club-field__label">Dates</span>
+          <span class="club-field__value" id="datesValue">15 Mar – 18 Mar</span>
+          <div class="club-popover" id="datesPopover">
+            <div class="club-calendar" id="calendar"></div>
+          </div>
+        </div>
+
+        <!-- Guests -->
+        <div class="club-field" id="fieldGuests">
+          <span class="club-field__label">Guests</span>
+          <span class="club-field__value" id="guestsValue">2 Adults · 0 Children</span>
+          <div class="club-popover" id="guestsPopover">
+            <div class="club-guest-row">
+              <div>
+                <div class="club-guest-row__label">Adults</div>
+                <div class="club-guest-row__sub">Ages 13+</div>
+              </div>
+              <div class="club-guest-steppers">
+                <button class="club-guest-step" data-guest="adults" data-op="-1" aria-label="Decrease adults">−</button>
+                <span class="club-guest-count" id="countAdults">2</span>
+                <button class="club-guest-step" data-guest="adults" data-op="1" aria-label="Increase adults">+</button>
+              </div>
+            </div>
+            <div class="club-guest-row">
+              <div>
+                <div class="club-guest-row__label">Children</div>
+                <div class="club-guest-row__sub">Ages 0–12</div>
+              </div>
+              <div class="club-guest-steppers">
+                <button class="club-guest-step" data-guest="children" data-op="-1" aria-label="Decrease children">−</button>
+                <span class="club-guest-count" id="countChildren">0</span>
+                <button class="club-guest-step" data-guest="children" data-op="1" aria-label="Increase children">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="club-cta" id="findRatesBtn">Find Rates →</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE LAYOUT — filters + results
+       ══════════════════════════════════════════════════════════ -->
+  <main class="club-page">
+
+    <!-- ── Filter sidebar (desktop) ── -->
+    <aside class="club-filters" aria-label="Filters">
+
+      <div class="club-filter-group">
+        <div class="club-filter-group__title">Budget — Member Rate / Night</div>
+        <div class="club-slider">
+          <div class="club-slider__track">
+            <div class="club-slider__fill" id="budgetFill" style="width: 45%;"></div>
+          </div>
+          <input type="range" id="budgetRange" min="0" max="100000" step="2500" value="45000" aria-label="Maximum budget per night">
+        </div>
+        <div class="club-slider__labels">
+          <span>₹0</span>
+          <span id="budgetValue">₹45,000</span>
+          <span>₹1,00,000</span>
+        </div>
+      </div>
+
+      <div class="club-filter-group">
+        <div class="club-filter-group__title">Travel Type</div>
+        <div class="club-check-list" data-group="travel-type">
+          <label class="club-check-row"><input type="checkbox"> Leisure</label>
+          <label class="club-check-row"><input type="checkbox"> Business</label>
+          <label class="club-check-row"><input type="checkbox"> Romantic</label>
+          <label class="club-check-row"><input type="checkbox"> Family</label>
+          <label class="club-check-row"><input type="checkbox"> Wellness</label>
+        </div>
+      </div>
+
+      <div class="club-filter-group">
+        <div class="club-filter-group__title">Brand Tier</div>
+        <div class="club-check-list" data-group="brand-tier">
+          <label class="club-check-row">
+            <input type="checkbox">
+            <span>
+              Luxury
+              <span class="club-check-row__sub">Aman, Oberoi, Six Senses</span>
+            </span>
+          </label>
+          <label class="club-check-row">
+            <input type="checkbox">
+            <span>
+              Premium
+              <span class="club-check-row__sub">Marriott Luxury, Hyatt</span>
+            </span>
+          </label>
+          <label class="club-check-row">
+            <input type="checkbox">
+            <span>
+              Boutique
+              <span class="club-check-row__sub">Independent luxury</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="club-filter-group">
+        <div class="club-filter-group__title">Location Type</div>
+        <div class="club-check-list" data-group="location-type">
+          <label class="club-check-row"><input type="checkbox"> Beachfront</label>
+          <label class="club-check-row"><input type="checkbox"> City</label>
+          <label class="club-check-row"><input type="checkbox"> Mountain</label>
+          <label class="club-check-row"><input type="checkbox"> Island</label>
+          <label class="club-check-row"><input type="checkbox"> Desert</label>
+        </div>
+      </div>
+
+      <div class="club-filter-group">
+        <div class="club-filter-group__title">Member Rate Saving</div>
+        <div class="club-toggle-row">
+          <span class="club-toggle-label">Show only 30%+ savings</span>
+          <label class="club-toggle">
+            <input type="checkbox" id="savingToggle">
+            <span class="club-toggle__track"></span>
+            <span class="club-toggle__thumb"></span>
+          </label>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ── Results ── -->
+    <section class="club-results">
+
+      <!-- Sort bar -->
+      <div class="club-sort-bar">
+        <div class="club-sort-bar__count">Showing <em id="resultsCount">47</em> hotels in Bali</div>
+        <div class="club-sort-bar__sort">
+          <span class="club-sort-bar__label">Sort</span>
+          <div class="club-sort" role="tablist" data-sort>
+            <button class="club-sort__btn is-active" data-sort-btn="recommended">Recommended</button>
+            <button class="club-sort__btn" data-sort-btn="saving">Saving (highest)</button>
+            <button class="club-sort__btn" data-sort-btn="rate">Rate (low–high)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Voyagr Collections -->
+      <div class="club-collections">
+        <div class="club-collections__title">Voyagr Collections</div>
+        <div class="club-collections__strip" role="tablist" data-collections>
+          <button class="club-pill is-active" data-collection="all">All Stays</button>
+          <button class="club-pill" data-collection="overwater">Overwater Villas</button>
+          <button class="club-pill" data-collection="adult-only">Adult-Only Retreats</button>
+          <button class="club-pill" data-collection="business">Business Hotels</button>
+          <button class="club-pill" data-collection="wellness">Wellness Escapes</button>
+          <button class="club-pill" data-collection="city-icons">City Icons</button>
+        </div>
+      </div>
+
+      <!-- Cards grid -->
+      <div class="club-grid" id="resultsGrid"></div>
+
+      <button class="club-load-more" id="loadMoreBtn">Load 12 more →</button>
+
+    </section>
+  </main>
+
+  <!-- Mobile filter FAB -->
+  <button class="club-filter-fab" id="filterFab" aria-label="Open filters">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/>
+    </svg>
+    Filter + Sort
+  </button>
+
+  <!-- Mobile filter sheet -->
+  <div class="club-sheet-backdrop" id="sheetBackdrop"></div>
+  <aside class="club-sheet" id="filterSheet" aria-label="Filters and sort" aria-modal="true" role="dialog">
+    <div class="club-sheet__handle"></div>
+    <div class="club-sheet__head">
+      <div class="club-sheet__title">Refine your search</div>
+      <button class="club-sheet__close" id="sheetClose">Close</button>
+    </div>
+    <div id="sheetFilters"></div>
+    <div class="club-sheet__apply">
+      <button class="club-cta club-cta--wide" id="sheetApply">Show Results →</button>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════════
+       JS — basic filter toggle + card rendering + popovers
+       ══════════════════════════════════════════════════════════ -->
+  <script>
+    // ── Data: sample hotels (real-looking, for a luxury club) ──
+    const HOTELS = [
+      {
+        id: 1, name: 'Como Uma Ubud', loc: 'Ubud, Bali',
+        tagline: 'Where Bali quiets down — a cliffside sanctuary above the Oos valley.',
+        img: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1200&q=70&auto=format&fit=crop',
+        public: 62400, member: 51000, savings: 11400, pick: true, tier: 'luxury', type: ['wellness', 'adult-only'], locType: 'mountain'
+      },
+      {
+        id: 2, name: 'Bulgari Resort Bali', loc: 'Uluwatu, Bali',
+        tagline: 'Italian discipline meets Balinese cliff-edge — 150m above the Indian Ocean.',
+        img: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1200&q=70&auto=format&fit=crop',
+        public: 92000, member: 74000, savings: 18000, pick: true, tier: 'luxury', type: ['romantic', 'adult-only'], locType: 'beachfront'
+      },
+      {
+        id: 3, name: 'Four Seasons Jimbaran Bay', loc: 'Jimbaran, Bali',
+        tagline: 'A village of private villas, each with a plunge pool facing the sunset.',
+        img: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&q=70&auto=format&fit=crop',
+        public: 58000, member: 46600, savings: 11400, pick: true, tier: 'luxury', type: ['family', 'romantic'], locType: 'beachfront'
+      },
+      {
+        id: 4, name: 'The Legian Seminyak', loc: 'Seminyak, Bali',
+        tagline: 'A discreet hush on a very busy beach. Lap pools, linen, long lunches.',
+        img: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=70&auto=format&fit=crop',
+        public: 44000, member: 36800, savings: 7200, pick: false, tier: 'boutique', type: ['leisure', 'romantic'], locType: 'beachfront'
+      },
+      {
+        id: 5, name: 'Amandari', loc: 'Ubud, Bali',
+        tagline: 'Stone-walled courtyards above the Ayung gorge. Aman restraint, at its original home.',
+        img: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1200&q=70&auto=format&fit=crop',
+        public: 108000, member: 86400, savings: 21600, pick: false, tier: 'luxury', type: ['wellness', 'romantic'], locType: 'mountain'
+      },
+      {
+        id: 6, name: 'Alila Villas Uluwatu', loc: 'Uluwatu, Bali',
+        tagline: 'Architecture that watches the sea. Infinity pools cut into limestone cliffs.',
+        img: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?w=1200&q=70&auto=format&fit=crop',
+        public: 68000, member: 54400, savings: 13600, pick: false, tier: 'luxury', type: ['romantic', 'adult-only'], locType: 'beachfront'
+      },
+      {
+        id: 7, name: 'Mandapa, a Ritz-Carlton Reserve', loc: 'Ubud, Bali',
+        tagline: 'A Reserve on the river — spa suites, pathside lanterns, temple chants at dusk.',
+        img: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1200&q=70&auto=format&fit=crop',
+        public: 78000, member: 62400, savings: 15600, pick: false, tier: 'premium', type: ['wellness', 'romantic'], locType: 'mountain'
+      },
+      {
+        id: 8, name: 'Hotel Tugu Bali', loc: 'Canggu, Bali',
+        tagline: 'A museum that happens to serve breakfast. Antique teak, lotus ponds, Canggu quiet.',
+        img: 'https://images.unsplash.com/photo-1551918120-9739cb430c6d?w=1200&q=70&auto=format&fit=crop',
+        public: 38000, member: 31600, savings: 6400, pick: false, tier: 'boutique', type: ['leisure'], locType: 'beachfront'
+      }
+    ];
+
+    // ── Destination typeahead ──
+    const CITIES = [
+      { name: 'Bali', country: 'Indonesia', hotels: 47 },
+      { name: 'Bangkok', country: 'Thailand', hotels: 62 },
+      { name: 'Tokyo', country: 'Japan', hotels: 54 },
+      { name: 'Maldives', country: 'Maldives', hotels: 28 },
+      { name: 'Paris', country: 'France', hotels: 81 },
+      { name: 'Santorini', country: 'Greece', hotels: 19 },
+      { name: 'Dubai', country: 'UAE', hotels: 72 },
+      { name: 'Singapore', country: 'Singapore', hotels: 44 },
+      { name: 'Udaipur', country: 'India', hotels: 21 },
+      { name: 'Kyoto', country: 'Japan', hotels: 34 },
+    ];
+
+    const INR = n => '₹' + n.toLocaleString('en-IN');
+
+    // ── Render cards ──
+    function renderCards(list) {
+      const grid = document.getElementById('resultsGrid');
+      if (!list.length) {
+        grid.innerHTML = `
+          <div class="club-empty">
+            <div class="club-empty__title">No hotels match these filters in Bali.</div>
+            <div class="club-empty__sub">Our concierge can find options not yet on the platform — tell us what you're looking for and we'll reply within the hour.</div>
+            <a class="club-empty__cta" href="https://wa.me/919876543210?text=I'm%20looking%20for%20hotels%20in%20Bali%20that%20aren't%20on%20the%20platform" target="_blank" rel="noopener">
+              Open WhatsApp →
+            </a>
+          </div>
+        `;
+        return;
+      }
+      grid.innerHTML = list.map(h => `
+        <article class="club-card" data-id="${h.id}">
+          <div class="club-card__media">
+            <img src="${h.img}" alt="${h.name}" loading="lazy" onerror="this.style.display='none'"/>
+            ${h.pick ? '<span class="club-card__badge">Voyagr Pick</span>' : ''}
+          </div>
+          <div class="club-card__body">
+            <span class="club-card__loc">${h.loc}</span>
+            <h3 class="club-card__name">${h.name}</h3>
+            <p class="club-card__tagline">${h.tagline}</p>
+            <div class="club-card__rate-row">
+              <span class="club-card__public-rate">${INR(h.public)}</span>
+              <span class="club-card__member-rate">${INR(h.member)}</span>
+              <span class="club-card__saving">Save ${INR(h.savings)}/night</span>
+            </div>
+            <a class="club-card__cta" href="#">See Room Rates →</a>
+          </div>
+        </article>
+      `).join('');
+    }
+    renderCards(HOTELS);
+
+    // ── Checkbox row visual state ──
+    document.querySelectorAll('.club-check-row input').forEach(cb => {
+      cb.addEventListener('change', () => {
+        cb.closest('.club-check-row').classList.toggle('is-checked', cb.checked);
+      });
+    });
+
+    // ── Budget slider fill ──
+    const budgetRange = document.getElementById('budgetRange');
+    const budgetFill = document.getElementById('budgetFill');
+    const budgetValue = document.getElementById('budgetValue');
+    function updateBudget() {
+      const pct = (budgetRange.value / budgetRange.max) * 100;
+      budgetFill.style.width = pct + '%';
+      budgetValue.textContent = '₹' + Number(budgetRange.value).toLocaleString('en-IN');
+    }
+    budgetRange.addEventListener('input', updateBudget);
+    updateBudget();
+
+    // ── Sort bar active state ──
+    document.querySelectorAll('[data-sort-btn]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-sort-btn]').forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        const mode = btn.dataset.sortBtn;
+        const sorted = [...HOTELS].sort((a, b) => {
+          if (mode === 'saving') return b.savings - a.savings;
+          if (mode === 'rate') return a.member - b.member;
+          return b.pick - a.pick; // recommended: picks first
+        });
+        renderCards(sorted);
+      });
+    });
+
+    // ── Collections pills ──
+    document.querySelectorAll('[data-collection]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-collection]').forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        const key = btn.dataset.collection;
+        const list = key === 'all' ? HOTELS : HOTELS.filter(h => h.type.includes(key));
+        renderCards(list);
+        document.getElementById('resultsCount').textContent = list.length;
+      });
+    });
+
+    // ── Popover (typeahead / dates / guests) ──
+    const popovers = [
+      { field: 'fieldDest', pop: 'destPopover' },
+      { field: 'fieldDates', pop: 'datesPopover' },
+      { field: 'fieldGuests', pop: 'guestsPopover' },
+    ];
+    function closeAllPopovers() {
+      popovers.forEach(p => document.getElementById(p.pop).classList.remove('is-open'));
+    }
+    popovers.forEach(({ field, pop }) => {
+      const el = document.getElementById(field);
+      const popEl = document.getElementById(pop);
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const willOpen = !popEl.classList.contains('is-open');
+        closeAllPopovers();
+        if (willOpen) popEl.classList.add('is-open');
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.club-field')) closeAllPopovers();
+    });
+
+    // ── Destination typeahead ──
+    const destInput = document.getElementById('destInput');
+    const destList = document.getElementById('destList');
+    function renderCityList(q) {
+      const filtered = q
+        ? CITIES.filter(c => c.name.toLowerCase().startsWith(q.toLowerCase()) || c.country.toLowerCase().includes(q.toLowerCase()))
+        : CITIES;
+      destList.innerHTML = filtered.map(c => `
+        <li data-city="${c.name}">
+          <span>${c.name}, <span style="color:var(--ivory-40)">${c.country}</span></span>
+          <span class="hint">${c.hotels} hotels</span>
+        </li>
+      `).join('') || '<li style="color:var(--muted); padding:14px; font-size:12px;">No cities yet — tap Find Rates to reach our concierge.</li>';
+    }
+    renderCityList('');
+    destInput.addEventListener('input', () => renderCityList(destInput.value));
+    destList.addEventListener('click', (e) => {
+      const li = e.target.closest('li[data-city]');
+      if (!li) return;
+      destInput.value = li.dataset.city;
+      closeAllPopovers();
+    });
+
+    // ── Guests steppers ──
+    const guestCounts = { adults: 2, children: 0 };
+    document.querySelectorAll('.club-guest-step').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const key = btn.dataset.guest;
+        const op = Number(btn.dataset.op);
+        const min = key === 'adults' ? 1 : 0;
+        guestCounts[key] = Math.max(min, Math.min(8, guestCounts[key] + op));
+        document.getElementById('countAdults').textContent = guestCounts.adults;
+        document.getElementById('countChildren').textContent = guestCounts.children;
+        document.getElementById('guestsValue').textContent =
+          `${guestCounts.adults} ${guestCounts.adults === 1 ? 'Adult' : 'Adults'} · ${guestCounts.children} ${guestCounts.children === 1 ? 'Child' : 'Children'}`;
+      });
+    });
+
+    // ── Inline date range picker (gold accents, no red/green) ──
+    (function buildCalendar() {
+      const cal = document.getElementById('calendar');
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const dowLabels = ['S','M','T','W','T','F','S'];
+      let viewDate = new Date(2026, 2, 1); // March 2026
+      let startDate = new Date(2026, 2, 15);
+      let endDate = new Date(2026, 2, 18);
+      let picking = 'end'; // toggles between start/end
+
+      function render() {
+        cal.innerHTML = '';
+        for (let offset = 0; offset < 2; offset++) {
+          const d = new Date(viewDate.getFullYear(), viewDate.getMonth() + offset, 1);
+          cal.appendChild(renderMonth(d, offset));
+        }
+        updateDatesValue();
+      }
+
+      function renderMonth(monthDate, offset) {
+        const wrap = document.createElement('div');
+        wrap.className = 'club-calendar__month';
+        const head = document.createElement('div');
+        head.className = 'club-calendar__head';
+        head.innerHTML = `
+          ${offset === 0
+            ? '<button class="club-calendar__nav" data-nav="-1" aria-label="Previous month">‹</button>'
+            : '<span style="width:28px"></span>'}
+          <span class="club-calendar__title">${monthNames[monthDate.getMonth()]} ${monthDate.getFullYear()}</span>
+          ${offset === 1
+            ? '<button class="club-calendar__nav" data-nav="1" aria-label="Next month">›</button>'
+            : '<span style="width:28px"></span>'}
+        `;
+        wrap.appendChild(head);
+
+        const grid = document.createElement('div');
+        grid.className = 'club-calendar__grid';
+        dowLabels.forEach(l => {
+          const dow = document.createElement('span');
+          dow.className = 'club-calendar__dow';
+          dow.textContent = l;
+          grid.appendChild(dow);
+        });
+
+        const firstDow = monthDate.getDay();
+        const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+        const today = new Date(); today.setHours(0,0,0,0);
+
+        for (let i = 0; i < firstDow; i++) {
+          grid.appendChild(Object.assign(document.createElement('span'), { className: 'club-calendar__day club-calendar__day--muted' }));
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+          const d = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
+          const btn = document.createElement('button');
+          btn.className = 'club-calendar__day';
+          btn.textContent = day;
+          if (d < today) btn.classList.add('club-calendar__day--muted');
+          if (startDate && endDate && d > startDate && d < endDate) btn.classList.add('club-calendar__day--in-range');
+          if ((startDate && sameDay(d, startDate)) || (endDate && sameDay(d, endDate))) btn.classList.add('club-calendar__day--selected');
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handlePick(d);
+          });
+          grid.appendChild(btn);
+        }
+        wrap.appendChild(grid);
+        return wrap;
+      }
+
+      function sameDay(a, b) {
+        return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+      }
+      function handlePick(d) {
+        if (picking === 'start' || d < startDate) {
+          startDate = d;
+          endDate = null;
+          picking = 'end';
+        } else {
+          endDate = d;
+          picking = 'start';
+        }
+        render();
+      }
+      function updateDatesValue() {
+        const fmt = d => d ? `${d.getDate()} ${monthNames[d.getMonth()]}` : '—';
+        document.getElementById('datesValue').textContent = `${fmt(startDate)} – ${fmt(endDate)}`;
+      }
+      cal.addEventListener('click', (e) => {
+        const nav = e.target.closest('[data-nav]');
+        if (nav) {
+          e.stopPropagation();
+          viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + Number(nav.dataset.nav), 1);
+          render();
+        }
+      });
+      render();
+    })();
+
+    // ── Mobile: expand collapsed search bar ──
+    const bar = document.getElementById('searchBar');
+    const mobileTrigger = document.getElementById('mobileSearchTrigger');
+    mobileTrigger.addEventListener('click', () => {
+      bar.classList.add('club-search-bar--mobile-open');
+    });
+
+    // ── Mobile filter sheet ──
+    const fab = document.getElementById('filterFab');
+    const sheet = document.getElementById('filterSheet');
+    const backdrop = document.getElementById('sheetBackdrop');
+    const sheetFilters = document.getElementById('sheetFilters');
+    const desktopFilters = document.querySelector('.club-filters');
+    function openSheet() {
+      // Move the filter content into the sheet for single-source-of-truth
+      if (!sheetFilters.hasChildNodes()) {
+        const clone = desktopFilters.cloneNode(true);
+        clone.classList.remove('club-filters');
+        sheetFilters.appendChild(clone);
+        clone.querySelectorAll('.club-check-row input').forEach(cb => {
+          cb.addEventListener('change', () => cb.closest('.club-check-row').classList.toggle('is-checked', cb.checked));
+        });
+      }
+      sheet.classList.add('is-open');
+      backdrop.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeSheet() {
+      sheet.classList.remove('is-open');
+      backdrop.classList.remove('is-open');
+      document.body.style.overflow = '';
+    }
+    fab.addEventListener('click', openSheet);
+    backdrop.addEventListener('click', closeSheet);
+    document.getElementById('sheetClose').addEventListener('click', closeSheet);
+    document.getElementById('sheetApply').addEventListener('click', closeSheet);
+
+    // ── Load more (append same hotels for the prototype) ──
+    document.getElementById('loadMoreBtn').addEventListener('click', () => {
+      const grid = document.getElementById('resultsGrid');
+      const more = HOTELS.slice(0, 4).map(h => ({ ...h, id: h.id + 100, pick: false }));
+      const cur = document.querySelectorAll('.club-card').length;
+      grid.insertAdjacentHTML('beforeend', more.map(h => `
+        <article class="club-card" data-id="${h.id}">
+          <div class="club-card__media">
+            <img src="${h.img}" alt="${h.name}" loading="lazy"/>
+          </div>
+          <div class="club-card__body">
+            <span class="club-card__loc">${h.loc}</span>
+            <h3 class="club-card__name">${h.name}</h3>
+            <p class="club-card__tagline">${h.tagline}</p>
+            <div class="club-card__rate-row">
+              <span class="club-card__public-rate">${INR(h.public)}</span>
+              <span class="club-card__member-rate">${INR(h.member)}</span>
+              <span class="club-card__saving">Save ${INR(h.savings)}/night</span>
+            </div>
+            <a class="club-card__cta" href="#">See Room Rates →</a>
+          </div>
+        </article>
+      `).join(''));
+    });
+  </script>
+</body>
+</html>
