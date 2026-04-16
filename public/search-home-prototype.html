@@ -883,21 +883,40 @@
     }
     input.addEventListener('input', syncSearchState);
 
-    // Tapping a typeahead result fills the input with the selected destination.
+    // Tapping a typeahead result navigates straight to results.
+    // No "Your Search" confirmation screen — results page opens with a skeleton
+    // state and the Edit Search bottom sheet auto-opens if dates aren't set yet.
     typeaheadEl.addEventListener('click', (e) => {
       const btn = e.target.closest('.ta-item');
       if (!btn) return;
       const value = btn.dataset.city || btn.dataset.hotel || btn.dataset.region;
       if (!value) return;
-      input.value = value;
-      syncSearchState();
+      window.location.href = `search-prototype.html?dest=${encodeURIComponent(value)}&nodates=1`;
     });
 
-    // Recent searches: X dismiss removes the row from the list.
+    // Recent searches: full row tap → results with preserved dest + dates;
+    //                  X dismiss → remove the row from the list.
     document.getElementById('recentList').addEventListener('click', (e) => {
-      const btn = e.target.closest('.recent-item__dismiss');
-      if (!btn) return;
-      btn.closest('.recent-item').remove();
+      const dismissBtn = e.target.closest('.recent-item__dismiss');
+      if (dismissBtn) {
+        dismissBtn.closest('.recent-item').remove();
+        return;
+      }
+      const row = e.target.closest('.recent-item');
+      if (!row) return;
+      const city = row.querySelector('.recent-item__city')?.textContent?.trim();
+      if (!city) return;
+      window.location.href = `search-prototype.html?dest=${encodeURIComponent(city)}`;
+    });
+
+    // Bottom bar "Find Hotels" CTA → navigate to results with typed dest.
+    document.querySelector('.bottom-bar__cta')?.addEventListener('click', () => {
+      const v = input.value.trim();
+      if (v) {
+        window.location.href = `search-prototype.html?dest=${encodeURIComponent(v)}&nodates=1`;
+      } else {
+        window.location.href = 'search-prototype.html';
+      }
     });
   </script>
 </body>

@@ -790,6 +790,289 @@
     }
 
     /* ──────────────────────────────────────────────────────────
+       Mobile sticky edit bar (56px) — replaces the old "Your Search"
+       confirmation screen. Tap or pencil opens the Edit bottom sheet.
+       ────────────────────────────────────────────────────────── */
+    .club-edit-bar {
+      display: none;
+      width: 100%;
+      height: 56px;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+      background: rgba(245, 240, 232, 0.04);
+      border: 1px solid var(--ivory-10);
+      border-radius: 2px;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .club-edit-bar:hover,
+    .club-edit-bar:active {
+      background: rgba(245, 240, 232, 0.06);
+      border-color: var(--gold-soft);
+    }
+    .club-edit-bar__summary {
+      flex: 1;
+      min-width: 0;
+      font-size: 13px;
+      color: var(--ivory);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .club-edit-bar__pencil {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      flex-shrink: 0;
+      border-radius: 50%;
+      transition: background 0.15s;
+    }
+    .club-edit-bar:hover .club-edit-bar__pencil { background: rgba(201, 168, 76, 0.08); }
+
+    /* ──────────────────────────────────────────────────────────
+       Edit Search bottom sheet — slides up 65% of viewport
+       ────────────────────────────────────────────────────────── */
+    .club-edit-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: rgba(0, 0, 0, 0.6);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .club-edit-backdrop.is-open { display: block; opacity: 1; }
+
+    .club-edit-sheet {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 61;
+      background: var(--navy);
+      border-top: 1px solid var(--gold-line);
+      height: 65vh;
+      max-height: 65vh;
+      overflow-y: auto;
+      border-radius: 12px 12px 0 0;
+      padding: 14px 20px 28px;
+      transform: translateY(100%);
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform 0.3s ease, visibility 0s linear 0.3s;
+    }
+    .club-edit-sheet.is-open {
+      transform: translateY(0);
+      visibility: visible;
+      pointer-events: auto;
+      transition: transform 0.3s ease, visibility 0s linear 0s;
+    }
+
+    .club-edit-sheet__handle {
+      width: 40px;
+      height: 4px;
+      background: var(--ivory-20);
+      border-radius: 999px;
+      margin: 0 auto 16px;
+    }
+    .club-edit-sheet__title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      color: var(--ivory);
+      font-weight: 500;
+      font-style: italic;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* Rounded dark card input rows */
+    .club-edit-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(245, 240, 232, 0.04);
+      border: 1px solid var(--ivory-10);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .club-edit-row:hover,
+    .club-edit-row.is-active { border-color: var(--gold-soft); }
+    .club-edit-row__icon {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+    .club-edit-row__body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .club-edit-row__label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .club-edit-row__value {
+      font-size: 14px;
+      color: var(--ivory);
+      line-height: 1.3;
+    }
+    .club-edit-row__value--muted { color: var(--ivory-40); }
+    .club-edit-row__input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--ivory);
+      font-size: 14px;
+      width: 100%;
+      padding: 0;
+    }
+    .club-edit-row__input::placeholder { color: var(--ivory-40); }
+    .club-edit-row__chevron {
+      color: var(--ivory-40);
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .club-edit-row.is-active .club-edit-row__chevron { transform: rotate(90deg); color: var(--gold); }
+
+    /* Currency select row */
+    .club-edit-row__select {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--ivory);
+      font-size: 14px;
+      width: 100%;
+      padding: 0;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .club-edit-row__select option {
+      background: var(--navy-raised);
+      color: var(--ivory);
+    }
+
+    /* Collapsible sub-panels inside the sheet */
+    .club-edit-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .club-edit-panel.is-open { max-height: 480px; overflow-y: auto; }
+    .club-edit-panel__inner { padding: 4px 4px 10px; }
+
+    .club-edit-typeahead {
+      list-style: none;
+      padding: 0;
+    }
+    .club-edit-typeahead li {
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--ivory-70);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 2px;
+    }
+    .club-edit-typeahead li:hover { background: var(--ivory-05); color: var(--ivory); }
+    .club-edit-typeahead li .hint {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .club-edit-night-badge {
+      display: inline-block;
+      margin: 6px 0 2px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(201, 168, 76, 0.12);
+      color: var(--gold);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    /* Search button — full-width gold pill */
+    .club-edit-sheet__search {
+      display: block;
+      width: 100%;
+      margin-top: 14px;
+      padding: 14px 24px;
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--navy);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .club-edit-sheet__search:hover { background: #d9b95e; }
+    .club-edit-sheet__search:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ──────────────────────────────────────────────────────────
+       Skeleton cards — shown briefly while results "load" after
+       navigation from typeahead.
+       ────────────────────────────────────────────────────────── */
+    .club-skeleton {
+      background: var(--navy-raised);
+      border: 1px solid var(--ivory-10);
+      overflow: hidden;
+    }
+    .club-skeleton__media {
+      height: 220px;
+      background: linear-gradient(90deg, var(--navy-deep) 0%, rgba(255,255,255,0.04) 50%, var(--navy-deep) 100%);
+      background-size: 200% 100%;
+      animation: clubShimmer 1.4s infinite linear;
+    }
+    .club-skeleton__body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .club-skeleton__line {
+      height: 10px;
+      background: linear-gradient(90deg, var(--ivory-05) 0%, rgba(255,255,255,0.08) 50%, var(--ivory-05) 100%);
+      background-size: 200% 100%;
+      border-radius: 2px;
+      animation: clubShimmer 1.4s infinite linear;
+    }
+    .club-skeleton__line--short { width: 40%; }
+    .club-skeleton__line--med { width: 70%; }
+    .club-skeleton__line--long { width: 100%; }
+    .club-skeleton__line--rate { width: 55%; height: 18px; }
+    @keyframes clubShimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ──────────────────────────────────────────────────────────
        Responsive — mobile-first adjustments
        ────────────────────────────────────────────────────────── */
     @media (max-width: 900px) {
@@ -802,35 +1085,23 @@
       .club-grid { grid-template-columns: 1fr; gap: 18px; }
       .club-card__media { height: 140px; }
       .club-card__name { font-size: 20px; }
+      .club-skeleton__media { height: 140px; }
       .club-filter-fab { display: inline-flex; align-items: center; gap: 8px; }
 
-      .club-search-bar { height: auto; padding: 10px 0; }
+      .club-search-bar { height: 56px; padding: 0; }
       .club-search-bar__inner {
         padding: 0 16px;
         gap: 10px;
-        flex-wrap: wrap;
+        height: 56px;
       }
       .club-logo { font-size: 18px; }
 
-      /* Collapsed summary replaces full fields on mobile */
+      /* Desktop fields + old collapsed summary + Find Rates CTA hidden
+         on mobile — replaced by the 56px edit bar + bottom sheet. */
       .club-search-fields { display: none; }
-      .club-search-summary { display: flex; }
+      .club-search-summary { display: none; }
       .club-cta { display: none; }
-
-      /* When mobile search expanded */
-      .club-search-bar--mobile-open { height: auto; padding: 12px 0 16px; }
-      .club-search-bar--mobile-open .club-search-fields {
-        display: flex;
-        width: 100%;
-        flex-basis: 100%;
-      }
-      .club-search-bar--mobile-open .club-search-summary { display: none; }
-      .club-search-bar--mobile-open .club-cta {
-        display: inline-block;
-        width: 100%;
-        text-align: center;
-        padding: 14px 24px;
-      }
+      .club-edit-bar { display: flex; }
 
       .club-sort-bar { flex-direction: column; align-items: flex-start; gap: 12px; }
       .club-sort { flex-wrap: wrap; }
@@ -838,6 +1109,7 @@
 
     @media (min-width: 901px) {
       .club-filter-fab, .club-sheet, .club-sheet-backdrop { display: none !important; }
+      .club-edit-bar, .club-edit-sheet, .club-edit-backdrop { display: none !important; }
     }
 
     /* Reduce motion */
@@ -858,7 +1130,19 @@
     <div class="club-search-bar__inner">
       <a href="#" class="club-logo"><em>V</em>oyagr</a>
 
-      <!-- Mobile collapsed summary -->
+      <!-- Mobile edit bar — 56px sticky summary with pencil affordance.
+           Tap bar OR pencil → opens the Edit Search bottom sheet. -->
+      <button class="club-edit-bar" id="editBar" aria-label="Edit search">
+        <span class="club-edit-bar__summary" id="editBarSummary">Bali · 15 Mar – 18 Mar · 1 Room, 2 Guests</span>
+        <span class="club-edit-bar__pencil" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </span>
+      </button>
+
+      <!-- Legacy desktop-only collapsed summary (hidden on mobile by CSS) -->
       <button class="club-search-summary" id="mobileSearchTrigger" aria-label="Open search">
         <svg class="club-search-summary__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -929,6 +1213,138 @@
       <button class="club-cta" id="findRatesBtn">Find Rates →</button>
     </div>
   </header>
+
+  <!-- ══════════════════════════════════════════════════════════
+       EDIT SEARCH BOTTOM SHEET (mobile)
+       Replaces the deleted "Your Search" confirmation screen.
+       Opens when the user taps the sticky edit bar, or auto-opens
+       on arrival from typeahead when no dates are set.
+       ══════════════════════════════════════════════════════════ -->
+  <div class="club-edit-backdrop" id="editBackdrop"></div>
+  <aside class="club-edit-sheet" id="editSheet" aria-label="Edit search" aria-modal="true" role="dialog">
+    <div class="club-edit-sheet__handle"></div>
+    <h2 class="club-edit-sheet__title">Edit Search</h2>
+
+    <!-- Row 1: Destination (📍) -->
+    <div class="club-edit-row" id="editDestRow" data-row="dest">
+      <span class="club-edit-row__icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </span>
+      <div class="club-edit-row__body">
+        <span class="club-edit-row__label">Destination</span>
+        <input class="club-edit-row__input" id="destInputSheet" type="text" placeholder="Where to?" autocomplete="off" aria-label="Destination"/>
+      </div>
+    </div>
+    <div class="club-edit-panel" id="destPanel">
+      <div class="club-edit-panel__inner">
+        <ul class="club-edit-typeahead" id="destListSheet"></ul>
+      </div>
+    </div>
+
+    <!-- Row 2: Dates (📅) -->
+    <button class="club-edit-row" id="editDatesRow" data-row="dates" type="button">
+      <span class="club-edit-row__icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </span>
+      <div class="club-edit-row__body">
+        <span class="club-edit-row__label">Dates</span>
+        <span class="club-edit-row__value" id="datesValueSheet">Select dates</span>
+      </div>
+      <span class="club-edit-row__chevron" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </span>
+    </button>
+    <div class="club-edit-panel" id="datesPanel">
+      <div class="club-edit-panel__inner">
+        <span class="club-edit-night-badge" id="nightBadge">0 Nights</span>
+        <div class="club-calendar" id="calendarSheet"></div>
+      </div>
+    </div>
+
+    <!-- Row 3: Rooms & Guests (👥) -->
+    <button class="club-edit-row" id="editGuestsRow" data-row="guests" type="button">
+      <span class="club-edit-row__icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </span>
+      <div class="club-edit-row__body">
+        <span class="club-edit-row__label">Rooms & Guests</span>
+        <span class="club-edit-row__value" id="guestsValueSheet">1 Room, 2 Guests</span>
+      </div>
+      <span class="club-edit-row__chevron" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </span>
+    </button>
+    <div class="club-edit-panel" id="guestsPanel">
+      <div class="club-edit-panel__inner" style="padding: 4px 8px 10px;">
+        <div class="club-guest-row">
+          <div>
+            <div class="club-guest-row__label">Rooms</div>
+          </div>
+          <div class="club-guest-steppers">
+            <button class="club-guest-step" data-guest-m="rooms" data-op="-1" aria-label="Decrease rooms">−</button>
+            <span class="club-guest-count" id="countRoomsSheet">1</span>
+            <button class="club-guest-step" data-guest-m="rooms" data-op="1" aria-label="Increase rooms">+</button>
+          </div>
+        </div>
+        <div class="club-guest-row">
+          <div>
+            <div class="club-guest-row__label">Adults</div>
+            <div class="club-guest-row__sub">Ages 13+</div>
+          </div>
+          <div class="club-guest-steppers">
+            <button class="club-guest-step" data-guest-m="adults" data-op="-1" aria-label="Decrease adults">−</button>
+            <span class="club-guest-count" id="countAdultsSheet">2</span>
+            <button class="club-guest-step" data-guest-m="adults" data-op="1" aria-label="Increase adults">+</button>
+          </div>
+        </div>
+        <div class="club-guest-row">
+          <div>
+            <div class="club-guest-row__label">Children</div>
+            <div class="club-guest-row__sub">Ages 0–12</div>
+          </div>
+          <div class="club-guest-steppers">
+            <button class="club-guest-step" data-guest-m="children" data-op="-1" aria-label="Decrease children">−</button>
+            <span class="club-guest-count" id="countChildrenSheet">0</span>
+            <button class="club-guest-step" data-guest-m="children" data-op="1" aria-label="Increase children">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Currency row — kept as-is from the deleted screen. -->
+    <label class="club-edit-row" for="currencySelectSheet">
+      <span class="club-edit-row__icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="8" x2="12" y2="16"/>
+        </svg>
+      </span>
+      <div class="club-edit-row__body">
+        <span class="club-edit-row__label">Currency</span>
+        <select class="club-edit-row__select" id="currencySelectSheet" aria-label="Currency">
+          <option value="INR">INR — Indian Rupee</option>
+          <option value="USD">USD — US Dollar</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="GBP">GBP — British Pound</option>
+          <option value="AED">AED — UAE Dirham</option>
+        </select>
+      </div>
+    </label>
+
+    <!-- Gold pill Search CTA — applies current values + closes sheet. -->
+    <button class="club-edit-sheet__search" id="editSearchBtn" type="button">Search</button>
+  </aside>
 
   <!-- ══════════════════════════════════════════════════════════
        PAGE LAYOUT — filters + results
@@ -1147,15 +1563,34 @@
 
     const INR = n => '₹' + n.toLocaleString('en-IN');
 
+    // ── URL params — seed destination from typeahead navigation ──
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlDest = (urlParams.get('dest') || '').trim();
+    // `?nodates=1` means the user came from typeahead without picking dates
+    // — we treat that as "no dates set yet" and auto-open the bottom sheet.
+    const hasNoDates = urlParams.get('nodates') === '1';
+
+    if (urlDest) {
+      const di = document.getElementById('destInput');
+      const dis = document.getElementById('destInputSheet');
+      if (di) di.value = urlDest;
+      if (dis) dis.value = urlDest;
+      const countWrap = document.querySelector('.club-sort-bar__count');
+      if (countWrap) {
+        countWrap.innerHTML = `Showing <em id="resultsCount">${HOTELS.length}</em> hotels in ${urlDest}`;
+      }
+    }
+
     // ── Render cards ──
     function renderCards(list) {
       const grid = document.getElementById('resultsGrid');
+      const destLabel = urlDest || 'Bali';
       if (!list.length) {
         grid.innerHTML = `
           <div class="club-empty">
-            <div class="club-empty__title">No hotels match these filters in Bali.</div>
+            <div class="club-empty__title">No hotels match these filters in ${destLabel}.</div>
             <div class="club-empty__sub">Our concierge can find options not yet on the platform — tell us what you're looking for and we'll reply within the hour.</div>
-            <a class="club-empty__cta" href="https://wa.me/919876543210?text=I'm%20looking%20for%20hotels%20in%20Bali%20that%20aren't%20on%20the%20platform" target="_blank" rel="noopener">
+            <a class="club-empty__cta" href="https://wa.me/919876543210?text=I'm%20looking%20for%20hotels%20in%20${encodeURIComponent(destLabel)}%20that%20aren't%20on%20the%20platform" target="_blank" rel="noopener">
               Open WhatsApp →
             </a>
           </div>
@@ -1182,7 +1617,26 @@
         </article>
       `).join('');
     }
-    renderCards(HOTELS);
+
+    // Paint 6 skeleton cards while results "load", then render real cards.
+    // This is the momentum win from removing the dead confirmation screen:
+    // the user sees results appearing, not an empty black slab.
+    function renderSkeleton(n = 6) {
+      const grid = document.getElementById('resultsGrid');
+      grid.innerHTML = Array.from({ length: n }).map(() => `
+        <div class="club-skeleton">
+          <div class="club-skeleton__media"></div>
+          <div class="club-skeleton__body">
+            <div class="club-skeleton__line club-skeleton__line--short"></div>
+            <div class="club-skeleton__line club-skeleton__line--med"></div>
+            <div class="club-skeleton__line club-skeleton__line--long"></div>
+            <div class="club-skeleton__line club-skeleton__line--rate"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+    renderSkeleton();
+    setTimeout(() => renderCards(HOTELS), 650);
 
     // ── Checkbox row visual state ──
     document.querySelectorAll('.club-check-row input').forEach(cb => {
@@ -1293,21 +1747,28 @@
     });
 
     // ── Inline date range picker (gold accents, no red/green) ──
-    (function buildCalendar() {
-      const cal = document.getElementById('calendar');
+    // Renders into BOTH the desktop popover (#calendar) and the mobile
+    // edit sheet (#calendarSheet), sharing a single state.
+    const searchCal = (function buildCalendar() {
+      const targets = [
+        document.getElementById('calendar'),
+        document.getElementById('calendarSheet'),
+      ].filter(Boolean);
       const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const dowLabels = ['S','M','T','W','T','F','S'];
       let viewDate = new Date(2026, 2, 1); // March 2026
-      let startDate = new Date(2026, 2, 15);
-      let endDate = new Date(2026, 2, 18);
-      let picking = 'end'; // toggles between start/end
+      let startDate = hasNoDates ? null : new Date(2026, 2, 15);
+      let endDate   = hasNoDates ? null : new Date(2026, 2, 18);
+      let picking = hasNoDates ? 'start' : 'end';
 
       function render() {
-        cal.innerHTML = '';
-        for (let offset = 0; offset < 2; offset++) {
-          const d = new Date(viewDate.getFullYear(), viewDate.getMonth() + offset, 1);
-          cal.appendChild(renderMonth(d, offset));
-        }
+        targets.forEach(cal => {
+          cal.innerHTML = '';
+          for (let offset = 0; offset < 2; offset++) {
+            const d = new Date(viewDate.getFullYear(), viewDate.getMonth() + offset, 1);
+            cal.appendChild(renderMonth(d, offset));
+          }
+        });
         updateDatesValue();
       }
 
@@ -1318,11 +1779,11 @@
         head.className = 'club-calendar__head';
         head.innerHTML = `
           ${offset === 0
-            ? '<button class="club-calendar__nav" data-nav="-1" aria-label="Previous month">‹</button>'
+            ? '<button class="club-calendar__nav" data-nav="-1" aria-label="Previous month" type="button">‹</button>'
             : '<span style="width:28px"></span>'}
           <span class="club-calendar__title">${monthNames[monthDate.getMonth()]} ${monthDate.getFullYear()}</span>
           ${offset === 1
-            ? '<button class="club-calendar__nav" data-nav="1" aria-label="Next month">›</button>'
+            ? '<button class="club-calendar__nav" data-nav="1" aria-label="Next month" type="button">›</button>'
             : '<span style="width:28px"></span>'}
         `;
         wrap.appendChild(head);
@@ -1347,6 +1808,7 @@
           const d = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
           const btn = document.createElement('button');
           btn.className = 'club-calendar__day';
+          btn.type = 'button';
           btn.textContent = day;
           if (d < today) btn.classList.add('club-calendar__day--muted');
           if (startDate && endDate && d > startDate && d < endDate) btn.classList.add('club-calendar__day--in-range');
@@ -1365,7 +1827,7 @@
         return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
       }
       function handlePick(d) {
-        if (picking === 'start' || d < startDate) {
+        if (picking === 'start' || !startDate || d < startDate) {
           startDate = d;
           endDate = null;
           picking = 'end';
@@ -1375,27 +1837,230 @@
         }
         render();
       }
+      function fmt(d) { return d ? `${d.getDate()} ${monthNames[d.getMonth()]}` : '—'; }
       function updateDatesValue() {
-        const fmt = d => d ? `${d.getDate()} ${monthNames[d.getMonth()]}` : '—';
-        document.getElementById('datesValue').textContent = `${fmt(startDate)} – ${fmt(endDate)}`;
-      }
-      cal.addEventListener('click', (e) => {
-        const nav = e.target.closest('[data-nav]');
-        if (nav) {
-          e.stopPropagation();
-          viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + Number(nav.dataset.nav), 1);
-          render();
+        const hasAny = !!(startDate || endDate);
+        const val = hasAny ? `${fmt(startDate)} – ${fmt(endDate)}` : 'Select dates';
+
+        const dv = document.getElementById('datesValue');
+        if (dv) dv.textContent = hasAny ? `${fmt(startDate)} – ${fmt(endDate)}` : '—';
+
+        const dvs = document.getElementById('datesValueSheet');
+        if (dvs) {
+          dvs.textContent = val;
+          dvs.classList.toggle('club-edit-row__value--muted', !hasAny);
         }
+
+        const badge = document.getElementById('nightBadge');
+        if (badge) {
+          let nights = 0;
+          if (startDate && endDate) nights = Math.round((endDate - startDate) / 86400000);
+          badge.textContent = `${nights} ${nights === 1 ? 'Night' : 'Nights'}`;
+        }
+
+        if (typeof window.__updateEditBar === 'function') window.__updateEditBar();
+      }
+
+      targets.forEach(cal => {
+        cal.addEventListener('click', (e) => {
+          const nav = e.target.closest('[data-nav]');
+          if (nav) {
+            e.stopPropagation();
+            viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + Number(nav.dataset.nav), 1);
+            render();
+          }
+        });
       });
       render();
+
+      return {
+        hasDates: () => !!(startDate && endDate),
+        hasAny: () => !!(startDate || endDate),
+        formatRange: () => (startDate || endDate) ? `${fmt(startDate)} – ${fmt(endDate)}` : '—',
+      };
     })();
 
-    // ── Mobile: expand collapsed search bar ──
-    const bar = document.getElementById('searchBar');
-    const mobileTrigger = document.getElementById('mobileSearchTrigger');
-    mobileTrigger.addEventListener('click', () => {
-      bar.classList.add('club-search-bar--mobile-open');
-    });
+    // ── Mobile Edit Search sheet controller ──
+    // Replaces the deleted "Your Search" confirmation screen. The sheet is
+    // the single place to change destination / dates / guests / currency
+    // on mobile — the 56px bar at the top of results just summarises state
+    // and opens this sheet for editing.
+    (function initEditSheet() {
+      const sheet     = document.getElementById('editSheet');
+      const backdrop  = document.getElementById('editBackdrop');
+      const editBar   = document.getElementById('editBar');
+      const summary   = document.getElementById('editBarSummary');
+
+      const destRow   = document.getElementById('editDestRow');
+      const datesRow  = document.getElementById('editDatesRow');
+      const guestsRow = document.getElementById('editGuestsRow');
+      const destPanel   = document.getElementById('destPanel');
+      const datesPanel  = document.getElementById('datesPanel');
+      const guestsPanel = document.getElementById('guestsPanel');
+
+      const destInputSheet = document.getElementById('destInputSheet');
+      const destListSheet  = document.getElementById('destListSheet');
+      const searchBtn      = document.getElementById('editSearchBtn');
+
+      // Per-sheet guest state — mirrors the desktop adults/children but
+      // adds rooms for the Rooms & Guests display requested by the spec.
+      const sheetCounts = {
+        rooms: 1,
+        adults: guestCounts.adults,
+        children: guestCounts.children,
+      };
+
+      function updateGuestsValue() {
+        const guests = sheetCounts.adults + sheetCounts.children;
+        const roomsLbl  = `${sheetCounts.rooms} ${sheetCounts.rooms === 1 ? 'Room' : 'Rooms'}`;
+        const guestsLbl = `${guests} ${guests === 1 ? 'Guest' : 'Guests'}`;
+        const out = `${roomsLbl}, ${guestsLbl}`;
+        const el = document.getElementById('guestsValueSheet');
+        if (el) el.textContent = out;
+        updateEditBar();
+      }
+
+      function updateEditBar() {
+        const dest = (destInputSheet.value || urlDest || 'Bali').trim();
+        const dates = searchCal.hasAny() ? searchCal.formatRange() : 'Add dates';
+        const guests = sheetCounts.adults + sheetCounts.children;
+        const roomsLbl  = `${sheetCounts.rooms} ${sheetCounts.rooms === 1 ? 'Room' : 'Rooms'}`;
+        const guestsLbl = `${guests} ${guests === 1 ? 'Guest' : 'Guests'}`;
+        summary.textContent = `${dest} · ${dates} · ${roomsLbl}, ${guestsLbl}`;
+      }
+      // Expose so the calendar module can poke the bar after every date pick.
+      window.__updateEditBar = updateEditBar;
+
+      function openSheet(opts = {}) {
+        sheet.classList.add('is-open');
+        backdrop.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        // Collapse all sub-panels unless we're asked to pre-open dates.
+        closePanels();
+        if (opts.openDates) togglePanel('dates', true);
+      }
+      function closeSheet() {
+        sheet.classList.remove('is-open');
+        backdrop.classList.remove('is-open');
+        document.body.style.overflow = '';
+        closePanels();
+      }
+
+      function closePanels() {
+        [destPanel, datesPanel, guestsPanel].forEach(p => p.classList.remove('is-open'));
+        [destRow, datesRow, guestsRow].forEach(r => r.classList.remove('is-active'));
+      }
+      function togglePanel(which, forceOpen) {
+        const map = {
+          dest:   { panel: destPanel,   row: destRow },
+          dates:  { panel: datesPanel,  row: datesRow },
+          guests: { panel: guestsPanel, row: guestsRow },
+        };
+        const { panel, row } = map[which];
+        const willOpen = forceOpen !== undefined ? forceOpen : !panel.classList.contains('is-open');
+        closePanels();
+        if (willOpen) {
+          panel.classList.add('is-open');
+          row.classList.add('is-active');
+        }
+      }
+
+      // Tap the 56px bar OR the pencil icon → opens the sheet for editing.
+      editBar.addEventListener('click', () => openSheet());
+
+      // Tapping each row toggles its panel. Typing into the destination input
+      // also opens the destination panel so the typeahead list is visible.
+      destRow.addEventListener('click', (e) => {
+        if (e.target === destInputSheet) return;
+        togglePanel('dest');
+        destInputSheet.focus();
+      });
+      datesRow.addEventListener('click', () => togglePanel('dates'));
+      guestsRow.addEventListener('click', () => togglePanel('guests'));
+
+      // Destination typeahead inside the sheet — mirrors the desktop list.
+      function renderSheetCityList(q) {
+        const filtered = q
+          ? CITIES.filter(c => c.name.toLowerCase().startsWith(q.toLowerCase()) || c.country.toLowerCase().includes(q.toLowerCase()))
+          : CITIES;
+        destListSheet.innerHTML = filtered.map(c => `
+          <li data-city="${c.name}">
+            <span>${c.name}, <span style="color:var(--ivory-40)">${c.country}</span></span>
+            <span class="hint">${c.hotels} hotels</span>
+          </li>
+        `).join('') || '<li style="color:var(--muted); padding:14px; font-size:12px;">No cities yet — tap Search to reach our concierge.</li>';
+      }
+      renderSheetCityList('');
+      destInputSheet.addEventListener('input', () => {
+        renderSheetCityList(destInputSheet.value);
+        togglePanel('dest', true);
+        updateEditBar();
+      });
+      destInputSheet.addEventListener('focus', () => togglePanel('dest', true));
+      destListSheet.addEventListener('click', (e) => {
+        const li = e.target.closest('li[data-city]');
+        if (!li) return;
+        destInputSheet.value = li.dataset.city;
+        // Also sync the desktop input so both views stay in step.
+        const di = document.getElementById('destInput');
+        if (di) di.value = li.dataset.city;
+        togglePanel('dest', false);
+        updateEditBar();
+      });
+
+      // Sheet guest steppers — use data-guest-m to avoid colliding with
+      // the desktop steppers' data-guest binding.
+      document.querySelectorAll('.club-guest-step[data-guest-m]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const key = btn.dataset.guestM;
+          const op = Number(btn.dataset.op);
+          const min = key === 'adults' || key === 'rooms' ? 1 : 0;
+          sheetCounts[key] = Math.max(min, Math.min(8, sheetCounts[key] + op));
+          const idMap = {
+            rooms:    'countRoomsSheet',
+            adults:   'countAdultsSheet',
+            children: 'countChildrenSheet',
+          };
+          document.getElementById(idMap[key]).textContent = sheetCounts[key];
+          // Sync adults/children to the desktop popover state + display.
+          if (key === 'adults' || key === 'children') {
+            guestCounts[key] = sheetCounts[key];
+            const cAd = document.getElementById('countAdults');
+            const cCh = document.getElementById('countChildren');
+            const gv  = document.getElementById('guestsValue');
+            if (cAd) cAd.textContent = guestCounts.adults;
+            if (cCh) cCh.textContent = guestCounts.children;
+            if (gv) gv.textContent =
+              `${guestCounts.adults} ${guestCounts.adults === 1 ? 'Adult' : 'Adults'} · ${guestCounts.children} ${guestCounts.children === 1 ? 'Child' : 'Children'}`;
+          }
+          updateGuestsValue();
+        });
+      });
+
+      // Search button: apply state, close sheet, re-show skeleton briefly.
+      searchBtn.addEventListener('click', () => {
+        if (!searchCal.hasDates()) {
+          // Keep the sheet open; open the dates panel so the user can fill it.
+          togglePanel('dates', true);
+          return;
+        }
+        closeSheet();
+        renderSkeleton();
+        setTimeout(() => renderCards(HOTELS), 650);
+        updateEditBar();
+      });
+
+      // Tap backdrop to dismiss.
+      backdrop.addEventListener('click', closeSheet);
+
+      // Initial summary paint + auto-open on arrival without dates.
+      updateGuestsValue();   // also calls updateEditBar
+      if (hasNoDates) {
+        // Auto-open on arrival from typeahead — user still needs to pick dates.
+        openSheet({ openDates: true });
+      }
+    })();
 
     // ── Mobile filter sheet ──
     const fab = document.getElementById('filterFab');
