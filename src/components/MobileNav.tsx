@@ -106,23 +106,19 @@ export default function MobileNav() {
   const overlay = mounted
     ? createPortal(
         <>
-          {/* ── Backdrop overlay ── */}
+          {/* ── Backdrop overlay (hidden — full-screen menu) ── */}
           <div
             onClick={() => setOpen(false)}
             style={{
               position: "fixed",
               inset: 0,
               zIndex: 10000,
-              background: "rgba(26, 23, 16, 0.45)",
-              backdropFilter: open ? "blur(4px)" : "none",
-              WebkitBackdropFilter: open ? "blur(4px)" : "none",
-              opacity: open ? 1 : 0,
-              pointerEvents: open ? "auto" : "none",
-              transition: "opacity 0.3s ease",
+              background: "transparent",
+              pointerEvents: "none",
             }}
           />
 
-          {/* ── Drawer: slides from RIGHT, 85vw ── */}
+          {/* ── Full-screen overlay menu ── */}
           <div
             ref={drawerRef}
             role="dialog"
@@ -131,18 +127,12 @@ export default function MobileNav() {
             tabIndex={-1}
             style={{
               position: "fixed",
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: "85vw",
-              maxWidth: "380px",
+              inset: 0,
               zIndex: 10001,
               background: "var(--white, #fdfaf5)",
-              boxShadow: open
-                ? "-8px 0 40px rgba(26, 23, 16, 0.12)"
-                : "none",
-              transform: open ? "translateX(0)" : "translateX(100%)",
-              transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease",
+              opacity: open ? 1 : 0,
+              pointerEvents: open ? "auto" : "none",
+              transition: "opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               display: "flex",
               flexDirection: "column",
               overflowY: "auto",
@@ -553,7 +543,7 @@ export default function MobileNav() {
                 left: 0,
                 right: 0,
                 height: "1.5px",
-                background: "#ffffff",
+                background: "rgba(253,250,245,0.7)",
                 borderRadius: "1px",
                 transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 top: open ? "6px" : `${top}px`,

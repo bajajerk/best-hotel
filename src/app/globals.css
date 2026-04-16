@@ -116,13 +116,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Voyagr nav — responsive padding (6px desktop, 5px mobile) ── */
+/* ── Voyagr nav — 72px desktop, 60px mobile ── */
 .voyagr-nav {
-  padding: 6px 24px;
+  padding: 0 24px;
+}
+.voyagr-nav-inner {
+  height: 72px;
 }
 @media (max-width: 767px) {
   .voyagr-nav {
-    padding: 5px 16px;
+    padding: 0 16px;
+  }
+  .voyagr-nav-inner {
+    height: 60px;
   }
 }
 
