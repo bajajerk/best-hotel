@@ -958,6 +958,7 @@ main {
   .section-destinations,
   .section-proof,
   .section-trust,
+  .section-trust-founder,
   .section-testimonials,
   .section-plan-stay,
   .section-why-book {
@@ -1040,6 +1041,7 @@ main {
   .section-destinations,
   .section-proof,
   .section-trust,
+  .section-trust-founder,
   .section-testimonials,
   .section-plan-stay,
   .section-why-book,
@@ -1646,6 +1648,41 @@ main {
   }
   .newsletter-form button {
     width: 100% !important;
+  }
+}
+
+/* ═══════════════════════════════════════
+   TRUST & FOUNDER SECTION — responsive
+   ═══════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .section-trust-founder {
+    padding: 60px 36px !important;
+  }
+  .trust-founder-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+  .founder-stats {
+    flex-wrap: wrap !important;
+    gap: 24px !important;
+  }
+}
+@media (max-width: 767px) {
+  .section-trust-founder {
+    padding: 48px 20px !important;
+  }
+  .section-trust-founder h2 {
+    font-size: 32px !important;
+  }
+  .trust-founder-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  .founder-stats {
+    gap: 20px !important;
+  }
+  .founder-stats > div > div:first-child {
+    font-size: 28px !important;
   }
 }
 

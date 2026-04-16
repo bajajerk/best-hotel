@@ -1824,6 +1824,259 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
       </section>
 
       {/* ================================================================
+          TRUST & FOUNDER — why members trust Voyagr
+      ================================================================ */}
+      <section
+        className="section-trust-founder"
+        style={{
+          padding: "80px 64px",
+          background: "#132338",
+        }}
+      >
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "10px",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: "var(--gold)",
+                marginBottom: "12px",
+              }}
+            >
+              Why Members Trust Voyagr
+            </div>
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "44px",
+                fontWeight: 400,
+                color: "#f5f0e8",
+                lineHeight: 1.2,
+                marginBottom: "56px",
+              }}
+            >
+              Built by Someone Who Knows{" "}
+              <em style={{ fontStyle: "italic", color: "var(--gold)" }}>
+                the Other Side
+              </em>
+            </h2>
+          </motion.div>
+
+          {/* 2-column grid: founder left, testimonials right */}
+          <div
+            className="trust-founder-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "48px",
+              alignItems: "start",
+            }}
+          >
+            {/* LEFT — Founder block */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+            >
+              <div
+                style={{
+                  borderLeft: "2px solid rgba(201, 168, 76, 0.2)",
+                  paddingLeft: "28px",
+                  marginBottom: "40px",
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: "20px",
+                    fontWeight: 300,
+                    fontStyle: "italic",
+                    color: "rgba(245, 240, 232, 0.75)",
+                    lineHeight: 1.6,
+                    margin: "0 0 20px 0",
+                  }}
+                >
+                  &ldquo;I spent a decade on the hotel supply side &mdash; managing
+                  rates, contracts, and the inventory that never makes it to
+                  public platforms. Voyagr exists because that access
+                  shouldn&rsquo;t be reserved for corporations.&rdquo;
+                </p>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "10px",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "var(--gold)",
+                  }}
+                >
+                  &mdash; Founder, Voyagr Club &middot; Mumbai
+                </div>
+              </div>
+
+              {/* Stat blocks */}
+              <div
+                className="founder-stats"
+                style={{
+                  display: "flex",
+                  gap: "32px",
+                }}
+              >
+                {[
+                  { number: "10+", label: "Years Supply Side" },
+                  { number: "1,500+", label: "Hotels on Platform" },
+                  { number: "₹2.4Cr", label: "Saved by Members" },
+                ].map((stat) => (
+                  <div key={stat.label}>
+                    <div
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontSize: "36px",
+                        fontWeight: 400,
+                        color: "var(--gold)",
+                        lineHeight: 1,
+                        marginBottom: "6px",
+                      }}
+                    >
+                      {stat.number}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "9px",
+                        letterSpacing: "0.12em",
+                        textTransform: "uppercase",
+                        color: "rgba(245, 240, 232, 0.45)",
+                      }}
+                    >
+                      {stat.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* RIGHT — Testimonials */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+            >
+              {[
+                {
+                  quote:
+                    "Booked the Anantara Veli through Voyagr — same room type I'd priced on three OTAs, but ₹18,400 less. The concierge even sorted a seaplane transfer I didn't know was included.",
+                  name: "Ananya Mehta",
+                  location: "Mumbai",
+                  hotel: "Anantara Veli",
+                  saving: "Saved ₹18,400",
+                },
+                {
+                  quote:
+                    "We were comparing Taj Exotica rates for our anniversary. Voyagr's member rate came in under the hotel's own website. No catch, no upsell — just a genuinely better price and a room upgrade on arrival.",
+                  name: "Rohan Kapoor",
+                  location: "Delhi",
+                  hotel: "Taj Exotica Goa",
+                  saving: "Saved ₹12,200",
+                },
+              ].map((testimonial) => (
+                <div
+                  key={testimonial.name}
+                  style={{
+                    background: "#0B1B2B",
+                    border: "1px solid rgba(201, 168, 76, 0.08)",
+                    padding: "20px 24px",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "13px",
+                      color: "rgba(245, 240, 232, 0.65)",
+                      lineHeight: 1.65,
+                      margin: "0 0 16px 0",
+                    }}
+                  >
+                    &ldquo;{testimonial.quote}&rdquo;
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "9px",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: "rgba(245, 240, 232, 0.4)",
+                      }}
+                    >
+                      {testimonial.name} &middot; {testimonial.location} &middot;{" "}
+                      {testimonial.hotel}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontSize: "16px",
+                        color: "var(--gold)",
+                      }}
+                    >
+                      {testimonial.saving}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* Trust badges row */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            style={{
+              display: "flex",
+              gap: "32px",
+              marginTop: "56px",
+              opacity: 0.4,
+            }}
+          >
+            {["Razorpay Secured", "SSL Encrypted", "GST Registered"].map(
+              (badge) => (
+                <div
+                  key={badge}
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "9px",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "rgba(245, 240, 232, 0.5)",
+                  }}
+                >
+                  {badge}
+                </div>
+              )
+            )}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ================================================================
           NEWSLETTER CTA — before footer
       ================================================================ */}
       <section
