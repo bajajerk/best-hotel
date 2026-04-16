@@ -757,22 +757,6 @@
     </button>
   </div>
 
-  <script>
-    // Keep countdown format ("m:ss") — FIX #2 changed only the
-    // colour/icon to gold, not the behaviour.
-    (function() {
-      const el = document.getElementById('rv-countdown');
-      if (!el) return;
-      let total = 4 * 60 + 58;
-      const tick = () => {
-        if (total <= 0) { el.textContent = '0:00'; return; }
-        total -= 1;
-        const m = Math.floor(total / 60);
-        const s = String(total % 60).padStart(2, '0');
-        el.textContent = m + ':' + s;
-      };
-      setInterval(tick, 1000);
-    })();
-  </script>
+  <script src="booking-flow.js"></script>
 </body>
 </html>

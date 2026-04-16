@@ -883,18 +883,21 @@
     }
     input.addEventListener('input', syncSearchState);
 
-    // Tapping a typeahead result navigates straight to results.
-    // No "Your Search" confirmation screen — results page opens with a skeleton
-    // state and the Edit Search bottom sheet auto-opens if dates aren't set yet.
+    // Tapping a typeahead result navigates straight to Results
+    // (no "Your Search" screen — skipped per the journey spec).
+    // Destination persistence + exit transition are handled by
+    // booking-flow.js via a capture-phase intercept on the same
+    // element; that script writes sessionStorage.destination and
+    // then replaces the href navigation with a slide-left exit.
     typeaheadEl.addEventListener('click', (e) => {
       const btn = e.target.closest('.ta-item');
       if (!btn) return;
       const value = btn.dataset.city || btn.dataset.hotel || btn.dataset.region;
       if (!value) return;
-      window.location.href = `search-prototype.html?dest=${encodeURIComponent(value)}&nodates=1`;
+      window.location.href = `results-mobile-prototype.html?dest=${encodeURIComponent(value)}`;
     });
 
-    // Recent searches: full row tap → results with preserved dest + dates;
+    // Recent searches: full row tap → results with preserved dest;
     //                  X dismiss → remove the row from the list.
     document.getElementById('recentList').addEventListener('click', (e) => {
       const dismissBtn = e.target.closest('.recent-item__dismiss');
@@ -906,18 +909,19 @@
       if (!row) return;
       const city = row.querySelector('.recent-item__city')?.textContent?.trim();
       if (!city) return;
-      window.location.href = `search-prototype.html?dest=${encodeURIComponent(city)}`;
+      window.location.href = `results-mobile-prototype.html?dest=${encodeURIComponent(city)}`;
     });
 
     // Bottom bar "Find Hotels" CTA → navigate to results with typed dest.
     document.querySelector('.bottom-bar__cta')?.addEventListener('click', () => {
       const v = input.value.trim();
       if (v) {
-        window.location.href = `search-prototype.html?dest=${encodeURIComponent(v)}&nodates=1`;
+        window.location.href = `results-mobile-prototype.html?dest=${encodeURIComponent(v)}`;
       } else {
-        window.location.href = 'search-prototype.html';
+        window.location.href = 'results-mobile-prototype.html';
       }
     });
   </script>
+  <script src="booking-flow.js"></script>
 </body>
 </html>
