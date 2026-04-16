@@ -356,7 +356,7 @@ export default function ProfilePage() {
                 <label style={s.toggleRow}>
                   <div>
                     <span style={s.toggleLabel}>Newsletter</span>
-                    <span style={s.toggleDesc}>Receive curated travel deals and destination guides</span>
+                    <span style={s.toggleDesc}>Receive curated travel picks and destination guides</span>
                   </div>
                   <button
                     onClick={() => setNewsletter(!newsletter)}

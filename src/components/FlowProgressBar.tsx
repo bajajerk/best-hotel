@@ -104,10 +104,10 @@ export default function FlowProgressBar({
                       }
                     : isActive
                     ? {
-                        background: "var(--gold, #b8955a)",
+                        background: "var(--gold, #C9A84C)",
                         color: "var(--ink, #1a1710)",
-                        border: "2px solid var(--gold, #b8955a)",
-                        boxShadow: "0 0 0 3px rgba(184,149,90,0.25)",
+                        border: "2px solid var(--gold, #C9A84C)",
+                        boxShadow: "0 0 0 3px rgba(201,168,76,0.25)",
                       }
                     : {
                         background: "transparent",
@@ -144,7 +144,7 @@ export default function FlowProgressBar({
                   color: isCompleted
                     ? "var(--success, #4a7c59)"
                     : isActive
-                    ? "var(--gold, #b8955a)"
+                    ? "var(--gold, #C9A84C)"
                     : "var(--ink-light, #7a7465)",
                   whiteSpace: "nowrap",
                   transition: "color 0.3s",

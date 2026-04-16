@@ -97,19 +97,19 @@ const HOW_IT_WORKS = [
   },
   {
     step: "03",
-    title: "Wholesale Rates",
-    description: "By bulk-purchasing airmiles and maintaining strong relationships with airlines, we secure wholesale rates that translate to incredible savings for you.",
+    title: "Preferred Rates",
+    description: "By bulk-purchasing airmiles and maintaining strong relationships with airlines, we secure preferred rates that translate to significant savings for you.",
   },
 ];
 
 const TESTIMONIALS = [
   {
-    text: "I was amazed to save over $2,000 on my luxury round-trip to Switzerland and Paris last year. Their service went above and beyond — truly exceptional value for premium travel!",
+    text: "I was amazed to save over $2,000 on my luxury round-trip to Switzerland and Paris last year. Their service went above and beyond — truly exceptional value for premium travel.",
     author: "Raunit",
     role: "International Traveller",
   },
   {
-    text: "As a frequent flyer, I exclusively book through them now. They consistently find me incredible deals even during peak festival seasons when prices are normally sky-high.",
+    text: "As a frequent flyer, I exclusively book through them now. They consistently find me remarkable rates even during peak festival seasons when prices are normally sky-high.",
     author: "Divij",
     role: "Frequent Flyer",
   },
@@ -473,7 +473,7 @@ export default function BusinessClassFlightsPage() {
                 marginBottom: "40px",
               }}
             >
-              Business class deals at unprecedented prices
+              Business class fares at unprecedented prices
             </p>
 
             {/* Region filter */}
@@ -779,7 +779,7 @@ export default function BusinessClassFlightsPage() {
               >
                 We offer unbeatable prices on premium flights to all
                 international destinations. Share your travel details and
-                we&apos;ll find you the best luxury deals available.
+                we&apos;ll find you the best luxury fares available.
               </p>
               <button
                 onClick={openContactForm}
@@ -855,7 +855,7 @@ export default function BusinessClassFlightsPage() {
             }}
           >
             Our unique approach combines airline partnerships, points
-            optimisation, and wholesale rates to bring you luxury travel at
+            optimisation, and preferred rates to bring you luxury travel at
             economy prices.
           </p>
 
@@ -1051,7 +1051,7 @@ export default function BusinessClassFlightsPage() {
               e.currentTarget.style.background = "var(--gold-light)";
               e.currentTarget.style.transform = "translateY(-2px)";
               e.currentTarget.style.boxShadow =
-                "0 8px 30px rgba(184,149,90,0.3)";
+                "0 8px 30px rgba(201,168,76,0.3)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "var(--gold)";

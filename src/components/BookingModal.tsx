@@ -402,7 +402,7 @@ export default function BookingModal({
                         fontFamily: "var(--font-body)",
                       }}
                     >
-                      <span style={{ color: "var(--gold, #b8955a)", fontWeight: 600 }}>
+                      <span style={{ color: "var(--gold, #C9A84C)", fontWeight: 600 }}>
                         {roomName}
                       </span>
                       <span>
@@ -538,8 +538,8 @@ export default function BookingModal({
 
                         <div
                           style={{
-                            background: "var(--gold-pale, rgba(184,149,90,0.08))",
-                            border: "1px solid var(--gold, #b8955a)",
+                            background: "var(--gold-pale, rgba(201,168,76,0.08))",
+                            border: "1px solid var(--gold, #C9A84C)",
                             padding: "16px 20px",
                           }}
                         >
@@ -681,7 +681,7 @@ export default function BookingModal({
                         fontWeight: 600,
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
-                        background: "var(--gold, #b8955a)",
+                        background: "var(--gold, #C9A84C)",
                         color: "var(--ink, #1a1710)",
                         border: "none",
                         cursor: "pointer",
@@ -929,7 +929,7 @@ export default function BookingModal({
                           fontWeight: 600,
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
-                          background: "var(--gold, #b8955a)",
+                          background: "var(--gold, #C9A84C)",
                           color: "var(--ink, #1a1710)",
                           border: "none",
                           cursor: "pointer",

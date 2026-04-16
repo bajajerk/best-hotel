@@ -356,7 +356,7 @@ export default function UnlockRateModal({
                           fontWeight: 600,
                           letterSpacing: "0.12em",
                           textTransform: "uppercase",
-                          color: "var(--gold, #b8955a)",
+                          color: "var(--gold, #C9A84C)",
                         }}
                       >
                         Unlock Your Preferred Rate
@@ -388,7 +388,7 @@ export default function UnlockRateModal({
                         fontFamily: "var(--font-body)",
                       }}
                     >
-                      <span style={{ color: "var(--gold, #b8955a)", fontWeight: 600 }}>
+                      <span style={{ color: "var(--gold, #C9A84C)", fontWeight: 600 }}>
                         {roomName}
                       </span>
                       <span>
@@ -477,7 +477,7 @@ export default function UnlockRateModal({
                         <line x1="12" y1="8" x2="12.01" y2="8" />
                       </svg>
                       <span>
-                        These are <strong style={{ color: "var(--ink)" }}>private wholesale rates</strong> not available on Booking.com, Expedia, or any public OTA. Share your details and our concierge will confirm your rate within 15 minutes on WhatsApp.
+                        These are <strong style={{ color: "var(--ink)" }}>private preferred rates</strong> not available on Booking.com, Expedia, or any public OTA. Share your details and our concierge will confirm your rate within 15 minutes on WhatsApp.
                       </span>
                     </div>
 
@@ -636,7 +636,7 @@ export default function UnlockRateModal({
                         fontWeight: 600,
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
-                        background: "var(--gold, #b8955a)",
+                        background: "var(--gold, #C9A84C)",
                         color: "var(--ink, #1a1710)",
                         border: "none",
                         cursor: submitting ? "wait" : "pointer",

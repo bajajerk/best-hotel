@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = `${name} — ${stars}Hotel in ${city}${country ? `, ${country}` : ""}`;
   const description = overview
-    || `Book ${name} in ${city} at preferred wholesale rates. Save 20-40% compared to OTAs with Voyagr Club.`;
+    || `Book ${name} in ${city} at preferred rates. Save 20-40% compared to OTAs with Voyagr Club.`;
 
   return {
     title,

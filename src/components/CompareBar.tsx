@@ -36,7 +36,7 @@ export default function CompareBar() {
           right: 0,
           zIndex: 150,
           background: "var(--ink)",
-          borderTop: "1px solid rgba(184, 149, 90, 0.3)",
+          borderTop: "1px solid rgba(201, 168, 76, 0.3)",
           padding: "12px 24px",
           display: "flex",
           alignItems: "center",
@@ -56,7 +56,7 @@ export default function CompareBar() {
                 alignItems: "center",
                 gap: 8,
                 background: "rgba(255,255,255,0.08)",
-                border: "1px solid rgba(184, 149, 90, 0.25)",
+                border: "1px solid rgba(201, 168, 76, 0.25)",
                 padding: "6px 10px 6px 6px",
                 maxWidth: 200,
               }}
@@ -112,12 +112,12 @@ export default function CompareBar() {
               style={{
                 width: 36,
                 height: 36,
-                border: "1px dashed rgba(184, 149, 90, 0.3)",
+                border: "1px dashed rgba(201, 168, 76, 0.3)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: 16,
-                color: "rgba(184, 149, 90, 0.4)",
+                color: "rgba(201, 168, 76, 0.4)",
               }}
             >
               +
@@ -147,7 +147,7 @@ export default function CompareBar() {
             onClick={() => router.push("/compare")}
             disabled={hotels.length < 2}
             style={{
-              background: hotels.length >= 2 ? "var(--gold)" : "rgba(184, 149, 90, 0.3)",
+              background: hotels.length >= 2 ? "var(--gold)" : "rgba(201, 168, 76, 0.3)",
               border: "none",
               color: hotels.length >= 2 ? "var(--ink)" : "rgba(255,255,255,0.4)",
               fontSize: 11,

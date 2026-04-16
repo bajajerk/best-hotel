@@ -193,8 +193,8 @@ export default function MobileNav() {
                 width: "48px",
                 height: "48px",
                 borderRadius: "50%",
-                background: "var(--gold-pale, #f0e6d0)",
-                border: "2px solid var(--gold, #b8955a)",
+                background: "var(--gold-pale, #F2EBDA)",
+                border: "2px solid var(--gold, #C9A84C)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -202,7 +202,7 @@ export default function MobileNav() {
                 fontWeight: 600,
                 fontSize: "16px",
                 letterSpacing: "0.04em",
-                color: "var(--gold, #b8955a)",
+                color: "var(--gold, #C9A84C)",
                 flexShrink: 0,
               }}
             >
@@ -243,18 +243,18 @@ export default function MobileNav() {
                   fontSize: "20px",
                   fontWeight: active || isHighlighted ? 500 : 400,
                   color: active || isHighlighted
-                    ? "var(--gold, #b8955a)"
+                    ? "var(--gold, #C9A84C)"
                     : "var(--ink, #1a1710)",
                   textDecoration: "none",
                   padding: isHighlighted ? "16px 24px" : "14px 24px",
                   transition: "background 0.2s, color 0.2s",
                   background: isHighlighted
-                    ? "linear-gradient(90deg, rgba(184, 149, 90, 0.08) 0%, transparent 100%)"
+                    ? "linear-gradient(90deg, rgba(201, 168, 76, 0.08) 0%, transparent 100%)"
                     : active
-                    ? "linear-gradient(90deg, var(--gold-pale, #f0e6d0) 0%, transparent 100%)"
+                    ? "linear-gradient(90deg, var(--gold-pale, #F2EBDA) 0%, transparent 100%)"
                     : "transparent",
                   borderLeft: active || isHighlighted
-                    ? "3px solid var(--gold, #b8955a)"
+                    ? "3px solid var(--gold, #C9A84C)"
                     : "3px solid transparent",
                 }}
               >
@@ -263,7 +263,7 @@ export default function MobileNav() {
                   style={{
                     fontSize: "22px",
                     color: active || isHighlighted
-                      ? "var(--gold, #b8955a)"
+                      ? "var(--gold, #C9A84C)"
                       : "var(--ink-light, #7a7465)",
                     lineHeight: 1,
                     fontVariationSettings: isHighlighted
@@ -287,7 +287,7 @@ export default function MobileNav() {
                           letterSpacing: "0.14em",
                           textTransform: "uppercase",
                           color: "#ffffff",
-                          background: "var(--gold, #b8955a)",
+                          background: "var(--gold, #C9A84C)",
                           padding: "3px 7px 2px",
                           borderRadius: "3px",
                           lineHeight: 1,
@@ -325,9 +325,9 @@ export default function MobileNav() {
           style={{
             margin: "4px 16px",
             padding: "16px 20px",
-            background: "linear-gradient(135deg, #f7f2e8 0%, var(--gold-pale, #f0e6d0) 100%)",
+            background: "linear-gradient(135deg, #f7f2e8 0%, var(--gold-pale, #F2EBDA) 100%)",
             borderRadius: "12px",
-            border: "1px solid var(--gold-light, #d4ae78)",
+            border: "1px solid var(--gold-light, #D9BC72)",
           }}
         >
           <a
@@ -344,7 +344,7 @@ export default function MobileNav() {
               padding: "12px 16px",
               background: "transparent",
               color: "var(--ink, #1a1710)",
-              border: "1.5px solid var(--gold, #b8955a)",
+              border: "1.5px solid var(--gold, #C9A84C)",
               borderRadius: "8px",
               fontFamily: "var(--font-display)",
               fontSize: "15px",
@@ -467,7 +467,7 @@ export default function MobileNav() {
               color: "var(--cream-border, #ddd5c3)",
             }}
           >
-            <span style={{ color: "var(--gold-light, #d4ae78)" }}>V</span>oyagr<span style={{ color: "#B8960C" }}>.</span>Club
+            <span style={{ color: "var(--gold-light, #D9BC72)" }}>V</span>oyagr<span style={{ color: "#C9A84C" }}>.</span>Club
           </div>
         </div>
 
@@ -492,7 +492,7 @@ export default function MobileNav() {
               gap: "8px",
               width: "100%",
               padding: "14px 20px",
-              background: "var(--gold, #b8955a)",
+              background: "var(--gold, #C9A84C)",
               color: "#ffffff",
               border: "none",
               borderRadius: "10px",

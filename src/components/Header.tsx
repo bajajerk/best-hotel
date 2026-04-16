@@ -9,8 +9,8 @@ import MobileNav from "./MobileNav";
    Voyagr.Club — Sticky Navigation Bar + Hotels Mega-Menu
    ──────────────────────────────────────────────────────────── */
 
-const GOLD = "#B8960C";
-const NAVY = "#0D1B2A";
+const GOLD = "#C9A84C";
+const NAVY = "#0B1B2B";
 
 export const NAV_LINKS = [
   { label: "Search", href: "/search" },
@@ -52,9 +52,9 @@ const MEGA_COLUMNS = [
     ],
   },
   {
-    title: "Deals & Collections",
+    title: "Collections & Curation",
     links: [
-      { label: "This Week's Top Deals", href: "/search?sort=deal" },
+      { label: "This Week's Top Picks", href: "/search?sort=deal" },
       { label: "New Arrivals", href: "/search?sort=new" },
       { label: "Preferred Rate Hotels", href: "/preferred-rates" },
       { label: "Last-Minute Escapes", href: "/search?sort=lastminute" },

@@ -456,7 +456,7 @@ function TrustSignals({ hotelId, rating, reviewCount }: { hotelId: number; ratin
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           <polyline points="9 12 11 14 15 10" />
         </svg>
-        <span>Verified wholesale rates</span>
+        <span>Verified preferred rates</span>
       </div>
     </div>
   );
@@ -1017,7 +1017,7 @@ export default function HotelPage() {
                     lineHeight: 1.6,
                   }}
                 >
-                  Exclusive wholesale rates with premium inclusions, available only to Voyagr Club members.
+                  Exclusive preferred rates with premium inclusions, available only to Voyagr Club members.
                 </p>
 
                 <div className="flex flex-col gap-4">
@@ -1513,7 +1513,7 @@ export default function HotelPage() {
         style={{
           background: "rgba(26,23,16,0.97)",
           backdropFilter: "blur(16px)",
-          borderTop: "1px solid rgba(184,149,90,0.2)",
+          borderTop: "1px solid rgba(201,168,76,0.2)",
           padding: "0 24px",
         }}
       >

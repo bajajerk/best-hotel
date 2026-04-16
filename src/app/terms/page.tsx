@@ -61,7 +61,7 @@ const sections = [
   {
     title: "2. Description of Service",
     content:
-      "Voyagr Club is a hotel booking platform that provides access to preferred wholesale hotel rates. We act as an intermediary between you and hotel supply partners. We do not own or operate any hotels.",
+      "Voyagr Club is a hotel booking platform that provides access to preferred hotel rates. We act as an intermediary between you and hotel supply partners. We do not own or operate any hotels.",
   },
   {
     title: "3. Account Registration",

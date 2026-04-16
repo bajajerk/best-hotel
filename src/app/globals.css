@@ -14,9 +14,9 @@
   --ink: #1a1710;
   --ink-mid: #3d3929;
   --ink-light: #7a7465;
-  --gold: #b8955a;
-  --gold-light: #d4ae78;
-  --gold-pale: #f0e6d0;
+  --gold: #C9A84C;
+  --gold-light: #D9BC72;
+  --gold-pale: #F2EBDA;
   --white: #fdfaf5;
   --success: #4a7c59;
   --emerald: #10B981;
@@ -25,7 +25,8 @@
   --error: #8b3a3a;
   --market-rate: #96705e;
   --our-rate: #3b7a4a;
-  --navy: #0F172A;
+  --navy: #0B1B2B;
+  --sage: #4A5E52;
   --charcoal: #1e293b;
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'DM Sans', sans-serif;
@@ -33,7 +34,7 @@
   /* ── Font aliases (unify variable names across codebase) ── */
   --font-instrument-serif: var(--font-display);
   --font-dm-sans: var(--font-body);
-  --font-jetbrains-mono: var(--font-mono);
+  --font-dm-mono: var(--font-mono);
 
   /* ── Type scale ── */
   --text-display-1: clamp(42px, 5vw, 68px);
@@ -63,7 +64,7 @@
   --text-ghost: var(--cream-border);
   --accent: var(--gold);
   --accent-soft: var(--gold-pale);
-  --accent-border: rgba(184, 149, 90, 0.3);
+  --accent-border: rgba(201, 168, 76, 0.3);
   --accent-hover: var(--gold-light);
   --border: var(--cream-border);
   --border-hover: var(--gold);
@@ -234,8 +235,8 @@ body {
 
 /* ── Unlock Rate button pulse animation ── */
 @keyframes unlock-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(184, 149, 90, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(184, 149, 90, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 168, 76, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(201, 168, 76, 0); }
 }
 .unlock-rate-btn-pulse {
   animation: unlock-pulse 2s ease-in-out infinite;
@@ -428,7 +429,7 @@ button:focus {
 
 /* ── Selection color ── */
 ::selection {
-  background: rgba(184, 149, 90, 0.3);
+  background: rgba(201, 168, 76, 0.3);
   color: var(--ink);
 }
 
@@ -745,7 +746,7 @@ main {
 }
 .card-hover:hover {
   transform: translateY(-6px);
-  box-shadow: 0 12px 40px rgba(26, 23, 16, 0.10), 0 4px 12px rgba(184, 149, 90, 0.08);
+  box-shadow: 0 12px 40px rgba(26, 23, 16, 0.10), 0 4px 12px rgba(201, 168, 76, 0.08);
   border-color: var(--gold-light);
 }
 .card-hover .card-img {
@@ -1208,7 +1209,7 @@ main {
 }
 .price-range-input::-webkit-slider-thumb:hover {
   transform: scale(1.15);
-  box-shadow: 0 2px 8px rgba(184, 149, 90, 0.3);
+  box-shadow: 0 2px 8px rgba(201, 168, 76, 0.3);
 }
 .price-range-input::-webkit-slider-thumb:active {
   transform: scale(1.2);
@@ -1226,7 +1227,7 @@ main {
 }
 .price-range-input::-moz-range-thumb:hover {
   transform: scale(1.15);
-  box-shadow: 0 2px 8px rgba(184, 149, 90, 0.3);
+  box-shadow: 0 2px 8px rgba(201, 168, 76, 0.3);
 }
 .price-range-input::-moz-range-track {
   background: transparent;
@@ -1678,8 +1679,8 @@ main {
 
 /* ── Reserve button pulse animation ── */
 @keyframes reservePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(184, 149, 90, 0.5); }
-  50% { box-shadow: 0 0 0 8px rgba(184, 149, 90, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 168, 76, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(201, 168, 76, 0); }
 }
 .reserve-btn-pulse {
   animation: reservePulse 2s ease-in-out infinite;
@@ -2244,5 +2245,227 @@ main {
     font-size: 15px;
     bottom: 14px;
     left: 14px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Fallback Carousel — Editor's Picks shown when a collection filter yields
+   zero results. Horizontal infinite-loop carousel with auto-rotation.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.fb-carousel {
+  position: relative;
+}
+
+/* ── Track ── */
+.fb-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  gap: 22px;
+  padding: 4px 0 12px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  cursor: grab;
+}
+.fb-track::-webkit-scrollbar {
+  display: none;
+}
+.fb-track:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+.fb-track:focus:not(:focus-visible) {
+  outline: none;
+}
+.fb-track.fb-dragging {
+  scroll-snap-type: none;
+  cursor: grabbing;
+}
+.fb-track.fb-dragging * {
+  pointer-events: none;
+}
+
+/* ── Slide sizing — Desktop: ~3.5 cards visible ── */
+.fb-slide {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  width: calc((100% - 66px) / 3.5);
+}
+
+/* ── Card ── */
+.fb-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  aspect-ratio: 3 / 4;
+  box-shadow: 0 4px 20px rgba(26, 23, 16, 0.1);
+  transition: box-shadow 0.35s ease, transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.fb-card:hover {
+  box-shadow: 0 12px 40px rgba(26, 23, 16, 0.18), 0 4px 12px rgba(201, 168, 76, 0.08);
+  transform: translateY(-4px);
+}
+
+/* ── Card image ── */
+.fb-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              filter 0.6s ease;
+  filter: saturate(0.9) brightness(0.85);
+}
+.fb-card:hover .fb-card-img {
+  transform: scale(1.06);
+  filter: saturate(1) brightness(0.8);
+}
+
+/* ── Gradient overlay ── */
+.fb-card-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.25) 40%,
+    transparent 65%
+  );
+  pointer-events: none;
+}
+
+/* ── Badge ── */
+.fb-card-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--gold);
+  color: var(--white);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 2px;
+  font-family: var(--font-body);
+}
+
+/* ── Content overlay ── */
+.fb-card-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 18px 20px;
+  z-index: 1;
+}
+
+.fb-card-name {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  margin: 0 0 3px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+}
+
+.fb-card-city {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  margin: 0 0 6px;
+}
+
+.fb-card-tagline {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 11px;
+  font-style: italic;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ── Navigation arrows ── */
+.fb-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1px solid var(--cream-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 12px rgba(26, 23, 16, 0.08);
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+}
+.fb-arrow-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.fb-arrow:hover {
+  background: var(--ink);
+  color: var(--cream);
+  border-color: var(--ink);
+  box-shadow: 0 4px 20px rgba(26, 23, 16, 0.15);
+}
+.fb-arrow:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  opacity: 1;
+  pointer-events: auto;
+}
+.fb-arrow-prev {
+  left: -21px;
+}
+.fb-arrow-next {
+  right: -21px;
+}
+
+/* ── Tablet: ~2.5 cards ── */
+@media (min-width: 640px) and (max-width: 1024px) {
+  .fb-slide {
+    width: calc((100% - 44px) / 2.5);
+  }
+  .fb-track {
+    gap: 18px;
+  }
+  .fb-arrow-prev { left: -16px; }
+  .fb-arrow-next { right: -16px; }
+}
+
+/* ── Mobile: ~1.4 cards ── */
+@media (max-width: 639px) {
+  .fb-slide {
+    width: calc(100% - 60px);
+  }
+  .fb-track {
+    gap: 14px;
+    padding-left: 4px;
+    scroll-padding-left: 4px;
+  }
+  .fb-arrow {
+    display: none;
+  }
+  .fb-card-name {
+    font-size: 15px;
+  }
+  .fb-card-tagline {
+    font-size: 10px;
   }
 }

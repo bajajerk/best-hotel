@@ -596,7 +596,7 @@ export default function Tab3BeatPrice() {
         transition={{ delay: 0.2, duration: 0.35, type: "spring", stiffness: 200 }}
         className="inline-block self-start mb-5 mt-3"
         style={{
-          fontFamily: "var(--font-jetbrains-mono)",
+          fontFamily: "var(--font-dm-mono)",
           fontSize: 10,
           letterSpacing: 1.5,
           textTransform: "uppercase",

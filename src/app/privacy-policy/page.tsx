@@ -71,7 +71,7 @@ const sections = [
   {
     title: "4. Phone Number Verification",
     content:
-      "We use Firebase Authentication by Google to verify your phone number via one-time passwords (OTP). Your phone number is sent to Google's servers for verification purposes. Google's privacy policy applies to this processing. We store your phone number to identify your account and enable seamless login.",
+      "We use Firebase Authentication by Google to verify your phone number via one-time passwords (OTP). Your phone number is sent to Google's servers for verification purposes. Google's privacy policy applies to this processing. We store your phone number to identify your account and enable secure login.",
   },
   {
     title: "5. Third-Party Services",

@@ -98,7 +98,7 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
       >
         <div
           style={{
-            fontFamily: compact ? "var(--font-body, sans-serif)" : "var(--font-jetbrains-mono)",
+            fontFamily: compact ? "var(--font-body, sans-serif)" : "var(--font-dm-mono)",
             fontSize: 9,
             letterSpacing: compact ? 1 : 1.2,
             textTransform: "uppercase",

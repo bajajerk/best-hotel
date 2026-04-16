@@ -400,7 +400,7 @@ export default function MatchMyRatesPage() {
               }}
             >
               Screenshot any hotel rate from any booking site — we&apos;ll
-              check it against our wholesale B2B rates that aren&apos;t
+              check it against our preferred B2B rates that aren&apos;t
               available to the public.
             </p>
           </div>
@@ -1167,7 +1167,7 @@ function UploadStep({
                 </svg>
               ),
               title: "Save 15–40%",
-              desc: "Get B2B wholesale rates that OTAs mark up",
+              desc: "Get B2B preferred rates that OTAs mark up",
             },
           ].map((item) => (
             <div
@@ -2018,7 +2018,7 @@ function ResultStep({
         transition={{ delay: 0.65, duration: 0.4 }}
         style={{
           background: "var(--gold-pale)",
-          border: "1px solid rgba(184, 149, 90, 0.25)",
+          border: "1px solid rgba(201, 168, 76, 0.25)",
           borderRadius: 12,
           padding: "14px 20px",
           display: "flex",

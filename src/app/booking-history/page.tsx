@@ -66,7 +66,7 @@ function BookingCard({ booking }: { booking: StoredBooking }) {
           >
             {booking.hotelName}
           </h3>
-          <p style={{ fontSize: "12px", color: "var(--gold, #b8955a)", fontWeight: 500, marginTop: 2 }}>
+          <p style={{ fontSize: "12px", color: "var(--gold, #C9A84C)", fontWeight: 500, marginTop: 2 }}>
             {booking.roomName}
           </p>
         </div>
@@ -173,9 +173,9 @@ function BookingCard({ booking }: { booking: StoredBooking }) {
               letterSpacing: "0.08em",
               textTransform: "uppercase",
               padding: "4px 10px",
-              background: isPreferred ? "var(--gold-pale, rgba(184,149,90,0.12))" : "var(--cream-deep, #ede7d9)",
-              color: isPreferred ? "var(--gold, #b8955a)" : "var(--ink-light)",
-              border: isPreferred ? "1px solid var(--gold, #b8955a)" : "1px solid var(--cream-border)",
+              background: isPreferred ? "var(--gold-pale, rgba(201,168,76,0.12))" : "var(--cream-deep, #ede7d9)",
+              color: isPreferred ? "var(--gold, #C9A84C)" : "var(--ink-light)",
+              border: isPreferred ? "1px solid var(--gold, #C9A84C)" : "1px solid var(--cream-border)",
             }}
           >
             {isPreferred ? "Preferred Rate" : "Standard Rate"}

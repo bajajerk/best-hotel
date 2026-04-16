@@ -287,7 +287,7 @@ export default function Tab2Premium() {
           >
             <span
               style={{
-                fontFamily: "var(--font-jetbrains-mono)",
+                fontFamily: "var(--font-dm-mono)",
                 fontSize: 14,
                 fontWeight: 500,
                 color: "var(--gold)",

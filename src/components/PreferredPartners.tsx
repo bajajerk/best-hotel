@@ -66,7 +66,7 @@ function PartnerTile({ partner }: { partner: Partner }) {
         cursor: "pointer",
         transition: "border-color 0.2s, box-shadow 0.2s, transform 0.2s",
         boxShadow: hovered
-          ? "0 4px 20px rgba(184, 149, 90, 0.12)"
+          ? "0 4px 20px rgba(201, 168, 76, 0.12)"
           : "0 1px 4px rgba(26, 23, 16, 0.04)",
         transform: hovered ? "translateY(-2px)" : "none",
       }}

@@ -238,7 +238,7 @@ function ExperienceCard({
       <div
         style={{
           background:
-            "linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(184, 149, 90, 0.05))",
+            "linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(201, 168, 76, 0.05))",
           borderTop: "1px solid var(--cream-border)",
           padding: "12px 24px",
           display: "flex",

@@ -4,11 +4,11 @@ import { SITE_URL, SITE_NAME } from "@/lib/seo";
 export const metadata: Metadata = {
   title: "Business Class Flights — Luxury Travel at Economy Prices",
   description:
-    "Fly business & first class at up to 70% off with Mer Voyage Club. Exclusive airline partnerships, wholesale airmile rates, and premium seats from India to 30+ global destinations.",
+    "Fly business & first class at up to 70% off with Mer Voyage Club. Exclusive airline partnerships, preferred airmile rates, and premium seats from India to 30+ global destinations.",
   keywords: [
     "business class flights",
     "cheap business class",
-    "first class deals",
+    "first class fares",
     "luxury flights India",
     "premium flight booking",
     "discounted business class",

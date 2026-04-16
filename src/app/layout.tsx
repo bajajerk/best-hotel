@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, DM_Sans, JetBrains_Mono } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import CompareBar from "@/components/CompareBar";
@@ -25,7 +25,7 @@ const dmSans = DM_Sans({
   variable: "--font-body",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const dmMono = DM_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
   variable: "--font-mono",
@@ -34,14 +34,14 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — Preferred Hotel Rates | Wholesale Access to 1,500+ Hotels Worldwide`,
+    default: `${SITE_NAME} — Preferred Hotel Rates | Members-Only Access to 1,500+ Hotels Worldwide`,
     template: `%s | ${SITE_NAME}`,
   },
   description: DEFAULT_DESCRIPTION,
   keywords: [
     "preferred hotel rates",
     "B2B hotel rates",
-    "wholesale hotel booking",
+    "preferred hotel booking",
     "hotel price comparison",
     "voyagr club",
     "luxury hotel access",
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} — Preferred Hotel Rates`,
     description:
-      "Access preferred wholesale hotel rates across 50+ cities worldwide. No markup, no hidden fees.",
+      "Access preferred hotel rates across 50+ cities worldwide. No markup, no hidden fees.",
     images: [
       {
         url: "/og-image.png",
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${SITE_NAME} — Preferred Hotel Rates`,
     description:
-      "Access preferred wholesale hotel rates across 50+ cities worldwide. No markup, no hidden fees.",
+      "Access preferred hotel rates across 50+ cities worldwide. No markup, no hidden fees.",
     images: ["/og-image.png"],
   },
   robots: {
@@ -134,7 +134,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${cormorant.variable} ${dmSans.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${cormorant.variable} ${dmSans.variable} ${dmMono.variable} antialiased`}
       >
         <Providers>
         {children}

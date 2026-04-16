@@ -272,7 +272,7 @@ export default function DateBar({ variant = "light" }: DateBarProps) {
             style={{
               flex: 1,
               cursor: "pointer",
-              background: calendarOpen && selecting === "checkIn" ? (isDark ? "rgba(255,255,255,0.12)" : "rgba(184,149,90,0.08)") : bgInput,
+              background: calendarOpen && selecting === "checkIn" ? (isDark ? "rgba(255,255,255,0.12)" : "rgba(201,168,76,0.08)") : bgInput,
               border: `1px solid ${calendarOpen && selecting === "checkIn" ? (isDark ? "rgba(255,255,255,0.2)" : "var(--gold)") : border}`,
               borderRadius: 10,
               padding: "8px 12px",
@@ -307,7 +307,7 @@ export default function DateBar({ variant = "light" }: DateBarProps) {
             style={{
               flex: 1,
               cursor: "pointer",
-              background: calendarOpen && selecting === "checkOut" ? (isDark ? "rgba(255,255,255,0.12)" : "rgba(184,149,90,0.08)") : bgInput,
+              background: calendarOpen && selecting === "checkOut" ? (isDark ? "rgba(255,255,255,0.12)" : "rgba(201,168,76,0.08)") : bgInput,
               border: `1px solid ${calendarOpen && selecting === "checkOut" ? (isDark ? "rgba(255,255,255,0.2)" : "var(--gold)") : border}`,
               borderRadius: 10,
               padding: "8px 12px",
@@ -501,7 +501,7 @@ export default function DateBar({ variant = "light" }: DateBarProps) {
                   className="cursor-pointer"
                   style={{
                     padding: "10px 24px",
-                    background: "var(--gold, #b8955a)",
+                    background: "var(--gold, #C9A84C)",
                     color: "var(--white, #fdfaf5)",
                     border: "none",
                     borderRadius: 10,

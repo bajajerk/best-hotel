@@ -56,7 +56,7 @@ function createGoldIcon(starRating: number | null): L.DivIcon {
         justify-content: center;
         width: 32px;
         height: 32px;
-        background: var(--gold, #b8955a);
+        background: var(--gold, #C9A84C);
         border: 2px solid var(--white, #fff);
         border-radius: 50% 50% 50% 0;
         transform: rotate(-45deg);
@@ -89,7 +89,7 @@ function createActiveIcon(starRating: number | null): L.DivIcon {
         width: 40px;
         height: 40px;
         background: var(--ink, #1a1710);
-        border: 3px solid var(--gold, #b8955a);
+        border: 3px solid var(--gold, #C9A84C);
         border-radius: 50% 50% 50% 0;
         transform: rotate(-45deg);
         box-shadow: 0 4px 16px rgba(0,0,0,0.35);
@@ -97,7 +97,7 @@ function createActiveIcon(starRating: number | null): L.DivIcon {
       ">
         <span style="
           transform: rotate(45deg);
-          color: var(--gold, #b8955a);
+          color: var(--gold, #C9A84C);
           font-size: 13px;
           font-weight: 700;
           font-family: var(--font-body, sans-serif);
@@ -193,7 +193,7 @@ export default function SearchMapView({ hotels }: SearchMapViewProps) {
       const photoSrc = sanitizePhoto(hotel.photo1);
       const starsHtml =
         hotel.star_rating && hotel.star_rating > 0
-          ? `<div style="color: #b8955a; font-size: 10px; letter-spacing: 1px; margin-bottom: 4px;">${"★".repeat(hotel.star_rating)}</div>`
+          ? `<div style="color: #C9A84C; font-size: 10px; letter-spacing: 1px; margin-bottom: 4px;">${"★".repeat(hotel.star_rating)}</div>`
           : "";
 
       marker.bindPopup(
@@ -216,7 +216,7 @@ export default function SearchMapView({ hotels }: SearchMapViewProps) {
               ${hotel.city}, ${hotel.country}
             </div>
             <a href="/hotel/${hotel.hotel_id}"
-              style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: #b8955a; text-decoration: none; letter-spacing: 0.06em; padding: 6px 14px; border: 1px solid #b8955a; transition: all 0.2s;">
+              style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: #C9A84C; text-decoration: none; letter-spacing: 0.06em; padding: 6px 14px; border: 1px solid #C9A84C; transition: all 0.2s;">
               View details &rarr;
             </a>
           </div>

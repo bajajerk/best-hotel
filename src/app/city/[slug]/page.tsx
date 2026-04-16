@@ -21,10 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const tagline = city?.tagline || "";
   const image = CITY_IMAGES[slug] || FALLBACK_CITY_IMAGE;
 
-  const title = `Best Hotel Deals in ${cityName}${country ? `, ${country}` : ""} — Save 20-40%`;
+  const title = `Best Hotel Rates in ${cityName}${country ? `, ${country}` : ""} — Save 20-40%`;
   const description = tagline
-    ? `${tagline}. Find the best wholesale hotel rates in ${cityName}. Voyagr Club negotiates directly with hotels so you save 20-40% on every booking.`
-    : `Find the best wholesale hotel rates in ${cityName}${country ? `, ${country}` : ""}. Save 20-40% on every booking with Voyagr Club's preferred rates.`;
+    ? `${tagline}. Find the best preferred hotel rates in ${cityName}. Voyagr Club negotiates directly with hotels so you save 20-40% on every booking.`
+    : `Find the best preferred hotel rates in ${cityName}${country ? `, ${country}` : ""}. Save 20-40% on every booking with Voyagr Club's preferred rates.`;
 
   return {
     title,

@@ -92,7 +92,7 @@ export default function Tab1Search() {
         <motion.p
           variants={fadeUp}
           style={{
-            fontFamily: "var(--font-jetbrains-mono)",
+            fontFamily: "var(--font-dm-mono)",
             fontSize: "10px",
             letterSpacing: "2px",
             textTransform: "uppercase",
@@ -128,7 +128,7 @@ export default function Tab1Search() {
             marginBottom: "40px",
           }}
         >
-          Preferred wholesale rates at 1,500+ hotels worldwide.
+          Preferred rates at 1,500+ hotels worldwide.
           Direct partnerships. No markup, no hidden fees.
         </motion.p>
 
@@ -148,7 +148,7 @@ export default function Tab1Search() {
           <div style={{ marginBottom: "16px" }}>
             <label
               style={{
-                fontFamily: "var(--font-jetbrains-mono)",
+                fontFamily: "var(--font-dm-mono)",
                 fontSize: "9px",
                 letterSpacing: "1.2px",
                 textTransform: "uppercase",
@@ -189,7 +189,7 @@ export default function Tab1Search() {
             >
               <div
                 style={{
-                  fontFamily: "var(--font-jetbrains-mono)",
+                  fontFamily: "var(--font-dm-mono)",
                   fontSize: "9px",
                   letterSpacing: "1.2px",
                   textTransform: "uppercase",
@@ -242,7 +242,7 @@ export default function Tab1Search() {
             >
               <div
                 style={{
-                  fontFamily: "var(--font-jetbrains-mono)",
+                  fontFamily: "var(--font-dm-mono)",
                   fontSize: "9px",
                   letterSpacing: "1.2px",
                   textTransform: "uppercase",
@@ -362,7 +362,7 @@ export default function Tab1Search() {
               </div>
               <div
                 style={{
-                  fontFamily: "var(--font-jetbrains-mono)",
+                  fontFamily: "var(--font-dm-mono)",
                   fontSize: "9px",
                   letterSpacing: "1.5px",
                   textTransform: "uppercase",
