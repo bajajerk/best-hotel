@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Komaneka at Bisma — Voyagr Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* ──────────────────────────────────────────────────────────
+       Voyagr Club — design tokens
+       ────────────────────────────────────────────────────────── */
+    :root {
+      --navy: #0B1B2B;
+      --navy-deep: #070f1a;
+      --navy-raised: #112740;
+      --gold: #C9A84C;
+      --gold-soft: rgba(201, 168, 76, 0.5);
+      --gold-line: rgba(201, 168, 76, 0.15);
+      --gold-line-strong: rgba(201, 168, 76, 0.35);
+      --ivory: #F5F0E8;
+      --ivory-80: rgba(245, 240, 232, 0.8);
+      --ivory-65: rgba(245, 240, 232, 0.65);
+      --ivory-60: rgba(245, 240, 232, 0.6);
+      --ivory-40: rgba(245, 240, 232, 0.4);
+      --ivory-20: rgba(245, 240, 232, 0.2);
+      --ivory-10: rgba(245, 240, 232, 0.1);
+      --ivory-05: rgba(245, 240, 232, 0.05);
+      --sage: #7FA393;
+      --sage-pill: rgba(127, 163, 147, 0.18);
+      --muted: rgba(245, 240, 232, 0.35);
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'DM Mono', ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--navy);
+      color: var(--ivory);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+    input, select { font: inherit; color: inherit; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    .mono {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+    .serif { font-family: var(--font-display); letter-spacing: -0.01em; }
+
+    /* ──────────────────────────────────────────────────────────
+       Top nav — minimal club chrome
+       ────────────────────────────────────────────────────────── */
+    .topbar {
+      height: 72px;
+      border-bottom: 1px solid var(--gold-line);
+      display: flex;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 80;
+      background: var(--navy);
+    }
+    .topbar__inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 40px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .club-logo {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 0.08em;
+    }
+    .club-logo em { font-style: italic; color: var(--gold); font-weight: 400; }
+    .topbar__nav {
+      display: flex;
+      gap: 28px;
+      font-size: 12px;
+      color: var(--ivory-60);
+    }
+    .topbar__nav a:hover { color: var(--ivory); }
+    .topbar__cta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--gold);
+      padding: 10px 18px;
+      border: 1px solid var(--gold-line-strong);
+    }
+
+    /* Mobile sticky header replacing topbar when scrolled */
+    .mobile-sticky {
+      display: none;
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       HERO — full-bleed image
+       ────────────────────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      height: 70vh;
+      max-height: 780px;
+      min-height: 520px;
+      width: 100%;
+      overflow: hidden;
+      background: var(--navy-deep);
+    }
+    .hero__img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .hero__shade {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(7,15,26,0.4) 0%, rgba(7,15,26,0) 35%);
+      pointer-events: none;
+    }
+    .hero__thumbs {
+      position: absolute;
+      right: 28px;
+      bottom: 24px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      z-index: 3;
+    }
+    .hero__thumb {
+      width: 84px; height: 60px;
+      border: 1px solid rgba(245,240,232,0.22);
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .hero__thumb:hover {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+    }
+    .hero__see-all {
+      background: rgba(7, 15, 26, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--gold-line-strong);
+      color: var(--ivory);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .hero__see-all:hover {
+      background: rgba(201, 168, 76, 0.15);
+      border-color: var(--gold);
+    }
+
+    /* Hotel header — BELOW image, not overlaid */
+    .hero-header {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 40px 40px 32px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 32px;
+    }
+    .hero-header__text { flex: 1; max-width: 780px; }
+    .breadcrumb {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .breadcrumb a { color: var(--muted); transition: color 0.2s; }
+    .breadcrumb a:hover { color: var(--ivory-60); }
+    .breadcrumb span { color: var(--ivory-60); }
+
+    .hotel-name {
+      font-family: var(--font-display);
+      font-size: 52px;
+      line-height: 1.02;
+      color: var(--ivory);
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      margin-bottom: 14px;
+    }
+    .hotel-loc {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+      margin-bottom: 10px;
+    }
+    .hotel-editorial {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-style: italic;
+      color: var(--ivory-40);
+    }
+    .voyagr-pick {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border: 1px solid var(--gold-line-strong);
+      color: var(--gold);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-top: 20px;
+    }
+    .voyagr-pick::before {
+      content: "";
+      width: 5px; height: 5px;
+      background: var(--gold);
+      border-radius: 50%;
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       Main layout — 2 col desktop (content + sticky panel)
+       ────────────────────────────────────────────────────────── */
+    .layout {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 40px 120px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 64px;
+      align-items: flex-start;
+    }
+    .content { min-width: 0; }
+
+    .section {
+      padding: 48px 0;
+      border-bottom: 1px solid var(--ivory-05);
+    }
+    .section:last-child { border-bottom: none; }
+    .section__heading {
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: var(--ivory);
+      margin-bottom: 24px;
+      letter-spacing: -0.01em;
+    }
+    .section__kicker {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    /* ── Block 1: Rate reveal card ── */
+    .rate-card {
+      background: var(--ivory);
+      color: var(--navy);
+      padding: 40px 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    .rate-card::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 2px;
+      background: var(--gold);
+    }
+    .rate-card__kicker {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(11, 27, 43, 0.6);
+      margin-bottom: 18px;
+    }
+    .rate-card__row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: flex-end;
+    }
+    .rate-card__pub-label,
+    .rate-card__mem-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(11, 27, 43, 0.5);
+      margin-bottom: 6px;
+    }
+    .rate-card__pub {
+      font-family: var(--font-display);
+      font-size: 26px;
+      color: rgba(11, 27, 43, 0.5);
+      text-decoration: line-through;
+    }
+    .rate-card__mem {
+      font-family: var(--font-display);
+      font-size: 44px;
+      color: var(--navy);
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.9s ease-out, transform 0.9s ease-out;
+    }
+    .rate-card.is-revealed .rate-card__mem { opacity: 1; transform: translateY(0); }
+    .rate-card__save {
+      display: inline-block;
+      background: var(--sage-pill);
+      color: #365548;
+      padding: 5px 11px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-top: 14px;
+      opacity: 0;
+      transition: opacity 0.9s ease-out 0.2s;
+    }
+    .rate-card.is-revealed .rate-card__save { opacity: 1; }
+    .rate-card__foot {
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(11,27,43,0.08);
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: rgba(11,27,43,0.6);
+    }
+
+    /* ── Block 2: About editorial copy ── */
+    .about p {
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--ivory-80);
+      margin-bottom: 18px;
+    }
+    .about p:last-child { margin-bottom: 0; }
+    .about p em {
+      color: var(--ivory);
+      font-style: italic;
+    }
+
+    /* ── Block 3: Rooms grid ── */
+    .rooms {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .room {
+      background: rgba(245, 240, 232, 0.02);
+      border: 1px solid var(--ivory-05);
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .room:hover {
+      border-color: var(--gold-line-strong);
+      background: rgba(201, 168, 76, 0.03);
+    }
+    .room__img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+    }
+    .room__body { padding: 20px 22px 22px; flex: 1; display: flex; flex-direction: column; }
+    .room__name {
+      font-family: var(--font-display);
+      font-size: 20px;
+      color: var(--ivory);
+      margin-bottom: 6px;
+      font-weight: 400;
+    }
+    .room__meta {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+      margin-bottom: 16px;
+    }
+    .room__inclusions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      margin-bottom: 18px;
+    }
+    .room__inc {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--ivory-65);
+    }
+    .room__inc svg { color: var(--sage); flex-shrink: 0; }
+    .room__rate-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-top: auto;
+      margin-bottom: 14px;
+    }
+    .room__pub {
+      font-size: 12px;
+      color: var(--ivory-40);
+      text-decoration: line-through;
+    }
+    .room__mem {
+      font-family: var(--font-display);
+      font-size: 22px;
+      color: var(--gold);
+    }
+    .room__per {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+    }
+    .room__cta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      align-self: flex-start;
+      transition: letter-spacing 0.2s;
+    }
+    .room__cta:hover { letter-spacing: 0.22em; }
+
+    /* ── Block 4: What's included ── */
+    .perks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px 36px;
+    }
+    .perk {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .perk__icon {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--sage);
+    }
+    .perk__text {
+      font-size: 13px;
+      color: var(--ivory);
+      line-height: 1.6;
+    }
+    .perk__text strong {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .perk__text span {
+      color: var(--ivory-60);
+      font-size: 12px;
+    }
+
+    /* ── Block 5: Location ── */
+    .map-wrap {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      border: 1px solid var(--ivory-05);
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 60% 40%, rgba(127,163,147,0.12) 0%, rgba(11,27,43,0) 60%),
+        linear-gradient(135deg, #0e2135 0%, #081523 100%);
+    }
+    .map-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .map-road {
+      position: absolute;
+      height: 1px;
+      background: rgba(245,240,232,0.08);
+    }
+    .map-road.r1 { left: 5%; right: 10%; top: 42%; transform: rotate(-4deg); }
+    .map-road.r2 { left: 10%; right: 5%; top: 62%; transform: rotate(3deg); }
+    .map-road.r3 { top: 8%; bottom: 0; width: 1px; height: auto; left: 58%; transform: rotate(8deg); }
+    .map-pin {
+      position: absolute;
+      left: 55%; top: 46%;
+      transform: translate(-50%, -100%);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .map-pin__dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 6px rgba(201,168,76,0.2), 0 0 0 14px rgba(201,168,76,0.08);
+    }
+    .map-pin__label {
+      background: var(--navy);
+      border: 1px solid var(--gold-line-strong);
+      padding: 6px 10px;
+      color: var(--gold);
+      white-space: nowrap;
+    }
+    .map-meta {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--ivory-60);
+    }
+    .map-meta span + span::before {
+      content: " · ";
+      color: var(--ivory-40);
+    }
+
+    /* ── Block 6: Member stories ── */
+    .stories {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .story {
+      border-left: 1px solid var(--gold-line-strong);
+      padding: 8px 0 8px 24px;
+    }
+    .story__quote {
+      font-family: var(--font-body);
+      font-style: italic;
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--ivory-65);
+      margin-bottom: 18px;
+    }
+    .story__who {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+    }
+    .story__who b { color: var(--ivory); font-weight: 500; }
+    .story__save {
+      color: var(--sage);
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       STICKY RATE PANEL — right column desktop
+       ────────────────────────────────────────────────────────── */
+    .rate-panel-wrap { position: relative; }
+    .rate-panel {
+      position: sticky;
+      top: 96px;
+      width: 360px;
+      background: var(--navy-raised);
+      border: 1px solid var(--gold-line-strong);
+      padding: 28px;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .rate-panel.is-hidden {
+      opacity: 0;
+      transform: translateY(-12px);
+      pointer-events: none;
+    }
+    .rate-panel__title {
+      font-size: 13px;
+      color: var(--ivory-60);
+      margin-bottom: 16px;
+    }
+    .rate-panel__divider {
+      height: 1px;
+      background: var(--ivory-10);
+      margin: 0 0 18px;
+    }
+    .rate-panel__public {
+      font-size: 16px;
+      color: var(--ivory-40);
+      text-decoration: line-through;
+      margin-bottom: 4px;
+    }
+    .rate-panel__member {
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: var(--gold);
+      line-height: 1.05;
+      margin-bottom: 2px;
+    }
+    .rate-panel__member-per {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+      margin-bottom: 14px;
+    }
+    .rate-panel__save {
+      display: inline-block;
+      background: var(--sage-pill);
+      color: var(--sage);
+      padding: 6px 10px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+    .rate-panel__field-group {
+      display: flex;
+      border: 1px solid var(--ivory-10);
+      margin-bottom: 10px;
+    }
+    .rate-panel__field {
+      flex: 1;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .rate-panel__field + .rate-panel__field { border-left: 1px solid var(--ivory-10); }
+    .rate-panel__field:hover { background: rgba(245,240,232,0.03); }
+    .rate-panel__field-label {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 3px;
+    }
+    .rate-panel__field-value {
+      font-size: 12px;
+      color: var(--ivory);
+    }
+    .rate-panel__select-wrap {
+      position: relative;
+      border: 1px solid var(--ivory-10);
+      margin-bottom: 16px;
+    }
+    .rate-panel__select-wrap::after {
+      content: "";
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      width: 6px; height: 6px;
+      border-right: 1px solid var(--ivory-60);
+      border-bottom: 1px solid var(--ivory-60);
+      transform: translateY(-70%) rotate(45deg);
+      pointer-events: none;
+    }
+    .rate-panel__select-wrap .rate-panel__field-label {
+      padding: 8px 14px 0;
+    }
+    .rate-panel__select {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      border: none;
+      color: var(--ivory);
+      padding: 0 14px 10px;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+    }
+    .rate-panel__select option { background: var(--navy-raised); color: var(--ivory); }
+
+    .rate-panel__cta {
+      width: 100%;
+      padding: 14px 18px;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      background: transparent;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      margin-bottom: 16px;
+    }
+    .rate-panel__cta:hover {
+      background: var(--gold);
+      color: var(--navy);
+    }
+    .rate-panel__fine {
+      font-size: 11px;
+      color: var(--ivory-40);
+      margin-bottom: 6px;
+    }
+    .rate-panel__guar {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .rate-panel__ask {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-top: 14px;
+      border-top: 1px solid var(--ivory-10);
+      color: var(--sage);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .rate-panel__ask svg { flex-shrink: 0; }
+    .rate-panel__ask:hover { color: #9dbfaf; }
+
+    /* ──────────────────────────────────────────────────────────
+       Photo gallery overlay — fullscreen
+       ────────────────────────────────────────────────────────── */
+    .gallery {
+      position: fixed;
+      inset: 0;
+      background: var(--navy-deep);
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+    }
+    .gallery.is-open { display: flex; }
+    .gallery__head {
+      padding: 20px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--ivory-05);
+    }
+    .gallery__tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .gallery__tab {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+      padding: 10px 16px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .gallery__tab:hover { color: var(--ivory-80); }
+    .gallery__tab.is-active {
+      color: var(--gold);
+      border-color: var(--gold-line-strong);
+    }
+    .gallery__close {
+      width: 40px; height: 40px;
+      border: 1px solid var(--ivory-20);
+      color: var(--ivory);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s;
+    }
+    .gallery__close:hover { border-color: var(--gold); }
+
+    .gallery__body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 16px;
+      padding: 20px 32px 32px;
+      min-height: 0;
+    }
+    .gallery__stage {
+      position: relative;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .gallery__stage img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    .gallery__nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: rgba(7,15,26,0.7);
+      border: 1px solid var(--ivory-20);
+      color: var(--ivory);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .gallery__nav:hover { background: rgba(201,168,76,0.25); border-color: var(--gold); }
+    .gallery__nav--prev { left: 16px; }
+    .gallery__nav--next { right: 16px; }
+    .gallery__count {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+      background: rgba(7,15,26,0.7);
+      padding: 6px 12px;
+    }
+    .gallery__strip {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .gallery__thumb {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background-size: cover;
+      background-position: center;
+      cursor: pointer;
+      opacity: 0.55;
+      border: 1px solid transparent;
+      transition: opacity 0.2s, border-color 0.2s;
+    }
+    .gallery__thumb:hover { opacity: 0.85; }
+    .gallery__thumb.is-active { opacity: 1; border-color: var(--gold); }
+
+    /* ──────────────────────────────────────────────────────────
+       WhatsApp nudge — bottom-right, appears after 40s
+       ────────────────────────────────────────────────────────── */
+    .wa-nudge {
+      position: fixed;
+      right: 28px;
+      bottom: 28px;
+      max-width: 320px;
+      background: var(--navy-raised);
+      border: 1px solid var(--gold-line-strong);
+      padding: 20px 22px;
+      z-index: 150;
+      transform: translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    }
+    .wa-nudge.is-visible {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .wa-nudge__close {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 24px; height: 24px;
+      color: var(--ivory-40);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wa-nudge__close:hover { color: var(--ivory); }
+    .wa-nudge__kicker {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 8px;
+    }
+    .wa-nudge__title {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--ivory);
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .wa-nudge__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--sage);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .wa-nudge__cta:hover { color: #9dbfaf; }
+
+    /* ──────────────────────────────────────────────────────────
+       Mobile breakpoint
+       ────────────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      /* Topbar hidden; mobile sticky header shows */
+      .topbar { display: none; }
+      .mobile-sticky {
+        display: flex;
+        position: sticky;
+        top: 0;
+        z-index: 80;
+        height: 56px;
+        background: var(--navy);
+        border-bottom: 1px solid var(--gold-line);
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px;
+      }
+      .mobile-sticky__name {
+        font-family: var(--font-display);
+        font-size: 17px;
+        color: var(--ivory);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 60%;
+      }
+      .mobile-sticky__price {
+        font-family: var(--font-display);
+        font-size: 16px;
+        color: var(--gold);
+      }
+
+      .hero {
+        height: 50vh;
+        min-height: 340px;
+      }
+      .hero__thumbs {
+        right: 12px; bottom: 12px;
+        gap: 6px;
+      }
+      .hero__thumb { width: 52px; height: 38px; }
+      .hero__thumb.mobile-hide { display: none; }
+      .hero__see-all {
+        font-size: 9px;
+        padding: 10px 12px;
+      }
+
+      .hero-header {
+        padding: 28px 20px 24px;
+        flex-direction: column;
+      }
+      .hotel-name {
+        font-size: 32px;
+      }
+      .hotel-editorial { font-size: 12px; }
+
+      .layout {
+        grid-template-columns: 1fr;
+        padding: 0 20px 180px;
+        gap: 0;
+      }
+
+      .rate-panel-wrap { display: none; }
+
+      .section { padding: 36px 0; }
+      .section__heading { font-size: 24px; }
+
+      .rate-card { padding: 28px 22px; }
+      .rate-card__row { grid-template-columns: 1fr; gap: 20px; }
+      .rate-card__mem { font-size: 36px; }
+
+      .rooms { grid-template-columns: 1fr; gap: 16px; }
+      .perks { grid-template-columns: 1fr; gap: 18px; }
+      .stories { grid-template-columns: 1fr; gap: 20px; }
+
+      /* Mobile sticky rate bar */
+      .mobile-rate-bar {
+        display: flex;
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        z-index: 90;
+        background: var(--navy-raised);
+        border-top: 1px solid var(--gold-line-strong);
+        padding: 10px 16px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        height: 68px;
+      }
+      .mobile-rate-bar__price {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .mobile-rate-bar__amount {
+        font-family: var(--font-display);
+        font-size: 22px;
+        color: var(--gold);
+        line-height: 1;
+      }
+      .mobile-rate-bar__per {
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--ivory-40);
+      }
+      .mobile-rate-bar__cta {
+        padding: 0 20px;
+        height: 40px;
+        border: 1px solid var(--gold);
+        color: var(--gold);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+      .mobile-rate-bar__cta:hover { background: var(--gold); color: var(--navy); }
+
+      /* Ask Priya bar above mobile CTA */
+      .mobile-ask-bar {
+        display: flex;
+        position: fixed;
+        left: 0; right: 0;
+        bottom: 68px;
+        z-index: 89;
+        background: rgba(127,163,147,0.12);
+        border-top: 1px solid rgba(127,163,147,0.25);
+        padding: 0 16px;
+        height: 38px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: var(--sage);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      /* Mobile expanded booking panel */
+      .mobile-book-sheet {
+        display: none;
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        z-index: 180;
+        background: var(--navy-raised);
+        border-top: 1px solid var(--gold-line-strong);
+        padding: 24px 20px 32px;
+        transform: translateY(100%);
+        transition: transform 0.3s ease-out;
+      }
+      .mobile-book-sheet.is-open {
+        display: block;
+        transform: translateY(0);
+        animation: slideUp 0.3s ease-out;
+      }
+      @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+      }
+      .mobile-book-sheet__close {
+        position: absolute;
+        top: 10px; right: 14px;
+        width: 28px; height: 28px;
+        color: var(--ivory-60);
+      }
+
+      .mobile-backdrop {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 170;
+      }
+      .mobile-backdrop.is-open { display: block; }
+
+      .wa-nudge {
+        right: 12px;
+        bottom: 120px;
+        max-width: calc(100vw - 24px);
+      }
+
+      .gallery__body {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+      }
+      .gallery__strip {
+        flex-direction: row;
+        max-height: 84px;
+      }
+      .gallery__thumb {
+        width: 100px;
+        flex-shrink: 0;
+        aspect-ratio: 4/3;
+      }
+      .gallery__tabs { flex-wrap: wrap; }
+      .gallery__head { padding: 14px 16px; }
+      .gallery__body { padding: 12px 16px 16px; }
+    }
+
+    /* Hide mobile-only elements on desktop */
+    @media (min-width: 901px) {
+      .mobile-rate-bar,
+      .mobile-ask-bar,
+      .mobile-book-sheet,
+      .mobile-backdrop { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Desktop top nav
+       ═══════════════════════════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a href="#" class="club-logo">Voyagr <em>Club</em></a>
+      <nav class="topbar__nav">
+        <a href="#">Destinations</a>
+        <a href="#">Collections</a>
+        <a href="#">The Journal</a>
+        <a href="#">Members</a>
+      </nav>
+      <a href="#" class="topbar__cta">My Stays</a>
+    </div>
+  </header>
+
+  <!-- Mobile sticky header -->
+  <header class="mobile-sticky" id="mobileSticky">
+    <div class="mobile-sticky__name">Komaneka at Bisma</div>
+    <div class="mobile-sticky__price">₹12,400<span style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.14em;color:var(--ivory-40);margin-left:4px;">/NIGHT</span></div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HERO — full-bleed image, thumbnail strip bottom-right
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="hero">
+    <img
+      class="hero__img"
+      src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=2400&q=75"
+      alt="Komaneka at Bisma — pool over Campuhan ridge"
+      loading="eager"
+    />
+    <div class="hero__shade"></div>
+    <div class="hero__thumbs">
+      <div class="hero__thumb mobile-hide" data-gallery-idx="1" style="background-image:url('https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=400&q=70')"></div>
+      <div class="hero__thumb mobile-hide" data-gallery-idx="2" style="background-image:url('https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=400&q=70')"></div>
+      <div class="hero__thumb" data-gallery-idx="3" style="background-image:url('https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=400&q=70')"></div>
+      <div class="hero__thumb" data-gallery-idx="4" style="background-image:url('https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=400&q=70')"></div>
+      <button class="hero__see-all" id="openGallery">See all 24 photos →</button>
+    </div>
+  </section>
+
+  <!-- Hotel name block — NOT overlaid on image -->
+  <div class="hero-header">
+    <div class="hero-header__text">
+      <nav class="breadcrumb">
+        <a href="#">Destinations</a> / <a href="#">Bali</a> / <span>Ubud</span>
+      </nav>
+      <h1 class="hotel-name">Komaneka at Bisma</h1>
+      <div class="hotel-loc">Ubud · Bali</div>
+      <p class="hotel-editorial">Where the rice terraces begin.</p>
+      <div class="voyagr-pick">Voyagr Pick</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MAIN LAYOUT — content + sticky rate panel
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="layout">
+
+    <main class="content">
+
+      <!-- BLOCK 1: Rate reveal -->
+      <section class="section" id="rateRevealSection">
+        <div class="section__kicker">Your Member Rate</div>
+        <div class="rate-card" id="rateCard">
+          <div class="rate-card__kicker">Tonight · Ubud, Bali</div>
+          <div class="rate-card__row">
+            <div>
+              <div class="rate-card__pub-label">Public rate</div>
+              <div class="rate-card__pub">₹18,750</div>
+            </div>
+            <div>
+              <div class="rate-card__mem-label">Your member rate</div>
+              <div class="rate-card__mem">₹12,400</div>
+            </div>
+          </div>
+          <div class="rate-card__save">You save ₹6,350 tonight</div>
+          <div class="rate-card__foot">Member rate valid for your selected dates · 3 Nov – 7 Nov</div>
+        </div>
+      </section>
+
+      <!-- BLOCK 2: About -->
+      <section class="section">
+        <h2 class="section__heading">About Komaneka at Bisma</h2>
+        <div class="about">
+          <p>Komaneka at Bisma sits above the Campuhan Ridge, where Ubud's mist rises each morning before the valley clears. It's a place that rewards staying in as much as going out — the kind of hotel where breakfast stretches to eleven and no one minds.</p>
+          <p>The pool runs the length of the garden, level with the treetops. Rooms open onto the ridge; bathrooms onto small stone courtyards you'll forget are private. A short walk takes you to the monkey forest or the warungs along Bisma; a shorter one returns you to a deep chair on the veranda.</p>
+          <p>Gede, who has run the front desk for eleven years, keeps a list of things worth doing in the valley — the walks, the temple mornings, the one rice farmer who still makes red-rice porridge on a wood fire. Ask for it. <em>It is better than the one in the folder.</em></p>
+        </div>
+      </section>
+
+      <!-- BLOCK 3: Room types -->
+      <section class="section">
+        <h2 class="section__heading">Rooms</h2>
+        <div class="rooms">
+
+          <article class="room">
+            <img class="room__img" src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=900&q=70" alt="Deluxe Pool View room" loading="lazy" />
+            <div class="room__body">
+              <h3 class="room__name">Deluxe Pool View</h3>
+              <div class="room__meta">36 m² · King bed · Pool outlook</div>
+              <div class="room__inclusions">
+                <span class="room__inc">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 11V3H7v8M5 11h14l-1 10H6L5 11z"/></svg>
+                  Breakfast
+                </span>
+                <span class="room__inc">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 15s1-1 4-1 5 2 8 2 4-1 4-1M3 11s1-1 4-1 5 2 8 2 4-1 4-1M3 19s1-1 4-1 5 2 8 2 4-1 4-1"/></svg>
+                  Pool
+                </span>
+                <span class="room__inc">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12.55a11 11 0 0 1 14 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+                  Wi-Fi
+                </span>
+              </div>
+              <div class="room__rate-row">
+                <span class="room__pub">₹14,200</span>
+                <span class="room__mem">₹9,450</span>
+                <span class="room__per">/ night</span>
+              </div>
+              <a href="#" class="room__cta">Select Room →</a>
+            </div>
+          </article>
+
+          <article class="room">
+            <img class="room__img" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=70" alt="Valley Suite" loading="lazy" />
+            <div class="room__body">
+              <h3 class="room__name">Valley Suite</h3>
+              <div class="room__meta">52 m² · King bed · Terrace outlook</div>
+              <div class="room__inclusions">
+                <span class="room__inc">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 11V3H7v8M5 11h14l-1 10H6L5 11z"/></svg>
+                  Breakfast
+                </span>
+                <span class="room__inc">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 15s1-1 4-1 5 2 8 2 4-1 4-1M3 11s1-1 4-1 5 2 8 2 4-1 4-1M3 19s1-1 4-1 5 2 8 2 4-1 4-1"/></svg>
+                  Pool
+                </span>
+                <span class="room__inc">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg>
+                  Spa credit
+                </span>
+              </div>
+              <div class="room__rate-row">
+                <span class="room__pub">₹18,750</span>
+                <span class="room__mem">₹12,400</span>
+                <span class="room__per">/ night</span>
+              </div>
+              <a href="#" class="room__cta">Select Room →</a>
+            </div>
+          </article>
+
+          <article class="room">
+            <img class="room__img" src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=70" alt="One Bedroom Pool Villa" loading="lazy" />
+            <div class="room__body">
+              <h3 class="room__name">One Bedroom Pool Villa</h3>
+              <div class="room__meta">120 m² · King bed · Private plunge</div>
+              <div class="room__inclusions">
+                <span class="room__inc">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 11V3H7v8M5 11h14l-1 10H6L5 11z"/></svg>
+                  Breakfast
+                </span>
+                <span class="room__inc">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 15s1-1 4-1 5 2 8 2 4-1 4-1M3 11s1-1 4-1 5 2 8 2 4-1 4-1"/></svg>
+                  Private pool
+                </span>
+                <span class="room__inc">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 18L18 6M8 6h10v10"/></svg>
+                  Airport transfer
+                </span>
+              </div>
+              <div class="room__rate-row">
+                <span class="room__pub">₹32,400</span>
+                <span class="room__mem">₹22,900</span>
+                <span class="room__per">/ night</span>
+              </div>
+              <a href="#" class="room__cta">Select Room →</a>
+            </div>
+          </article>
+
+          <article class="room">
+            <img class="room__img" src="https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=900&q=70" alt="Two Bedroom Villa" loading="lazy" />
+            <div class="room__body">
+              <h3 class="room__name">Two Bedroom Villa</h3>
+              <div class="room__meta">180 m² · 2 Kings · Garden courtyard</div>
+              <div class="room__inclusions">
+                <span class="room__inc">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 11V3H7v8M5 11h14l-1 10H6L5 11z"/></svg>
+                  Breakfast
+                </span>
+                <span class="room__inc">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 15s1-1 4-1 5 2 8 2 4-1 4-1"/></svg>
+                  Private pool
+                </span>
+                <span class="room__inc">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8"/><path d="M12 4v16"/></svg>
+                  Butler service
+                </span>
+              </div>
+              <div class="room__rate-row">
+                <span class="room__pub">₹48,000</span>
+                <span class="room__mem">₹33,500</span>
+                <span class="room__per">/ night</span>
+              </div>
+              <a href="#" class="room__cta">Select Room →</a>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- BLOCK 4: What's included — member perks -->
+      <section class="section">
+        <h2 class="section__heading">What's included for members</h2>
+        <div class="perks">
+          <div class="perk">
+            <span class="perk__icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </span>
+            <div class="perk__text">
+              <strong>Early check-in, handled</strong>
+              <span>Concierge requests your preferred arrival window with the hotel directly.</span>
+            </div>
+          </div>
+          <div class="perk">
+            <span class="perk__icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M20 12v10H4V12M22 7H2v5h20V7zM12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+            </span>
+            <div class="perk__text">
+              <strong>Welcome amenity, pre-arranged</strong>
+              <span>A Balinese floral arrangement or house-pressed juice awaits in your room.</span>
+            </div>
+          </div>
+          <div class="perk">
+            <span class="perk__icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+            </span>
+            <div class="perk__text">
+              <strong>Rate match guarantee</strong>
+              <span>Find this stay cheaper elsewhere within 24 hours — we'll match and credit the difference.</span>
+            </div>
+          </div>
+          <div class="perk">
+            <span class="perk__icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+            </span>
+            <div class="perk__text">
+              <strong>WhatsApp support throughout stay</strong>
+              <span>Priya is one message away — from dinner reservations to emergencies.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BLOCK 5: Location -->
+      <section class="section">
+        <h2 class="section__heading">Where you'll be</h2>
+        <div class="map-wrap" aria-label="Map showing hotel location in Ubud">
+          <div class="map-grid"></div>
+          <div class="map-road r1"></div>
+          <div class="map-road r2"></div>
+          <div class="map-road r3"></div>
+          <div class="map-pin">
+            <span class="map-pin__label">Komaneka at Bisma</span>
+            <span class="map-pin__dot"></span>
+          </div>
+        </div>
+        <div class="map-meta">
+          <span>15 min from Ubud centre</span>
+          <span>45 min from Denpasar airport</span>
+          <span>8 min to Monkey Forest</span>
+        </div>
+      </section>
+
+      <!-- BLOCK 6: Member stories -->
+      <section class="section">
+        <div class="section__kicker">From Members Who Stayed</div>
+        <h2 class="section__heading">What they remember</h2>
+        <div class="stories">
+          <div class="story">
+            <p class="story__quote">"We'd booked for three nights and asked Priya to extend on a Sunday afternoon. She had it sorted in twenty minutes, better rate than the hotel quoted me direct. We ended up staying six."</p>
+            <div class="story__who">
+              <b>Ananya Mehta</b> · Mumbai · 6 nights · <span class="story__save">Saved ₹18,400</span>
+            </div>
+          </div>
+          <div class="story">
+            <p class="story__quote">"I'm a tea person. Someone had told the hotel. There was a proper Darjeeling set out every morning on the veranda before I came down. Small thing. I still think about it."</p>
+            <div class="story__who">
+              <b>Rohan Kapoor</b> · Bangalore · 4 nights · <span class="story__save">Saved ₹11,200</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         STICKY RATE PANEL — right column, 320–360px
+         ═══════════════════════════════════════════════════════════ -->
+    <aside class="rate-panel-wrap" id="ratePanelWrap">
+      <div class="rate-panel" id="ratePanel">
+        <div class="rate-panel__title">Komaneka at Bisma</div>
+        <div class="rate-panel__divider"></div>
+
+        <div class="rate-panel__public">₹18,750</div>
+        <div class="rate-panel__member">₹12,400</div>
+        <div class="rate-panel__member-per">Member rate / night</div>
+        <div class="rate-panel__save">You save ₹6,350 tonight</div>
+
+        <div class="rate-panel__field-group">
+          <button class="rate-panel__field">
+            <div class="rate-panel__field-label">Check-in</div>
+            <div class="rate-panel__field-value">Mon, 3 Nov</div>
+          </button>
+          <button class="rate-panel__field">
+            <div class="rate-panel__field-label">Check-out</div>
+            <div class="rate-panel__field-value">Fri, 7 Nov</div>
+          </button>
+        </div>
+
+        <div class="rate-panel__select-wrap">
+          <div class="rate-panel__field-label">Room</div>
+          <select class="rate-panel__select">
+            <option>Valley Suite · 2 guests</option>
+            <option>Deluxe Pool View · 2 guests</option>
+            <option>One Bedroom Pool Villa · 2 guests</option>
+            <option>Two Bedroom Villa · 4 guests</option>
+          </select>
+        </div>
+
+        <button class="rate-panel__cta">Reserve Your Stay →</button>
+
+        <div class="rate-panel__fine">Free cancellation until 1 Nov</div>
+        <div class="rate-panel__guar">Best rate guarantee</div>
+
+        <a href="#" class="rate-panel__ask">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          Questions? Ask Priya →
+        </a>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Mobile sticky rate bar + Ask Priya bar
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="mobile-ask-bar" id="mobileAskBar">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+    Ask Priya about this stay →
+  </div>
+  <div class="mobile-rate-bar" id="mobileRateBar">
+    <div class="mobile-rate-bar__price">
+      <span class="mobile-rate-bar__amount">₹12,400</span>
+      <span class="mobile-rate-bar__per">Member rate / night</span>
+    </div>
+    <button class="mobile-rate-bar__cta" id="mobileReserveBtn">Reserve →</button>
+  </div>
+
+  <div class="mobile-backdrop" id="mobileBackdrop"></div>
+  <div class="mobile-book-sheet" id="mobileBookSheet">
+    <button class="mobile-book-sheet__close" id="mobileSheetClose" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="rate-panel__title" style="margin-bottom:14px;">Komaneka at Bisma</div>
+    <div class="rate-panel__public">₹18,750</div>
+    <div class="rate-panel__member">₹12,400</div>
+    <div class="rate-panel__member-per">Member rate / night</div>
+    <div class="rate-panel__save">You save ₹6,350 tonight</div>
+    <div class="rate-panel__field-group">
+      <button class="rate-panel__field">
+        <div class="rate-panel__field-label">Check-in</div>
+        <div class="rate-panel__field-value">Mon, 3 Nov</div>
+      </button>
+      <button class="rate-panel__field">
+        <div class="rate-panel__field-label">Check-out</div>
+        <div class="rate-panel__field-value">Fri, 7 Nov</div>
+      </button>
+    </div>
+    <div class="rate-panel__select-wrap">
+      <div class="rate-panel__field-label">Room</div>
+      <select class="rate-panel__select">
+        <option>Valley Suite · 2 guests</option>
+        <option>Deluxe Pool View · 2 guests</option>
+        <option>One Bedroom Pool Villa · 2 guests</option>
+      </select>
+    </div>
+    <button class="rate-panel__cta">Reserve Your Stay →</button>
+    <div class="rate-panel__fine">Free cancellation until 1 Nov</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Photo gallery overlay
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="gallery" id="gallery" role="dialog" aria-label="Photo gallery" aria-hidden="true">
+    <div class="gallery__head">
+      <div class="gallery__tabs" id="galleryTabs">
+        <button class="gallery__tab is-active" data-tab="all">All · 24</button>
+        <button class="gallery__tab" data-tab="rooms">Rooms</button>
+        <button class="gallery__tab" data-tab="pool">Pool</button>
+        <button class="gallery__tab" data-tab="restaurant">Restaurant</button>
+        <button class="gallery__tab" data-tab="location">Location</button>
+      </div>
+      <button class="gallery__close" id="galleryClose" aria-label="Close gallery">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="gallery__body">
+      <div class="gallery__stage">
+        <button class="gallery__nav gallery__nav--prev" id="galleryPrev" aria-label="Previous photo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <img id="galleryImg" src="" alt="" />
+        <button class="gallery__nav gallery__nav--next" id="galleryNext" aria-label="Next photo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <div class="gallery__count" id="galleryCount">1 / 24</div>
+      </div>
+      <div class="gallery__strip" id="galleryStrip"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       WhatsApp nudge — slides up after 40s
+       ═══════════════════════════════════════════════════════════ -->
+  <aside class="wa-nudge" id="waNudge" role="complementary" aria-label="Ask Priya">
+    <button class="wa-nudge__close" id="waNudgeClose" aria-label="Dismiss">✕</button>
+    <div class="wa-nudge__kicker">WhatsApp concierge</div>
+    <div class="wa-nudge__title">Have a question about Komaneka at Bisma?</div>
+    <a href="https://wa.me/919000000000?text=Hi%20Priya%2C%20I%27m%20looking%20at%20Komaneka%20at%20Bisma%20on%20Voyagr%20Club" class="wa-nudge__cta" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+      Ask Priya →
+    </a>
+  </aside>
+
+
+  <script>
+    // ──────────────────────────────────────────────────────────
+    // Photo gallery data — 24 images across tabs
+    // ──────────────────────────────────────────────────────────
+    const PHOTOS = [
+      // Rooms
+      { cat: 'rooms', src: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'rooms', src: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'rooms', src: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'rooms', src: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'rooms', src: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'rooms', src: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=1800&q=75' },
+      // Pool
+      { cat: 'pool', src: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'pool', src: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'pool', src: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'pool', src: 'https://images.unsplash.com/photo-1545579133-99bb5ab189bd?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'pool', src: 'https://images.unsplash.com/photo-1544124499-58912cbddaad?auto=format&fit=crop&w=1800&q=75' },
+      // Restaurant
+      { cat: 'restaurant', src: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'restaurant', src: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'restaurant', src: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'restaurant', src: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'restaurant', src: 'https://images.unsplash.com/photo-1551218808-94e220e084d2?auto=format&fit=crop&w=1800&q=75' },
+      // Location
+      { cat: 'location', src: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'location', src: 'https://images.unsplash.com/photo-1539367628448-4bc5c9d171c8?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'location', src: 'https://images.unsplash.com/photo-1518544866330-95a2bec01dc3?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'location', src: 'https://images.unsplash.com/photo-1555400082-8c5cd5b3c3b3?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'location', src: 'https://images.unsplash.com/photo-1604999333679-b86d54738315?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'location', src: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'location', src: 'https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?auto=format&fit=crop&w=1800&q=75' },
+      { cat: 'location', src: 'https://images.unsplash.com/photo-1518544889938-1076c0d9db39?auto=format&fit=crop&w=1800&q=75' },
+    ];
+
+    // ──────────────────────────────────────────────────────────
+    // Gallery overlay behaviour
+    // ──────────────────────────────────────────────────────────
+    const gallery = document.getElementById('gallery');
+    const galleryImg = document.getElementById('galleryImg');
+    const galleryStrip = document.getElementById('galleryStrip');
+    const galleryCount = document.getElementById('galleryCount');
+    const tabsEl = document.getElementById('galleryTabs');
+    let currentTab = 'all';
+    let currentIdx = 0;
+    let filtered = PHOTOS.slice();
+
+    function renderStrip() {
+      filtered = currentTab === 'all'
+        ? PHOTOS.slice()
+        : PHOTOS.filter(p => p.cat === currentTab);
+      galleryStrip.innerHTML = filtered.map((p, i) => `
+        <div class="gallery__thumb${i === currentIdx ? ' is-active' : ''}"
+             data-idx="${i}"
+             style="background-image:url('${p.src}')"></div>
+      `).join('');
+    }
+    function renderStage() {
+      if (!filtered[currentIdx]) currentIdx = 0;
+      galleryImg.src = filtered[currentIdx].src;
+      galleryImg.alt = `Komaneka at Bisma — photo ${currentIdx + 1}`;
+      galleryCount.textContent = `${currentIdx + 1} / ${filtered.length}`;
+      document.querySelectorAll('.gallery__thumb').forEach((t, i) => {
+        t.classList.toggle('is-active', i === currentIdx);
+      });
+      const active = document.querySelector('.gallery__thumb.is-active');
+      if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+    function openGallery(startIdx = 0) {
+      currentIdx = startIdx;
+      renderStrip();
+      renderStage();
+      gallery.classList.add('is-open');
+      gallery.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeGallery() {
+      gallery.classList.remove('is-open');
+      gallery.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+    document.getElementById('openGallery').addEventListener('click', () => openGallery(0));
+    document.getElementById('galleryClose').addEventListener('click', closeGallery);
+    document.getElementById('galleryPrev').addEventListener('click', () => {
+      currentIdx = (currentIdx - 1 + filtered.length) % filtered.length;
+      renderStage();
+    });
+    document.getElementById('galleryNext').addEventListener('click', () => {
+      currentIdx = (currentIdx + 1) % filtered.length;
+      renderStage();
+    });
+    galleryStrip.addEventListener('click', (e) => {
+      const thumb = e.target.closest('.gallery__thumb');
+      if (!thumb) return;
+      currentIdx = Number(thumb.dataset.idx);
+      renderStage();
+    });
+    tabsEl.addEventListener('click', (e) => {
+      const tab = e.target.closest('.gallery__tab');
+      if (!tab) return;
+      tabsEl.querySelectorAll('.gallery__tab').forEach(t => t.classList.remove('is-active'));
+      tab.classList.add('is-active');
+      currentTab = tab.dataset.tab;
+      currentIdx = 0;
+      renderStrip();
+      renderStage();
+    });
+
+    // Hero thumbnails open gallery at specific index
+    document.querySelectorAll('.hero__thumb').forEach(t => {
+      t.addEventListener('click', () => {
+        const idx = Number(t.dataset.galleryIdx || 0);
+        openGallery(idx);
+      });
+    });
+
+    // Keyboard nav
+    document.addEventListener('keydown', (e) => {
+      if (!gallery.classList.contains('is-open')) return;
+      if (e.key === 'Escape') closeGallery();
+      if (e.key === 'ArrowLeft') {
+        currentIdx = (currentIdx - 1 + filtered.length) % filtered.length;
+        renderStage();
+      }
+      if (e.key === 'ArrowRight') {
+        currentIdx = (currentIdx + 1) % filtered.length;
+        renderStage();
+      }
+    });
+
+    // ──────────────────────────────────────────────────────────
+    // Rate card reveal animation (IntersectionObserver)
+    // ──────────────────────────────────────────────────────────
+    const rateCard = document.getElementById('rateCard');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          setTimeout(() => rateCard.classList.add('is-revealed'), 120);
+          io.unobserve(rateCard);
+        }
+      });
+    }, { threshold: 0.45 });
+    io.observe(rateCard);
+
+    // ──────────────────────────────────────────────────────────
+    // Rate panel visibility — show after user scrolls past hero
+    // (spec: "appears after scrolling past hero")
+    // ──────────────────────────────────────────────────────────
+    const ratePanel = document.getElementById('ratePanel');
+    const hero = document.querySelector('.hero');
+    ratePanel.classList.add('is-hidden');
+    const panelIO = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        // When hero leaves viewport, show the panel
+        ratePanel.classList.toggle('is-hidden', e.isIntersecting);
+      });
+    }, { threshold: 0.3 });
+    panelIO.observe(hero);
+
+    // ──────────────────────────────────────────────────────────
+    // WhatsApp nudge — slides up after 40 seconds
+    // ──────────────────────────────────────────────────────────
+    const waNudge = document.getElementById('waNudge');
+    const NUDGE_DELAY = 40000;
+    let nudgeShown = false;
+    let nudgeTimer = setTimeout(() => {
+      if (nudgeShown) return;
+      nudgeShown = true;
+      waNudge.classList.add('is-visible');
+    }, NUDGE_DELAY);
+    document.getElementById('waNudgeClose').addEventListener('click', () => {
+      waNudge.classList.remove('is-visible');
+      clearTimeout(nudgeTimer);
+    });
+
+    // ──────────────────────────────────────────────────────────
+    // Mobile booking sheet — expand from sticky CTA
+    // ──────────────────────────────────────────────────────────
+    const mobileReserveBtn = document.getElementById('mobileReserveBtn');
+    const mobileBookSheet = document.getElementById('mobileBookSheet');
+    const mobileBackdrop = document.getElementById('mobileBackdrop');
+    const mobileSheetClose = document.getElementById('mobileSheetClose');
+    function openMobileSheet() {
+      mobileBookSheet.classList.add('is-open');
+      mobileBackdrop.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobileSheet() {
+      mobileBookSheet.classList.remove('is-open');
+      mobileBackdrop.classList.remove('is-open');
+      document.body.style.overflow = '';
+    }
+    if (mobileReserveBtn) mobileReserveBtn.addEventListener('click', openMobileSheet);
+    if (mobileBackdrop) mobileBackdrop.addEventListener('click', closeMobileSheet);
+    if (mobileSheetClose) mobileSheetClose.addEventListener('click', closeMobileSheet);
+
+    // ──────────────────────────────────────────────────────────
+    // Ask Priya mobile bar → opens WhatsApp
+    // ──────────────────────────────────────────────────────────
+    document.getElementById('mobileAskBar').addEventListener('click', () => {
+      window.open('https://wa.me/919000000000?text=Hi%20Priya%2C%20I%27m%20looking%20at%20Komaneka%20at%20Bisma%20on%20Voyagr%20Club', '_blank');
+    });
+  </script>
+</body>
+</html>
