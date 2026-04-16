@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=420, initial-scale=1.0, viewport-fit=cover" />
+  <title>Taj Aravali — Review Reservation (Mobile, fixed)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* Voyagr Club tokens — unchanged across prototypes */
+    :root {
+      --navy: #0B1B2B;
+      --navy-deep: #070f1a;
+      --navy-raised: #112740;
+      --gold: #C9A84C;
+      --gold-soft: rgba(201, 168, 76, 0.5);
+      --gold-line: rgba(201, 168, 76, 0.15);
+      --gold-line-strong: rgba(201, 168, 76, 0.35);
+      --gold-pale: rgba(201, 168, 76, 0.08);
+      --ivory: #F5F0E8;
+      --ivory-80: rgba(245, 240, 232, 0.8);
+      --ivory-70: rgba(245, 240, 232, 0.7);
+      --ivory-60: rgba(245, 240, 232, 0.6);
+      --ivory-50: rgba(245, 240, 232, 0.5);
+      --ivory-40: rgba(245, 240, 232, 0.4);
+      --ivory-30: rgba(245, 240, 232, 0.3);
+      --ivory-20: rgba(245, 240, 232, 0.2);
+      --ivory-10: rgba(245, 240, 232, 0.1);
+      --ivory-05: rgba(245, 240, 232, 0.05);
+      --sage: #7FA393;
+      --sage-pill: rgba(127, 163, 147, 0.18);
+      --muted: rgba(245, 240, 232, 0.35);
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      /* FIX #6 — Font stack now declares -apple-system / BlinkMacSystemFont
+         fallbacks so iOS stops surfacing the "Some missing fonts were
+         replaced" toast. Same fix applied on the Package screen. */
+      --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--navy);
+      color: var(--ivory);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      padding-bottom: 120px; /* leave room for sticky Confirm Stay footer */
+    }
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Sticky header bar — same chrome as rate
+       package / room list screens. Back arrow +
+       hotel name / trip meta in the middle.
+       ────────────────────────────────────────────── */
+    .rv-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--navy);
+      border-bottom: 1px solid var(--gold-line);
+    }
+    .rv-topbar__row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+    }
+    .rv-back {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ivory-10);
+      border-radius: 999px;
+      color: var(--ivory);
+      flex-shrink: 0;
+    }
+    .rv-summary {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .rv-summary__label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+    }
+    .rv-summary__title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      color: var(--ivory);
+      line-height: 1.1;
+    }
+
+    /* ──────────────────────────────────────────────
+       FIX #2 — Urgency timer (gold instead of red)
+       "Room(s) held for 4:58" — countdown + format
+       retained; colour changed from red/orange to
+       the same gold used throughout the app. Gold
+       communicates "privileged hold" instead of panic.
+       ────────────────────────────────────────────── */
+    .rv-hold {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--gold-pale);
+      border-bottom: 1px solid var(--gold-line);
+      color: var(--gold);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .rv-hold svg { color: var(--gold); }
+    .rv-hold__time {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.06em;
+    }
+
+    /* Page container — vertical stack of cards */
+    .rv-page {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px 14px 20px;
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Dark card base — same card style as
+       every other screen in the booking funnel.
+       ────────────────────────────────────────────── */
+    .rv-card {
+      background: var(--navy-raised);
+      border: 1px solid var(--ivory-10);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .rv-card__body {
+      padding: 14px 14px;
+    }
+
+    /* Section eyebrow — tiny DM Mono label above each card */
+    .rv-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+      margin-bottom: 8px;
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Hotel summary card — thumbnail + name
+       + address. Format untouched per task brief.
+       ────────────────────────────────────────────── */
+    .rv-hotel {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .rv-hotel__thumb {
+      width: 72px;
+      height: 72px;
+      flex-shrink: 0;
+      border-radius: 4px;
+      overflow: hidden;
+      background: var(--navy-deep);
+      border: 1px solid var(--ivory-10);
+    }
+    .rv-hotel__thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .rv-hotel__info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .rv-hotel__name {
+      font-family: var(--font-display);
+      font-size: 20px;
+      line-height: 1.15;
+      color: var(--ivory);
+      font-weight: 500;
+    }
+    .rv-hotel__addr {
+      font-size: 12.5px;
+      color: var(--ivory-60);
+      line-height: 1.4;
+    }
+    .rv-hotel__city {
+      margin-top: 2px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+    }
+
+    /* ──────────────────────────────────────────────
+       FIX #5 — Dates card. Previously a floating
+       "2 Nights" bubble sat between the two date
+       columns. Now:
+         • "Duration: 2 Nights" — small, muted, centered,
+           sits ABOVE the date row.
+         • Check-in (left) / Check-out (right) columns
+           breathe without anything hovering between them.
+       Date format + "Mon, 3:00 PM" time format preserved.
+       ────────────────────────────────────────────── */
+    .rv-dates {
+      display: flex;
+      flex-direction: column;
+    }
+    /* FIX #5 — small muted duration label, centered,
+       replaces the floating bubble pill. */
+    .rv-dates__duration {
+      align-self: center;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+      margin-bottom: 12px;
+    }
+    .rv-dates__duration b {
+      font-weight: 500;
+      color: var(--ivory-60);
+    }
+    .rv-dates__row {
+      display: flex;
+      align-items: flex-start;
+      /* FIX #5 — no floating pill between the columns, just
+         breathing space. A thin vertical hairline separates
+         the two columns to aid scan-ability. */
+      gap: 0;
+    }
+    .rv-dates__col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 0 4px;
+    }
+    .rv-dates__col--out {
+      text-align: right;
+      align-items: flex-end;
+    }
+    .rv-dates__sep {
+      width: 1px;
+      align-self: stretch;
+      background: var(--ivory-10);
+      margin: 2px 10px;
+    }
+    .rv-dates__label {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+    }
+    .rv-dates__date {
+      font-family: var(--font-display);
+      font-size: 22px;
+      line-height: 1.1;
+      color: var(--ivory);
+      font-weight: 500;
+    }
+    .rv-dates__month {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+    }
+    /* (KEEP) "Mon, 3:00 PM" format — unchanged */
+    .rv-dates__time {
+      margin-top: 4px;
+      font-size: 11.5px;
+      color: var(--ivory-70);
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Guests block — "2 Guest(s), 2 Room(s)"
+       format preserved per task brief.
+       ────────────────────────────────────────────── */
+    .rv-guests {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .rv-guests__icon {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ivory-10);
+      border-radius: 999px;
+      color: var(--ivory-70);
+      background: var(--navy-deep);
+    }
+    .rv-guests__text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .rv-guests__primary {
+      font-size: 14px;
+      color: var(--ivory);
+    }
+    .rv-guests__meta {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+    }
+    .rv-guests__edit {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border-bottom: 1px solid var(--gold-line-strong);
+      padding-bottom: 2px;
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Room card — name + inclusion icons +
+       flexible cancellation line + policy link. All
+       visual treatment preserved from package screen.
+       ────────────────────────────────────────────── */
+    .rv-room__name {
+      font-family: var(--font-display);
+      font-size: 20px;
+      line-height: 1.2;
+      color: var(--ivory);
+      font-weight: 500;
+    }
+    .rv-room__pkg {
+      margin-top: 4px;
+      font-size: 12.5px;
+      color: var(--ivory-70);
+    }
+    /* (KEEP) Sage/green "Flexible, free cancellation" */
+    .rv-room__cancel {
+      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--sage);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .rv-room__cancel svg { color: var(--sage); }
+    /* (KEEP) Inclusion icons — same chip style used on package card */
+    .rv-room__inclusions {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px 14px;
+      list-style: none;
+    }
+    .rv-room__inclusions li {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12.5px;
+      color: var(--ivory);
+    }
+    .rv-room__icon {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ivory-10);
+      border-radius: 4px;
+      background: var(--navy-deep);
+    }
+    .rv-room__icon svg { color: var(--sage); }
+    /* (KEEP) "Cancellation Policy" gold link */
+    .rv-room__policy {
+      margin-top: 14px;
+      align-self: flex-start;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid var(--gold-line-strong);
+      padding-bottom: 2px;
+    }
+
+    /* ──────────────────────────────────────────────
+       FIX #4 — Price breakdown card. Previously the
+       page showed only a truncated "₹2,50,00..." line.
+       Now: four clean rows — room rate, member
+       discount, taxes line, total. Same card bg and
+       typography as every other card on the screen.
+       ────────────────────────────────────────────── */
+    .rv-price__row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 8px 0;
+      font-size: 13.5px;
+      color: var(--ivory);
+    }
+    .rv-price__row + .rv-price__row {
+      border-top: 1px solid var(--ivory-05);
+    }
+    .rv-price__label { color: var(--ivory-70); }
+    .rv-price__val {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--ivory);
+      letter-spacing: 0.02em;
+    }
+    /* FIX #4 — Member discount styled in gold so the saving
+       is instantly readable against the neutral rows. */
+    .rv-price__row--discount .rv-price__label { color: var(--ivory-80); }
+    .rv-price__row--discount .rv-price__val { color: var(--gold); }
+    /* (KEEP) sage/green "Taxes & GST included" treatment */
+    .rv-price__row--taxes {
+      justify-content: flex-start;
+      gap: 6px;
+      color: var(--sage);
+      font-size: 12px;
+    }
+    .rv-price__row--taxes svg { color: var(--sage); }
+    /* Total row — larger, display serif, gold number */
+    .rv-price__row--total {
+      margin-top: 6px;
+      padding-top: 14px;
+      border-top: 1px solid var(--ivory-10);
+      align-items: baseline;
+    }
+    .rv-price__row--total .rv-price__label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+    }
+    .rv-price__row--total .rv-price__val {
+      font-family: var(--font-display);
+      font-size: 26px;
+      line-height: 1;
+      color: var(--gold);
+      font-weight: 500;
+    }
+
+    /* FIX #1 — Coupon / gift card row REMOVED entirely.
+       No replacement element is rendered here; the visual
+       gap between the price card and the sticky footer
+       is left as breathing room per the task brief. */
+
+    /* ──────────────────────────────────────────────
+       FIX #3 + FIX #7 — Sticky footer.
+       FIX #3: single sage/green saving line sits
+       directly above the CTA, same colour as
+       "Taxes & fees included" elsewhere.
+       FIX #7: CTA label renamed "Continue" →
+       "Confirm Stay →". Same gold pill, same size.
+       ────────────────────────────────────────────── */
+    .rv-footer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--navy);
+      border-top: 1px solid var(--gold-line);
+      padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 30;
+    }
+    /* FIX #3 — member saving line, sage/green, placed
+       immediately above the "Confirm Stay" CTA. */
+    .rv-footer__save {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--sage);
+      font-size: 12.5px;
+    }
+    .rv-footer__save svg { color: var(--sage); }
+    /* FIX #7 — "Continue" renamed to "Confirm Stay →".
+       Same gold pill style, same size, same position. */
+    .rv-cta {
+      width: 100%;
+      padding: 14px 22px;
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--navy);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+    .rv-cta:hover { background: #d9b95e; }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════
+       (KEEP) STICKY HEADER
+       ══════════════════════════════════════════════ -->
+  <header class="rv-topbar">
+    <div class="rv-topbar__row">
+      <a class="rv-back" href="rate-packages-mobile-prototype.html" aria-label="Back to packages">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </a>
+      <div class="rv-summary">
+        <span class="rv-summary__label">Step 3 of 4</span>
+        <span class="rv-summary__title">Review Reservation</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════
+       FIX #2 — URGENCY TIMER in gold (was red/orange)
+       Countdown value + clock icon colour both gold.
+       ══════════════════════════════════════════════ -->
+  <div class="rv-hold" role="status" aria-live="polite">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <polyline points="12 7 12 12 15.5 13.5"/>
+    </svg>
+    Room(s) held for <span class="rv-hold__time" id="rv-countdown">4:58</span>
+  </div>
+
+  <main class="rv-page">
+
+    <!-- ─── (KEEP) Hotel summary card — thumb + name + address ─── -->
+    <section class="rv-card">
+      <div class="rv-card__body rv-hotel">
+        <div class="rv-hotel__thumb">
+          <!-- Muted SVG illustration placeholder — same tone as
+               the rest of the dark-card imagery on the funnel. -->
+          <svg viewBox="0 0 72 72" width="72" height="72" aria-hidden="true">
+            <rect width="72" height="72" fill="#1b2e45"/>
+            <path d="M0 48 L22 30 L36 42 L56 24 L72 36 L72 72 L0 72 Z" fill="#0B1B2B"/>
+            <circle cx="54" cy="18" r="6" fill="#C9A84C" opacity="0.8"/>
+            <rect x="14" y="50" width="6" height="14" fill="#7FA393" opacity="0.6"/>
+            <rect x="28" y="46" width="6" height="18" fill="#7FA393" opacity="0.45"/>
+            <rect x="44" y="52" width="6" height="12" fill="#7FA393" opacity="0.55"/>
+          </svg>
+        </div>
+        <div class="rv-hotel__info">
+          <span class="rv-hotel__name">Taj Aravali Resort &amp; Spa</span>
+          <span class="rv-hotel__addr">Dulawa, Udaipur, Rajasthan 313001</span>
+          <span class="rv-hotel__city">Udaipur · India</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── FIX #5: Stay dates — "Duration: 2 Nights" ABOVE the
+         date row; no floating pill between the two columns ─── -->
+    <section class="rv-card">
+      <div class="rv-card__body">
+        <span class="rv-eyebrow">Stay</span>
+
+        <div class="rv-dates">
+          <!-- FIX #5: replaces the previous floating "2 Nights" pill -->
+          <span class="rv-dates__duration">Duration: <b>2 Nights</b></span>
+
+          <div class="rv-dates__row">
+            <div class="rv-dates__col">
+              <span class="rv-dates__label">Check-in</span>
+              <span class="rv-dates__date">15</span>
+              <span class="rv-dates__month">Mar 2026</span>
+              <!-- (KEEP) "Mon, 3:00 PM" check-in time format -->
+              <span class="rv-dates__time">Mon, 3:00 PM</span>
+            </div>
+            <div class="rv-dates__sep" aria-hidden="true"></div>
+            <div class="rv-dates__col rv-dates__col--out">
+              <span class="rv-dates__label">Check-out</span>
+              <span class="rv-dates__date">17</span>
+              <span class="rv-dates__month">Mar 2026</span>
+              <span class="rv-dates__time">Wed, 12:00 PM</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── (KEEP) Guests & rooms block — format unchanged ─── -->
+    <section class="rv-card">
+      <div class="rv-card__body rv-guests">
+        <span class="rv-guests__icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </span>
+        <div class="rv-guests__text">
+          <span class="rv-guests__primary">2 Guest(s), 2 Room(s)</span>
+          <span class="rv-guests__meta">Primary guest · Aarav Mehta</span>
+        </div>
+        <a class="rv-guests__edit" href="#">Edit</a>
+      </div>
+    </section>
+
+    <!-- ─── (KEEP) Room card — name + inclusion icons + cancellation ─── -->
+    <section class="rv-card">
+      <div class="rv-card__body">
+        <span class="rv-eyebrow">Room</span>
+
+        <h2 class="rv-room__name">Royal Suite, 1 Bedroom, Lake View</h2>
+        <p class="rv-room__pkg">Room Only – No Meals</p>
+
+        <!-- (KEEP) Green "Flexible, free cancellation" treatment -->
+        <span class="rv-room__cancel">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Flexible, free cancellation
+        </span>
+
+        <!-- (KEEP) Inclusion icons — identical chip style to package screen -->
+        <ul class="rv-room__inclusions" aria-label="Room inclusions">
+          <li>
+            <span class="rv-room__icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 17h14l-1.5-5.5a2 2 0 0 0-2-1.5h-7a2 2 0 0 0-2 1.5L5 17z"/>
+                <circle cx="7.5" cy="17.5" r="1.5"/>
+                <circle cx="16.5" cy="17.5" r="1.5"/>
+                <path d="M6 10V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </span>
+            Airport transfer
+          </li>
+          <li>
+            <span class="rv-room__icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                <path d="M10 17V8h3.5a2.5 2.5 0 0 1 0 5H10"/>
+              </svg>
+            </span>
+            Valet parking
+          </li>
+          <li>
+            <span class="rv-room__icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 8.5a15 15 0 0 1 20 0"/>
+                <path d="M5 12a10 10 0 0 1 14 0"/>
+                <path d="M8.5 15.5a5 5 0 0 1 7 0"/>
+                <circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/>
+              </svg>
+            </span>
+            High-speed Wi-Fi
+          </li>
+          <li>
+            <span class="rv-room__icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 4c-8 0-14 5-14 12a6 6 0 0 0 6 6c7 0 12-6 12-14 0-1.5-.3-3-1-4z"/>
+                <path d="M6 22C10 16 14 12 20 8"/>
+              </svg>
+            </span>
+            Spa access
+          </li>
+        </ul>
+
+        <!-- (KEEP) "Cancellation Policy" gold link -->
+        <a class="rv-room__policy" href="#">
+          Cancellation Policy
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ─── FIX #4: Full price breakdown (was truncated) ─── -->
+    <section class="rv-card">
+      <div class="rv-card__body">
+        <span class="rv-eyebrow">Price Details</span>
+
+        <div class="rv-price__row">
+          <span class="rv-price__label">Room rate (2 nights)</span>
+          <span class="rv-price__val">₹50,000</span>
+        </div>
+        <!-- FIX #4: Member discount row in gold so the saving is
+             instantly visible inside the breakdown. -->
+        <div class="rv-price__row rv-price__row--discount">
+          <span class="rv-price__label">Member discount</span>
+          <span class="rv-price__val">−₹13,200</span>
+        </div>
+        <!-- (KEEP) sage/green "Taxes & GST included" -->
+        <div class="rv-price__row rv-price__row--taxes">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Taxes &amp; GST included
+        </div>
+        <div class="rv-price__row rv-price__row--total">
+          <span class="rv-price__label">Total</span>
+          <span class="rv-price__val">₹36,800</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FIX #1: Coupon / gift card row deliberately omitted.
+         No replacement element — the space just breathes. -->
+
+  </main>
+
+  <!-- ══════════════════════════════════════════════
+       FIX #3 + FIX #7 — Sticky footer
+       ══════════════════════════════════════════════ -->
+  <div class="rv-footer">
+    <!-- FIX #3: single sage/green member saving line above the CTA -->
+    <span class="rv-footer__save">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      You're saving ₹13,200 vs. public rate
+    </span>
+    <!-- FIX #7: "Continue" renamed to "Confirm Stay →".
+         Same gold pill style, size, and position as before. -->
+    <button class="rv-cta" type="button">
+      Confirm Stay
+      <span aria-hidden="true">→</span>
+    </button>
+  </div>
+
+  <script>
+    // Keep countdown format ("m:ss") — FIX #2 changed only the
+    // colour/icon to gold, not the behaviour.
+    (function() {
+      const el = document.getElementById('rv-countdown');
+      if (!el) return;
+      let total = 4 * 60 + 58;
+      const tick = () => {
+        if (total <= 0) { el.textContent = '0:00'; return; }
+        total -= 1;
+        const m = Math.floor(total / 60);
+        const s = String(total % 60).padStart(2, '0');
+        el.textContent = m + ':' + s;
+      };
+      setInterval(tick, 1000);
+    })();
+  </script>
+</body>
+</html>
