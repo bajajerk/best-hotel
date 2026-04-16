@@ -23,6 +23,7 @@ import TopSellers, { computeTopSellers, type TopSellerHotel } from "@/components
 import RecommendationHub from "@/components/RecommendationHub";
 import OccasionCarousel from "@/components/OccasionCarousel";
 import FeaturedDestinationsGrid from "@/components/FeaturedDestinationsGrid";
+import RateReveal from "@/components/RateReveal";
 
 export interface HomePageClientProps {
   initialCities: CuratedCity[];
@@ -1030,6 +1031,11 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
           FEATURED DESTINATIONS — curated hotel card grid
       ================================================================ */}
       <FeaturedDestinationsGrid />
+
+      {/* ================================================================
+          RATE REVEAL — member rate blur-to-clear animation on scroll
+      ================================================================ */}
+      <RateReveal />
 
       {/* ================================================================
           TOP SELLERS — most booked properties
