@@ -360,6 +360,97 @@
     /* Breathing room below last section so sticky bar never overlaps */
     .bottom-spacer { height: 24px; }
 
+    /* ──────────────────────────────────────────────────────────
+       Typeahead active state (Screen 2) — shown when user types
+       Cities · "Hotels in [city]" · Nearby regions · Empty state
+       ────────────────────────────────────────────────────────── */
+    .typeahead { display: none; padding-top: 8px; }
+    .typeahead.is-active { display: block; }
+    .default-sections.is-hidden { display: none; }
+
+    .ta-section + .ta-section { margin-top: 8px; }
+    .ta-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--gold);
+      text-transform: uppercase;
+      padding: 16px 20px 10px;
+    }
+
+    .ta-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--ivory-05);
+      transition: background 0.15s;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+    }
+    .ta-item:last-child { border-bottom: none; }
+    .ta-item:hover,
+    .ta-item:active { background: var(--ivory-05); }
+    .ta-item__icon {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--navy-raised);
+      border: 1px solid var(--ivory-10);
+      border-radius: 6px;
+      color: var(--ivory-70);
+    }
+    .ta-item__body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .ta-item__title {
+      font-size: 15px;
+      color: var(--ivory);
+      font-weight: 500;
+      line-height: 1.3;
+    }
+    .ta-item__title .ta-match {
+      color: var(--gold);
+      font-weight: 600;
+    }
+    .ta-item__rate {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+    }
+
+    .ta-empty {
+      padding: 32px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .ta-empty__title {
+      font-size: 14px;
+      color: var(--ivory-70);
+    }
+    .ta-empty__link {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+      text-transform: uppercase;
+      padding: 8px 0;
+      transition: color 0.15s;
+    }
+    .ta-empty__link:hover { color: #d9b95e; }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         transition: none !important;
@@ -397,6 +488,15 @@
         />
       </div>
     </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         TYPEAHEAD (Screen 2) — active when user types 2+ chars
+         Cities only · Hotels in city · Nearby regions · Empty state
+         No transit results (no railway/bus/airport rows).
+         ══════════════════════════════════════════════════════════ -->
+    <div class="typeahead" id="typeahead" role="listbox" aria-label="Destination results"></div>
+
+    <div class="default-sections" id="defaultSections">
 
     <!-- ══════════════════════════════════════════════════════════
          COLLECTIONS (new) — horizontal strip, dark + gold border
@@ -541,6 +641,8 @@
       </div>
     </section>
 
+    </div><!-- /.default-sections -->
+
     <div class="bottom-spacer"></div>
 
   </main>
@@ -557,12 +659,238 @@
   </div>
 
   <script>
-    // Hide the sticky bottom bar while the member is typing a destination
-    // (so it never competes with the keyboard / typeahead).
+    // ── Destination data — cities, hotels-by-city, regions ──
+    // Luxury platform: cities / regions / specific hotels only.
+    // No train stations, bus stops, or airports.
+    const CITIES = [
+      { name: 'Udaipur',   region: 'Rajasthan',  country: 'India' },
+      { name: 'Jaipur',    region: 'Rajasthan',  country: 'India' },
+      { name: 'Jodhpur',   region: 'Rajasthan',  country: 'India' },
+      { name: 'Jaisalmer', region: 'Rajasthan',  country: 'India' },
+      { name: 'Bali',      region: '',           country: 'Indonesia' },
+      { name: 'Bangkok',   region: '',           country: 'Thailand' },
+      { name: 'Maldives',  region: '',           country: 'Maldives' },
+      { name: 'Tokyo',     region: '',           country: 'Japan' },
+      { name: 'Kyoto',     region: '',           country: 'Japan' },
+      { name: 'Paris',     region: '',           country: 'France' },
+      { name: 'Singapore', region: '',           country: 'Singapore' },
+      { name: 'Dubai',     region: '',           country: 'UAE' },
+      { name: 'Santorini', region: '',           country: 'Greece' },
+      { name: 'Lisbon',    region: '',           country: 'Portugal' },
+      { name: 'Marrakech', region: '',           country: 'Morocco' },
+    ];
+
+    const HOTELS_BY_CITY = {
+      'Udaipur': [
+        { name: 'The Oberoi Udaivilas',    rate: 48400 },
+        { name: 'Taj Lake Palace',         rate: 62000 },
+        { name: 'Leela Palace Udaipur',    rate: 44500 },
+      ],
+      'Jaipur': [
+        { name: 'Rambagh Palace',          rate: 52000 },
+        { name: 'The Oberoi Rajvilas',     rate: 46000 },
+        { name: 'Taj Jai Mahal Palace',    rate: 38000 },
+      ],
+      'Jodhpur': [
+        { name: 'Umaid Bhawan Palace',     rate: 58000 },
+        { name: 'Raas Jodhpur',            rate: 32000 },
+        { name: 'The Ajit Bhawan',         rate: 18400 },
+      ],
+      'Jaisalmer': [
+        { name: 'Suryagarh Jaisalmer',     rate: 28000 },
+        { name: 'The Serai',               rate: 42000 },
+      ],
+      'Bali': [
+        { name: 'Four Seasons Jimbaran',   rate: 46600 },
+        { name: 'Amandari',                rate: 86400 },
+        { name: 'Bulgari Resort Bali',     rate: 74000 },
+      ],
+      'Bangkok': [
+        { name: 'Mandarin Oriental',       rate: 36200 },
+        { name: 'The Siam',                rate: 42000 },
+        { name: 'Capella Bangkok',         rate: 58000 },
+      ],
+      'Maldives': [
+        { name: 'Soneva Jani',             rate: 148000 },
+        { name: 'Cheval Blanc Randheli',   rate: 184000 },
+        { name: 'Velaa Private Island',    rate: 126000 },
+      ],
+      'Tokyo': [
+        { name: 'Aman Tokyo',              rate: 92000 },
+        { name: 'The Peninsula Tokyo',     rate: 64000 },
+        { name: 'Hoshinoya Tokyo',         rate: 58000 },
+      ],
+      'Kyoto': [
+        { name: 'Aman Kyoto',              rate: 108000 },
+        { name: 'The Ritz-Carlton Kyoto',  rate: 74000 },
+      ],
+      'Paris': [
+        { name: 'Le Bristol Paris',        rate: 96000 },
+        { name: 'Hôtel de Crillon',        rate: 108000 },
+        { name: 'The Ritz Paris',          rate: 112000 },
+      ],
+      'Singapore': [
+        { name: 'Raffles Singapore',       rate: 64000 },
+        { name: 'The Fullerton Bay',       rate: 38000 },
+      ],
+      'Dubai': [
+        { name: 'Bulgari Resort Dubai',    rate: 72000 },
+        { name: 'One&Only The Palm',       rate: 58000 },
+      ],
+      'Santorini': [
+        { name: 'Canaves Oia Suites',      rate: 62000 },
+        { name: 'Grace Hotel Santorini',   rate: 58000 },
+      ],
+      'Lisbon': [
+        { name: 'Four Seasons Ritz',       rate: 42000 },
+      ],
+      'Marrakech': [
+        { name: 'La Mamounia',             rate: 48000 },
+        { name: 'Royal Mansour',           rate: 124000 },
+      ],
+    };
+
+    const REGIONS = [
+      { name: 'Rajasthan', country: 'India' },
+      { name: 'Kerala',    country: 'India' },
+      { name: 'Tuscany',   country: 'Italy' },
+      { name: 'Provence',  country: 'France' },
+      { name: 'Bali',      country: 'Indonesia' },
+      { name: 'Phuket',    country: 'Thailand' },
+    ];
+
+    // ── Icons (inlined SVG — location pin + building/hotel) ──
+    const ICON_PIN = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+      </svg>`;
+    const ICON_HOTEL = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 21V7a1 1 0 0 1 1-1h6v15"/><path d="M10 21V3a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v18"/>
+        <line x1="14" y1="7" x2="17" y2="7"/><line x1="14" y1="11" x2="17" y2="11"/><line x1="14" y1="15" x2="17" y2="15"/>
+        <line x1="6" y1="11" x2="7" y2="11"/><line x1="6" y1="15" x2="7" y2="15"/>
+      </svg>`;
+
+    const INR = n => '₹' + n.toLocaleString('en-IN');
+    const escapeHtml = (s) => s.replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+
+    // Highlight the matched prefix in gold + bold. Example: "Udai" in "Udaipur".
+    function highlightMatch(text, query) {
+      const safeText = escapeHtml(text);
+      if (!query) return safeText;
+      const lower = text.toLowerCase();
+      const q = query.toLowerCase();
+      if (!lower.startsWith(q)) return safeText;
+      const matched = escapeHtml(text.slice(0, query.length));
+      const rest = escapeHtml(text.slice(query.length));
+      return `<span class="ta-match">${matched}</span>${rest}`;
+    }
+
+    // Build the WhatsApp concierge link with the typed text pre-filled.
+    function conciergeHref(typedText) {
+      const msg = `Hi, I'm looking for hotels in ${typedText}. Can you help?`;
+      return `https://wa.me/919876543210?text=${encodeURIComponent(msg)}`;
+    }
+
+    // ── Render the typeahead for a given query ──
+    const typeaheadEl = document.getElementById('typeahead');
+    const defaultSectionsEl = document.getElementById('defaultSections');
+
+    function renderTypeahead(rawQuery) {
+      const query = rawQuery.trim();
+      const q = query.toLowerCase();
+
+      const cityMatch = CITIES.find(c => c.name.toLowerCase().startsWith(q));
+      const regionMatches = REGIONS.filter(r => r.name.toLowerCase().startsWith(q));
+
+      let html = '';
+
+      if (cityMatch) {
+        // 1 — Exact city match (location pin icon, gold-bold matched prefix)
+        const locSuffix = cityMatch.region
+          ? `, ${cityMatch.region}`
+          : (cityMatch.country ? `, ${cityMatch.country}` : '');
+        html += `
+          <button class="ta-item" data-city="${escapeHtml(cityMatch.name)}" role="option">
+            <span class="ta-item__icon">${ICON_PIN}</span>
+            <span class="ta-item__body">
+              <span class="ta-item__title">${highlightMatch(cityMatch.name, query)}${escapeHtml(locSuffix)}</span>
+            </span>
+          </button>
+        `;
+
+        // 2 — "HOTELS IN [CITY]" — up to 3 hotels, each with member rate line
+        const hotels = (HOTELS_BY_CITY[cityMatch.name] || []).slice(0, 3);
+        if (hotels.length) {
+          html += `<div class="ta-label">Hotels in ${escapeHtml(cityMatch.name)}</div>`;
+          html += hotels.map(h => `
+            <button class="ta-item" data-hotel="${escapeHtml(h.name)}" role="option">
+              <span class="ta-item__icon">${ICON_HOTEL}</span>
+              <span class="ta-item__body">
+                <span class="ta-item__title">${escapeHtml(h.name)}</span>
+                <span class="ta-item__rate">Member rate from ${INR(h.rate)}/night</span>
+              </span>
+            </button>
+          `).join('');
+        }
+      } else if (regionMatches.length) {
+        // 3 — Nearby regions fallback (only when no exact city match)
+        html += `<div class="ta-label">Nearby Regions</div>`;
+        html += regionMatches.map(r => `
+          <button class="ta-item" data-region="${escapeHtml(r.name)}" role="option">
+            <span class="ta-item__icon">${ICON_PIN}</span>
+            <span class="ta-item__body">
+              <span class="ta-item__title">${highlightMatch(r.name, query)}, ${escapeHtml(r.country)}</span>
+            </span>
+          </button>
+        `).join('');
+      } else if (query.length >= 3) {
+        // 4 — Empty state: "No destinations found" + concierge WhatsApp link
+        html += `
+          <div class="ta-empty">
+            <div class="ta-empty__title">No destinations found</div>
+            <a class="ta-empty__link" href="${conciergeHref(query)}" target="_blank" rel="noopener">Ask our concierge →</a>
+          </div>
+        `;
+      }
+
+      typeaheadEl.innerHTML = html;
+    }
+
+    // ── Input wiring ──
+    // - 0–1 chars: show default sections (Collections, Recent, Viewed), no typeahead
+    // - 2+ chars: hide default sections, show typeahead
+    // - 3+ chars with no matches: typeahead shows the empty state
     const input = document.getElementById('searchInput');
     const bar = document.getElementById('bottomBar');
-    input.addEventListener('input', () => {
-      bar.classList.toggle('bottom-bar--hidden', input.value.trim().length > 0);
+
+    function syncSearchState() {
+      const value = input.value;
+      const trimmedLen = value.trim().length;
+      bar.classList.toggle('bottom-bar--hidden', trimmedLen > 0);
+
+      if (trimmedLen >= 2) {
+        renderTypeahead(value);
+        typeaheadEl.classList.add('is-active');
+        defaultSectionsEl.classList.add('is-hidden');
+      } else {
+        typeaheadEl.classList.remove('is-active');
+        typeaheadEl.innerHTML = '';
+        defaultSectionsEl.classList.remove('is-hidden');
+      }
+    }
+    input.addEventListener('input', syncSearchState);
+
+    // Tapping a typeahead result fills the input with the selected destination.
+    typeaheadEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.ta-item');
+      if (!btn) return;
+      const value = btn.dataset.city || btn.dataset.hotel || btn.dataset.region;
+      if (!value) return;
+      input.value = value;
+      syncSearchState();
     });
 
     // Recent searches: X dismiss removes the row from the list.
