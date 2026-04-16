@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=420, initial-scale=1.0, viewport-fit=cover" />
+  <title>Taj Aravali — Guest Details (Mobile, fixed)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* Voyagr Club tokens — unchanged across prototypes */
+    :root {
+      --navy: #0B1B2B;
+      --navy-deep: #070f1a;
+      --navy-raised: #112740;
+      --gold: #C9A84C;
+      --gold-soft: rgba(201, 168, 76, 0.5);
+      --gold-line: rgba(201, 168, 76, 0.15);
+      --gold-line-strong: rgba(201, 168, 76, 0.35);
+      --gold-pale: rgba(201, 168, 76, 0.08);
+      --ivory: #F5F0E8;
+      --ivory-80: rgba(245, 240, 232, 0.8);
+      --ivory-70: rgba(245, 240, 232, 0.7);
+      --ivory-60: rgba(245, 240, 232, 0.6);
+      --ivory-50: rgba(245, 240, 232, 0.5);
+      --ivory-40: rgba(245, 240, 232, 0.4);
+      --ivory-20: rgba(245, 240, 232, 0.2);
+      --ivory-10: rgba(245, 240, 232, 0.1);
+      --ivory-05: rgba(245, 240, 232, 0.05);
+      --sage: #7FA393;
+      --sage-deep: #3E5D52;      /* darker shade of the sage/green used in-app */
+      --sage-pill: rgba(127, 163, 147, 0.18);
+      --muted: rgba(245, 240, 232, 0.35);
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--navy-deep);
+      color: var(--ivory);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ── State gallery — two phone frames on one page so pre-filled
+         and empty states are both visible without a toggle. ────── */
+    .states {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 28px;
+      padding: 28px 16px 56px;
+    }
+    .state {
+      width: 420px;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .state__label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+      padding: 0 2px;
+    }
+    .state__label b {
+      font-weight: 500;
+      color: var(--ivory);
+    }
+    .phone {
+      background: var(--navy);
+      border: 1px solid var(--ivory-10);
+      border-radius: 22px;
+      overflow: hidden;
+      position: relative;
+      padding-bottom: 132px;   /* space for the sticky Continue footer */
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Sticky header bar — identical chrome to
+       the review/package/room list screens. Back
+       arrow + step label + screen title.
+       ────────────────────────────────────────────── */
+    .gd-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--navy);
+      border-bottom: 1px solid var(--gold-line);
+    }
+    .gd-topbar__row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+    }
+    .gd-back {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ivory-10);
+      border-radius: 999px;
+      color: var(--ivory);
+      flex-shrink: 0;
+    }
+    .gd-summary {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .gd-summary__label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+    }
+    /* (KEEP) "Who's checking in?" header style — serif, ivory */
+    .gd-summary__title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      color: var(--ivory);
+      line-height: 1.1;
+      font-weight: 500;
+    }
+
+    /* ──────────────────────────────────────────────
+       FIX #6 — Urgency timer (gold, not red/orange).
+       Identical treatment to the Review screen: gold
+       colour, gold icon, gold-pale background, gold
+       hairline. Countdown format/behaviour unchanged.
+       ────────────────────────────────────────────── */
+    .gd-hold {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--gold-pale);
+      border-bottom: 1px solid var(--gold-line);
+      color: var(--gold);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .gd-hold svg { color: var(--gold); }
+    .gd-hold__time {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.06em;
+    }
+
+    /* ──────────────────────────────────────────────
+       FIX #4 — Pre-fill banner. Dark-green (sage)
+       background, white/ivory text, one line, small.
+       Sits directly below the urgency timer so the
+       user reads it before touching the form.
+       Shown only in the pre-filled state.
+       ────────────────────────────────────────────── */
+    .gd-prefill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      background: var(--sage-deep);
+      color: var(--ivory);
+      font-size: 12px;
+      line-height: 1.3;
+      border-bottom: 1px solid rgba(0,0,0,0.2);
+    }
+    .gd-prefill__check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+      color: var(--ivory);
+      flex-shrink: 0;
+    }
+    .gd-prefill__text { flex: 1; min-width: 0; }
+    .gd-prefill__edit {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ivory);
+      opacity: 0.9;
+      border-bottom: 1px solid rgba(245,240,232,0.45);
+      padding-bottom: 1px;
+      flex-shrink: 0;
+    }
+
+    /* Page container — vertical stack of cards */
+    .gd-page {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px 14px 20px;
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Dark card base — same card style used on
+       every other screen in the booking funnel.
+       ────────────────────────────────────────────── */
+    .gd-card {
+      background: var(--navy-raised);
+      border: 1px solid var(--ivory-10);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .gd-card__body {
+      padding: 14px 14px;
+    }
+
+    /* (KEEP) "Room 01" section label — tiny DM Mono eyebrow */
+    .gd-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+      margin-bottom: 12px;
+      display: block;
+    }
+    .gd-eyebrow--room {
+      color: var(--gold);
+      letter-spacing: 0.22em;
+    }
+
+    /* ──────────────────────────────────────────────
+       FIX #7 — Remaining visible fields only:
+         · First Name (pre-filled)
+         · Last Name  (pre-filled)
+         · Special Requests (optional textarea)
+       Plus two collapsed disclosures (GST / Identity).
+       DOB and Nationality removed entirely → no
+       calendar picker, no country dropdown.
+       ────────────────────────────────────────────── */
+    .gd-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .gd-field + .gd-field {
+      margin-top: 12px;
+    }
+    /* (KEEP) Label style above each field — DM Mono, muted */
+    .gd-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+      margin-bottom: 6px;
+    }
+    .gd-label__opt {
+      margin-left: 6px;
+      color: var(--ivory-40);
+      letter-spacing: 0.14em;
+    }
+    /* (KEEP) Input field style — dark bg, rounded, white text */
+    .gd-input,
+    .gd-textarea {
+      width: 100%;
+      background: var(--navy-deep);
+      border: 1px solid var(--ivory-10);
+      border-radius: 4px;
+      color: var(--ivory);
+      font-family: var(--font-body);
+      font-size: 14px;
+      padding: 11px 12px;
+      outline: none;
+      -webkit-appearance: none;
+      transition: border-color 0.15s;
+    }
+    .gd-input:focus,
+    .gd-textarea:focus {
+      border-color: var(--gold-soft);
+    }
+    .gd-input::placeholder,
+    .gd-textarea::placeholder {
+      color: var(--ivory-40);
+    }
+    .gd-textarea {
+      resize: vertical;
+      min-height: 72px;
+      line-height: 1.45;
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) GST Details — collapsed disclosure. Same
+       "Add GST" link treatment as on the desktop
+       funnel. Tap to expand (not wired in prototype).
+       ────────────────────────────────────────────── */
+    .gd-disclose {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .gd-disclose__text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .gd-disclose__title {
+      font-size: 13.5px;
+      color: var(--ivory);
+    }
+    .gd-disclose__sub {
+      font-size: 11.5px;
+      color: var(--ivory-60);
+      line-height: 1.35;
+    }
+    .gd-disclose__add {
+      flex-shrink: 0;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border-bottom: 1px solid var(--gold-line-strong);
+      padding-bottom: 2px;
+    }
+
+    /* ──────────────────────────────────────────────
+       FIX #3 — Identity Verification card.
+       Heading changed from "PAN Details — As per RBI,
+       PAN details are mandatory for all…" (compliance
+       warning tone) to "Identity Verification" (service
+       tone). Sub-label kept verbatim per brief. Input
+       field and icon kept exactly as is.
+       ────────────────────────────────────────────── */
+    .gd-id__head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .gd-id__icon {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ivory-10);
+      border-radius: 4px;
+      background: var(--navy-deep);
+      color: var(--gold);
+    }
+    .gd-id__titles {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .gd-id__title {
+      font-size: 14px;
+      color: var(--ivory);
+      font-weight: 500;
+    }
+    .gd-id__sub {
+      font-size: 11.5px;
+      color: var(--ivory-60);
+      line-height: 1.35;
+    }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) "Continue" gold pill — size + position
+       on the sticky footer preserved from other
+       screens. FIX #8: label only — "Continue" →
+       "Continue to Payment →".
+       ────────────────────────────────────────────── */
+    .gd-footer {
+      position: absolute;   /* absolute inside the phone frame for gallery */
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--navy);
+      border-top: 1px solid var(--gold-line);
+      padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 30;
+    }
+    .gd-footer__meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ivory-60);
+    }
+    .gd-footer__total {
+      font-family: var(--font-display);
+      font-size: 20px;
+      line-height: 1;
+      color: var(--gold);
+      letter-spacing: 0;
+      text-transform: none;
+      font-weight: 500;
+    }
+    .gd-cta {
+      width: 100%;
+      padding: 14px 22px;
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--navy);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+    .gd-cta:hover { background: #d9b95e; }
+
+    /* Notes rail — short annotation per state so reviewers can
+       see the delta between pre-filled and empty at a glance. */
+    .state__notes {
+      font-size: 11.5px;
+      color: var(--ivory-60);
+      line-height: 1.5;
+      padding: 0 2px;
+    }
+    .state__notes b { color: var(--ivory); font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <section class="states">
+
+    <!-- ════════════════════════════════════════════
+         STATE A — PRE-FILLED (member profile exists)
+         · Pre-fill banner visible (FIX #4)
+         · First / Last names populated
+         · Special Requests placeholder
+         · GST collapsed ("Add GST" link — KEEP)
+         · Identity Verification (FIX #3 — renamed)
+         ════════════════════════════════════════════ -->
+    <div class="state">
+      <div class="state__label">State A · <b>Pre-filled (member profile)</b></div>
+
+      <div class="phone">
+        <!-- (KEEP) Sticky header — same chrome as other screens -->
+        <header class="gd-topbar">
+          <div class="gd-topbar__row">
+            <a class="gd-back" href="review-reservation-mobile-prototype.html" aria-label="Back">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </a>
+            <div class="gd-summary">
+              <span class="gd-summary__label">Step 3 of 4 · Guest Details</span>
+              <!-- (KEEP) "Who's checking in?" header style -->
+              <span class="gd-summary__title">Who&rsquo;s checking in?</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- FIX #6 — Urgency timer in gold (was orange/red). -->
+        <div class="gd-hold" role="status" aria-live="polite">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <polyline points="12 7 12 12 15.5 13.5"/>
+          </svg>
+          Room(s) held for <span class="gd-hold__time" data-countdown>4:55</span>
+        </div>
+
+        <!-- FIX #4 — Pre-fill banner. Dark green (sage-deep), ivory
+             text, one line, small. Sits above the form. -->
+        <div class="gd-prefill" role="note">
+          <span class="gd-prefill__check" aria-hidden="true">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+          <span class="gd-prefill__text">Details pre-filled from your profile</span>
+          <a class="gd-prefill__edit" href="#">Edit</a>
+        </div>
+
+        <main class="gd-page">
+
+          <!-- ─── (KEEP) "Room 01" section label + guest name fields ───
+               FIX #7: DOB + Nationality removed. Only First/Last Name
+               + Special Requests remain as visible fields in this card. -->
+          <section class="gd-card">
+            <div class="gd-card__body">
+              <span class="gd-eyebrow gd-eyebrow--room">Room 01 · Primary Guest</span>
+
+              <div class="gd-row">
+                <div class="gd-field">
+                  <label class="gd-label" for="a-first">First Name</label>
+                  <!-- Pre-filled from member profile -->
+                  <input class="gd-input" id="a-first" type="text" value="Aarav" autocomplete="given-name" />
+                </div>
+                <div class="gd-field">
+                  <label class="gd-label" for="a-last">Last Name</label>
+                  <input class="gd-input" id="a-last" type="text" value="Mehta" autocomplete="family-name" />
+                </div>
+              </div>
+
+              <!-- FIX #1 + FIX #2 — DOB field + MM/DD/YYYY calendar
+                   picker REMOVED. FIX #2 — Nationality dropdown REMOVED.
+                   No replacements rendered. -->
+
+              <div class="gd-field" style="margin-top: 14px;">
+                <label class="gd-label" for="a-notes">
+                  Special Requests <span class="gd-label__opt">Optional</span>
+                </label>
+                <textarea class="gd-textarea" id="a-notes" placeholder="Late check-in, high floor, anniversary…"></textarea>
+              </div>
+            </div>
+          </section>
+
+          <!-- ─── (KEEP) GST Details — collapsed by default, "Add GST" link ─── -->
+          <section class="gd-card">
+            <div class="gd-card__body gd-disclose">
+              <div class="gd-disclose__text">
+                <span class="gd-disclose__title">GST Details</span>
+                <span class="gd-disclose__sub">Claim input tax credit on business stays</span>
+              </div>
+              <a class="gd-disclose__add" href="#">Add GST →</a>
+            </div>
+          </section>
+
+          <!-- ─── FIX #3 — "PAN Details / RBI warning" heading
+               reframed as "Identity Verification" (service tone).
+               Sub-label + input + icon kept exactly as is. ─── -->
+          <section class="gd-card">
+            <div class="gd-card__body">
+              <div class="gd-id__head">
+                <span class="gd-id__icon" aria-hidden="true">
+                  <!-- (KEEP) Same identity icon as before -->
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="5" width="18" height="14" rx="2"/>
+                    <circle cx="9" cy="12" r="2.5"/>
+                    <path d="M14 10h5"/>
+                    <path d="M14 14h4"/>
+                    <path d="M6 17.5c.6-1.5 1.8-2.3 3-2.3s2.4.8 3 2.3"/>
+                  </svg>
+                </span>
+                <div class="gd-id__titles">
+                  <!-- FIX #3: heading text is the ONLY change in this card -->
+                  <span class="gd-id__title">Identity Verification</span>
+                  <span class="gd-id__sub">Required by RBI for bookings above &#8377;2,00,000</span>
+                </div>
+              </div>
+              <label class="gd-label" for="a-pan">PAN Number</label>
+              <input class="gd-input" id="a-pan" type="text" placeholder="ABCDE1234F" autocapitalize="characters" maxlength="10" />
+            </div>
+          </section>
+
+          <!-- FIX #5 — "Add a loyalty program" checkbox REMOVED. No
+               replacement rendered. Voyagr is the loyalty layer.
+               FIX (coupon) — "DBS25 applied" coupon row REMOVED,
+               matching the Review screen pattern. -->
+
+        </main>
+
+        <!-- (KEEP) Sticky footer / gold pill — same position + size.
+             FIX #8: label "Continue" → "Continue to Payment →". -->
+        <div class="gd-footer">
+          <div class="gd-footer__meta">
+            <span>Total for 2 nights</span>
+            <span class="gd-footer__total">&#8377;36,800</span>
+          </div>
+          <button class="gd-cta" type="button">
+            Continue to Payment
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </div>
+
+      <p class="state__notes">
+        <b>Visible fields:</b> First Name, Last Name, Special Requests &middot;
+        <b>Collapsed:</b> GST, Identity Verification &middot;
+        <b>Removed:</b> DOB, Nationality, loyalty-program checkbox, coupon row.
+      </p>
+    </div>
+
+    <!-- ════════════════════════════════════════════
+         STATE B — EMPTY (no member profile / new guest)
+         · No pre-fill banner
+         · First / Last names empty with placeholders
+         · Identical structure to State A otherwise
+         ════════════════════════════════════════════ -->
+    <div class="state">
+      <div class="state__label">State B · <b>Empty (new guest)</b></div>
+
+      <div class="phone">
+        <header class="gd-topbar">
+          <div class="gd-topbar__row">
+            <a class="gd-back" href="review-reservation-mobile-prototype.html" aria-label="Back">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </a>
+            <div class="gd-summary">
+              <span class="gd-summary__label">Step 3 of 4 · Guest Details</span>
+              <span class="gd-summary__title">Who&rsquo;s checking in?</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- FIX #6 — Urgency timer in gold (was orange/red). -->
+        <div class="gd-hold" role="status" aria-live="polite">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <polyline points="12 7 12 12 15.5 13.5"/>
+          </svg>
+          Room(s) held for <span class="gd-hold__time" data-countdown>4:55</span>
+        </div>
+
+        <!-- FIX #4 — No pre-fill banner in the empty state. -->
+
+        <main class="gd-page">
+
+          <section class="gd-card">
+            <div class="gd-card__body">
+              <span class="gd-eyebrow gd-eyebrow--room">Room 01 · Primary Guest</span>
+
+              <div class="gd-row">
+                <div class="gd-field">
+                  <label class="gd-label" for="b-first">First Name</label>
+                  <input class="gd-input" id="b-first" type="text" placeholder="First name" autocomplete="given-name" />
+                </div>
+                <div class="gd-field">
+                  <label class="gd-label" for="b-last">Last Name</label>
+                  <input class="gd-input" id="b-last" type="text" placeholder="Last name" autocomplete="family-name" />
+                </div>
+              </div>
+
+              <div class="gd-field" style="margin-top: 14px;">
+                <label class="gd-label" for="b-notes">
+                  Special Requests <span class="gd-label__opt">Optional</span>
+                </label>
+                <textarea class="gd-textarea" id="b-notes" placeholder="Late check-in, high floor, anniversary…"></textarea>
+              </div>
+            </div>
+          </section>
+
+          <section class="gd-card">
+            <div class="gd-card__body gd-disclose">
+              <div class="gd-disclose__text">
+                <span class="gd-disclose__title">GST Details</span>
+                <span class="gd-disclose__sub">Claim input tax credit on business stays</span>
+              </div>
+              <a class="gd-disclose__add" href="#">Add GST →</a>
+            </div>
+          </section>
+
+          <section class="gd-card">
+            <div class="gd-card__body">
+              <div class="gd-id__head">
+                <span class="gd-id__icon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="5" width="18" height="14" rx="2"/>
+                    <circle cx="9" cy="12" r="2.5"/>
+                    <path d="M14 10h5"/>
+                    <path d="M14 14h4"/>
+                    <path d="M6 17.5c.6-1.5 1.8-2.3 3-2.3s2.4.8 3 2.3"/>
+                  </svg>
+                </span>
+                <div class="gd-id__titles">
+                  <span class="gd-id__title">Identity Verification</span>
+                  <span class="gd-id__sub">Required by RBI for bookings above &#8377;2,00,000</span>
+                </div>
+              </div>
+              <label class="gd-label" for="b-pan">PAN Number</label>
+              <input class="gd-input" id="b-pan" type="text" placeholder="ABCDE1234F" autocapitalize="characters" maxlength="10" />
+            </div>
+          </section>
+
+        </main>
+
+        <div class="gd-footer">
+          <div class="gd-footer__meta">
+            <span>Total for 2 nights</span>
+            <span class="gd-footer__total">&#8377;36,800</span>
+          </div>
+          <button class="gd-cta" type="button">
+            Continue to Payment
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </div>
+
+      <p class="state__notes">
+        Same screen with <b>no pre-fill banner</b> and empty name inputs &mdash;
+        everything else (fields, copy, layout) is identical to State A.
+      </p>
+    </div>
+
+  </section>
+
+  <script>
+    // FIX #6 — countdown format/behaviour preserved from the Review
+    // screen; only colour/icon changed to gold. Runs both timers
+    // in sync so the two states stay visually aligned.
+    (function() {
+      const els = document.querySelectorAll('[data-countdown]');
+      if (!els.length) return;
+      let total = 4 * 60 + 55;
+      const render = () => {
+        const m = Math.floor(total / 60);
+        const s = String(total % 60).padStart(2, '0');
+        const txt = m + ':' + s;
+        els.forEach((el) => { el.textContent = txt; });
+      };
+      render();
+      setInterval(() => {
+        if (total <= 0) return;
+        total -= 1;
+        render();
+      }, 1000);
+    })();
+  </script>
+</body>
+</html>
