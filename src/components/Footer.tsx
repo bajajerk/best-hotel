@@ -15,7 +15,6 @@ const FOOTER_DESTINATIONS = [
 
 const FOOTER_ABOUT = [
   { label: "Our Story", href: "/#about-us" },
-  { label: "How It Works", href: "/#how-it-works" },
   { label: "Why Voyagr Club", href: "/#the-proof" },
   { label: "Preferred Rates", href: "/preferred-rates" },
   { label: "Preferred Partners", href: "/preferred-rates#partners" },

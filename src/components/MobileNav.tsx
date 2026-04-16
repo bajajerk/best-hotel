@@ -27,7 +27,6 @@ const PRIMARY_LINKS: {
     icon: "trending_down",
     subtext: "See if we can beat your current hotel price",
   },
-  { label: "How It Works", href: "/#how-it-works", icon: "info" },
   {
     label: "Preferred Rates",
     href: "/preferred-rates",

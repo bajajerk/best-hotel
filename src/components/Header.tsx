@@ -228,7 +228,7 @@ export default function Header() {
             </Link>
 
             <Link
-              href="/#how-it-works"
+              href="/preferred-rates"
               style={{
                 fontFamily: "var(--font-body)",
                 fontWeight: 500,
@@ -241,7 +241,7 @@ export default function Header() {
                 transition: "opacity 0.2s",
               }}
             >
-              How It Works
+              Preferred Rates
             </Link>
           </div>
 
