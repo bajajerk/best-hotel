@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Voyagr Club — Member Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #0B1B2B;
+      --navy-raised: #132338;
+      --navy-deep: #070f1a;
+      --navy-card: #0f1f33;
+      --gold: #C9A84C;
+      --gold-warm: #D6B966;
+      --gold-soft: rgba(201, 168, 76, 0.5);
+      --gold-line: rgba(201, 168, 76, 0.14);
+      --gold-line-soft: rgba(201, 168, 76, 0.08);
+      --gold-glow: rgba(201, 168, 76, 0.22);
+      --ivory: #F5F0E8;
+      --ivory-70: rgba(245, 240, 232, 0.70);
+      --ivory-55: rgba(245, 240, 232, 0.55);
+      --ivory-50: rgba(245, 240, 232, 0.50);
+      --ivory-40: rgba(245, 240, 232, 0.40);
+      --ivory-25: rgba(245, 240, 232, 0.25);
+      --ivory-15: rgba(245, 240, 232, 0.15);
+      --ivory-10: rgba(245, 240, 232, 0.10);
+      --ivory-05: rgba(245, 240, 232, 0.05);
+      --sage: #7FA393;
+      --sage-strong: #93B9A7;
+      --sage-bg: rgba(127, 163, 147, 0.16);
+      --sage-border: rgba(127, 163, 147, 0.32);
+      --muted: rgba(245, 240, 232, 0.40);
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'DM Mono', ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { background: var(--navy); }
+    body {
+      color: var(--ivory);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ── Ambient luxe background ── */
+    .ambience {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ambience::before {
+      content: "";
+      position: absolute;
+      top: -12%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1040px;
+      height: 1040px;
+      background: radial-gradient(circle at center,
+        rgba(201, 168, 76, 0.10) 0%,
+        rgba(201, 168, 76, 0.04) 30%,
+        transparent 65%);
+      filter: blur(10px);
+    }
+    .ambience::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(245, 240, 232, 0.022) 1px, transparent 1px);
+      background-size: 3px 3px;
+      opacity: 0.7;
+      mix-blend-mode: screen;
+    }
+
+    /* ── Top rail ── */
+    .rail {
+      position: relative;
+      z-index: 2;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--gold-line);
+    }
+    .rail__inner {
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .club-logo {
+      font-family: var(--font-display);
+      font-size: 20px;
+      letter-spacing: 0.08em;
+      color: var(--ivory);
+    }
+    .club-logo em { font-style: italic; color: var(--gold); font-weight: 400; }
+
+    .rail__account {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #d6b966, #8e7a3c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 14px;
+      color: var(--navy-deep);
+      font-weight: 500;
+    }
+    .rail__name {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ivory-55);
+    }
+
+    /* ── Shell ── */
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* ── Header ── */
+    .hero-header {
+      opacity: 0;
+      transform: translateY(8px);
+      animation: riseIn 0.8s ease-out 0.05s forwards;
+    }
+    .hero-header__greeting {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 300;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      color: var(--ivory);
+    }
+    .hero-header__greeting em {
+      font-style: italic;
+      color: var(--gold);
+      font-weight: 400;
+    }
+    .hero-header__since {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── Savings hero ── */
+    .savings-hero {
+      margin-top: 48px;
+      padding: 56px 24px 48px;
+      text-align: center;
+      border-top: 1px solid var(--gold-line);
+      border-bottom: 1px solid var(--gold-line);
+      position: relative;
+      opacity: 0;
+      transform: translateY(12px);
+      animation: riseIn 0.9s ease-out 0.25s forwards;
+    }
+    .savings-hero::before,
+    .savings-hero::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-soft), transparent);
+    }
+    .savings-hero::before { top: -1px; }
+    .savings-hero::after { bottom: -1px; }
+
+    .savings-hero__eyebrow {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .savings-hero__amount {
+      margin-top: 22px;
+      font-family: var(--font-display);
+      font-size: 64px;
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--gold);
+      text-shadow: 0 0 48px rgba(201, 168, 76, 0.25);
+    }
+    .savings-hero__caption {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Savings growth bar */
+    .savings-bar {
+      margin: 36px auto 0;
+      max-width: 560px;
+      display: flex;
+      gap: 4px;
+      height: 10px;
+    }
+    .seg {
+      position: relative;
+      flex: var(--seg-flex, 1);
+      background: linear-gradient(180deg, var(--gold-warm), var(--gold));
+      border-radius: 1px;
+      cursor: pointer;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    }
+    .seg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0));
+      opacity: 0.6;
+      border-radius: inherit;
+      pointer-events: none;
+    }
+    .seg:hover,
+    .seg:focus-visible {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+      box-shadow: 0 6px 20px rgba(201, 168, 76, 0.35);
+      outline: none;
+    }
+    .seg__tip {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      padding: 8px 12px;
+      background: var(--navy-deep);
+      border: 1px solid var(--gold-line);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ivory);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+      z-index: 5;
+    }
+    .seg__tip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: var(--navy-deep);
+    }
+    .seg:hover .seg__tip,
+    .seg:focus-visible .seg__tip,
+    .seg.is-active .seg__tip {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .seg.is-active {
+      filter: brightness(1.1);
+      box-shadow: 0 6px 20px rgba(201, 168, 76, 0.35);
+    }
+    .savings-bar__legend {
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      color: var(--ivory-40);
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      max-width: 560px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── Section frame ── */
+    .section {
+      margin-top: 48px;
+      opacity: 0;
+      transform: translateY(12px);
+      animation: riseIn 0.9s ease-out 0.45s forwards;
+    }
+    .section + .section { animation-delay: 0.55s; }
+    .section:nth-of-type(3) { animation-delay: 0.65s; }
+    .section:nth-of-type(4) { animation-delay: 0.75s; }
+    .section:nth-of-type(5) { animation-delay: 0.85s; }
+
+    .section__label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    /* ── Upcoming trip card ── */
+    .upcoming {
+      background: var(--navy-raised);
+      border-left: 3px solid var(--gold);
+      padding: 24px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .upcoming::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle at top right,
+        rgba(201, 168, 76, 0.08), transparent 60%);
+      pointer-events: none;
+    }
+    .upcoming__eyebrow {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .upcoming__top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .upcoming__title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 400;
+      line-height: 1.15;
+      letter-spacing: -0.005em;
+      color: var(--ivory);
+      margin-top: 10px;
+    }
+    .upcoming__dates {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    .count-pill {
+      margin-top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--sage-bg);
+      border: 1px solid var(--sage-border);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--sage-strong);
+      position: relative;
+      z-index: 1;
+    }
+    .count-pill__dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--sage-strong);
+      box-shadow: 0 0 10px rgba(147, 185, 167, 0.7);
+      animation: pulseDot 1.8s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    .upcoming__actions {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--gold-line);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+    .upcoming__action {
+      color: var(--ivory-50);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s ease;
+    }
+    .upcoming__action:hover { color: var(--ivory); }
+    .upcoming__action svg {
+      width: 11px;
+      height: 11px;
+      stroke: currentColor;
+      fill: none;
+    }
+    .upcoming__sep {
+      color: var(--gold);
+      font-weight: 500;
+    }
+
+    /* ── Past trips (2-up grid) ── */
+    .past-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .past-card {
+      display: flex;
+      background: var(--navy-card);
+      border: 1px solid var(--ivory-05);
+      transition: border-color 0.25s ease, transform 0.25s ease;
+    }
+    .past-card:hover {
+      border-color: var(--gold-line);
+      transform: translateY(-2px);
+    }
+    .past-card__img {
+      width: 120px;
+      flex-shrink: 0;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    .past-card__img::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 70%, rgba(15, 31, 51, 0.7));
+    }
+    .past-card__body {
+      flex: 1;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+    }
+    .past-card__hotel {
+      font-family: var(--font-display);
+      font-size: 18px;
+      line-height: 1.2;
+      color: var(--ivory);
+      letter-spacing: -0.005em;
+    }
+    .past-card__dates {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .past-card__saved {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 8px;
+    }
+    .past-card__link {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: gap 0.2s ease, color 0.2s ease;
+    }
+    .past-card__link:hover {
+      gap: 10px;
+      color: var(--gold-warm);
+    }
+
+    /* ── Recommendation ── */
+    .rec__intro {
+      font-size: 13px;
+      font-style: italic;
+      color: var(--ivory-40);
+      margin-bottom: 18px;
+    }
+    .rec__subintro {
+      margin-bottom: 12px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ivory-55);
+    }
+    .rec-card {
+      background: var(--navy-raised);
+      border: 1px solid var(--gold-line);
+      display: grid;
+      grid-template-columns: 1fr;
+      overflow: hidden;
+      transition: border-color 0.3s ease, transform 0.3s ease;
+    }
+    .rec-card:hover {
+      border-color: var(--gold-soft);
+      transform: translateY(-3px);
+    }
+    .rec-card__media {
+      aspect-ratio: 16 / 10;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    .rec-card__tag {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      padding: 6px 10px;
+      background: rgba(11, 27, 43, 0.8);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--gold-line);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .rec-card__body {
+      padding: 22px 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .rec-card__meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .rec-card__loc { color: var(--ivory-55); }
+    .rec-card__rating {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--gold);
+    }
+    .rec-card__name {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 1.15;
+      letter-spacing: -0.005em;
+      color: var(--ivory);
+    }
+    .rec-card__desc {
+      font-size: 13px;
+      color: var(--ivory-55);
+      line-height: 1.55;
+    }
+    .rec-card__price {
+      margin-top: 6px;
+      padding-top: 16px;
+      border-top: 1px solid var(--gold-line);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .rec-card__price-block {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .rec-card__strike {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ivory-40);
+      text-decoration: line-through;
+      letter-spacing: 0.12em;
+    }
+    .rec-card__rate {
+      font-family: var(--font-display);
+      font-size: 22px;
+      color: var(--gold);
+      font-weight: 400;
+    }
+    .rec-card__rate-unit {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .rec-card__cta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border: 1px solid var(--gold-soft);
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+    .rec-card__cta:hover {
+      background: var(--gold);
+      color: var(--navy-deep);
+    }
+
+    /* ── Referral ── */
+    .referral {
+      background: var(--navy-card);
+      border: 1px solid var(--ivory-05);
+      padding: 26px 22px;
+    }
+    .referral__top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .referral__title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--ivory);
+    }
+    .referral__title em {
+      font-style: italic;
+      color: var(--gold);
+      font-weight: 400;
+    }
+    .referral__status {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .referral__credits {
+      margin-top: 12px;
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .credit {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .credit__amount {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 300;
+      letter-spacing: -0.01em;
+    }
+    .credit__amount--earned { color: var(--gold); }
+    .credit__amount--pending { color: var(--ivory-55); }
+    .credit__label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .progress {
+      margin-top: 22px;
+      height: 6px;
+      background: var(--navy-deep);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress__fill {
+      height: 100%;
+      width: 66%;
+      background: linear-gradient(90deg, var(--gold-warm), var(--gold));
+      border-radius: 999px;
+      position: relative;
+      animation: fillIn 1.2s ease-out 0.8s backwards;
+    }
+    .progress__fill::after {
+      content: "";
+      position: absolute;
+      right: -3px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--gold-warm);
+      box-shadow: 0 0 12px var(--gold-glow);
+    }
+    @keyframes fillIn { from { width: 0; } }
+    .progress__meta {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ivory-55);
+    }
+    .progress__reward { color: var(--gold); }
+
+    /* ── Account quick links ── */
+    .account-links {
+      margin-top: 64px;
+      padding-top: 32px;
+      border-top: 1px solid var(--gold-line-soft);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 18px;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+    }
+    .account-links a {
+      color: var(--ivory-40);
+      transition: color 0.2s ease;
+      padding: 6px 0;
+    }
+    .account-links a:hover { color: var(--ivory); }
+    .account-links__sep { color: var(--gold-line); }
+    .account-links__signout:hover { color: var(--gold) !important; }
+
+    .footer-note {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--ivory-25);
+      font-style: italic;
+    }
+
+    @keyframes riseIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Responsive ── */
+    @media (min-width: 640px) {
+      .shell { padding: 56px 32px 96px; }
+      .past-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+      .hero-header__greeting { font-size: 44px; }
+      .savings-hero__amount { font-size: 80px; }
+      .upcoming { padding: 28px 32px; }
+      .rec-card { grid-template-columns: 1.2fr 1fr; }
+      .rec-card__media { aspect-ratio: auto; min-height: 260px; }
+    }
+
+    @media (min-width: 900px) {
+      .rail { height: 64px; padding: 0 32px; }
+      .shell { padding: 72px 40px 120px; }
+      .hero-header__greeting { font-size: 48px; }
+      .savings-hero { padding: 72px 40px 64px; }
+      .savings-hero__amount { font-size: 88px; }
+      .section { margin-top: 64px; }
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambience" aria-hidden="true"></div>
+
+  <header class="rail">
+    <div class="rail__inner">
+      <a class="club-logo" href="#">voyagr <em>club</em></a>
+      <div class="rail__account">
+        <span class="rail__name">Rahul M.</span>
+        <div class="avatar" aria-hidden="true">R</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <!-- ── HEADER ── -->
+    <section class="hero-header">
+      <h1 class="hero-header__greeting">Welcome back, <em>Rahul.</em></h1>
+      <p class="hero-header__since">Member since March 2025 · Tier I · Founding 500</p>
+    </section>
+
+    <!-- ── SAVINGS HERO ── -->
+    <section class="savings-hero" aria-labelledby="savings-heading">
+      <div id="savings-heading" class="savings-hero__eyebrow">Total saved with Voyagr</div>
+      <div class="savings-hero__amount">₹47,200</div>
+      <div class="savings-hero__caption">across 4 bookings</div>
+
+      <div class="savings-bar" role="group" aria-label="Savings by booking">
+        <button type="button" class="seg" style="--seg-flex: 184;" aria-label="Bali, March, ₹18,400 saved">
+          <span class="seg__tip">Bali · March · ₹18,400 saved</span>
+        </button>
+        <button type="button" class="seg" style="--seg-flex: 126;" aria-label="Jaipur, August, ₹12,600 saved">
+          <span class="seg__tip">Jaipur · August · ₹12,600 saved</span>
+        </button>
+        <button type="button" class="seg" style="--seg-flex: 94;" aria-label="Coorg, November, ₹9,400 saved">
+          <span class="seg__tip">Coorg · November · ₹9,400 saved</span>
+        </button>
+        <button type="button" class="seg" style="--seg-flex: 68;" aria-label="Goa, January, ₹6,800 saved">
+          <span class="seg__tip">Goa · January · ₹6,800 saved</span>
+        </button>
+      </div>
+      <div class="savings-bar__legend">
+        <span>March 2025</span>
+        <span>Today</span>
+      </div>
+    </section>
+
+    <!-- ── UPCOMING TRIP ── -->
+    <section class="section">
+      <div class="upcoming">
+        <div class="upcoming__eyebrow">Your next trip</div>
+        <div class="upcoming__top">
+          <div>
+            <h2 class="upcoming__title">Amanjiwo · Java</h2>
+            <div class="upcoming__dates">Apr 30 — May 6 · 6 nights</div>
+          </div>
+          <span class="count-pill">
+            <span class="count-pill__dot"></span>
+            14 days away
+          </span>
+        </div>
+        <div class="upcoming__actions">
+          <a href="#" class="upcoming__action">
+            <svg viewBox="0 0 16 16" stroke-width="1.5"><path d="M2 4h12v8H4l-2 2z"/></svg>
+            Message Priya
+          </a>
+          <span class="upcoming__sep">·</span>
+          <a href="#" class="upcoming__action">
+            <svg viewBox="0 0 16 16" stroke-width="1.5"><path d="M3 3h7l3 3v7H3z"/><path d="M10 3v3h3"/></svg>
+            View confirmation
+          </a>
+          <span class="upcoming__sep">·</span>
+          <a href="#" class="upcoming__action">
+            <svg viewBox="0 0 16 16" stroke-width="1.5"><rect x="2.5" y="3.5" width="11" height="10"/><path d="M2.5 6.5h11M5 2v3M11 2v3"/></svg>
+            Add to calendar
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PAST TRIPS ── -->
+    <section class="section">
+      <div class="section__label">Past stays</div>
+      <div class="past-grid">
+        <article class="past-card">
+          <div class="past-card__img" style="background-image: url('https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&q=80');"></div>
+          <div class="past-card__body">
+            <div>
+              <h3 class="past-card__hotel">Komaneka at Bisma</h3>
+              <div class="past-card__dates">Mar 12 — 18 · Bali</div>
+            </div>
+            <div>
+              <div class="past-card__saved">Saved ₹18,400</div>
+              <a href="#" class="past-card__link">Book again →</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="past-card">
+          <div class="past-card__img" style="background-image: url('https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=400&q=80');"></div>
+          <div class="past-card__body">
+            <div>
+              <h3 class="past-card__hotel">Rambagh Palace</h3>
+              <div class="past-card__dates">Aug 3 — 7 · Jaipur</div>
+            </div>
+            <div>
+              <div class="past-card__saved">Saved ₹12,600</div>
+              <a href="#" class="past-card__link">Book again →</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ── NEXT TRIP RECOMMENDATION ── -->
+    <section class="section">
+      <div class="section__label">Curated for you</div>
+      <p class="rec__intro">Based on your Bali stay:</p>
+      <p class="rec__subintro">Members who stayed at Komaneka also loved:</p>
+      <article class="rec-card">
+        <div class="rec-card__media" style="background-image: url('https://images.unsplash.com/photo-1540541338287-41700207dee6?w=800&q=80');">
+          <span class="rec-card__tag">Members save ₹22,400</span>
+        </div>
+        <div class="rec-card__body">
+          <div class="rec-card__meta">
+            <span class="rec-card__loc">Ubud · Bali</span>
+            <span class="rec-card__rating">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M5 0l1.5 3.2 3.5.5-2.5 2.5.6 3.4L5 8l-3.1 1.6.6-3.4L0 3.7l3.5-.5z"/></svg>
+              9.4 · 212 stays
+            </span>
+          </div>
+          <h3 class="rec-card__name">Bambu Indah</h3>
+          <p class="rec-card__desc">Antique Javanese bridal houses perched above the Sayan gorge. Spring-fed pool, nightly kaen service — the slow counterpoint to Komaneka's calm.</p>
+          <div class="rec-card__price">
+            <div class="rec-card__price-block">
+              <span class="rec-card__strike">₹38,600</span>
+              <span class="rec-card__rate">₹16,200</span>
+              <span class="rec-card__rate-unit">/ night</span>
+            </div>
+            <a href="#" class="rec-card__cta">Reveal member rate →</a>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ── REFERRAL STATUS ── -->
+    <section class="section">
+      <div class="section__label">Referrals</div>
+      <div class="referral">
+        <div class="referral__top">
+          <h2 class="referral__title">You've referred <em>2 friends.</em></h2>
+          <span class="referral__status">2 of 3 unlocked</span>
+        </div>
+        <div class="referral__credits">
+          <div class="credit">
+            <span class="credit__amount credit__amount--earned">₹4,000</span>
+            <span class="credit__label">Credit earned</span>
+          </div>
+          <div class="credit">
+            <span class="credit__amount credit__amount--pending">₹4,000</span>
+            <span class="credit__label">Pending</span>
+          </div>
+        </div>
+        <div class="progress" aria-label="Referral progress: 2 of 3">
+          <div class="progress__fill"></div>
+        </div>
+        <div class="progress__meta">
+          <span>1 more referral</span>
+          <span class="progress__reward">Unlock priority concierge →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ACCOUNT QUICK LINKS ── -->
+    <nav class="account-links" aria-label="Account">
+      <a href="#">My bookings</a>
+      <span class="account-links__sep">·</span>
+      <a href="#">Billing</a>
+      <span class="account-links__sep">·</span>
+      <a href="#">Preferences</a>
+      <span class="account-links__sep">·</span>
+      <a href="#" class="account-links__signout">Sign out</a>
+    </nav>
+    <p class="footer-note">Every booking you place through Voyagr is priced below public rates. This is what membership pays for.</p>
+  </main>
+
+  <script>
+    // Keyboard support: touch-activated tooltips stay visible when segment is focused.
+    // Also allow tap-to-toggle on touch devices by toggling a .is-active class.
+    (function () {
+      const segs = document.querySelectorAll('.seg');
+      segs.forEach((s) => {
+        s.addEventListener('click', (e) => {
+          e.preventDefault();
+          // On touch, toggle persistent visibility
+          segs.forEach((x) => { if (x !== s) x.classList.remove('is-active'); });
+          s.classList.toggle('is-active');
+        });
+      });
+      // Close active tooltip on outside tap
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.seg')) {
+          segs.forEach((s) => s.classList.remove('is-active'));
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
