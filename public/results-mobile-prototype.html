@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=420, initial-scale=1.0, viewport-fit=cover" />
+  <title>Voyagr Club — Results (Mobile, fixed)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* Voyagr Club tokens — unchanged from existing prototype */
+    :root {
+      --navy: #0B1B2B;
+      --navy-deep: #070f1a;
+      --navy-raised: #112740;
+      --gold: #C9A84C;
+      --gold-soft: rgba(201, 168, 76, 0.5);
+      --gold-line: rgba(201, 168, 76, 0.15);
+      --gold-pale: rgba(201, 168, 76, 0.08);
+      --ivory: #F5F0E8;
+      --ivory-70: rgba(245, 240, 232, 0.7);
+      --ivory-40: rgba(245, 240, 232, 0.4);
+      --ivory-20: rgba(245, 240, 232, 0.2);
+      --ivory-10: rgba(245, 240, 232, 0.1);
+      --ivory-05: rgba(245, 240, 232, 0.05);
+      --sage: #7FA393;
+      --sage-pill: rgba(127, 163, 147, 0.18);
+      --muted: rgba(245, 240, 232, 0.35);
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'DM Mono', ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--navy);
+      color: var(--ivory);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Sticky search summary bar — top of page
+       Reused from existing edit-bar pattern.
+       ────────────────────────────────────────────── */
+    .r-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--navy);
+      border-bottom: 1px solid var(--gold-line);
+    }
+    .r-topbar__row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+    }
+    .r-logo {
+      font-family: var(--font-display);
+      font-size: 18px;
+      letter-spacing: 0.08em;
+      color: var(--ivory);
+    }
+    .r-logo em { font-style: italic; color: var(--gold); font-weight: 400; }
+    .r-summary {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 44px;
+      padding: 0 14px;
+      background: rgba(245, 240, 232, 0.04);
+      border: 1px solid var(--ivory-10);
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .r-summary__text {
+      flex: 1;
+      min-width: 0;
+      font-size: 12.5px;
+      color: var(--ivory);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .r-summary__pencil { color: var(--gold); flex-shrink: 0; display: inline-flex; }
+
+    /* ──────────────────────────────────────────────
+       FIX #5 — Headline + count line
+       "47 luxury hotels in Udaipur" — no "+359 around"
+       ────────────────────────────────────────────── */
+    .r-heading {
+      padding: 18px 16px 14px;
+    }
+    .r-heading__title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-style: italic;
+      color: var(--ivory);
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+    .r-heading__title em { color: var(--gold); font-style: normal; font-weight: 500; }
+    .r-heading__sub {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ivory-40);
+    }
+
+    /* ──────────────────────────────────────────────
+       FIX #7 + #8 — Sticky filter pill bar
+       Filter ↓ · Price ↓ · Sort ↓ · Saving ↓ · Map
+       (Map moved here from the floating overlay,
+        standalone 🔍 icon removed)
+       ────────────────────────────────────────────── */
+    .r-pillbar {
+      position: sticky;
+      top: 64px;
+      z-index: 30;
+      background: var(--navy);
+      border-bottom: 1px solid var(--ivory-10);
+      padding: 10px 0;
+    }
+    .r-pillbar__scroll {
+      display: flex;
+      gap: 8px;
+      padding: 0 14px;
+      overflow-x: auto;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .r-pillbar__scroll::-webkit-scrollbar { display: none; }
+    .r-pill {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: 1px solid var(--ivory-10);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ivory-70);
+      background: transparent;
+      transition: all 0.15s;
+    }
+    .r-pill:hover, .r-pill.is-active {
+      border-color: var(--gold-soft);
+      color: var(--ivory);
+      background: var(--gold-pale);
+    }
+    .r-pill__caret { color: var(--ivory-40); }
+    .r-pill--map { color: var(--ivory); }
+    .r-pill--map svg { color: var(--gold); }
+
+    /* ──────────────────────────────────────────────
+       (KEEP) Card grid — single column on mobile
+       ────────────────────────────────────────────── */
+    .r-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 16px 14px 96px;
+    }
+
+    /* (KEEP) Card chrome — dark navy raised, rounded corners,
+       full-bleed image. Untouched per brief. */
+    .r-card {
+      background: var(--navy-raised);
+      border: 1px solid var(--ivory-10);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .r-card__media {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      background: var(--navy-deep);
+      overflow: hidden;
+    }
+    .r-card__media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(0.92) brightness(0.94);
+    }
+
+    /* ──────────────────────────────────────────────
+       FIX #1 + #6 — Badges
+       Pet Friendly badge REMOVED entirely from cards.
+       Only badge shown on image is "Voyagr Pick" — gold
+       border + gold text, top-left, on editorial picks.
+       ────────────────────────────────────────────── */
+    .r-card__pick {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      padding: 5px 11px;
+      border: 1px solid var(--gold);
+      background: rgba(11, 27, 43, 0.72);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      color: var(--gold);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 500;
+      border-radius: 2px;
+    }
+
+    /* (KEEP) Rating badge style: "4.2 · Exceptional" */
+    .r-card__rating {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: rgba(11, 27, 43, 0.78);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid var(--ivory-10);
+      border-radius: 2px;
+      color: var(--ivory);
+    }
+    .r-card__rating-score {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1;
+    }
+    .r-card__rating-label {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ivory-70);
+    }
+
+    .r-card__body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* FIX #2 — Location: city + region only.
+       NO street address. */
+    .r-card__loc {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      color: var(--ivory-40);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    /* (KEEP) Hotel name typography — Cormorant, italic-friendly */
+    .r-card__name {
+      font-family: var(--font-display);
+      font-size: 22px;
+      line-height: 1.18;
+      color: var(--ivory);
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    /* Rate row — public struck through + member rate (FIX #3 part A) */
+    .r-card__rate-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .r-card__public {
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+    .r-card__member {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .r-card__per {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      color: var(--ivory-40);
+      text-transform: uppercase;
+    }
+
+    /* FIX #3 part B — Saving delta in gold, small.
+       Lead value-prop on every card. */
+    .r-card__compare {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.06em;
+      color: var(--gold);
+      margin-top: 6px;
+    }
+
+    /* (KEEP) "Taxes & fees included" — sage/green line */
+    .r-card__taxes {
+      font-size: 11px;
+      color: var(--sage);
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .r-card__taxes svg { color: var(--sage); }
+
+    /* FIX #4 — "vs. public rate →" link
+       (replaces previous "Price Comparison" label) */
+    .r-card__vs {
+      align-self: flex-start;
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ivory-70);
+      border-bottom: 1px solid var(--ivory-10);
+      padding-bottom: 2px;
+      transition: all 0.15s;
+    }
+    .r-card__vs:hover { color: var(--gold); border-bottom-color: var(--gold-soft); }
+
+    /* (KEEP) "Select Room" gold pill CTA */
+    .r-card__cta {
+      margin-top: 14px;
+      width: 100%;
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--navy);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .r-card__cta:hover { background: #d9b95e; }
+
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════
+       STICKY SEARCH SUMMARY BAR (kept)
+       ══════════════════════════════════════════════ -->
+  <header class="r-topbar">
+    <div class="r-topbar__row">
+      <a href="search-home-prototype.html" class="r-logo"><em>V</em>oyagr</a>
+      <button class="r-summary" aria-label="Edit search">
+        <span class="r-summary__text">Udaipur · 15 Mar – 18 Mar · 1 Room, 2 Guests</span>
+        <span class="r-summary__pencil" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </header>
+
+  <!-- FIX #5 — Curated count, no "+359 around" -->
+  <section class="r-heading">
+    <h1 class="r-heading__title"><em>47</em> luxury hotels in Udaipur</h1>
+    <span class="r-heading__sub">15 Mar – 18 Mar · 3 Nights</span>
+  </section>
+
+  <!-- FIX #7 + #8 — Sticky pill bar with Map alongside filters.
+       Order: Filter · Price · Sort · Saving · Map.
+       Standalone search icon removed (search lives in topbar). -->
+  <nav class="r-pillbar" aria-label="Filters and sort">
+    <div class="r-pillbar__scroll">
+      <button class="r-pill" type="button">
+        Filter
+        <span class="r-pill__caret" aria-hidden="true">↓</span>
+      </button>
+      <button class="r-pill" type="button">
+        Price
+        <span class="r-pill__caret" aria-hidden="true">↓</span>
+      </button>
+      <button class="r-pill" type="button">
+        Sort
+        <span class="r-pill__caret" aria-hidden="true">↓</span>
+      </button>
+      <button class="r-pill" type="button">
+        Saving
+        <span class="r-pill__caret" aria-hidden="true">↓</span>
+      </button>
+      <button class="r-pill r-pill--map" type="button" aria-label="Show on map">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+          <line x1="8" y1="2" x2="8" y2="18"/>
+          <line x1="16" y1="6" x2="16" y2="22"/>
+        </svg>
+        Map
+      </button>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════
+       RESULT CARDS — 2 sample cards with all fixes
+       ══════════════════════════════════════════════ -->
+  <section class="r-grid">
+
+    <!-- ─── Card 1 — Taj Aravali Resort & Spa, Udaipur ─── -->
+    <article class="r-card">
+      <div class="r-card__media">
+        <img
+          src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=900&q=70&auto=format&fit=crop"
+          alt="Taj Aravali Resort & Spa"
+          loading="lazy"
+        />
+        <!-- FIX #1: NO Pet Friendly badge.
+             FIX #6: Voyagr Pick badge — gold border, gold text. -->
+        <span class="r-card__pick">Voyagr Pick</span>
+        <!-- (KEEP) Rating badge -->
+        <span class="r-card__rating">
+          <span class="r-card__rating-score">4.2</span>
+          <span class="r-card__rating-label">Exceptional</span>
+        </span>
+      </div>
+      <div class="r-card__body">
+        <!-- FIX #2: city + region only — no street address -->
+        <span class="r-card__loc">Udaipur · Rajasthan</span>
+        <h2 class="r-card__name">Taj Aravali Resort &amp; Spa</h2>
+
+        <!-- FIX #3 part A: public rate struck through + member rate -->
+        <div class="r-card__rate-row">
+          <span class="r-card__public">₹38,400</span>
+          <span class="r-card__member">₹31,800</span>
+          <span class="r-card__per">/ night</span>
+        </div>
+
+        <!-- FIX #3 part B: explicit Booking.com saving delta in gold -->
+        <span class="r-card__compare">₹6,600 less than Booking.com</span>
+
+        <!-- (KEEP) Taxes & fees included — sage/green line -->
+        <span class="r-card__taxes">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Taxes &amp; fees included
+        </span>
+
+        <!-- FIX #4: renamed "Price Comparison" → "vs. public rate →" -->
+        <a class="r-card__vs" href="#">vs. public rate →</a>
+
+        <!-- (KEEP) Select Room gold pill CTA -->
+        <button class="r-card__cta" type="button">Select Room</button>
+      </div>
+    </article>
+
+    <!-- ─── Card 2 — Taj Lake Palace, Udaipur ─── -->
+    <article class="r-card">
+      <div class="r-card__media">
+        <img
+          src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=900&q=70&auto=format&fit=crop"
+          alt="Taj Lake Palace, Udaipur"
+          loading="lazy"
+        />
+        <span class="r-card__pick">Voyagr Pick</span>
+        <span class="r-card__rating">
+          <span class="r-card__rating-score">4.7</span>
+          <span class="r-card__rating-label">Exceptional</span>
+        </span>
+      </div>
+      <div class="r-card__body">
+        <span class="r-card__loc">Udaipur · Rajasthan</span>
+        <h2 class="r-card__name">Taj Lake Palace</h2>
+
+        <div class="r-card__rate-row">
+          <span class="r-card__public">₹74,200</span>
+          <span class="r-card__member">₹62,000</span>
+          <span class="r-card__per">/ night</span>
+        </div>
+
+        <span class="r-card__compare">₹12,200 less than Booking.com</span>
+
+        <span class="r-card__taxes">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Taxes &amp; fees included
+        </span>
+
+        <a class="r-card__vs" href="#">vs. public rate →</a>
+
+        <button class="r-card__cta" type="button">Select Room</button>
+      </div>
+    </article>
+
+  </section>
+
+</body>
+</html>
