@@ -21,6 +21,7 @@ import type { CityCardData } from "@/components/CityCard";
 
 import TopSellers, { computeTopSellers, type TopSellerHotel } from "@/components/TopSellers";
 import RecommendationHub from "@/components/RecommendationHub";
+import OccasionCarousel from "@/components/OccasionCarousel";
 
 export interface HomePageClientProps {
   initialCities: CuratedCity[];
@@ -1028,6 +1029,11 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
           TOP SELLERS — most booked properties
       ================================================================ */}
       <TopSellers hotels={topSellers} />
+
+      {/* ================================================================
+          BY OCCASION — horizontal carousel with auto-rotation
+      ================================================================ */}
+      <OccasionCarousel />
 
       {/* ================================================================
           RECOMMENDATION HUB — curated category tabs with hotel grid
