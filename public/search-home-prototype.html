@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Voyagr Club — Search Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* ──────────────────────────────────────────────────────────
+       Voyagr Club — shared design tokens (match other prototypes)
+       ────────────────────────────────────────────────────────── */
+    :root {
+      --navy: #0B1B2B;
+      --navy-deep: #070f1a;
+      --navy-raised: #112740;
+      --gold: #C9A84C;
+      --gold-soft: rgba(201, 168, 76, 0.5);
+      --gold-line: rgba(201, 168, 76, 0.15);
+      --ivory: #F5F0E8;
+      --ivory-70: rgba(245, 240, 232, 0.7);
+      --ivory-40: rgba(245, 240, 232, 0.4);
+      --ivory-20: rgba(245, 240, 232, 0.2);
+      --ivory-10: rgba(245, 240, 232, 0.1);
+      --ivory-05: rgba(245, 240, 232, 0.05);
+      --muted: rgba(245, 240, 232, 0.35);
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'DM Mono', ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--navy);
+      color: var(--ivory);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      padding-bottom: 56px; /* room for sticky bottom bar */
+    }
+
+    button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+    input { font: inherit; color: inherit; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    .mono {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       Mobile frame — single phone column, 420px max
+       ────────────────────────────────────────────────────────── */
+    .screen {
+      max-width: 420px;
+      margin: 0 auto;
+      min-height: 100vh;
+      position: relative;
+      background: var(--navy);
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       Top search bar — back arrow + rounded dark input
+       ────────────────────────────────────────────────────────── */
+    .search-top {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--navy);
+      padding: 16px 20px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--gold-line);
+    }
+    .search-back {
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ivory-70);
+      flex-shrink: 0;
+      border-radius: 50%;
+      transition: background 0.15s;
+    }
+    .search-back:hover { background: var(--ivory-05); color: var(--ivory); }
+
+    .search-input-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      height: 44px;
+      background: rgba(245, 240, 232, 0.04);
+      border: 1px solid var(--ivory-10);
+      border-radius: 22px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .search-input-wrap:focus-within {
+      border-color: var(--gold-soft);
+      background: rgba(245, 240, 232, 0.06);
+    }
+    .search-input-wrap__icon { color: var(--gold); flex-shrink: 0; }
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--ivory);
+      font-size: 14px;
+    }
+    .search-input::placeholder { color: var(--ivory-40); }
+
+    /* ──────────────────────────────────────────────────────────
+       Section label — shared across Collections / Recent / Viewed
+       ────────────────────────────────────────────────────────── */
+    .section {
+      padding: 24px 0 4px;
+    }
+    .section__label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--gold);
+      text-transform: uppercase;
+      padding: 0 20px;
+      margin-bottom: 14px;
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       Collections strip — dark bg + gold border pills
+       ────────────────────────────────────────────────────────── */
+    .collections-strip {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 0 20px 6px;
+      scroll-snap-type: x mandatory;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .collections-strip::-webkit-scrollbar { display: none; }
+
+    .collection-pill {
+      flex-shrink: 0;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 10px 18px;
+      border: 1px solid var(--gold);
+      background: transparent;
+      color: var(--ivory);
+      border-radius: 999px;
+      white-space: nowrap;
+      scroll-snap-align: start;
+      transition: background 0.15s;
+    }
+    .collection-pill:hover,
+    .collection-pill:active {
+      background: rgba(201, 168, 76, 0.08);
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       Recent Searches list — adds member-rate context line
+       ────────────────────────────────────────────────────────── */
+    .recent-list {
+      display: flex;
+      flex-direction: column;
+    }
+    .recent-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--ivory-05);
+      transition: background 0.15s;
+    }
+    .recent-item:last-child { border-bottom: none; }
+    .recent-item:hover { background: var(--ivory-05); }
+    .recent-item__icon {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ivory-10);
+      border-radius: 50%;
+      color: var(--ivory-40);
+    }
+    .recent-item__body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .recent-item__city {
+      font-size: 15px;
+      color: var(--ivory);
+      font-weight: 500;
+    }
+    .recent-item__meta {
+      font-size: 12px;
+      color: var(--ivory-40);
+    }
+    .recent-item__rate {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      margin-top: 4px;
+    }
+    .recent-item__dismiss {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ivory-40);
+      border-radius: 50%;
+      transition: color 0.15s, background 0.15s;
+      align-self: center;
+    }
+    .recent-item__dismiss:hover { color: var(--ivory); background: var(--ivory-05); }
+
+    /* ──────────────────────────────────────────────────────────
+       Recently Viewed cards — 200 × 130 image, rate below
+       ────────────────────────────────────────────────────────── */
+    .viewed-strip {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      padding: 0 20px 8px;
+      scroll-snap-type: x mandatory;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .viewed-strip::-webkit-scrollbar { display: none; }
+
+    .viewed-card {
+      flex-shrink: 0;
+      width: 200px;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      background: var(--navy-raised);
+      border: 1px solid var(--ivory-10);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .viewed-card:active { transform: scale(0.98); }
+    .viewed-card:hover { border-color: var(--gold-soft); }
+    .viewed-card__media {
+      width: 100%;
+      height: 130px;
+      background: var(--navy-deep);
+      position: relative;
+      overflow: hidden;
+    }
+    .viewed-card__media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(0.9) brightness(0.94);
+    }
+    .viewed-card__body {
+      padding: 12px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .viewed-card__name {
+      font-family: var(--font-display);
+      font-size: 17px;
+      line-height: 1.2;
+      color: var(--ivory);
+      font-weight: 500;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .viewed-card__loc {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      color: var(--ivory-40);
+      text-transform: uppercase;
+    }
+    .viewed-card__rate {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--gold);
+      font-family: var(--font-mono);
+      letter-spacing: 0.06em;
+    }
+
+    /* ──────────────────────────────────────────────────────────
+       Sticky bottom bar — member value + CTA
+       ────────────────────────────────────────────────────────── */
+    .bottom-bar {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 30;
+      height: 56px;
+      background: var(--navy);
+      border-top: 1px solid var(--gold-line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      transition: transform 0.25s ease;
+    }
+    .bottom-bar__wrap {
+      max-width: 420px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .bottom-bar--hidden {
+      transform: translateY(100%);
+    }
+    .bottom-bar__saved {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+    }
+    .bottom-bar__cta {
+      padding: 10px 20px;
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--navy);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .bottom-bar__cta:hover { background: #d9b95e; }
+
+    /* Breathing room below last section so sticky bar never overlaps */
+    .bottom-spacer { height: 24px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="screen">
+
+    <!-- ══════════════════════════════════════════════════════════
+         SEARCH BAR (back arrow + dark rounded input)
+         ══════════════════════════════════════════════════════════ -->
+    <div class="search-top">
+      <button class="search-back" aria-label="Go back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+      </button>
+      <div class="search-input-wrap">
+        <svg class="search-input-wrap__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          class="search-input"
+          id="searchInput"
+          type="text"
+          placeholder="Where are you going?"
+          autocomplete="off"
+          aria-label="Search destinations"
+        />
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         COLLECTIONS (new) — horizontal strip, dark + gold border
+         ══════════════════════════════════════════════════════════ -->
+    <section class="section">
+      <div class="section__label">Collections</div>
+      <div class="collections-strip" role="list">
+        <button class="collection-pill" data-collection="rajasthan-palaces">Rajasthan Palaces</button>
+        <button class="collection-pill" data-collection="maldives">Maldives</button>
+        <button class="collection-pill" data-collection="bali">Bali</button>
+        <button class="collection-pill" data-collection="business-hotels">Business Hotels</button>
+        <button class="collection-pill" data-collection="wellness-retreats">Wellness Retreats</button>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         RECENT SEARCHES — city + dates/guests + member rate line
+         ══════════════════════════════════════════════════════════ -->
+    <section class="section">
+      <div class="section__label">Recent Searches</div>
+      <div class="recent-list" id="recentList">
+
+        <div class="recent-item">
+          <span class="recent-item__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </span>
+          <div class="recent-item__body">
+            <span class="recent-item__city">Udaipur</span>
+            <span class="recent-item__meta">22–25 Apr · 2 guests</span>
+            <span class="recent-item__rate">From ₹18,400 member rate</span>
+          </div>
+          <button class="recent-item__dismiss" aria-label="Remove recent search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="recent-item">
+          <span class="recent-item__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </span>
+          <div class="recent-item__body">
+            <span class="recent-item__city">Bali</span>
+            <span class="recent-item__meta">15–18 May · 2 guests</span>
+            <span class="recent-item__rate">From ₹36,800 member rate</span>
+          </div>
+          <button class="recent-item__dismiss" aria-label="Remove recent search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="recent-item">
+          <span class="recent-item__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </span>
+          <div class="recent-item__body">
+            <span class="recent-item__city">Maldives</span>
+            <span class="recent-item__meta">2–6 Jun · 2 guests</span>
+            <span class="recent-item__rate">From ₹82,500 member rate</span>
+          </div>
+          <button class="recent-item__dismiss" aria-label="Remove recent search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         RECENTLY VIEWED — 200×130 cards, name + location + rate
+         ══════════════════════════════════════════════════════════ -->
+    <section class="section">
+      <div class="section__label">Recently Viewed</div>
+      <div class="viewed-strip" role="list">
+
+        <article class="viewed-card">
+          <div class="viewed-card__media">
+            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=70&auto=format&fit=crop" alt="Four Seasons Jimbaran Bay" loading="lazy" />
+          </div>
+          <div class="viewed-card__body">
+            <span class="viewed-card__loc">Jimbaran, Bali</span>
+            <h3 class="viewed-card__name">Four Seasons Jimbaran Bay</h3>
+            <span class="viewed-card__rate">₹46,600 member rate</span>
+          </div>
+        </article>
+
+        <article class="viewed-card">
+          <div class="viewed-card__media">
+            <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=70&auto=format&fit=crop" alt="Amandari Ubud" loading="lazy" />
+          </div>
+          <div class="viewed-card__body">
+            <span class="viewed-card__loc">Ubud, Bali</span>
+            <h3 class="viewed-card__name">Amandari</h3>
+            <span class="viewed-card__rate">₹86,400 member rate</span>
+          </div>
+        </article>
+
+        <article class="viewed-card">
+          <div class="viewed-card__media">
+            <img src="https://images.unsplash.com/photo-1540541338287-41700207dee6?w=600&q=70&auto=format&fit=crop" alt="Bulgari Resort Bali" loading="lazy" />
+          </div>
+          <div class="viewed-card__body">
+            <span class="viewed-card__loc">Uluwatu, Bali</span>
+            <h3 class="viewed-card__name">Bulgari Resort Bali</h3>
+            <span class="viewed-card__rate">₹74,000 member rate</span>
+          </div>
+        </article>
+
+        <article class="viewed-card">
+          <div class="viewed-card__media">
+            <img src="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=600&q=70&auto=format&fit=crop" alt="Mandapa Ubud" loading="lazy" />
+          </div>
+          <div class="viewed-card__body">
+            <span class="viewed-card__loc">Ubud, Bali</span>
+            <h3 class="viewed-card__name">Mandapa, a Ritz-Carlton Reserve</h3>
+            <span class="viewed-card__rate">₹62,400 member rate</span>
+          </div>
+        </article>
+
+        <article class="viewed-card">
+          <div class="viewed-card__media">
+            <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600&q=70&auto=format&fit=crop" alt="Como Uma Ubud" loading="lazy" />
+          </div>
+          <div class="viewed-card__body">
+            <span class="viewed-card__loc">Ubud, Bali</span>
+            <h3 class="viewed-card__name">Como Uma Ubud</h3>
+            <span class="viewed-card__rate">₹51,000 member rate</span>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <div class="bottom-spacer"></div>
+
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════════
+       STICKY BOTTOM BAR — total saved + Find Hotels CTA
+       (hidden once user starts typing in the search input)
+       ══════════════════════════════════════════════════════════ -->
+  <div class="bottom-bar" id="bottomBar">
+    <div class="bottom-bar__wrap">
+      <span class="bottom-bar__saved">₹47,200 saved total</span>
+      <button class="bottom-bar__cta">Find Hotels →</button>
+    </div>
+  </div>
+
+  <script>
+    // Hide the sticky bottom bar while the member is typing a destination
+    // (so it never competes with the keyboard / typeahead).
+    const input = document.getElementById('searchInput');
+    const bar = document.getElementById('bottomBar');
+    input.addEventListener('input', () => {
+      bar.classList.toggle('bottom-bar--hidden', input.value.trim().length > 0);
+    });
+
+    // Recent searches: X dismiss removes the row from the list.
+    document.getElementById('recentList').addEventListener('click', (e) => {
+      const btn = e.target.closest('.recent-item__dismiss');
+      if (!btn) return;
+      btn.closest('.recent-item').remove();
+    });
+  </script>
+</body>
+</html>
