@@ -1410,10 +1410,31 @@ main {
    SEARCH PAGE — responsive overrides
    ═══════════════════════════════════════ */
 
+/* Unified search card — base (desktop): inline cells separated by dividers. */
+.usc-fields > .usc-cell + .usc-cell,
+.usc-fields > .usc-date-row > .usc-cell + .usc-cell {
+  border-left: 1px solid var(--cream-border);
+}
+.usc-fields > .usc-date-row {
+  display: flex;
+  flex: 2;
+  min-width: 0;
+  border-left: 1px solid var(--cream-border);
+}
+.usc-cell {
+  transition: background 0.15s;
+}
+.usc-cell:hover {
+  background: var(--cream);
+}
+
 /* Tablet */
 @media (min-width: 768px) and (max-width: 1024px) {
   .search-hero-inner {
     padding: 60px 32px 56px !important;
+  }
+  .search-unified-inner {
+    padding: 0 24px !important;
   }
   .search-results-section {
     padding: 40px 32px 80px !important;
@@ -1436,6 +1457,33 @@ main {
 @media (max-width: 767px) {
   .search-hero-inner {
     padding: 48px 20px 40px !important;
+  }
+  .search-unified {
+    padding-top: 76px !important;
+    padding-bottom: 24px !important;
+  }
+  .search-unified-inner {
+    padding: 0 16px !important;
+  }
+  /* Stack the unified card vertically on mobile. */
+  .usc-fields {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .usc-fields > .usc-date-row {
+    flex-direction: column !important;
+    border-left: none !important;
+    border-top: 1px solid var(--cream-border) !important;
+  }
+  .usc-fields > .usc-cell + .usc-cell,
+  .usc-fields > .usc-date-row > .usc-cell + .usc-cell {
+    border-left: none !important;
+    border-top: 1px solid var(--cream-border) !important;
+  }
+  .pill-strip {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
   }
   .search-form-bar {
     flex-direction: column !important;

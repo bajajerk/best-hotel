@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { searchHotels, fetchCuratedCities, CuratedCity } from "@/lib/api";
-import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE, CONTINENTS } from "@/lib/constants";
+import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE } from "@/lib/constants";
+import { useBooking } from "@/context/BookingContext";
 import { trackSearch, trackSearchFilterApplied } from "@/lib/analytics";
 import Header from "@/components/Header";
 import DateBar, { DateBarHandle } from "@/components/DateBar";
@@ -46,6 +47,7 @@ const INDIA_SEARCHES = [
   { label: "Udaipur", slug: "udaipur" },
   { label: "Jaipur", slug: "jaipur" },
   { label: "Delhi", slug: "delhi" },
+  { label: "Rishikesh", slug: "rishikesh" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -77,27 +79,65 @@ type ViewMode = "list" | "map";
 const RECENT_SEARCHES_KEY = "voyagr_recent_searches";
 const MAX_RECENT = 6;
 
-function getRecentSearches(): string[] {
+interface RecentSearch {
+  q: string;
+  checkIn?: string;
+  checkOut?: string;
+}
+
+function getRecentSearches(): RecentSearch[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(RECENT_SEARCHES_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((entry) => {
+        if (typeof entry === "string") return { q: entry };
+        if (entry && typeof entry === "object" && typeof entry.q === "string") {
+          return { q: entry.q, checkIn: entry.checkIn, checkOut: entry.checkOut };
+        }
+        return null;
+      })
+      .filter((e): e is RecentSearch => !!e);
   } catch {
     return [];
   }
 }
 
-function addRecentSearch(q: string) {
+function addRecentSearch(q: string, checkIn?: string, checkOut?: string) {
   if (typeof window === "undefined" || !q.trim()) return;
   try {
+    const trimmed = q.trim();
     const existing = getRecentSearches().filter(
-      (s) => s.toLowerCase() !== q.trim().toLowerCase()
+      (s) => s.q.toLowerCase() !== trimmed.toLowerCase()
     );
-    const updated = [q.trim(), ...existing].slice(0, MAX_RECENT);
+    const updated: RecentSearch[] = [
+      { q: trimmed, checkIn: checkIn || undefined, checkOut: checkOut || undefined },
+      ...existing,
+    ].slice(0, MAX_RECENT);
     localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
   } catch {
     // ignore
   }
+}
+
+/** Format ISO date pair as compact label, e.g. "May 25–30" or "May 25 – Jun 1". */
+function formatDateRange(checkIn?: string, checkOut?: string): string {
+  if (!checkIn) return "";
+  const a = new Date(checkIn + "T00:00:00");
+  if (Number.isNaN(a.getTime())) return "";
+  const month = (d: Date) => d.toLocaleString("en-US", { month: "short" });
+  if (!checkOut) {
+    return `${month(a)} ${a.getDate()}`;
+  }
+  const b = new Date(checkOut + "T00:00:00");
+  if (Number.isNaN(b.getTime())) return `${month(a)} ${a.getDate()}`;
+  if (a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()) {
+    return `${month(a)} ${a.getDate()}\u2013${b.getDate()}`;
+  }
+  return `${month(a)} ${a.getDate()} \u2013 ${month(b)} ${b.getDate()}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -125,6 +165,106 @@ const SORT_OPTIONS: { label: string; value: SortOption }[] = [
   { label: "Name Z–A", value: "name_desc" },
 ];
 
+// ---------------------------------------------------------------------------
+// Pill strip + pill subcomponents
+// ---------------------------------------------------------------------------
+function PillStrip({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="pill-strip" style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <span
+        style={{
+          fontSize: 12,
+          color: "var(--ink-light)",
+          fontFamily: "var(--font-body)",
+          fontWeight: 500,
+          letterSpacing: "0.02em",
+          flexShrink: 0,
+          minWidth: 56,
+        }}
+      >
+        {label}
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+    </div>
+  );
+}
+
+function RecentPill({ entry, onClick }: { entry: RecentSearch; onClick: () => void }) {
+  const dateLabel = formatDateRange(entry.checkIn, entry.checkOut);
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: "var(--white)",
+        border: "1px solid var(--cream-border)",
+        borderRadius: 999,
+        padding: "8px 14px",
+        cursor: "pointer",
+        fontFamily: "var(--font-body)",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 10,
+        flexShrink: 0,
+        transition: "border-color 0.2s, background 0.2s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "var(--gold)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "var(--cream-border)";
+      }}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-light)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+      <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.15 }}>
+        <span style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500, whiteSpace: "nowrap" }}>
+          {entry.q}
+        </span>
+        {dateLabel && (
+          <span style={{ fontSize: 11, color: "var(--ink-light)", marginTop: 2, whiteSpace: "nowrap" }}>
+            {dateLabel}
+          </span>
+        )}
+      </span>
+    </button>
+  );
+}
+
+function DestinationPill({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      style={{
+        background: "var(--white)",
+        border: "1px solid var(--cream-border)",
+        borderRadius: 999,
+        padding: "8px 16px",
+        textDecoration: "none",
+        fontSize: 13,
+        color: "var(--ink)",
+        fontFamily: "var(--font-body)",
+        display: "inline-flex",
+        alignItems: "center",
+        flexShrink: 0,
+        whiteSpace: "nowrap",
+        transition: "border-color 0.2s, color 0.2s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "var(--gold)";
+        e.currentTarget.style.color = "var(--gold)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "var(--cream-border)";
+        e.currentTarget.style.color = "var(--ink)";
+      }}
+    >
+      {label}
+    </Link>
+  );
+}
+
 // ============================================================================
 // Search Page
 // ============================================================================
@@ -133,12 +273,13 @@ export default function SearchPage() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
 
+  const { checkIn, checkOut } = useBooking();
   const [query, setQuery] = useState(initialQuery);
   const [cities, setCities] = useState<CuratedCity[]>([]);
   const [hotelResults, setHotelResults] = useState<HotelResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [starFilter, setStarFilter] = useState(0);
   const [regionFilter, setRegionFilter] = useState<string>("All");
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
@@ -186,7 +327,7 @@ export default function SearchPage() {
     setSearching(true);
     setHasSearched(true);
     if (options?.persist) {
-      addRecentSearch(q);
+      addRecentSearch(q, checkIn, checkOut);
       setRecentSearches(getRecentSearches());
     }
     try {
@@ -203,26 +344,7 @@ export default function SearchPage() {
     } finally {
       setSearching(false);
     }
-  }, [starFilter, sortBy, regionFilter]);
-
-  const handleInputChange = (value: string) => {
-    setQuery(value);
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      performSearch(value);
-    }, 400);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    performSearch(query, { persist: true });
-    // Update URL
-    const params = new URLSearchParams();
-    if (query.trim()) params.set("q", query.trim());
-    router.replace(`/search?${params.toString()}`);
-  };
+  }, [starFilter, sortBy, regionFilter, checkIn, checkOut]);
 
   const handleRecentClick = (term: string) => {
     setQuery(term);
@@ -301,282 +423,195 @@ export default function SearchPage() {
     <div style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
       <Header />
 
-      {/* ── Booking bar (destination + dates + guests) ── */}
-      <div style={{ paddingTop: 60, background: "rgba(0,0,0,0.03)", borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
-        {/* Destination row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px 0" }}>
-          <div
-            style={{
-              flex: 1,
-              background: "rgba(0,0,0,0.04)",
-              border: "1px solid rgba(0,0,0,0.08)",
-              borderRadius: 10,
-              padding: "8px 12px",
-            }}
-          >
-            <div
-              style={{
-                fontFamily: "var(--font-body), sans-serif",
-                fontSize: 9,
-                letterSpacing: 1,
-                textTransform: "uppercase",
-                color: "#7a7465",
-                marginBottom: 2,
-              }}
-            >
-              DESTINATION
-            </div>
-            <DestinationSearch
-              variant="light"
-              placeholder="City, hotel, or country..."
-              defaultValue={initialQuery}
-              onValueChange={(val) => {
-                setQuery(val);
-                if (debounceRef.current) clearTimeout(debounceRef.current);
-                debounceRef.current = setTimeout(() => {
-                  performSearch(val);
-                }, 400);
-              }}
-              onSelect={(_type, _value, label) => {
-                const filled = label ?? _value;
-                setQuery(filled);
-                if (debounceRef.current) clearTimeout(debounceRef.current);
-                performSearch(filled, { persist: true });
-                // Move focus to CHECK-IN without navigating away
-                requestAnimationFrame(() => dateBarRef.current?.openCheckIn());
-              }}
-            />
-          </div>
-        </div>
-        <DateBar variant="light" ref={dateBarRef} />
-        {/* Search submit button */}
-        <div style={{ padding: "0 16px 14px" }}>
-          <button
-            type="button"
-            onClick={() => {
-              if (!query.trim()) return;
-              if (debounceRef.current) clearTimeout(debounceRef.current);
-              performSearch(query, { persist: true });
-              const params = new URLSearchParams();
-              params.set("q", query.trim());
-              router.replace(`/search?${params.toString()}`);
-            }}
-            disabled={!query.trim()}
-            style={{
-              width: "100%",
-              padding: "14px 20px",
-              background: "#C9A84C",
-              color: "var(--ink)",
-              border: "none",
-              borderRadius: 10,
-              fontSize: 14,
-              fontWeight: 600,
-              letterSpacing: "0.04em",
-              fontFamily: "var(--font-body)",
-              cursor: query.trim() ? "pointer" : "not-allowed",
-              opacity: query.trim() ? 1 : 0.5,
-              transition: "opacity 0.2s",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-            }}
-          >
-            Search Hotels
-            <span aria-hidden style={{ fontSize: 16 }}>&rarr;</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ── Hero search area ── */}
+      {/* ── Unified search card + destination pills (single section, no dark hero) ── */}
       <section
-        className="search-hero"
+        className="search-unified"
         style={{
-          paddingTop: "0px",
-          background: "var(--ink)",
-          position: "relative",
-          overflow: "hidden",
+          paddingTop: 84,
+          paddingBottom: 32,
+          background: "var(--cream)",
         }}
       >
-        {/* Background pattern */}
         <div
+          className="search-unified-inner"
           style={{
-            position: "absolute",
-            inset: 0,
-            opacity: 0.04,
-            backgroundImage: `radial-gradient(circle at 1px 1px, var(--cream) 1px, transparent 0)`,
-            backgroundSize: "40px 40px",
+            maxWidth: 1100,
+            margin: "0 auto",
+            padding: "0 32px",
           }}
-        />
-
-        <div className="search-hero-inner" style={{ position: "relative", padding: "80px 60px 72px", maxWidth: "900px", margin: "0 auto", textAlign: "center" }}>
+        >
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.4 }}
           >
-            <div className="type-eyebrow" style={{ marginBottom: "16px", color: "var(--gold)" }}>
-              Search Hotels
-            </div>
-            <h1
-              className="type-display-2"
-              style={{ color: "var(--cream)", marginBottom: "12px" }}
+            {/* Unified search card */}
+            <div
+              className="usc-card"
+              style={{
+                background: "var(--white)",
+                border: "1px solid var(--cream-border)",
+                borderRadius: 14,
+                boxShadow: "0 8px 28px rgba(26,23,16,0.06)",
+                overflow: "visible",
+              }}
             >
-              Where are you{" "}
-              <em style={{ fontStyle: "italic", color: "var(--gold)" }}>going?</em>
-            </h1>
-            <p className="type-body-lg" style={{ color: "rgba(245,240,232,0.5)", marginBottom: "40px" }}>
-              Member rates on 1,500+ hotels. Never on MakeMyTrip or Booking.com.
-            </p>
-          </motion.div>
-
-          {/* Popular searches + recent searches */}
-          {!query.trim() && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              style={{ marginTop: "28px" }}
-            >
-              {/* Recent searches */}
-              {recentSearches.length > 0 && (
-                <div style={{
+              {/* Field row (destination + dates + guests) */}
+              <div className="usc-fields" style={{ display: "flex", alignItems: "stretch" }}>
+                {/* Destination cell */}
+                <div className="usc-cell usc-cell--destination" style={{ flex: 1.4, minWidth: 0, padding: "14px 18px" }}>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-body), sans-serif",
+                      fontSize: 10,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: "var(--ink-light)",
+                      marginBottom: 4,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Destination
+                  </div>
+                  <DestinationSearch
+                    variant="light"
+                    placeholder="Where are you going?"
+                    defaultValue={initialQuery}
+                    onValueChange={(val) => {
+                      setQuery(val);
+                      if (debounceRef.current) clearTimeout(debounceRef.current);
+                      debounceRef.current = setTimeout(() => {
+                        performSearch(val);
+                      }, 400);
+                    }}
+                    onSelect={(_type, _value, label) => {
+                      const filled = label ?? _value;
+                      setQuery(filled);
+                      if (debounceRef.current) clearTimeout(debounceRef.current);
+                      performSearch(filled, { persist: true });
+                      requestAnimationFrame(() => dateBarRef.current?.openCheckIn());
+                    }}
+                  />
+                </div>
+                {/* Dates + Guests (inline composable) */}
+                <DateBar variant="light" inline ref={dateBarRef} />
+              </div>
+              {/* Search submit */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!query.trim()) return;
+                  if (debounceRef.current) clearTimeout(debounceRef.current);
+                  performSearch(query, { persist: true });
+                  const params = new URLSearchParams();
+                  params.set("q", query.trim());
+                  router.replace(`/search?${params.toString()}`);
+                }}
+                disabled={!query.trim()}
+                style={{
+                  width: "100%",
+                  height: 52,
+                  background: "#C9A84C",
+                  color: "var(--ink)",
+                  border: "none",
+                  borderTop: "1px solid var(--cream-border)",
+                  borderRadius: "0 0 14px 14px",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  letterSpacing: "0.04em",
+                  fontFamily: "var(--font-body)",
+                  cursor: query.trim() ? "pointer" : "not-allowed",
+                  opacity: query.trim() ? 1 : 0.5,
+                  transition: "opacity 0.2s, background 0.2s",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  flexWrap: "wrap",
-                  gap: "8px",
-                  marginBottom: "16px",
-                }}>
-                  <span style={{ fontSize: "11px", color: "rgba(245,240,232,0.35)", letterSpacing: "0.08em" }}>
-                    RECENT:
-                  </span>
-                  {recentSearches.slice(0, 4).map((term) => (
-                    <button
-                      key={term}
-                      onClick={() => handleRecentClick(term)}
+                  gap: 10,
+                }}
+              >
+                Search Hotels
+                <span aria-hidden style={{ fontSize: 16 }}>&rarr;</span>
+              </button>
+            </div>
+
+            {/* ── Destination pill strips ── */}
+            {!query.trim() && (
+              <div className="usc-pills" style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 14 }}>
+                {recentSearches.length > 0 && (
+                  <PillStrip label="Recent">
+                    <div
+                      className="pill-row"
                       style={{
-                        fontSize: "12px",
-                        color: "rgba(245,240,232,0.7)",
-                        background: "rgba(245,240,232,0.08)",
-                        border: "1px solid rgba(245,240,232,0.12)",
-                        padding: "4px 14px",
-                        cursor: "pointer",
-                        fontFamily: "var(--font-body)",
-                        transition: "all 0.2s",
                         display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget).style.borderColor = "var(--gold)";
-                        (e.currentTarget).style.color = "var(--gold)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget).style.borderColor = "rgba(245,240,232,0.12)";
-                        (e.currentTarget).style.color = "rgba(245,240,232,0.7)";
+                        gap: 10,
+                        overflowX: "auto",
+                        scrollbarWidth: "thin",
+                        paddingBottom: 4,
                       }}
                     >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="1 4 1 10 7 10" />
-                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-                      </svg>
-                      {term}
-                    </button>
-                  ))}
-                  <button
-                    onClick={clearRecentSearches}
-                    style={{
-                      fontSize: "10px",
-                      color: "rgba(245,240,232,0.25)",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      fontFamily: "var(--font-body)",
-                      padding: "4px 8px",
-                    }}
-                  >
-                    Clear
-                  </button>
-                </div>
-              )}
+                      {recentSearches.slice(0, 4).map((entry) => (
+                        <RecentPill
+                          key={entry.q}
+                          entry={entry}
+                          onClick={() => handleRecentClick(entry.q)}
+                        />
+                      ))}
+                      <button
+                        onClick={clearRecentSearches}
+                        style={{
+                          fontSize: 11,
+                          color: "var(--ink-light)",
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          fontFamily: "var(--font-body)",
+                          padding: "4px 10px",
+                          alignSelf: "center",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </PillStrip>
+                )}
 
-              {/* India destinations */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexWrap: "wrap",
-                gap: "8px",
-                marginBottom: "16px",
-              }}>
-                <span style={{ fontSize: "11px", color: "rgba(245,240,232,0.35)", letterSpacing: "0.08em" }}>
-                  INDIA:
-                </span>
-                {INDIA_SEARCHES.map((s) => (
-                  <Link
-                    key={s.slug}
-                    href={`/city/${s.slug}`}
+                <PillStrip label="India">
+                  <div
+                    className="pill-row"
                     style={{
-                      fontSize: "12px",
-                      color: "rgba(245,240,232,0.6)",
-                      textDecoration: "none",
-                      padding: "4px 14px",
-                      border: "1px solid rgba(245,240,232,0.12)",
-                      transition: "all 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget).style.borderColor = "var(--gold)";
-                      (e.currentTarget).style.color = "var(--gold)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget).style.borderColor = "rgba(245,240,232,0.12)";
-                      (e.currentTarget).style.color = "rgba(245,240,232,0.6)";
+                      display: "flex",
+                      gap: 10,
+                      overflowX: "auto",
+                      scrollbarWidth: "thin",
+                      paddingBottom: 4,
                     }}
                   >
-                    {s.label}
-                  </Link>
-                ))}
-              </div>
+                    {INDIA_SEARCHES.map((s) => (
+                      <DestinationPill key={s.slug} href={`/city/${s.slug}`} label={s.label} />
+                    ))}
+                  </div>
+                </PillStrip>
 
-              {/* Popular searches */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexWrap: "wrap",
-                gap: "8px",
-              }}>
-                <span style={{ fontSize: "11px", color: "rgba(245,240,232,0.35)", letterSpacing: "0.08em" }}>
-                  POPULAR:
-                </span>
-                {POPULAR_SEARCHES.map((s) => (
-                  <Link
-                    key={s.slug}
-                    href={`/city/${s.slug}`}
+                <PillStrip label="Popular">
+                  <div
+                    className="pill-row"
                     style={{
-                      fontSize: "12px",
-                      color: "rgba(245,240,232,0.6)",
-                      textDecoration: "none",
-                      padding: "4px 14px",
-                      border: "1px solid rgba(245,240,232,0.12)",
-                      transition: "all 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget).style.borderColor = "var(--gold)";
-                      (e.currentTarget).style.color = "var(--gold)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget).style.borderColor = "rgba(245,240,232,0.12)";
-                      (e.currentTarget).style.color = "rgba(245,240,232,0.6)";
+                      display: "flex",
+                      gap: 10,
+                      overflowX: "auto",
+                      scrollbarWidth: "thin",
+                      paddingBottom: 4,
                     }}
                   >
-                    {s.label}
-                  </Link>
-                ))}
+                    {POPULAR_SEARCHES.map((s) => (
+                      <DestinationPill key={s.slug} href={`/city/${s.slug}`} label={s.label} />
+                    ))}
+                  </div>
+                </PillStrip>
               </div>
-            </motion.div>
-          )}
+            )}
+          </motion.div>
         </div>
       </section>
 

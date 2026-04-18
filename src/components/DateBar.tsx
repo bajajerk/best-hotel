@@ -6,6 +6,9 @@ import GuestRoomPicker from "@/components/GuestRoomPicker";
 
 interface DateBarProps {
   variant?: "dark" | "light";
+  /** When true, renders check-in / check-out / guests inline in a row with no
+   *  outer card chrome — designed for composition inside a unified search card. */
+  inline?: boolean;
 }
 
 export interface DateBarHandle {
@@ -62,7 +65,7 @@ function buildMonth(year: number, month: number, todayIso: string): DayCell[][] 
 
 /* ═══════════════════ Component ═══════════════════ */
 
-const DateBar = forwardRef<DateBarHandle, DateBarProps>(function DateBar({ variant = "light" }, ref) {
+const DateBar = forwardRef<DateBarHandle, DateBarProps>(function DateBar({ variant = "light", inline = false }, ref) {
   const { checkIn, checkOut, setCheckIn, setCheckOut, setDates, formatDate } = useBooking();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [selecting, setSelecting] = useState<"checkIn" | "checkOut">("checkIn");
@@ -265,6 +268,201 @@ const DateBar = forwardRef<DateBarHandle, DateBarProps>(function DateBar({ varia
     </div>
   );
 
+  /* ── Shared calendar dropdown ── */
+  const renderCalendarPanel = () => {
+    if (!calendarOpen) return null;
+    return (
+      <div
+        style={{
+          position: "absolute",
+          top: "100%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 1000,
+          background: "var(--white, #fdfaf5)",
+          border: "1px solid var(--cream-border, #ddd5c3)",
+          borderRadius: 20,
+          boxShadow: "0 16px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.06)",
+          padding: "28px 32px 24px",
+          marginTop: 6,
+          minWidth: 360,
+          width: "max-content",
+          maxWidth: "calc(100vw - 32px)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 24,
+            paddingBottom: 16,
+            borderBottom: "1px solid var(--cream-border, #ddd5c3)",
+          }}
+        >
+          <button
+            onClick={prevMonth}
+            disabled={!canGoPrev}
+            className="cursor-pointer"
+            style={{
+              width: 40, height: 40,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              border: "1px solid var(--cream-border)", borderRadius: 10,
+              background: "var(--cream, #f5f0e8)",
+              color: canGoPrev ? "var(--ink)" : "var(--cream-border)",
+              cursor: canGoPrev ? "pointer" : "default",
+              fontSize: 20, transition: "background 0.15s",
+            }}
+            aria-label="Previous month"
+          >
+            &#8249;
+          </button>
+          <div style={{ textAlign: "center" }}>
+            <span
+              style={{
+                fontSize: 13, fontWeight: 600, color: "var(--gold)",
+                fontFamily: "var(--font-body)", letterSpacing: "0.08em", textTransform: "uppercase",
+              }}
+            >
+              {selecting === "checkIn" ? "Select check-in" : "Select check-out"}
+            </span>
+            {nightCount > 0 && (
+              <div style={{ fontSize: 12, color: "var(--ink-light)", fontFamily: "var(--font-body)", marginTop: 4 }}>
+                {nightCount} night{nightCount !== 1 ? "s" : ""} selected
+              </div>
+            )}
+          </div>
+          <button
+            onClick={nextMonth}
+            className="cursor-pointer"
+            style={{
+              width: 40, height: 40,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              border: "1px solid var(--cream-border)", borderRadius: 10,
+              background: "var(--cream, #f5f0e8)", color: "var(--ink)",
+              cursor: "pointer", fontSize: 20, transition: "background 0.15s",
+            }}
+            aria-label="Next month"
+          >
+            &#8250;
+          </button>
+        </div>
+        <div style={{ display: "flex", gap: 40 }} className="flex-col sm:flex-row">
+          {renderMonth(month1.year, month1.month, weeks1)}
+          {renderMonth(month2.year, month2.month, weeks2)}
+        </div>
+        {checkIn && (
+          <div
+            style={{
+              marginTop: 24, padding: "14px 18px",
+              background: "var(--cream, #f5f0e8)", border: "1px solid var(--cream-border)",
+              borderRadius: 12, display: "flex", alignItems: "center",
+              justifyContent: "space-between", gap: 12,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-light)", fontFamily: "var(--font-body)", fontWeight: 600 }}>
+                  Check-in
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)", fontFamily: "var(--font-body)", marginTop: 2 }}>
+                  {new Date(checkIn + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                </div>
+              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: "var(--gold)" }}>
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+              <div>
+                <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-light)", fontFamily: "var(--font-body)", fontWeight: 600 }}>
+                  Check-out
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: checkOut ? "var(--ink)" : "var(--ink-light)", fontFamily: "var(--font-body)", fontStyle: checkOut ? "normal" : "italic", marginTop: 2 }}>
+                  {checkOut
+                    ? new Date(checkOut + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+                    : "Select date"}
+                </div>
+              </div>
+            </div>
+            {nightCount > 0 && (
+              <button
+                onClick={() => setCalendarOpen(false)}
+                className="cursor-pointer"
+                style={{
+                  padding: "10px 24px", background: "var(--gold, #C9A84C)",
+                  color: "var(--white, #fdfaf5)", border: "none", borderRadius: 10,
+                  fontSize: 14, fontWeight: 600, fontFamily: "var(--font-body)",
+                  cursor: "pointer", letterSpacing: "0.02em", transition: "background 0.15s",
+                }}
+              >
+                Done
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  /* ── Inline (composable) layout used inside the unified search card ── */
+  if (inline) {
+    const cellBase: React.CSSProperties = {
+      flex: 1,
+      minWidth: 0,
+      cursor: "pointer",
+      padding: "10px 16px",
+      transition: "background 0.15s",
+    };
+    const labelStyle: React.CSSProperties = {
+      fontFamily: "var(--font-body), sans-serif",
+      fontSize: 10,
+      letterSpacing: "0.08em",
+      textTransform: "uppercase",
+      color: "var(--ink-light)",
+      marginBottom: 4,
+      fontWeight: 600,
+    };
+    const valueStyle = (filled: boolean): React.CSSProperties => ({
+      fontFamily: "var(--font-body), sans-serif",
+      fontSize: 14,
+      fontWeight: filled ? 500 : 400,
+      color: filled ? "var(--ink)" : "var(--ink-light)",
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+    });
+
+    return (
+      <div ref={calRef} className="usc-date-row" style={{ position: "relative", display: "flex", flex: 1, minWidth: 0 }}>
+        <div
+          className="usc-cell"
+          onClick={() => openCalendar("checkIn")}
+          style={{
+            ...cellBase,
+            background: calendarOpen && selecting === "checkIn" ? "rgba(201,168,76,0.08)" : "transparent",
+          }}
+        >
+          <div style={labelStyle}>Check-in</div>
+          <div style={valueStyle(!!checkIn)}>{formatDate(checkIn, "Add date")}</div>
+        </div>
+        <div
+          className="usc-cell"
+          onClick={() => openCalendar("checkOut")}
+          style={{
+            ...cellBase,
+            background: calendarOpen && selecting === "checkOut" ? "rgba(201,168,76,0.08)" : "transparent",
+          }}
+        >
+          <div style={labelStyle}>Check-out</div>
+          <div style={valueStyle(!!checkOut)}>{formatDate(checkOut, "Add date")}</div>
+        </div>
+        <div className="usc-cell" style={{ flex: 1, minWidth: 0, padding: "6px 10px" }}>
+          <GuestRoomPicker variant="light" compact />
+        </div>
+        {renderCalendarPanel()}
+      </div>
+    );
+  }
+
   return (
     <div ref={calRef} style={{ position: "relative" }}>
       <div
@@ -355,182 +553,7 @@ const DateBar = forwardRef<DateBarHandle, DateBarProps>(function DateBar({ varia
         </div>
       </div>
 
-      {/* Calendar dropdown panel */}
-      {calendarOpen && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 1000,
-            background: "var(--white, #fdfaf5)",
-            border: "1px solid var(--cream-border, #ddd5c3)",
-            borderRadius: 20,
-            boxShadow: "0 16px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.06)",
-            padding: "28px 32px 24px",
-            marginTop: 6,
-            minWidth: 360,
-            width: "max-content",
-            maxWidth: "calc(100vw - 32px)",
-          }}
-        >
-          {/* Header: nav + instruction */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 24,
-              paddingBottom: 16,
-              borderBottom: "1px solid var(--cream-border, #ddd5c3)",
-            }}
-          >
-            <button
-              onClick={prevMonth}
-              disabled={!canGoPrev}
-              className="cursor-pointer"
-              style={{
-                width: 40,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: "1px solid var(--cream-border)",
-                borderRadius: 10,
-                background: "var(--cream, #f5f0e8)",
-                color: canGoPrev ? "var(--ink)" : "var(--cream-border)",
-                cursor: canGoPrev ? "pointer" : "default",
-                fontSize: 20,
-                transition: "background 0.15s",
-              }}
-              aria-label="Previous month"
-            >
-              &#8249;
-            </button>
-
-            <div style={{ textAlign: "center" }}>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "var(--gold)",
-                  fontFamily: "var(--font-body)",
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                }}
-              >
-                {selecting === "checkIn" ? "Select check-in" : "Select check-out"}
-              </span>
-              {nightCount > 0 && (
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: "var(--ink-light)",
-                    fontFamily: "var(--font-body)",
-                    marginTop: 4,
-                  }}
-                >
-                  {nightCount} night{nightCount !== 1 ? "s" : ""} selected
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={nextMonth}
-              className="cursor-pointer"
-              style={{
-                width: 40,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                border: "1px solid var(--cream-border)",
-                borderRadius: 10,
-                background: "var(--cream, #f5f0e8)",
-                color: "var(--ink)",
-                cursor: "pointer",
-                fontSize: 20,
-                transition: "background 0.15s",
-              }}
-              aria-label="Next month"
-            >
-              &#8250;
-            </button>
-          </div>
-
-          {/* Two-month grid */}
-          <div
-            style={{ display: "flex", gap: 40 }}
-            className="flex-col sm:flex-row"
-          >
-            {renderMonth(month1.year, month1.month, weeks1)}
-            {renderMonth(month2.year, month2.month, weeks2)}
-          </div>
-
-          {/* Selection summary bar */}
-          {checkIn && (
-            <div
-              style={{
-                marginTop: 24,
-                padding: "14px 18px",
-                background: "var(--cream, #f5f0e8)",
-                border: "1px solid var(--cream-border)",
-                borderRadius: 12,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 12,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <div>
-                  <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-light)", fontFamily: "var(--font-body)", fontWeight: 600 }}>
-                    Check-in
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)", fontFamily: "var(--font-body)", marginTop: 2 }}>
-                    {new Date(checkIn + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                  </div>
-                </div>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: "var(--gold)" }}>
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-                <div>
-                  <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--ink-light)", fontFamily: "var(--font-body)", fontWeight: 600 }}>
-                    Check-out
-                  </div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: checkOut ? "var(--ink)" : "var(--ink-light)", fontFamily: "var(--font-body)", fontStyle: checkOut ? "normal" : "italic", marginTop: 2 }}>
-                    {checkOut
-                      ? new Date(checkOut + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
-                      : "Select date"}
-                  </div>
-                </div>
-              </div>
-              {nightCount > 0 && (
-                <button
-                  onClick={() => setCalendarOpen(false)}
-                  className="cursor-pointer"
-                  style={{
-                    padding: "10px 24px",
-                    background: "var(--gold, #C9A84C)",
-                    color: "var(--white, #fdfaf5)",
-                    border: "none",
-                    borderRadius: 10,
-                    fontSize: 14,
-                    fontWeight: 600,
-                    fontFamily: "var(--font-body)",
-                    cursor: "pointer",
-                    letterSpacing: "0.02em",
-                    transition: "background 0.15s",
-                  }}
-                >
-                  Done
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      {renderCalendarPanel()}
     </div>
   );
 });
