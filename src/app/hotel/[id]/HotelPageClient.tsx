@@ -1011,12 +1011,12 @@ export default function HotelPage() {
               <span>{booking.guestSummary}</span>
             </div>
 
-            {/* "Private rates" callout */}
+            {/* "Member rates" callout */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
+                gap: 12,
                 padding: "12px 16px",
                 background: "var(--gold-pale)",
                 border: "1px solid var(--gold-light)",
@@ -1024,15 +1024,41 @@ export default function HotelPage() {
                 fontSize: "13px",
                 fontFamily: "var(--font-body)",
                 color: "var(--ink-mid)",
+                flexWrap: "wrap",
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
-              <span>
-                <strong style={{ color: "var(--ink)" }}>Private rates</strong> — not available on public booking sites. Unlock by sharing your details below.
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <strong style={{ color: "var(--ink)" }}>Member rates</strong> — not available on MakeMyTrip, Booking.com, or any public platform. Join free to see your rate.
               </span>
+              {!user && (
+                <button
+                  onClick={() => {
+                    setPendingRoomId(null);
+                    setLoginModalOpen(true);
+                  }}
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    padding: "8px 18px",
+                    border: "1px solid var(--gold)",
+                    background: "transparent",
+                    color: "var(--gold)",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-body)",
+                    transition: "all 0.15s ease",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                >
+                  Join Free →
+                </button>
+              )}
             </div>
 
             {/* ── Preferred Rates Section ── */}
