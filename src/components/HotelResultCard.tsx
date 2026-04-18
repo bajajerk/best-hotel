@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import type { CuratedHotel } from "@/lib/api";
 import { AmenityChips } from "@/components/AmenityIcons";
 import { PriceProofCompact, TrustBadgesCompact } from "@/components/PriceProof";
-import { useCompare } from "@/context/CompareContext";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -45,71 +44,6 @@ function starDots(count: number | null): string {
 // Horizontal Hotel Result Card (Voyagr style)
 // Used on city pages to display curated hotel listings
 // ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-// Compare Toggle Button
-// ---------------------------------------------------------------------------
-function CompareToggle({ hotel }: { hotel: CuratedHotel }) {
-  const { add, remove, has, isFull } = useCompare();
-  const selected = has(hotel.hotel_id);
-
-  return (
-    <button
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (selected) {
-          remove(hotel.hotel_id);
-        } else {
-          add(hotel);
-        }
-      }}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 5,
-        fontSize: 10,
-        fontWeight: 500,
-        fontFamily: "var(--font-body)",
-        letterSpacing: "0.06em",
-        textTransform: "uppercase",
-        padding: "5px 12px",
-        cursor: selected || !isFull ? "pointer" : "not-allowed",
-        border: selected
-          ? "1px solid var(--gold)"
-          : "1px solid var(--cream-border)",
-        background: selected ? "var(--gold-pale)" : "var(--white)",
-        color: selected ? "var(--gold)" : "var(--ink-light)",
-        opacity: !selected && isFull ? 0.5 : 1,
-        transition: "all 0.15s ease",
-      }}
-      aria-label={selected ? "Remove from compare" : "Add to compare"}
-    >
-      <svg
-        width={12}
-        height={12}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {selected ? (
-          <polyline points="20 6 9 17 4 12" />
-        ) : (
-          <>
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
-          </>
-        )}
-      </svg>
-      {selected ? "Comparing" : "Compare"}
-    </button>
-  );
-}
-
 export default function HotelResultCard({
   hotel,
   index,
@@ -291,9 +225,8 @@ export default function HotelResultCard({
                 <AmenityChips overview={hotel.overview} max={4} />
               </div>
             )}
-            <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ marginTop: 10 }}>
               <TrustBadgesCompact />
-              <CompareToggle hotel={hotel} />
             </div>
           </div>
 
@@ -513,9 +446,8 @@ export default function HotelResultCard({
                 <AmenityChips overview={hotel.overview} max={3} />
               </div>
             )}
-            <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ marginBottom: 12 }}>
               <TrustBadgesCompact />
-              <CompareToggle hotel={hotel} />
             </div>
 
             {/* Price row */}

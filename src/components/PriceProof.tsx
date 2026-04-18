@@ -321,7 +321,7 @@ export function PriceProofTrustRow() {
 }
 
 // ---------------------------------------------------------------------------
-// TrustBadgesRow — "Free cancellation" + "Pay tax at hotel" badges
+// TrustBadgesRow — "Free cancellation" + "Tax included in member rate" badges
 // ---------------------------------------------------------------------------
 export function TrustBadgesRow() {
   const badges = [
@@ -344,8 +344,8 @@ export function TrustBadgesRow() {
           <path d="M7 12h.01" />
         </svg>
       ),
-      label: "Pay tax at hotel",
-      sublabel: "No prepayment needed for taxes",
+      label: "Tax included in member rate",
+      sublabel: "No surprise fees at checkout",
     },
   ];
 
@@ -403,7 +403,7 @@ export function TrustBadgesRow() {
 }
 
 // ---------------------------------------------------------------------------
-// TrustBadgesCompact — inline "Free cancellation · Pay tax at hotel" for cards
+// TrustBadgesCompact — inline "Free cancellation · Tax included in member rate" for cards
 // ---------------------------------------------------------------------------
 export function TrustBadgesCompact() {
   return (
@@ -433,7 +433,7 @@ export function TrustBadgesCompact() {
           <rect x="2" y="6" width="20" height="12" rx="2" />
           <path d="M12 12h.01" />
         </svg>
-        Pay tax at hotel
+        Tax included in member rate
       </span>
     </div>
   );

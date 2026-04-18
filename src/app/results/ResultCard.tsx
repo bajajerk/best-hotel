@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { RankedHotel } from "@/lib/ranking";
 import { AmenityChips } from "@/components/AmenityIcons";
-import { useCompare } from "@/context/CompareContext";
 import { useBookingFlow } from "@/context/BookingFlowContext";
 
 // ---------------------------------------------------------------------------
@@ -35,66 +34,6 @@ function formatCurrency(amount: number, currency?: string | null): string {
       ? rounded.toLocaleString("en-IN")
       : rounded.toLocaleString("en-US");
   return `${sym}${formatted}`;
-}
-
-// ---------------------------------------------------------------------------
-// Compare Toggle
-// ---------------------------------------------------------------------------
-function CompareToggle({ hotel }: { hotel: RankedHotel["hotel"] }) {
-  const { add, remove, has, isFull } = useCompare();
-  const selected = has(hotel.hotel_id);
-
-  return (
-    <button
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (selected) remove(hotel.hotel_id);
-        else add(hotel);
-      }}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 4,
-        fontSize: 9,
-        fontWeight: 500,
-        fontFamily: "var(--font-body)",
-        letterSpacing: "0.06em",
-        textTransform: "uppercase",
-        padding: "4px 10px",
-        cursor: selected || !isFull ? "pointer" : "not-allowed",
-        border: selected ? "1px solid var(--gold)" : "1px solid var(--cream-border)",
-        background: selected ? "var(--gold-pale)" : "var(--white)",
-        color: selected ? "var(--gold)" : "var(--ink-light)",
-        opacity: !selected && isFull ? 0.5 : 1,
-        transition: "all 0.15s ease",
-      }}
-      aria-label={selected ? "Remove from compare" : "Add to compare"}
-    >
-      <svg
-        width={10}
-        height={10}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {selected ? (
-          <polyline points="20 6 9 17 4 12" />
-        ) : (
-          <>
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
-          </>
-        )}
-      </svg>
-      {selected ? "Comparing" : "Compare"}
-    </button>
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -485,11 +424,10 @@ export default function ResultCard({
               style={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "flex-end",
                 marginTop: 10,
               }}
             >
-              <CompareToggle hotel={hotel} />
               <span
                 style={{
                   fontSize: 11,
