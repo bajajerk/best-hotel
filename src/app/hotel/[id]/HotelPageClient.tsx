@@ -535,6 +535,20 @@ export default function HotelPage() {
   /* Login gate modal (SELECT button on a room card, user not signed in) */
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [pendingRoomId, setPendingRoomId] = useState<string | null>(null);
+  const [loginIntent, setLoginIntent] = useState<"room-select" | "save-hotel">("room-select");
+
+  /* Saved (heart) state — hero icon */
+  const [savedHotelIds, setSavedHotelIds] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = JSON.parse(localStorage.getItem("voyagr_saved_hotels") || "[]");
+      return Array.isArray(raw) ? raw.map(String) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [pendingSaveAfterLogin, setPendingSaveAfterLogin] = useState(false);
+  const isSaved = hotel ? savedHotelIds.includes(String(hotel.hotel_id)) : false;
 
   /* Section refs for scroll-based tabs */
   const roomsRef = useRef<HTMLDivElement>(null);
@@ -630,6 +644,7 @@ export default function HotelPage() {
       setSelectedRoomId(room.id);
       if (!user) {
         setPendingRoomId(room.id);
+        setLoginIntent("room-select");
         setLoginModalOpen(true);
         return;
       }
@@ -638,8 +653,51 @@ export default function HotelPage() {
     [user, proceedToBooking]
   );
 
+  /* ── Saved hotels (localStorage) ── */
+  const writeSavedHotels = useCallback((list: string[]) => {
+    setSavedHotelIds(list);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("voyagr_saved_hotels", JSON.stringify(list));
+    }
+  }, []);
+
+  const saveHotelToStorage = useCallback(() => {
+    if (!hotel) return;
+    const hotelIdStr = String(hotel.hotel_id);
+    setSavedHotelIds((prev) => {
+      if (prev.includes(hotelIdStr)) return prev;
+      const next = [...prev, hotelIdStr];
+      if (typeof window !== "undefined") {
+        localStorage.setItem("voyagr_saved_hotels", JSON.stringify(next));
+      }
+      return next;
+    });
+  }, [hotel]);
+
+  const handleHeartClick = useCallback(() => {
+    if (!hotel) return;
+    if (!user) {
+      setPendingSaveAfterLogin(true);
+      setLoginIntent("save-hotel");
+      setLoginModalOpen(true);
+      return;
+    }
+    const hotelIdStr = String(hotel.hotel_id);
+    if (savedHotelIds.includes(hotelIdStr)) {
+      const updated = savedHotelIds.filter((id) => id !== hotelIdStr);
+      writeSavedHotels(updated);
+    } else {
+      writeSavedHotels([...savedHotelIds, hotelIdStr]);
+    }
+  }, [hotel, user, savedHotelIds, writeSavedHotels]);
+
   const handleLoginSuccess = useCallback(() => {
     setLoginModalOpen(false);
+    if (pendingSaveAfterLogin) {
+      saveHotelToStorage();
+      setPendingSaveAfterLogin(false);
+      return;
+    }
     const roomId = pendingRoomId;
     if (roomId) {
       setSelectedRoomId(roomId);
@@ -654,7 +712,7 @@ export default function HotelPage() {
       }, 80);
     }
     setPendingRoomId(null);
-  }, [pendingRoomId]);
+  }, [pendingRoomId, pendingSaveAfterLogin, saveHotelToStorage]);
 
   /* ── Savings for hero badge ── */
   const heroSavePercent = 23; // Fixed "up to" percentage for hero
@@ -900,6 +958,48 @@ export default function HotelPage() {
           </motion.div>
         </div>
 
+        {/* Save / Heart button */}
+        <button
+          onClick={handleHeartClick}
+          aria-label={isSaved ? "Remove from saved hotels" : "Save this hotel"}
+          aria-pressed={isSaved}
+          className="absolute top-4 left-4 md:top-6 md:left-6 flex items-center justify-center z-10"
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: "50%",
+            background: "rgba(26,23,16,0.55)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            border: "none",
+            cursor: "pointer",
+            transition: "transform 0.15s ease, background 0.15s ease",
+            color: isSaved ? "var(--gold)" : "var(--cream)",
+          }}
+          onMouseDown={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.92)";
+          }}
+          onMouseUp={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+          }}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill={isSaved ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+
         {/* Photo counter */}
         {photos.length > 1 && (
           <button
@@ -1038,6 +1138,7 @@ export default function HotelPage() {
                 <button
                   onClick={() => {
                     setPendingRoomId(null);
+                    setLoginIntent("room-select");
                     setLoginModalOpen(true);
                   }}
                   style={{
@@ -1696,14 +1797,25 @@ export default function HotelPage() {
         />
       )}
 
-      {/* ═══════════════════ Login Gate Modal (SELECT button on room card) ═══════════════════ */}
+      {/* ═══════════════════ Login Gate Modal ═══════════════════ */}
       {loginModalOpen && (
         <RoomSelectLoginModal
           onClose={() => {
             setLoginModalOpen(false);
             setPendingRoomId(null);
+            setPendingSaveAfterLogin(false);
           }}
           onSuccess={handleLoginSuccess}
+          heading={
+            loginIntent === "save-hotel"
+              ? "Join free to save this hotel"
+              : "Join free to book this hotel"
+          }
+          subtext={
+            loginIntent === "save-hotel"
+              ? "Join free to save hotels and access them anytime"
+              : "See member rates and book in minutes. Free forever."
+          }
         />
       )}
 

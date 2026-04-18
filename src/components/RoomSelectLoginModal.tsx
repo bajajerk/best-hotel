@@ -7,6 +7,9 @@ import { useAuth } from "@/context/AuthContext";
 interface RoomSelectLoginModalProps {
   onClose: () => void;
   onSuccess: () => void;
+  eyebrow?: string;
+  heading?: string;
+  subtext?: string;
 }
 
 type Mode = "choose" | "phone" | "otp";
@@ -14,6 +17,9 @@ type Mode = "choose" | "phone" | "otp";
 export default function RoomSelectLoginModal({
   onClose,
   onSuccess,
+  eyebrow = "Members Only",
+  heading = "Join free to book this hotel",
+  subtext = "See member rates and book in minutes. Free forever.",
 }: RoomSelectLoginModalProps) {
   const { signInWithGoogle, sendPhoneOtp, verifyPhoneOtp } = useAuth();
 
@@ -167,7 +173,7 @@ export default function RoomSelectLoginModal({
                 marginBottom: 12,
               }}
             >
-              Members Only
+              {eyebrow}
             </div>
 
             {/* Heading */}
@@ -181,7 +187,7 @@ export default function RoomSelectLoginModal({
                 margin: "0 0 10px 0",
               }}
             >
-              Join free to book this hotel
+              {heading}
             </h2>
 
             {/* Subtext */}
@@ -194,7 +200,7 @@ export default function RoomSelectLoginModal({
                 margin: "0 0 24px 0",
               }}
             >
-              See member rates and book in minutes. Free forever.
+              {subtext}
             </p>
 
             {mode === "choose" && (
