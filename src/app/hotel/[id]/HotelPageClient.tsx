@@ -648,6 +648,10 @@ export default function HotelPage() {
         roomCardRefs.current[roomId]?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 80);
       setTimeout(() => setHighlightedRoomId(null), 2400);
+    } else {
+      setTimeout(() => {
+        document.getElementById("rooms")?.scrollIntoView({ behavior: "smooth" });
+      }, 80);
     }
     setPendingRoomId(null);
   }, [pendingRoomId]);
@@ -984,7 +988,7 @@ export default function HotelPage() {
         <div style={{ padding: "32px 0 120px 0" }} className="lg:pr-10">
 
           {/* ══════ ROOMS SECTION ══════ */}
-          <div ref={roomsRef} style={{ scrollMarginTop: "120px" }}>
+          <div id="rooms" ref={roomsRef} style={{ scrollMarginTop: "120px" }}>
             {/* Stay summary header */}
             <div
               className="flex items-center flex-wrap gap-2 mb-6"
@@ -1613,39 +1617,35 @@ export default function HotelPage() {
             )}
           </div>
 
-          {/* Unlock Rate button */}
+          {/* Select Room CTA — scrolls to Rooms (gated on login) */}
           <button
-            disabled={!selectedRoom}
             onClick={() => {
-              if (selectedRoom) {
-                setUnlockModalOpen(true);
+              if (!user) {
+                setPendingRoomId(null);
+                setLoginModalOpen(true);
+                return;
               }
+              document.getElementById("rooms")?.scrollIntoView({ behavior: "smooth" });
             }}
-            className={selectedRoom ? "unlock-rate-btn-pulse" : ""}
             style={{
               padding: "10px 24px",
               fontSize: "12px",
               fontWeight: 600,
               letterSpacing: "0.1em",
               textTransform: "uppercase",
-              background: selectedRoom ? "var(--gold)" : "rgba(253,250,245,0.1)",
-              color: selectedRoom ? "var(--ink)" : "var(--ink-light)",
+              background: "var(--gold)",
+              color: "var(--ink)",
               border: "none",
-              cursor: selectedRoom ? "pointer" : "not-allowed",
+              cursor: "pointer",
               fontFamily: "var(--font-body)",
               whiteSpace: "nowrap",
               transition: "all 0.3s",
-              opacity: selectedRoom ? 1 : 0.5,
               display: "flex",
               alignItems: "center",
               gap: 6,
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            {selectedRoom ? "Unlock Rate" : "Select Room"}
+            Select Room →
           </button>
         </div>
       </div>
