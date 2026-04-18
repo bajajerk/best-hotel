@@ -118,7 +118,10 @@ export default function GuestDetailsPage() {
           <span>&middot;</span>
           <span>{flow.selectedRooms.map((r) => `${r.quantity}x ${r.roomType.name}`).join(", ")}</span>
           <span>&middot;</span>
-          <span style={{ fontWeight: 500, color: "var(--ink)" }}>${flow.totalPrice.toLocaleString()}</span>
+          {/* TODO: implement USD→INR conversion via live rates. */}
+          <span style={{ fontWeight: 500, color: "var(--ink)" }}>
+            {"\u20B9"}{Math.round(flow.totalPrice * 83).toLocaleString("en-IN")}
+          </span>
         </div>
       </div>
 

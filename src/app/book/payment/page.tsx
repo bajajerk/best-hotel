@@ -94,6 +94,12 @@ export default function PaymentPage() {
     display: "block" as const,
   };
 
+  // TODO: implement USD→INR conversion via live rates.
+  const USD_TO_INR = 83;
+  const toInr = (usd: number) => Math.round(usd * USD_TO_INR);
+  const formatInr = (usd: number) =>
+    `\u20B9${toInr(usd).toLocaleString("en-IN")}`;
+
   const taxesAndFees = Math.round(flow.totalPrice * 0.14);
   const grandTotal = flow.totalPrice + taxesAndFees;
 
@@ -139,7 +145,7 @@ export default function PaymentPage() {
                 {r.quantity}x {r.roomType.name} &times; {flow.nights} night{flow.nights !== 1 ? "s" : ""}
               </span>
               <span style={{ fontWeight: 500, color: "var(--ink)" }}>
-                ${(r.roomType.pricePerNight * r.quantity * flow.nights).toLocaleString()}
+                {formatInr(r.roomType.pricePerNight * r.quantity * flow.nights)}
               </span>
             </div>
           ))}
@@ -155,7 +161,7 @@ export default function PaymentPage() {
             color: "var(--ink-mid)",
           }}>
             <span>Taxes & fees (14%)</span>
-            <span>${taxesAndFees.toLocaleString()}</span>
+            <span>{formatInr(taxesAndFees)}</span>
           </div>
 
           <div style={{
@@ -173,7 +179,7 @@ export default function PaymentPage() {
               fontWeight: 600,
               color: "var(--ink)",
             }}>
-              ${grandTotal.toLocaleString()}
+              {formatInr(grandTotal)}
             </span>
           </div>
         </div>
@@ -324,7 +330,7 @@ export default function PaymentPage() {
           ) : (
             <>
               <span className="material-symbols-outlined" style={{ fontSize: 18 }}>lock</span>
-              Pay ${grandTotal.toLocaleString()}
+              Pay {formatInr(grandTotal)}
             </>
           )}
         </button>

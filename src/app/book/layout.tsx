@@ -41,8 +41,10 @@ function StepIndicator() {
                 fontSize: 13,
                 fontWeight: 600,
                 fontFamily: "var(--sans)",
-                background: isDone ? "var(--gold)" : isActive ? "var(--ink)" : "var(--cream-deep)",
-                color: isDone || isActive ? "var(--white)" : "var(--ink-light)",
+                background: isActive || isDone ? "var(--gold)" : "var(--cream-deep)",
+                color: isActive ? "var(--ink)" : isDone ? "var(--white)" : "var(--ink-light)",
+                border: isActive ? "2px solid var(--gold)" : "none",
+                boxShadow: isActive ? "0 0 0 4px rgba(201,168,76,0.18)" : "none",
                 transition: "all 0.3s ease",
               }}>
                 {isDone ? (
@@ -55,7 +57,7 @@ function StepIndicator() {
                 fontSize: "var(--text-caption)",
                 fontFamily: "var(--sans)",
                 color: isActive ? "var(--ink)" : "var(--ink-light)",
-                fontWeight: isActive ? 500 : 400,
+                fontWeight: isActive ? 600 : 400,
                 marginTop: 6,
                 whiteSpace: "nowrap",
               }}>

@@ -247,6 +247,14 @@ function RoomCard({
 }) {
   const saving = marketRate - voyagrRate;
   const savePercent = Math.round((saving / marketRate) * 100);
+  const [amenitiesExpanded, setAmenitiesExpanded] = useState(false);
+  const MAX_INCLUSIONS = 3;
+  const hasMoreInclusions = room.inclusions.length > MAX_INCLUSIONS;
+  const hiddenCount = room.inclusions.length - MAX_INCLUSIONS;
+  const shownInclusions =
+    amenitiesExpanded || !hasMoreInclusions
+      ? room.inclusions
+      : room.inclusions.slice(0, MAX_INCLUSIONS);
 
   return (
     <motion.div
@@ -333,9 +341,9 @@ function RoomCard({
         )}
       </div>
 
-      {/* Inclusions */}
-      <div className="flex flex-wrap gap-1.5 mb-2">
-        {room.inclusions.map((inc) => (
+      {/* Inclusions (max 3 shown, rest expandable) */}
+      <div className="flex flex-wrap items-center gap-1.5 mb-2">
+        {shownInclusions.map((inc) => (
           <span
             key={inc}
             style={{
@@ -350,6 +358,29 @@ function RoomCard({
             {inc}
           </span>
         ))}
+        {hasMoreInclusions && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setAmenitiesExpanded((v) => !v);
+            }}
+            style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "var(--gold)",
+              background: "none",
+              border: "none",
+              padding: "3px 2px",
+              cursor: "pointer",
+              fontFamily: "var(--font-body)",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {amenitiesExpanded
+              ? "Show less"
+              : `+ ${hiddenCount} more amenit${hiddenCount === 1 ? "y" : "ies"}`}
+          </button>
+        )}
       </div>
 
       {/* Cancellation policy */}
@@ -1228,7 +1259,7 @@ export default function HotelPage() {
                     lineHeight: 1.6,
                   }}
                 >
-                  The same rates travel agents and preferred partners pay. Never available publicly.
+                  The same rates travel agents pay. Never listed publicly.
                 </p>
 
                 <div className="flex flex-col gap-4">
