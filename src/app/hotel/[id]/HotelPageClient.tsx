@@ -6,9 +6,11 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import UnlockRateModal from "@/components/UnlockRateModal";
+import RoomSelectLoginModal from "@/components/RoomSelectLoginModal";
 import HotelPageWhatsAppTrigger from "@/components/HotelPageWhatsAppTrigger";
 import { trackHotelViewed, trackHotelGalleryOpened, trackHotelTabClicked } from "@/lib/analytics";
 import { useBooking } from "@/context/BookingContext";
+import { useAuth } from "@/context/AuthContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -230,14 +232,20 @@ function RoomCard({
   marketRate,
   currency,
   isSelected,
+  isHighlighted,
+  cardRef,
   onSelect,
+  onProceed,
 }: {
   room: RoomDef;
   voyagrRate: number;
   marketRate: number;
   currency: string;
   isSelected: boolean;
+  isHighlighted: boolean;
+  cardRef: (el: HTMLDivElement | null) => void;
   onSelect: () => void;
+  onProceed: () => void;
 }) {
   const saving = marketRate - voyagrRate;
   const savePercent = Math.round((saving / marketRate) * 100);
@@ -245,7 +253,9 @@ function RoomCard({
   return (
     <motion.div
       layout
+      ref={cardRef}
       onClick={onSelect}
+      className={isHighlighted ? "room-card-highlight-pulse" : undefined}
       style={{
         background: "var(--white)",
         border: isSelected ? "2px solid #d4a24c" : "1px solid var(--cream-border)",
@@ -384,7 +394,7 @@ function RoomCard({
         </div>
 
         <button
-          onClick={(e) => { e.stopPropagation(); onSelect(); }}
+          onClick={(e) => { e.stopPropagation(); onProceed(); }}
           style={{
             padding: "8px 20px",
             fontSize: "12px",
@@ -399,7 +409,7 @@ function RoomCard({
             fontFamily: "var(--font-body)",
           }}
         >
-          {isSelected ? "Selected" : "Select"}
+          Select
         </button>
       </div>
     </motion.div>
@@ -502,6 +512,7 @@ export default function HotelPage() {
   const router = useRouter();
   const hotelId = params.id as string;
   const booking = useBooking();
+  const { user } = useAuth();
 
   const [hotel, setHotel] = useState<HotelDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -515,9 +526,15 @@ export default function HotelPage() {
 
   /* Room selection */
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [highlightedRoomId, setHighlightedRoomId] = useState<string | null>(null);
+  const roomCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   /* Unlock Rate modal */
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+
+  /* Login gate modal (SELECT button on a room card, user not signed in) */
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [pendingRoomId, setPendingRoomId] = useState<string | null>(null);
 
   /* Section refs for scroll-based tabs */
   const roomsRef = useRef<HTMLDivElement>(null);
@@ -586,6 +603,54 @@ export default function HotelPage() {
   const selectedMarketRate = selectedRoom ? getMarketRate(selectedRoom) : 0;
   const selectedSaving = selectedMarketRate - selectedVoyagrRate;
   const totalPrice = selectedVoyagrRate * nights;
+
+  /* ── Proceed to booking from a room card SELECT button ── */
+  const proceedToBooking = useCallback(
+    (room: RoomDef) => {
+      if (!hotel) return;
+      const base = hotel.rates_from || 100;
+      const rate = Math.round(base * room.priceMult);
+      const totalGuests = booking.rooms.reduce((s, r) => s + r.adults + r.children, 0);
+      const qs = new URLSearchParams({
+        hotelId: String(hotel.hotel_id),
+        roomType: room.id,
+        rate: String(rate),
+        checkIn: booking.checkIn || "",
+        checkOut: booking.checkOut || "",
+        guests: String(totalGuests),
+        rooms: String(booking.rooms.length),
+      });
+      router.push(`/book?${qs.toString()}`);
+    },
+    [hotel, booking, router]
+  );
+
+  const handleRoomSelectCTA = useCallback(
+    (room: RoomDef) => {
+      setSelectedRoomId(room.id);
+      if (!user) {
+        setPendingRoomId(room.id);
+        setLoginModalOpen(true);
+        return;
+      }
+      proceedToBooking(room);
+    },
+    [user, proceedToBooking]
+  );
+
+  const handleLoginSuccess = useCallback(() => {
+    setLoginModalOpen(false);
+    const roomId = pendingRoomId;
+    if (roomId) {
+      setSelectedRoomId(roomId);
+      setHighlightedRoomId(roomId);
+      setTimeout(() => {
+        roomCardRefs.current[roomId]?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 80);
+      setTimeout(() => setHighlightedRoomId(null), 2400);
+    }
+    setPendingRoomId(null);
+  }, [pendingRoomId]);
 
   /* ── Savings for hero badge ── */
   const heroSavePercent = 23; // Fixed "up to" percentage for hero
@@ -1022,7 +1087,10 @@ export default function HotelPage() {
                       marketRate={getMarketRate(room)}
                       currency={currency}
                       isSelected={selectedRoomId === room.id}
+                      isHighlighted={highlightedRoomId === room.id}
+                      cardRef={(el) => { roomCardRefs.current[room.id] = el; }}
                       onSelect={() => setSelectedRoomId(selectedRoomId === room.id ? null : room.id)}
+                      onProceed={() => handleRoomSelectCTA(room)}
                     />
                   ))}
                 </div>
@@ -1072,7 +1140,10 @@ export default function HotelPage() {
                       marketRate={getMarketRate(room)}
                       currency={currency}
                       isSelected={selectedRoomId === room.id}
+                      isHighlighted={highlightedRoomId === room.id}
+                      cardRef={(el) => { roomCardRefs.current[room.id] = el; }}
                       onSelect={() => setSelectedRoomId(selectedRoomId === room.id ? null : room.id)}
+                      onProceed={() => handleRoomSelectCTA(room)}
                     />
                   ))}
                 </div>
@@ -1599,8 +1670,30 @@ export default function HotelPage() {
         />
       )}
 
+      {/* ═══════════════════ Login Gate Modal (SELECT button on room card) ═══════════════════ */}
+      {loginModalOpen && (
+        <RoomSelectLoginModal
+          onClose={() => {
+            setLoginModalOpen(false);
+            setPendingRoomId(null);
+          }}
+          onSuccess={handleLoginSuccess}
+        />
+      )}
+
       {/* ═══════════════════ WhatsApp Concierge Trigger (40s delay) ═══════════════════ */}
       {hotel && <HotelPageWhatsAppTrigger hotelName={hotel.hotel_name} />}
+
+      <style jsx global>{`
+        @keyframes roomCardHighlightPulse {
+          0% { box-shadow: 0 0 0 0 rgba(212,162,76,0.45); }
+          60% { box-shadow: 0 0 0 12px rgba(212,162,76,0); }
+          100% { box-shadow: 0 0 0 0 rgba(212,162,76,0); }
+        }
+        .room-card-highlight-pulse {
+          animation: roomCardHighlightPulse 1.2s ease-out 2;
+        }
+      `}</style>
     </div>
   );
 }
