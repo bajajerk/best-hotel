@@ -1478,9 +1478,9 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
                 }}
               >
                 {[
-                  { number: "10+", label: "Years Supply Side" },
-                  { number: "1,500+", label: "Hotels on Platform" },
-                  { number: "₹2.4Cr", label: "Saved by Members" },
+                  { number: "10+", label: "Years in Hospitality" },
+                  { number: "1,500+", label: "Hotels Worldwide" },
+                  { number: "50+", label: "Cities Covered" },
                 ].map((stat) => (
                   <div key={stat.label}>
                     <div
@@ -1603,7 +1603,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               opacity: 0.4,
             }}
           >
-            {["Razorpay Secured", "SSL Encrypted", "GST Registered"].map(
+            {["Secure Payments", "SSL Encrypted", "GST Registered"].map(
               (badge) => (
                 <div
                   key={badge}
@@ -1642,10 +1642,10 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
             transition={{ duration: 0.8 }}
           >
             <div className="type-eyebrow" style={{ marginBottom: "8px" }}>
-              Stay Updated
+              Member Updates
             </div>
             <h2 className="type-display-2" style={{ color: "var(--ink)", marginBottom: "16px" }}>
-              Curated <em style={{ fontStyle: "italic", color: "var(--gold)" }}>experiences</em> in your inbox
+              Be the <em style={{ fontStyle: "italic", color: "var(--gold)" }}>first</em> to know
             </h2>
             <p className="type-body" style={{
               color: "var(--ink-light)",
@@ -1654,8 +1654,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               maxWidth: "480px",
               margin: "0 auto 32px",
             }}>
-              Get early access to new destinations, seasonal escapes, and handpicked hotels with exclusive member perks
-              &mdash; delivered once a week.
+              New destinations, member rates, and exclusive perks &mdash; straight to your inbox.
             </p>
 
             <div
