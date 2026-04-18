@@ -8,7 +8,7 @@ import { searchHotels, fetchCuratedCities, CuratedCity } from "@/lib/api";
 import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE, CONTINENTS } from "@/lib/constants";
 import { trackSearch, trackSearchFilterApplied } from "@/lib/analytics";
 import Header from "@/components/Header";
-import DateBar from "@/components/DateBar";
+import DateBar, { DateBarHandle } from "@/components/DateBar";
 import DestinationSearch from "@/components/DestinationSearch";
 import RegionFilterTabs from "@/components/RegionFilterTabs";
 
@@ -22,19 +22,30 @@ function safeImageSrc(url: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Popular search suggestions
+// Popular search suggestions (ordered for Indian audience)
 // ---------------------------------------------------------------------------
 const POPULAR_SEARCHES = [
-  { label: "Bangkok", slug: "bangkok", type: "city" as const },
-  { label: "Tokyo", slug: "tokyo", type: "city" as const },
-  { label: "Paris", slug: "paris", type: "city" as const },
   { label: "Dubai", slug: "dubai", type: "city" as const },
   { label: "Bali", slug: "bali", type: "city" as const },
   { label: "Maldives", slug: "maldives", type: "city" as const },
+  { label: "Bangkok", slug: "bangkok", type: "city" as const },
   { label: "Singapore", slug: "singapore", type: "city" as const },
+  { label: "Tokyo", slug: "tokyo", type: "city" as const },
   { label: "London", slug: "london", type: "city" as const },
+  { label: "Paris", slug: "paris", type: "city" as const },
   { label: "Santorini", slug: "santorini", type: "city" as const },
   { label: "Rome", slug: "rome", type: "city" as const },
+];
+
+// ---------------------------------------------------------------------------
+// India destinations (most searched for Indian travellers)
+// ---------------------------------------------------------------------------
+const INDIA_SEARCHES = [
+  { label: "Mumbai", slug: "mumbai" },
+  { label: "Goa", slug: "goa" },
+  { label: "Udaipur", slug: "udaipur" },
+  { label: "Jaipur", slug: "jaipur" },
+  { label: "Delhi", slug: "delhi" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -134,6 +145,7 @@ export default function SearchPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dateBarRef = useRef<DateBarHandle | null>(null);
 
   // Load cities for matching
   useEffect(() => {
@@ -164,7 +176,7 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const performSearch = useCallback(async (q: string) => {
+  const performSearch = useCallback(async (q: string, options?: { persist?: boolean }) => {
     if (!q.trim()) {
       setHotelResults([]);
       setHasSearched(false);
@@ -173,8 +185,10 @@ export default function SearchPage() {
 
     setSearching(true);
     setHasSearched(true);
-    addRecentSearch(q);
-    setRecentSearches(getRecentSearches());
+    if (options?.persist) {
+      addRecentSearch(q);
+      setRecentSearches(getRecentSearches());
+    }
     try {
       const results = await searchHotels(q, 30);
       setHotelResults(results || []);
@@ -203,7 +217,7 @@ export default function SearchPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    performSearch(query);
+    performSearch(query, { persist: true });
     // Update URL
     const params = new URLSearchParams();
     if (query.trim()) params.set("q", query.trim());
@@ -212,7 +226,7 @@ export default function SearchPage() {
 
   const handleRecentClick = (term: string) => {
     setQuery(term);
-    performSearch(term);
+    performSearch(term, { persist: true });
     router.replace(`/search?q=${encodeURIComponent(term)}`);
   };
 
@@ -323,10 +337,55 @@ export default function SearchPage() {
                   performSearch(val);
                 }, 400);
               }}
+              onSelect={(_type, _value, label) => {
+                const filled = label ?? _value;
+                setQuery(filled);
+                if (debounceRef.current) clearTimeout(debounceRef.current);
+                performSearch(filled, { persist: true });
+                // Move focus to CHECK-IN without navigating away
+                requestAnimationFrame(() => dateBarRef.current?.openCheckIn());
+              }}
             />
           </div>
         </div>
-        <DateBar variant="light" />
+        <DateBar variant="light" ref={dateBarRef} />
+        {/* Search submit button */}
+        <div style={{ padding: "0 16px 14px" }}>
+          <button
+            type="button"
+            onClick={() => {
+              if (!query.trim()) return;
+              if (debounceRef.current) clearTimeout(debounceRef.current);
+              performSearch(query, { persist: true });
+              const params = new URLSearchParams();
+              params.set("q", query.trim());
+              router.replace(`/search?${params.toString()}`);
+            }}
+            disabled={!query.trim()}
+            style={{
+              width: "100%",
+              padding: "14px 20px",
+              background: "#C9A84C",
+              color: "var(--ink)",
+              border: "none",
+              borderRadius: 10,
+              fontSize: 14,
+              fontWeight: 600,
+              letterSpacing: "0.04em",
+              fontFamily: "var(--font-body)",
+              cursor: query.trim() ? "pointer" : "not-allowed",
+              opacity: query.trim() ? 1 : 0.5,
+              transition: "opacity 0.2s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            Search Hotels
+            <span aria-hidden style={{ fontSize: 16 }}>&rarr;</span>
+          </button>
+        </div>
       </div>
 
       {/* ── Hero search area ── */}
@@ -363,11 +422,11 @@ export default function SearchPage() {
               className="type-display-2"
               style={{ color: "var(--cream)", marginBottom: "12px" }}
             >
-              Find your perfect{" "}
-              <em style={{ fontStyle: "italic", color: "var(--gold)" }}>stay</em>
+              Where are you{" "}
+              <em style={{ fontStyle: "italic", color: "var(--gold)" }}>going?</em>
             </h1>
             <p className="type-body-lg" style={{ color: "rgba(245,240,232,0.5)", marginBottom: "40px" }}>
-              Search across 1,500+ hotels in 50+ cities worldwide
+              Member rates on 1,500+ hotels. Never on MakeMyTrip or Booking.com.
             </p>
           </motion.div>
 
@@ -441,6 +500,44 @@ export default function SearchPage() {
                   </button>
                 </div>
               )}
+
+              {/* India destinations */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexWrap: "wrap",
+                gap: "8px",
+                marginBottom: "16px",
+              }}>
+                <span style={{ fontSize: "11px", color: "rgba(245,240,232,0.35)", letterSpacing: "0.08em" }}>
+                  INDIA:
+                </span>
+                {INDIA_SEARCHES.map((s) => (
+                  <Link
+                    key={s.slug}
+                    href={`/city/${s.slug}`}
+                    style={{
+                      fontSize: "12px",
+                      color: "rgba(245,240,232,0.6)",
+                      textDecoration: "none",
+                      padding: "4px 14px",
+                      border: "1px solid rgba(245,240,232,0.12)",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget).style.borderColor = "var(--gold)";
+                      (e.currentTarget).style.color = "var(--gold)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget).style.borderColor = "rgba(245,240,232,0.12)";
+                      (e.currentTarget).style.color = "rgba(245,240,232,0.6)";
+                    }}
+                  >
+                    {s.label}
+                  </Link>
+                ))}
+              </div>
 
               {/* Popular searches */}
               <div style={{

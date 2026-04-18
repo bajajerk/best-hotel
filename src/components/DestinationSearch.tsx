@@ -26,7 +26,7 @@ interface DestinationSearchProps {
   /** Auto-focus the input on mount */
   autoFocus?: boolean;
   /** Called when user selects a suggestion (instead of default navigation) */
-  onSelect?: (type: "city" | "hotel", value: string) => void;
+  onSelect?: (type: "city" | "hotel", value: string, label?: string) => void;
   /** Initial value */
   defaultValue?: string;
   /** Called when value changes */
@@ -116,8 +116,9 @@ export default function DestinationSearch({
       // Async: search hotels via API
       setLoading(true);
       try {
-        const hotels = await searchHotels(q, 5);
-        setHotelSuggestions(hotels || []);
+        const hotels = await searchHotels(q, 10);
+        const transitPattern = /\b(railway station|train station|bus stop|bus station|bus stand|bus terminal|metro station|airport shuttle|rail station)\b/i;
+        setHotelSuggestions((hotels || []).filter((h) => !transitPattern.test(h.hotel_name)).slice(0, 5));
       } catch {
         setHotelSuggestions([]);
       } finally {
@@ -141,7 +142,7 @@ export default function DestinationSearch({
     setQuery(city.city_name);
     setIsOpen(false);
     if (onSelect) {
-      onSelect("city", city.city_slug);
+      onSelect("city", city.city_slug, city.city_name);
     } else {
       router.push(`/city/${city.city_slug}`);
     }
@@ -151,7 +152,7 @@ export default function DestinationSearch({
     setQuery(hotel.hotel_name);
     setIsOpen(false);
     if (onSelect) {
-      onSelect("hotel", String(hotel.hotel_id));
+      onSelect("hotel", String(hotel.hotel_id), hotel.hotel_name);
     } else {
       router.push(`/hotel/${hotel.hotel_id}`);
     }

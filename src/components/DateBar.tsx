@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
 import { useBooking } from "@/context/BookingContext";
 import GuestRoomPicker from "@/components/GuestRoomPicker";
 
 interface DateBarProps {
   variant?: "dark" | "light";
+}
+
+export interface DateBarHandle {
+  openCheckIn: () => void;
 }
 
 /* ── Date helpers ── */
@@ -58,7 +62,7 @@ function buildMonth(year: number, month: number, todayIso: string): DayCell[][] 
 
 /* ═══════════════════ Component ═══════════════════ */
 
-export default function DateBar({ variant = "light" }: DateBarProps) {
+const DateBar = forwardRef<DateBarHandle, DateBarProps>(function DateBar({ variant = "light" }, ref) {
   const { checkIn, checkOut, setCheckIn, setCheckOut, setDates, formatDate } = useBooking();
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [selecting, setSelecting] = useState<"checkIn" | "checkOut">("checkIn");
@@ -139,6 +143,13 @@ export default function DateBar({ variant = "light" }: DateBarProps) {
     setSelecting(target);
     setCalendarOpen(true);
   };
+
+  useImperativeHandle(ref, () => ({
+    openCheckIn: () => {
+      setSelecting("checkIn");
+      setCalendarOpen(true);
+    },
+  }), []);
 
   const nightCount = useMemo(() => {
     if (!checkIn || !checkOut) return 0;
@@ -522,4 +533,6 @@ export default function DateBar({ variant = "light" }: DateBarProps) {
       )}
     </div>
   );
-}
+});
+
+export default DateBar;
