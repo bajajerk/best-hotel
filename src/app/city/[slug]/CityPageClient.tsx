@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { fetchCityCurations, CuratedHotel } from "@/lib/api";
-import { rankHotels, sortRankedHotels, SORT_STRATEGY_LABELS, type SortStrategy, type RankedHotel } from "@/lib/ranking";
+import { rankHotels, sortRankedHotels, type SortStrategy } from "@/lib/ranking";
 import Header from "@/components/Header";
 import BackButton from "@/components/BackButton";
 import { trackCityViewed } from "@/lib/analytics";
@@ -171,10 +171,14 @@ export default function CityPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<SortStrategy>("recommended");
 
-  // Subset of sort strategies relevant for city pages
-  const citySortOptions = SORT_STRATEGY_LABELS.filter((s) =>
-    ["recommended", "price_asc", "price_desc", "rating_desc", "popularity_desc", "deal_desc", "stars_desc"].includes(s.value)
-  );
+  // Subset of sort strategies relevant for city pages (with city-specific labels)
+  const citySortOptions: { label: string; value: SortStrategy }[] = [
+    { label: "Recommended", value: "recommended" },
+    { label: "Saving: Highest first", value: "deal_desc" },
+    { label: "Price: Low to high", value: "price_asc" },
+    { label: "Price: High to low", value: "price_desc" },
+    { label: "Rating: Highest first", value: "rating_desc" },
+  ];
 
   useEffect(() => {
     fetchCityCurations(slug)
@@ -247,14 +251,24 @@ export default function CityPage() {
   const sortedRanked = sortRankedHotels(rankedFiltered, sortBy);
   const hotels = sortedRanked.map((r) => r.hotel);
 
-  // Build a lookup for value scores (used by HotelResultCard badges)
-  const valueScoreMap = new Map<number, number>();
-  for (const r of sortedRanked) valueScoreMap.set(r.hotel.hotel_id, r.valueScore);
-
   const displayName = cityName || slugToName(slug);
   const isFilterActive = filterMin > priceMin || filterMax < priceMax;
   const isSortActive = sortBy !== "recommended";
   const currency = allHotels.find((h) => h.rates_currency)?.rates_currency || null;
+
+  // Member rate strip: lowest member rate + highest saving percentage
+  const memberRates = allHotels
+    .map((h) => h.rates_from)
+    .filter((p): p is number => p !== null && p > 0);
+  const lowestMemberRate = memberRates.length > 0 ? Math.min(...memberRates) : null;
+  const highestSavePercent = memberRates.length > 0
+    ? Math.max(
+        ...memberRates.map((rate) => {
+          const market = Math.round(rate * 1.25);
+          return Math.round(((market - rate) / market) * 100);
+        })
+      )
+    : null;
 
   return (
     <div
@@ -353,6 +367,24 @@ export default function CityPage() {
                   }}
                 >
                   {tagline}
+                </p>
+              )}
+              {lowestMemberRate && highestSavePercent && highestSavePercent > 0 && (
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "var(--ink-light)",
+                    fontWeight: 400,
+                    lineHeight: 1.6,
+                    marginTop: 8,
+                    maxWidth: 520,
+                  }}
+                >
+                  Member rates from{" "}
+                  <span style={{ color: "var(--gold)", fontWeight: 500 }}>
+                    {formatCurrency(lowestMemberRate, currency)}
+                  </span>
+                  /night &middot; Save up to {highestSavePercent}% vs. public platforms
                 </p>
               )}
             </motion.div>
@@ -778,7 +810,7 @@ export default function CityPage() {
 
                   {/* Showing count */}
                   <p style={{ fontSize: 12, color: "var(--ink-light)" }}>
-                    Showing <strong style={{ color: "var(--ink-mid)", fontWeight: 500 }}>{hotels.length}</strong> of {allHotels.length} stays
+                    Showing <strong style={{ color: "var(--ink-mid)", fontWeight: 500 }}>{hotels.length}</strong> of {allHotels.length} hotels
                   </p>
                 </div>
               </motion.aside>
@@ -810,7 +842,7 @@ export default function CityPage() {
                       }}
                     >
                       <p style={{ fontSize: 13, color: "var(--ink-light)" }}>
-                        {hotels.length} curated {hotels.length === 1 ? "stay" : "stays"}
+                        {hotels.length} {hotels.length === 1 ? "hotel" : "hotels"}
                         {isFilterActive && (
                           <span style={{ color: "var(--gold)" }}> &middot; price filtered</span>
                         )}
@@ -823,7 +855,7 @@ export default function CityPage() {
                     {hotels.length > 0 ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                         {hotels.map((hotel, i) => (
-                          <HotelResultCard key={hotel.hotel_id} hotel={hotel} index={i} valueScore={valueScoreMap.get(hotel.hotel_id)} />
+                          <HotelResultCard key={hotel.hotel_id} hotel={hotel} index={i} />
                         ))}
                       </div>
                     ) : (
@@ -970,7 +1002,7 @@ export default function CityPage() {
                   {hotels.length > 0 ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                       {hotels.map((hotel, i) => (
-                        <HotelResultCard key={hotel.hotel_id} hotel={hotel} index={i} valueScore={valueScoreMap.get(hotel.hotel_id)} />
+                        <HotelResultCard key={hotel.hotel_id} hotel={hotel} index={i} />
                       ))}
                     </div>
                   ) : (

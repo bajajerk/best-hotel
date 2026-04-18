@@ -737,6 +737,18 @@ main {
   color: var(--gold) !important;
 }
 
+/* ── City hotel result card — flat hover/tap state (border-only, no shadow) ── */
+.city-result-card-flat {
+  transition: border-color 0.2s ease, background-color 0.15s ease;
+}
+.city-result-card-flat:hover {
+  border-color: var(--gold) !important;
+}
+.city-result-card-flat:active {
+  border-color: var(--gold) !important;
+  background-color: var(--gold-pale) !important;
+}
+
 /* ── Carousel ── */
 .carousel-container {
   position: relative;
