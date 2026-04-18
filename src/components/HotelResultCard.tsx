@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { CuratedHotel } from "@/lib/api";
-import { AmenityChips } from "@/components/AmenityIcons";
-import { PriceProofCompact, TrustBadgesCompact } from "@/components/PriceProof";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -40,24 +38,25 @@ function StarRating({ count }: { count: number }) {
   const filled = Math.max(0, Math.min(5, rounded));
   const empty = 5 - filled;
   return (
-    <div
+    <span
       aria-label={`${filled} star hotel`}
       style={{
         color: "var(--gold)",
-        fontSize: 12,
+        fontSize: 13,
         letterSpacing: 1,
-        marginBottom: 6,
+        whiteSpace: "nowrap",
+        flexShrink: 0,
       }}
     >
       {"\u2605".repeat(filled)}
       <span style={{ color: "var(--cream-border)" }}>{"\u2606".repeat(empty)}</span>
-    </div>
+    </span>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Horizontal Hotel Result Card (Voyagr style)
-// Used on city pages to display curated hotel listings
+// Hotel Result Card — clean OTA-style (Booking/Airbnb inspired)
+// Full-bleed image on top, minimal content below
 // ---------------------------------------------------------------------------
 export default function HotelResultCard({
   hotel,
@@ -75,6 +74,9 @@ export default function HotelResultCard({
   const saveAmount =
     hotel.rates_from && marketRate ? marketRate - hotel.rates_from : null;
 
+  const isPreferred = index === 0;
+  const location = [hotel.city_name, hotel.country].filter(Boolean).join(" \u00B7 ");
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -86,222 +88,16 @@ export default function HotelResultCard({
       }}
     >
       <Link href={`/hotel/${hotel.hotel_id}`} className="block group">
-        {/* Desktop: horizontal 3-column card */}
         <div
-          className="hidden md:grid city-hotel-card city-result-card-flat"
+          className="city-result-card-flat"
           style={{
             background: "var(--white)",
             border: "1px solid var(--cream-border)",
-            gridTemplateColumns: "240px 1fr auto",
-            gap: "0 20px",
             overflow: "hidden",
             cursor: "pointer",
           }}
         >
-          {/* Left: Image */}
-          <div style={{ position: "relative", overflow: "hidden", height: 180 }}>
-            <img
-              src={photo}
-              alt={hotel.hotel_name}
-              loading="lazy"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
-                filter: "saturate(0.88)",
-              }}
-              onError={(e) => {
-                const img = e.target as HTMLImageElement;
-                if (img.src !== PLACEHOLDER_IMG) img.src = PLACEHOLDER_IMG;
-              }}
-            />
-            {index === 0 && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 12,
-                  left: 12,
-                  background: "var(--gold)",
-                  color: "var(--ink)",
-                  fontSize: 9,
-                  fontWeight: 600,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  padding: "4px 10px",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                Preferred
-              </div>
-            )}
-          </div>
-
-          {/* Middle: Details */}
-          <div style={{ padding: "20px 24px" }}>
-            {hotel.star_rating && hotel.star_rating > 0 && (
-              <StarRating count={hotel.star_rating} />
-            )}
-
-            <h3
-              className="type-heading-3"
-              style={{ color: "var(--ink)", marginBottom: 8 }}
-            >
-              {hotel.hotel_name}
-            </h3>
-
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {hotel.rating_average && hotel.rating_average > 0 && (
-                <span
-                  style={{
-                    fontSize: 10,
-                    padding: "3px 10px",
-                    background:
-                      hotel.rating_average >= 8.5
-                        ? "var(--gold-pale)"
-                        : "var(--cream)",
-                    color:
-                      hotel.rating_average >= 8.5
-                        ? "var(--gold)"
-                        : "var(--ink-mid)",
-                    border: "1px solid var(--cream-border)",
-                    fontFamily: "var(--font-body)",
-                    fontWeight: 500,
-                  }}
-                >
-                  {hotel.rating_average.toFixed(1)} rating
-                </span>
-              )}
-              {hotel.number_of_reviews && hotel.number_of_reviews > 0 && (
-                <span
-                  style={{
-                    fontSize: 10,
-                    padding: "3px 10px",
-                    background: "var(--cream)",
-                    color: "var(--ink-mid)",
-                    border: "1px solid var(--cream-border)",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  {hotel.number_of_reviews.toLocaleString()} reviews
-                </span>
-              )}
-            </div>
-            {hotel.overview && (
-              <div style={{ marginTop: 8 }}>
-                <AmenityChips overview={hotel.overview} max={4} />
-              </div>
-            )}
-            <div style={{ marginTop: 10 }}>
-              <TrustBadgesCompact />
-            </div>
-          </div>
-
-          {/* Right: Pricing */}
-          <div
-            style={{
-              padding: 20,
-              borderLeft: "1px solid var(--cream-border)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              minWidth: 180,
-            }}
-          >
-            {marketRate && hotel.rates_from ? (
-              <div style={{ textAlign: "right" }}>
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: "var(--ink-light)",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  Market rate
-                </div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    textDecoration: "line-through",
-                    color: "var(--market-rate)",
-                  }}
-                >
-                  {formatCurrency(marketRate, hotel.rates_currency)}
-                </div>
-              </div>
-            ) : (
-              <div />
-            )}
-
-            {hotel.rates_from ? (
-              <div
-                style={{
-                  textAlign: "right",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-end",
-                  gap: 6,
-                }}
-              >
-                <div className="type-label" style={{ color: "var(--gold)" }}>
-                  Member rate
-                </div>
-                <div className="type-price" style={{ color: "var(--our-rate)" }}>
-                  {formatCurrency(hotel.rates_from, hotel.rates_currency)}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--ink-light)" }}>
-                  per night
-                </div>
-                {saveAmount && saveAmount > 0 && (
-                  <div
-                    style={{
-                      background: "var(--gold-pale)",
-                      color: "var(--success)",
-                      fontSize: 11,
-                      fontWeight: 500,
-                      padding: "4px 10px",
-                      textAlign: "center",
-                      fontFamily: "var(--font-body)",
-                    }}
-                  >
-                    Save {formatCurrency(saveAmount, hotel.rates_currency)}/night
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 500,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: "var(--gold)",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                Call for rates
-              </div>
-            )}
-
-            {savePercent && savePercent > 0 ? (
-              <PriceProofCompact savePercent={savePercent} />
-            ) : (
-              <div />
-            )}
-          </div>
-        </div>
-
-        {/* Mobile: stacked card */}
-        <div
-          className="md:hidden city-result-card-flat"
-          style={{
-            background: "var(--white)",
-            border: "1px solid var(--cream-border)",
-            overflow: "hidden",
-          }}
-        >
-          {/* Image */}
+          {/* Full-bleed image */}
           <div style={{ position: "relative", height: 200, overflow: "hidden" }}>
             <img
               src={photo}
@@ -312,14 +108,14 @@ export default function HotelResultCard({
                 height: "100%",
                 objectFit: "cover",
                 display: "block",
-                filter: "saturate(0.88)",
+                filter: "saturate(0.9)",
               }}
               onError={(e) => {
                 const img = e.target as HTMLImageElement;
                 if (img.src !== PLACEHOLDER_IMG) img.src = PLACEHOLDER_IMG;
               }}
             />
-            {index === 0 && (
+            {isPreferred && (
               <div
                 style={{
                   position: "absolute",
@@ -344,10 +140,12 @@ export default function HotelResultCard({
                   position: "absolute",
                   top: 12,
                   right: 12,
-                  background: "var(--gold-pale)",
-                  color: "var(--success)",
-                  fontSize: 11,
-                  fontWeight: 500,
+                  background: "var(--success)",
+                  color: "var(--white)",
+                  fontSize: 10,
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
                   padding: "4px 10px",
                   fontFamily: "var(--font-body)",
                 }}
@@ -357,54 +155,86 @@ export default function HotelResultCard({
             )}
           </div>
 
-          {/* Info */}
-          <div style={{ padding: 16 }}>
-            {hotel.star_rating && hotel.star_rating > 0 && (
-              <StarRating count={hotel.star_rating} />
-            )}
-            <h3
-              className="type-heading-3"
-              style={{ color: "var(--ink)", marginBottom: 8 }}
-            >
-              {hotel.hotel_name}
-            </h3>
-            {hotel.overview && (
-              <div style={{ marginBottom: 8 }}>
-                <AmenityChips overview={hotel.overview} max={3} />
-              </div>
-            )}
-            <div style={{ marginBottom: 12 }}>
-              <TrustBadgesCompact />
-            </div>
-
-            {/* Price row */}
+          {/* Content */}
+          <div style={{ padding: "18px 20px 16px" }}>
+            {/* Row 1: name + stars inline */}
             <div
               style={{
                 display: "flex",
                 alignItems: "baseline",
                 justifyContent: "space-between",
+                gap: 12,
+                marginBottom: 4,
               }}
             >
-              {hotel.rates_from ? (
+              <h3
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: 20,
+                  fontWeight: 500,
+                  color: "var(--ink)",
+                  lineHeight: 1.2,
+                  margin: 0,
+                  flex: 1,
+                  minWidth: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {hotel.hotel_name}
+              </h3>
+              {hotel.star_rating && hotel.star_rating > 0 && (
+                <StarRating count={hotel.star_rating} />
+              )}
+            </div>
+
+            {/* Row 2: Location — city + country only */}
+            {location && (
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "var(--ink-light)",
+                  margin: 0,
+                  marginBottom: 14,
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                {location}
+              </p>
+            )}
+
+            {/* Row 3: Rate display */}
+            {hotel.rates_from ? (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-end",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  marginBottom: 10,
+                }}
+              >
+                {/* Left: member rate */}
                 <div>
                   <div
                     style={{
                       fontSize: 10,
                       fontWeight: 500,
-                      letterSpacing: "0.1em",
+                      letterSpacing: "0.12em",
                       textTransform: "uppercase",
                       color: "var(--gold)",
                       fontFamily: "var(--font-body)",
                       marginBottom: 2,
                     }}
                   >
-                    Member rate
+                    Member Rate
                   </div>
                   <div
                     style={{
                       display: "flex",
                       alignItems: "baseline",
-                      gap: 8,
+                      gap: 4,
                     }}
                   >
                     <span
@@ -412,62 +242,118 @@ export default function HotelResultCard({
                         fontFamily: "var(--font-display)",
                         fontSize: 24,
                         fontWeight: 500,
-                        color: "var(--our-rate)",
+                        color: "var(--gold)",
+                        lineHeight: 1,
                       }}
                     >
                       {formatCurrency(hotel.rates_from, hotel.rates_currency)}
                     </span>
                     <span style={{ fontSize: 11, color: "var(--ink-light)" }}>
-                      per night
+                      /night
                     </span>
                   </div>
-                  {saveAmount && saveAmount > 0 && (
-                    <div
+                </div>
+
+                {/* Right: struck-through market + save */}
+                {marketRate && saveAmount && saveAmount > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-end",
+                      gap: 2,
+                    }}
+                  >
+                    <span
                       style={{
-                        display: "inline-block",
-                        marginTop: 6,
-                        background: "var(--gold-pale)",
-                        color: "var(--success)",
-                        fontSize: 11,
-                        fontWeight: 500,
-                        padding: "4px 10px",
+                        fontSize: 12,
+                        textDecoration: "line-through",
+                        color: "var(--ink-light)",
                         fontFamily: "var(--font-body)",
                       }}
                     >
-                      Save {formatCurrency(saveAmount, hotel.rates_currency)}/night
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 500,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "var(--gold)",
-                    fontFamily: "var(--font-body)",
-                  }}
+                      {formatCurrency(marketRate, hotel.rates_currency)}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: "var(--success)",
+                        fontFamily: "var(--font-body)",
+                      }}
+                    >
+                      Save {formatCurrency(saveAmount, hotel.rates_currency)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 500,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "var(--gold)",
+                  fontFamily: "var(--font-body)",
+                  marginBottom: 10,
+                }}
+              >
+                Call for rates
+              </div>
+            )}
+
+            {/* Row 4: small meta + CTA */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                borderTop: "1px solid var(--cream-border)",
+                paddingTop: 10,
+              }}
+            >
+              <span
+                title="Free cancellation up to 48 hours before check-in"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 11,
+                  color: "var(--ink-light)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--success)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-label="Free cancellation"
                 >
-                  Call for rates
-                </span>
-              )}
-              {marketRate && hotel.rates_from && (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                  <span
-                    style={{
-                      fontSize: 12,
-                      textDecoration: "line-through",
-                      color: "var(--market-rate)",
-                    }}
-                  >
-                    {formatCurrency(marketRate, hotel.rates_currency)}
-                  </span>
-                  {savePercent && savePercent > 0 && (
-                    <PriceProofCompact savePercent={savePercent} />
-                  )}
-                </div>
-              )}
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+                All inclusive
+              </span>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  letterSpacing: "0.04em",
+                  color: "var(--gold)",
+                  fontFamily: "var(--font-body)",
+                  whiteSpace: "nowrap",
+                }}
+                className="group-hover:underline"
+              >
+                View Hotel &rarr;
+              </span>
             </div>
           </div>
         </div>

@@ -40,21 +40,6 @@ const cssVars: Record<string, string> = {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-const PLACEHOLDER_IMG =
-  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=70";
-
-function sanitizePhoto(url: string | null): string {
-  if (!url) return PLACEHOLDER_IMG;
-  let src = url.startsWith("http://") ? url.replace("http://", "https://") : url;
-  if (!src.startsWith("https://"))
-    src = `https://photos.hotelbeds.com/giata/${src}`;
-  return src;
-}
-
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, "").trim();
-}
-
 function formatCurrency(amount: number, currency?: string | null): string {
   const symbols: Record<string, string> = {
     USD: "$", EUR: "\u20AC", GBP: "\u00A3", INR: "\u20B9",
@@ -68,11 +53,6 @@ function formatCurrency(amount: number, currency?: string | null): string {
       ? rounded.toLocaleString("en-IN")
       : rounded.toLocaleString("en-US");
   return `${sym}${formatted}`;
-}
-
-function starDots(count: number | null): string {
-  if (!count || count <= 0) return "";
-  return Array.from({ length: Math.round(count) }, () => "\u2022").join(" ");
 }
 
 function slugToName(s: string): string {
@@ -256,20 +236,6 @@ export default function CityPage() {
   const isSortActive = sortBy !== "recommended";
   const currency = allHotels.find((h) => h.rates_currency)?.rates_currency || null;
 
-  // Member rate strip: lowest member rate + highest saving percentage
-  const memberRates = allHotels
-    .map((h) => h.rates_from)
-    .filter((p): p is number => p !== null && p > 0);
-  const lowestMemberRate = memberRates.length > 0 ? Math.min(...memberRates) : null;
-  const highestSavePercent = memberRates.length > 0
-    ? Math.max(
-        ...memberRates.map((rate) => {
-          const market = Math.round(rate * 1.25);
-          return Math.round(((market - rate) / market) * 100);
-        })
-      )
-    : null;
-
   return (
     <div
       style={{
@@ -369,24 +335,19 @@ export default function CityPage() {
                   {tagline}
                 </p>
               )}
-              {lowestMemberRate && highestSavePercent && highestSavePercent > 0 && (
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: "var(--ink-light)",
-                    fontWeight: 400,
-                    lineHeight: 1.6,
-                    marginTop: 8,
-                    maxWidth: 520,
-                  }}
-                >
-                  Member rates from{" "}
-                  <span style={{ color: "var(--gold)", fontWeight: 500 }}>
-                    {formatCurrency(lowestMemberRate, currency)}
-                  </span>
-                  /night &middot; Save up to {highestSavePercent}% vs. public platforms
-                </p>
-              )}
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--ink-light)",
+                  fontWeight: 400,
+                  lineHeight: 1.6,
+                  marginTop: 8,
+                  maxWidth: 520,
+                }}
+              >
+                <span style={{ color: "var(--gold)", fontWeight: 500 }}>Member rates</span>
+                {" \u00B7 Save up to 25% vs. MakeMyTrip and Booking.com"}
+              </p>
             </motion.div>
 
             {/* Divider */}
@@ -989,7 +950,7 @@ export default function CityPage() {
                 >
                   <div style={{ marginBottom: 16 }}>
                     <p style={{ fontSize: 13, color: "var(--ink-light)" }}>
-                      {hotels.length} curated {hotels.length === 1 ? "stay" : "stays"}
+                      {hotels.length} {hotels.length === 1 ? "hotel" : "hotels"}
                       {isFilterActive && (
                         <span style={{ color: "var(--gold)" }}> &middot; price filtered</span>
                       )}
