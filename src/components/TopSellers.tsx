@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import type { CuratedHotel } from "@/lib/api";
 import { computeTopSellerScores } from "@/lib/ranking";
+import Carousel from "./Carousel";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -93,24 +93,6 @@ const MEDAL_COLORS: Record<number, { bg: string; text: string; label: string }> 
   2: { bg: "#8a8a8a", text: "#fdfaf5", label: "Runner Up" },
   3: { bg: "#a0714f", text: "#fdfaf5", label: "Top Pick" },
 };
-
-// ---------------------------------------------------------------------------
-// Chevron icons
-// ---------------------------------------------------------------------------
-function ChevronLeft() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="15 18 9 12 15 6" />
-    </svg>
-  );
-}
-function ChevronRight() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="9 6 15 12 9 18" />
-    </svg>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Top Seller Card
@@ -356,64 +338,9 @@ function TopSellerCard({ hotel }: { hotel: TopSellerHotel }) {
 }
 
 // ---------------------------------------------------------------------------
-// Carousel hook
-// ---------------------------------------------------------------------------
-function useCarousel(itemCount: number, visibleCount: number = 4) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const maxIdx = Math.max(0, itemCount - visibleCount);
-
-  const scrollTo = useCallback((idx: number) => {
-    const track = trackRef.current;
-    if (!track || !track.children[0]) return;
-    const child = track.children[0] as HTMLElement;
-    const gap = 20;
-    const cardWidth = child.offsetWidth + gap;
-    track.scrollTo({ left: cardWidth * idx, behavior: "smooth" });
-    setActiveIdx(idx);
-  }, []);
-
-  const prev = useCallback(() => {
-    scrollTo(Math.max(0, activeIdx - 1));
-  }, [activeIdx, scrollTo]);
-
-  const next = useCallback(() => {
-    scrollTo(Math.min(maxIdx, activeIdx + 1));
-  }, [activeIdx, maxIdx, scrollTo]);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    let ticking = false;
-    const onScroll = () => {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(() => {
-          if (!track.children[0]) { ticking = false; return; }
-          const child = track.children[0] as HTMLElement;
-          const gap = 20;
-          const cardWidth = child.offsetWidth + gap;
-          const newIdx = Math.round(track.scrollLeft / cardWidth);
-          setActiveIdx(Math.min(newIdx, maxIdx));
-          ticking = false;
-        });
-      }
-    };
-    track.addEventListener("scroll", onScroll, { passive: true });
-    return () => track.removeEventListener("scroll", onScroll);
-  }, [maxIdx]);
-
-  const dotCount = maxIdx + 1;
-  return { trackRef, activeIdx, dotCount, prev, next, scrollTo, maxIdx };
-}
-
-// ---------------------------------------------------------------------------
 // TopSellers Section
 // ---------------------------------------------------------------------------
 export default function TopSellers({ hotels }: { hotels: TopSellerHotel[] }) {
-  const { trackRef, activeIdx, dotCount, prev, next, scrollTo, maxIdx } =
-    useCarousel(hotels.length, 4);
-
   if (hotels.length === 0) return null;
 
   return (
@@ -482,39 +409,16 @@ export default function TopSellers({ hotels }: { hotels: TopSellerHotel[] }) {
 
         {/* Carousel */}
         <motion.div
-          className="carousel-container"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <button className="carousel-btn carousel-btn-prev" onClick={prev} disabled={activeIdx === 0} aria-label="Previous">
-            <ChevronLeft />
-          </button>
-          <button className="carousel-btn carousel-btn-next" onClick={next} disabled={activeIdx >= maxIdx} aria-label="Next">
-            <ChevronRight />
-          </button>
-
-          <div className="carousel-track" ref={trackRef}>
+          <Carousel ariaLabel="Guest favourites" showProgressBar>
             {hotels.map((hotel) => (
-              <div key={`${hotel.name}-${hotel.citySlug}`} style={{ width: "calc(25% - 15px)" }}>
-                <TopSellerCard hotel={hotel} />
-              </div>
+              <TopSellerCard key={`${hotel.name}-${hotel.citySlug}`} hotel={hotel} />
             ))}
-          </div>
-
-          {dotCount > 1 && (
-            <div className="carousel-dots">
-              {Array.from({ length: dotCount }).map((_, i) => (
-                <button
-                  key={i}
-                  className={`carousel-dot${i === activeIdx ? " active" : ""}`}
-                  onClick={() => scrollTo(i)}
-                  aria-label={`Go to slide ${i + 1}`}
-                />
-              ))}
-            </div>
-          )}
+          </Carousel>
         </motion.div>
       </div>
     </section>

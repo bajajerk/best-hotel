@@ -1700,28 +1700,25 @@ main {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Discovery Carousel — reusable scroll-snap carousel system
+   Discovery Carousel — auto-playing translateX carousel system
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .discovery-carousel {
   position: relative;
 }
 
-/* ── Track ── */
+/* ── Viewport clips the sliding track ── */
+.dc-viewport {
+  overflow: hidden;
+  padding: 4px 0 8px;
+}
+
+/* ── Track slides horizontally via translateX ── */
 .dc-track {
   display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
   gap: 20px;
-  padding: 4px 0 8px;
-  /* Hide scrollbar cross-browser */
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.dc-track::-webkit-scrollbar {
-  display: none;
+  will-change: transform;
+  touch-action: pan-y;
 }
 .dc-track:focus {
   outline: 2px solid var(--gold);
@@ -1731,38 +1728,28 @@ main {
 .dc-track:focus:not(:focus-visible) {
   outline: none;
 }
-.dc-track.dc-dragging {
-  scroll-snap-type: none;
-  cursor: grabbing;
-}
-.dc-track.dc-dragging * {
-  pointer-events: none;
-}
 
-/* ── Slide sizing ── */
+/* ── Slide sizing: 2.5 / 1.5 / 1.2 cards per view ── */
 .dc-slide {
-  scroll-snap-align: start;
-  flex-shrink: 0;
-  /* Desktop: ~3.3 cards visible (peek effect) */
-  width: calc((100% - 60px) / 3.33);
+  flex: 0 0 auto;
+  /* Desktop: 2.5 cards visible (half of third peeks in) */
+  width: calc((100% - 2 * 20px) / 2.5);
 }
 
-/* Tablet: ~2.3 cards */
-@media (min-width: 640px) and (max-width: 1024px) {
+/* Tablet: 1.5 cards visible */
+@media (min-width: 768px) and (max-width: 1023px) {
   .dc-slide {
-    width: calc((100% - 20px) / 2.3);
+    width: calc((100% - 20px) / 1.5);
   }
 }
 
-/* Mobile: ~1.2 cards (peek effect) */
-@media (max-width: 639px) {
+/* Mobile: 1.2 cards visible (peek of next card on the right) */
+@media (max-width: 767px) {
   .dc-slide {
-    width: calc(100% - 60px);
+    width: calc((100% - 14px) / 1.2);
   }
   .dc-track {
     gap: 14px;
-    padding-left: 4px;
-    scroll-padding-left: 4px;
   }
 }
 
@@ -1812,13 +1799,13 @@ main {
 }
 
 /* Hide arrows on mobile (swipe is primary) */
-@media (max-width: 639px) {
+@media (max-width: 767px) {
   .dc-arrow {
     display: none;
   }
 }
 /* Adjust arrow position on tablet */
-@media (min-width: 640px) and (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1023px) {
   .dc-arrow-prev { left: -16px; }
   .dc-arrow-next { right: -16px; }
 }
@@ -1849,7 +1836,7 @@ main {
   border-radius: 4px;
 }
 
-/* ── Progress bar ── */
+/* ── Progress bar (gold fill, 5s linear sweep, resets per card) ── */
 .dc-progress-bar {
   height: 2px;
   background: var(--cream-border);
@@ -1857,32 +1844,19 @@ main {
   border-radius: 1px;
   overflow: hidden;
 }
+@keyframes dc-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
 .dc-progress-fill {
-  height: 100%;
-  background: var(--gold);
+  height: 2px;
+  background: #C9A84C;
   border-radius: 1px;
-  transition: width 0.15s ease-out;
+  width: 0%;
+  animation: dc-progress 5s linear forwards;
 }
-
-/* ── Scroll hint (auto-hide chevron) ── */
-@keyframes dc-hint-bounce {
-  0%, 100% { transform: translateX(0); opacity: 0.5; }
-  50% { transform: translateX(6px); opacity: 0.9; }
-}
-.dc-scroll-hint {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--ink-light);
-  animation: dc-hint-bounce 1.8s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 5;
-}
-@media (min-width: 640px) {
-  .dc-scroll-hint {
-    display: none;
-  }
+.dc-progress-fill.dc-progress-paused {
+  animation-play-state: paused;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
