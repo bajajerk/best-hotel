@@ -68,21 +68,21 @@ function safePhotoUrl(raw: string): string {
   return `https://photos.hotelbeds.com/giata/${raw}`;
 }
 
-function formatCurrency(amount: number, currency?: string): string {
-  const symbols: Record<string, string> = {
-    USD: "$", EUR: "\u20AC", GBP: "\u00A3", INR: "\u20B9",
-    JPY: "\u00A5", AUD: "A$", SGD: "S$", THB: "\u0E3F",
-    AED: "AED ", MYR: "RM ", IDR: "Rp ", KRW: "\u20A9",
-  };
-  const sym = currency
-    ? symbols[currency.toUpperCase()] || `${currency} `
-    : "$";
-  const rounded = Math.round(amount);
-  const formatted =
-    currency?.toUpperCase() === "INR"
-      ? rounded.toLocaleString("en-IN")
-      : rounded.toLocaleString("en-US");
-  return `${sym}${formatted}`;
+/** Approximate FX rates to INR. Used so every price on the hotel page
+ *  renders in ₹ regardless of what currency the backend returns. */
+const INR_PER: Record<string, number> = {
+  INR: 1, USD: 83, EUR: 90, GBP: 105, AUD: 55, SGD: 62,
+  AED: 23, THB: 2.4, JPY: 0.56, MYR: 19, IDR: 0.0053, KRW: 0.063,
+};
+
+function toInr(amount: number, currency?: string): number {
+  const code = (currency || "USD").toUpperCase();
+  const rate = INR_PER[code] ?? 83;
+  return amount * rate;
+}
+
+function formatInr(amount: number): string {
+  return `\u20B9${Math.round(amount).toLocaleString("en-IN")}`;
 }
 
 /* ── Urgency / Social Proof generators (deterministic per hotel_id) ── */
@@ -90,9 +90,7 @@ function formatCurrency(amount: number, currency?: string): string {
 function getUrgencyData(hotelId: number) {
   const seed = hotelId % 100;
   const roomsLeft = (seed % 4) + 2; // 2–5
-  const bookedToday = (seed % 8) + 3; // 3–10
-  const viewingNow = (seed % 6) + 4; // 4–9
-  return { roomsLeft, bookedToday, viewingNow };
+  return { roomsLeft };
 }
 
 function getMemberCount(hotelId: number) {
@@ -230,9 +228,9 @@ function RoomCard({
   room,
   voyagrRate,
   marketRate,
-  currency,
   isSelected,
   isHighlighted,
+  cancellation,
   cardRef,
   onSelect,
   onProceed,
@@ -240,9 +238,9 @@ function RoomCard({
   room: RoomDef;
   voyagrRate: number;
   marketRate: number;
-  currency: string;
   isSelected: boolean;
   isHighlighted: boolean;
+  cancellation: { refundable: boolean; freeUntil?: string };
   cardRef: (el: HTMLDivElement | null) => void;
   onSelect: () => void;
   onProceed: () => void;
@@ -336,7 +334,7 @@ function RoomCard({
       </div>
 
       {/* Inclusions */}
-      <div className="flex flex-wrap gap-1.5 mb-4">
+      <div className="flex flex-wrap gap-1.5 mb-2">
         {room.inclusions.map((inc) => (
           <span
             key={inc}
@@ -354,6 +352,21 @@ function RoomCard({
         ))}
       </div>
 
+      {/* Cancellation policy */}
+      <div
+        style={{
+          fontSize: "11px",
+          fontFamily: "var(--font-body)",
+          marginBottom: 14,
+          color: cancellation.refundable ? "var(--success)" : "var(--ink-light)",
+          fontWeight: cancellation.refundable ? 500 : 400,
+        }}
+      >
+        {cancellation.refundable
+          ? `\u2713 Free cancellation until ${cancellation.freeUntil}`
+          : "Non-refundable"}
+      </div>
+
       {/* Pricing row */}
       <div className="flex items-end justify-between">
         <div>
@@ -366,7 +379,7 @@ function RoomCard({
                 fontFamily: "var(--font-mono)",
               }}
             >
-              {formatCurrency(marketRate, currency)}
+              {formatInr(marketRate)}
             </span>
             <span
               style={{
@@ -375,7 +388,7 @@ function RoomCard({
                 fontWeight: 600,
               }}
             >
-              Save {formatCurrency(saving, currency)}
+              Save {formatInr(saving)}
             </span>
           </div>
           <div
@@ -388,7 +401,7 @@ function RoomCard({
               marginTop: 2,
             }}
           >
-            {formatCurrency(voyagrRate, currency)}
+            {formatInr(voyagrRate)}
             <span style={{ fontSize: "12px", fontWeight: 400, color: "var(--ink-light)", marginLeft: 4 }}>/night</span>
           </div>
         </div>
@@ -476,30 +489,22 @@ function TrustSignals({ hotelId, rating, reviewCount }: { hotelId: number; ratin
 /* ────────────────────────── Urgency Banner ────────────────────────── */
 
 function UrgencyBanner({ hotelId }: { hotelId: number }) {
-  const { roomsLeft, bookedToday, viewingNow } = getUrgencyData(hotelId);
+  const { roomsLeft } = getUrgencyData(hotelId);
 
   return (
     <div
-      className="flex flex-wrap gap-4 items-center justify-center"
+      className="flex flex-wrap gap-2 items-center justify-center"
       style={{
         padding: "10px 20px",
-        background: "rgba(139, 58, 58, 0.06)",
-        border: "1px solid rgba(139, 58, 58, 0.12)",
+        background: "rgba(201, 168, 76, 0.08)",
+        border: "1px solid rgba(201, 168, 76, 0.22)",
         fontSize: "12px",
         fontFamily: "var(--font-body)",
-        fontWeight: 500,
+        fontWeight: 600,
       }}
     >
-      <span style={{ color: "var(--error)" }}>
+      <span style={{ color: "#C9A84C" }}>
         Only {roomsLeft} rooms left at this rate
-      </span>
-      <span style={{ color: "var(--cream-border)" }}>|</span>
-      <span style={{ color: "var(--ink-mid)" }}>
-        Booked {bookedToday} times today
-      </span>
-      <span style={{ color: "var(--cream-border)" }}>|</span>
-      <span style={{ color: "var(--ink-mid)" }}>
-        {viewingNow} people viewing now
       </span>
     </div>
   );
@@ -531,6 +536,9 @@ export default function HotelPage() {
 
   /* Unlock Rate modal */
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+
+  /* Overview expanded state (show first 3 sentences by default) */
+  const [overviewExpanded, setOverviewExpanded] = useState(false);
 
   /* Login gate modal (SELECT button on a room card, user not signed in) */
   const [loginModalOpen, setLoginModalOpen] = useState(false);
@@ -606,11 +614,12 @@ export default function HotelPage() {
   const standardRooms = useMemo(() => rooms.filter((r) => r.tier === "standard"), [rooms]);
   const selectedRoom = useMemo(() => rooms.find((r) => r.id === selectedRoomId) || null, [rooms, selectedRoomId]);
 
-  /* ── Pricing ── */
+  /* ── Pricing (all values displayed in INR) ── */
   const baseRate = hotel?.rates_from || 100;
-  const currency = hotel?.rates_currency || "USD";
-  const getVoyagrRate = (room: RoomDef) => Math.round(baseRate * room.priceMult);
-  const getMarketRate = (room: RoomDef) => Math.round(baseRate * room.priceMult * 1.3);
+  const sourceCurrency = hotel?.rates_currency || "USD";
+  const baseRateInr = toInr(baseRate, sourceCurrency);
+  const getVoyagrRate = (room: RoomDef) => Math.round(baseRateInr * room.priceMult);
+  const getMarketRate = (room: RoomDef) => Math.round(baseRateInr * room.priceMult * 1.3);
 
   const nights = booking.nights || 1;
   const selectedVoyagrRate = selectedRoom ? getVoyagrRate(selectedRoom) : 0;
@@ -618,17 +627,29 @@ export default function HotelPage() {
   const selectedSaving = selectedMarketRate - selectedVoyagrRate;
   const totalPrice = selectedVoyagrRate * nights;
 
+  /* ── Per-room cancellation policy (deterministic, refundable for preferred tier) ── */
+  const cancellationFor = useCallback((room: RoomDef) => {
+    const refundable = room.tier === "preferred";
+    if (!refundable) return { refundable: false };
+    const checkIn = booking.checkIn ? new Date(booking.checkIn) : null;
+    const cutoff = checkIn && !isNaN(checkIn.getTime())
+      ? new Date(checkIn.getTime() - 2 * 24 * 60 * 60 * 1000)
+      : new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+    const freeUntil = cutoff.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    return { refundable: true, freeUntil };
+  }, [booking.checkIn]);
+
   /* ── Proceed to booking from a room card SELECT button ── */
   const proceedToBooking = useCallback(
     (room: RoomDef) => {
       if (!hotel) return;
-      const base = hotel.rates_from || 100;
-      const rate = Math.round(base * room.priceMult);
+      const rate = Math.round(baseRateInr * room.priceMult);
       const totalGuests = booking.rooms.reduce((s, r) => s + r.adults + r.children, 0);
       const qs = new URLSearchParams({
         hotelId: String(hotel.hotel_id),
         roomType: room.id,
         rate: String(rate),
+        currency: "INR",
         checkIn: booking.checkIn || "",
         checkOut: booking.checkOut || "",
         guests: String(totalGuests),
@@ -636,7 +657,7 @@ export default function HotelPage() {
       });
       router.push(`/book?${qs.toString()}`);
     },
-    [hotel, booking, router]
+    [hotel, booking, router, baseRateInr]
   );
 
   const handleRoomSelectCTA = useCallback(
@@ -1038,13 +1059,14 @@ export default function HotelPage() {
 
       {/* ═══════════════════ Tab Bar (Sticky) ═══════════════════ */}
       <div
-        className="flex gap-0 sticky top-[60px] z-40 overflow-x-auto"
+        className="tab-navigation flex gap-0 sticky top-[60px] overflow-x-auto"
         style={{
-          background: "var(--white)",
-          borderBottom: "1px solid var(--cream-border)",
+          background: "#ffffff",
+          borderBottom: "1px solid rgba(0,0,0,0.08)",
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           marginTop: 16,
+          zIndex: 50,
         }}
       >
         <div className="flex gap-0 md:gap-2 mx-auto max-w-[1200px] w-full px-6 md:px-12 lg:px-16">
@@ -1206,7 +1228,7 @@ export default function HotelPage() {
                     lineHeight: 1.6,
                   }}
                 >
-                  Exclusive preferred rates with premium inclusions, available only to Voyagr Club members.
+                  The same rates travel agents and preferred partners pay. Never available publicly.
                 </p>
 
                 <div className="flex flex-col gap-4">
@@ -1216,9 +1238,9 @@ export default function HotelPage() {
                       room={room}
                       voyagrRate={getVoyagrRate(room)}
                       marketRate={getMarketRate(room)}
-                      currency={currency}
                       isSelected={selectedRoomId === room.id}
                       isHighlighted={highlightedRoomId === room.id}
+                      cancellation={cancellationFor(room)}
                       cardRef={(el) => { roomCardRefs.current[room.id] = el; }}
                       onSelect={() => setSelectedRoomId(selectedRoomId === room.id ? null : room.id)}
                       onProceed={() => handleRoomSelectCTA(room)}
@@ -1269,9 +1291,9 @@ export default function HotelPage() {
                       room={room}
                       voyagrRate={getVoyagrRate(room)}
                       marketRate={getMarketRate(room)}
-                      currency={currency}
                       isSelected={selectedRoomId === room.id}
                       isHighlighted={highlightedRoomId === room.id}
+                      cancellation={cancellationFor(room)}
                       cardRef={(el) => { roomCardRefs.current[room.id] = el; }}
                       onSelect={() => setSelectedRoomId(selectedRoomId === room.id ? null : room.id)}
                       onProceed={() => handleRoomSelectCTA(room)}
@@ -1291,11 +1313,40 @@ export default function HotelPage() {
               </h3>
             </div>
 
-            {hotel.overview && (
-              <p style={{ fontSize: "14px", color: "var(--ink-mid)", lineHeight: 1.8, marginBottom: 24 }}>
-                {hotel.overview}
-              </p>
-            )}
+            {hotel.overview && (() => {
+              const plain = hotel.overview.replace(/<[^>]*>/g, "").trim();
+              const sentenceMatches = plain.match(/[^.!?]+[.!?]+(\s|$)/g);
+              const sentences = sentenceMatches ? sentenceMatches.map((s) => s.trim()) : [plain];
+              const hasMore = sentences.length > 3;
+              const shown = overviewExpanded || !hasMore
+                ? plain
+                : sentences.slice(0, 3).join(" ");
+              return (
+                <p style={{ fontSize: "14px", color: "var(--ink-mid)", lineHeight: 1.8, marginBottom: 24 }}>
+                  {shown}
+                  {hasMore && (
+                    <>
+                      {" "}
+                      <button
+                        onClick={() => setOverviewExpanded((v) => !v)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          padding: 0,
+                          color: "var(--gold)",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          fontFamily: "var(--font-body)",
+                          fontSize: "14px",
+                        }}
+                      >
+                        {overviewExpanded ? "Read less" : "Read more \u2192"}
+                      </button>
+                    </>
+                  )}
+                </p>
+              );
+            })()}
 
             <div
               style={{
@@ -1523,7 +1574,7 @@ export default function HotelPage() {
                         color: "var(--ink)",
                       }}
                     >
-                      {formatCurrency(selectedVoyagrRate, currency)}
+                      {formatInr(selectedVoyagrRate)}
                     </span>
                   </div>
 
@@ -1538,7 +1589,7 @@ export default function HotelPage() {
                         fontFamily: "var(--font-mono)",
                       }}
                     >
-                      {formatCurrency(selectedMarketRate, currency)}
+                      {formatInr(selectedMarketRate)}
                     </span>
                   </div>
 
@@ -1561,7 +1612,7 @@ export default function HotelPage() {
                         fontFamily: "var(--font-mono)",
                       }}
                     >
-                      {formatCurrency(selectedSaving, currency)}
+                      {formatInr(selectedSaving)}
                     </span>
                   </div>
 
@@ -1596,7 +1647,7 @@ export default function HotelPage() {
                   {/* Nights x rate breakdown */}
                   <div className="flex items-baseline justify-between mb-2">
                     <span style={{ fontSize: "13px", color: "var(--ink-mid)" }}>
-                      {nights} night{nights > 1 ? "s" : ""} &times; {formatCurrency(selectedVoyagrRate, currency)}
+                      {nights} night{nights > 1 ? "s" : ""} &times; {formatInr(selectedVoyagrRate)}
                     </span>
                     <span
                       style={{
@@ -1605,7 +1656,7 @@ export default function HotelPage() {
                         fontFamily: "var(--font-mono)",
                       }}
                     >
-                      {formatCurrency(totalPrice, currency)}
+                      {formatInr(totalPrice)}
                     </span>
                   </div>
 
@@ -1629,7 +1680,7 @@ export default function HotelPage() {
                         color: "var(--ink)",
                       }}
                     >
-                      {formatCurrency(totalPrice, currency)}
+                      {formatInr(totalPrice)}
                     </span>
                   </div>
 
@@ -1643,7 +1694,7 @@ export default function HotelPage() {
                       marginTop: 4,
                     }}
                   >
-                    Total saving: {formatCurrency(selectedSaving * nights, currency)}
+                    Total saving: {formatInr(selectedSaving * nights)}
                   </p>
                 </motion.div>
               )}
@@ -1735,11 +1786,11 @@ export default function HotelPage() {
             </p>
             {selectedRoom ? (
               <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
-                {formatCurrency(selectedVoyagrRate, currency)}/night &middot; Save {formatCurrency(selectedSaving, currency)}
+                Member rate {formatInr(selectedVoyagrRate)}/night &middot; Save {formatInr(selectedSaving)}
               </p>
             ) : (
-              <p style={{ fontSize: "12px", color: "var(--ink-light)", marginTop: 2 }}>
-                From {formatCurrency(baseRate, currency)}/night
+              <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
+                Member rate from {formatInr(baseRateInr)}/night
               </p>
             )}
           </div>
@@ -1792,7 +1843,7 @@ export default function HotelPage() {
           guests={booking.guestSummary}
           nightlyRate={selectedVoyagrRate}
           marketRate={selectedMarketRate}
-          currency={currency}
+          currency="INR"
           perks={selectedRoom.inclusions}
         />
       )}
@@ -1809,7 +1860,7 @@ export default function HotelPage() {
           heading={
             loginIntent === "save-hotel"
               ? "Join free to save this hotel"
-              : "Join free to book this hotel"
+              : "Join free to book this room"
           }
           subtext={
             loginIntent === "save-hotel"
