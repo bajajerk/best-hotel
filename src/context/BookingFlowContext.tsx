@@ -30,12 +30,25 @@ export interface GuestInfo {
   specialRequests: string;
 }
 
+export interface RoomGuest {
+  firstName: string;
+  lastName: string;
+  specialRequests: string;
+}
+
+export interface IdentityInfo {
+  pan: string;
+  gstin: string;
+}
+
 export interface PaymentInfo {
   cardholderName: string;
   cardNumber: string;
   expiry: string;
   cvv: string;
 }
+
+export type PaymentMethodKind = "upi" | "credit-card" | "debit-card" | "emi" | "net-banking";
 
 export interface BookingFlowState {
   hotelName: string;
@@ -47,18 +60,29 @@ export interface BookingFlowState {
   nights: number;
   selectedRooms: SelectedRoom[];
   guestInfo: GuestInfo | null;
+  roomGuests: RoomGuest[];
+  identity: IdentityInfo;
   paymentInfo: PaymentInfo | null;
+  paymentMethod: PaymentMethodKind | null;
   bookingId: string | null;
+  /** Epoch ms when the 5-minute rate hold began. null = not yet started. */
+  holdStartedAt: number | null;
 }
 
 interface BookingFlowContextValue extends BookingFlowState {
   totalPrice: number;
   currency: string;
+  /** Total room count across all selectedRooms (sum of quantities). */
+  totalRoomCount: number;
   setHotel: (name: string, image: string, city: string, stars: number) => void;
   setStayDates: (checkIn: string, checkOut: string) => void;
   setSelectedRooms: (rooms: SelectedRoom[]) => void;
   setGuestInfo: (info: GuestInfo) => void;
+  setRoomGuests: (guests: RoomGuest[]) => void;
+  setIdentity: (info: IdentityInfo) => void;
   setPaymentInfo: (info: PaymentInfo) => void;
+  setPaymentMethod: (m: PaymentMethodKind | null) => void;
+  startHold: () => void;
   confirmBooking: () => string;
   resetFlow: () => void;
 }
@@ -75,8 +99,12 @@ const INITIAL_STATE: BookingFlowState = {
   nights: 0,
   selectedRooms: [],
   guestInfo: null,
+  roomGuests: [],
+  identity: { pan: "", gstin: "" },
   paymentInfo: null,
+  paymentMethod: null,
   bookingId: null,
+  holdStartedAt: null,
 };
 
 function generateBookingId(): string {
@@ -111,8 +139,26 @@ export function BookingFlowProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, guestInfo: info }));
   }, []);
 
+  const setRoomGuests = useCallback((guests: RoomGuest[]) => {
+    setState((prev) => ({ ...prev, roomGuests: guests }));
+  }, []);
+
+  const setIdentity = useCallback((info: IdentityInfo) => {
+    setState((prev) => ({ ...prev, identity: info }));
+  }, []);
+
   const setPaymentInfo = useCallback((info: PaymentInfo) => {
     setState((prev) => ({ ...prev, paymentInfo: info }));
+  }, []);
+
+  const setPaymentMethod = useCallback((m: PaymentMethodKind | null) => {
+    setState((prev) => ({ ...prev, paymentMethod: m }));
+  }, []);
+
+  const startHold = useCallback(() => {
+    setState((prev) =>
+      prev.holdStartedAt ? prev : { ...prev, holdStartedAt: Date.now() }
+    );
   }, []);
 
   const confirmBooking = useCallback(() => {
@@ -129,18 +175,24 @@ export function BookingFlowProvider({ children }: { children: ReactNode }) {
     (sum, r) => sum + r.roomType.pricePerNight * r.quantity * state.nights,
     0
   );
+  const totalRoomCount = state.selectedRooms.reduce((sum, r) => sum + r.quantity, 0);
   const currency = state.selectedRooms[0]?.roomType.currency || "USD";
 
   return (
     <BookingFlowContext.Provider value={{
       ...state,
       totalPrice,
+      totalRoomCount,
       currency,
       setHotel,
       setStayDates,
       setSelectedRooms,
       setGuestInfo,
+      setRoomGuests,
+      setIdentity,
       setPaymentInfo,
+      setPaymentMethod,
+      startHold,
       confirmBooking,
       resetFlow,
     }}>

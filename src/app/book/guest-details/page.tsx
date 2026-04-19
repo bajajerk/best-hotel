@@ -1,18 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { useBookingFlow } from "@/context/BookingFlowContext";
+import { useBookingFlow, RoomGuest } from "@/context/BookingFlowContext";
 
 const GOLD = "#C9A84C";
-const USD_TO_INR = 83;
-
-const toInr = (usd: number) => Math.round(usd * USD_TO_INR);
-const formatInr = (usd: number) =>
-  `\u20B9${toInr(usd).toLocaleString("en-IN")}`;
-const formatInrAmount = (inr: number) =>
-  `\u20B9${Math.round(inr).toLocaleString("en-IN")}`;
+const HOLD_SECONDS = 300;
 
 function formatTimer(totalSeconds: number) {
   const safe = Math.max(0, totalSeconds);
@@ -21,43 +14,32 @@ function formatTimer(totalSeconds: number) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function formatLongDate(iso: string) {
-  if (!iso) return "";
-  const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+function blankGuest(): RoomGuest {
+  return { firstName: "", lastName: "", specialRequests: "" };
 }
 
-function formatDayLabel(iso: string, time: string) {
-  if (!iso) return "";
-  const d = new Date(iso + "T00:00:00");
-  const day = d.toLocaleDateString("en-IN", { weekday: "long" });
-  return `${day}, ${time}`;
-}
-
-function freeCancellationDate(checkInIso: string) {
-  if (!checkInIso) return "";
-  const d = new Date(checkInIso + "T00:00:00");
-  d.setDate(d.getDate() - 1);
-  return d.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-export default function ReviewBookingPage() {
+export default function GuestDetailsPage() {
   const router = useRouter();
   const flow = useBookingFlow();
 
-  const [seconds, setSeconds] = useState(300);
+  const totalRooms = flow.totalRoomCount || 1;
+
+  const [guests, setGuests] = useState<RoomGuest[]>(() => {
+    const seed = flow.roomGuests.slice(0, totalRooms);
+    while (seed.length < totalRooms) seed.push(blankGuest());
+    return seed;
+  });
+  const [errors, setErrors] = useState<Record<number, { firstName?: string; lastName?: string }>>({});
+  const [gstOpen, setGstOpen] = useState(!!flow.identity.gstin);
+  const [gstin, setGstin] = useState(flow.identity.gstin);
+  const [pan, setPan] = useState(flow.identity.pan);
+  const [panError, setPanError] = useState<string | null>(null);
+
+  const [seconds, setSeconds] = useState(HOLD_SECONDS);
   const [expired, setExpired] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Redirect if no rooms selected
+  // Bounce back to room selection if state is missing.
   useEffect(() => {
     if (flow.selectedRooms.length === 0) {
       router.replace("/book/rooms");
@@ -65,46 +47,146 @@ export default function ReviewBookingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Countdown timer — held for 5 minutes
+  // Resize the per-room form list if the user changed room counts upstream.
   useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setSeconds((s) => {
-        if (s <= 1) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          setExpired(true);
-          return 0;
-        }
-        return s - 1;
-      });
-    }, 1000);
+    setGuests((prev) => {
+      if (prev.length === totalRooms) return prev;
+      const next = prev.slice(0, totalRooms);
+      while (next.length < totalRooms) next.push(blankGuest());
+      return next;
+    });
+  }, [totalRooms]);
+
+  // Drive the same countdown the Review page started.
+  useEffect(() => {
+    if (!flow.holdStartedAt) {
+      // Direct navigation — no hold yet — start one so the timer is meaningful.
+      flow.startHold();
+      return;
+    }
+    const tick = () => {
+      const elapsed = Math.floor((Date.now() - (flow.holdStartedAt ?? Date.now())) / 1000);
+      const remaining = HOLD_SECONDS - elapsed;
+      if (remaining <= 0) {
+        setSeconds(0);
+        setExpired(true);
+        if (intervalRef.current) clearInterval(intervalRef.current);
+      } else {
+        setSeconds(remaining);
+      }
+    };
+    tick();
+    intervalRef.current = setInterval(tick, 1000);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []);
+  }, [flow.holdStartedAt]);
 
-  const firstRoom = flow.selectedRooms[0];
-  const roomType = firstRoom?.roomType;
-  const inclusions = roomType?.amenities.slice(0, 3) ?? [];
-  const packageName = "Stay + Breakfast";
+  const updateGuest = (idx: number, field: keyof RoomGuest, value: string) => {
+    setGuests((prev) => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], [field]: value };
+      return next;
+    });
+    if (field === "firstName" || field === "lastName") {
+      setErrors((prev) => {
+        if (!prev[idx]?.[field]) return prev;
+        const next = { ...prev };
+        next[idx] = { ...next[idx], [field]: undefined };
+        return next;
+      });
+    }
+  };
 
-  // Pricing — taxes shown as "Included" per spec
-  const subtotalInr = toInr(flow.totalPrice);
-  const grandTotalInr = subtotalInr; // taxes inclusive
+  const isPanValid = (val: string) => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(val.trim().toUpperCase());
 
-  const handlePay = () => {
+  const validate = () => {
+    const errs: Record<number, { firstName?: string; lastName?: string }> = {};
+    guests.forEach((g, i) => {
+      const e: { firstName?: string; lastName?: string } = {};
+      if (!g.firstName.trim()) e.firstName = "First name required";
+      if (!g.lastName.trim()) e.lastName = "Last name required";
+      if (e.firstName || e.lastName) errs[i] = e;
+    });
+    setErrors(errs);
+    let panOk = true;
+    if (!pan.trim()) {
+      setPanError("PAN is required as per RBI guidelines");
+      panOk = false;
+    } else if (!isPanValid(pan)) {
+      setPanError("Enter a valid 10-character PAN (e.g. ABCDE1234F)");
+      panOk = false;
+    } else {
+      setPanError(null);
+    }
+    return Object.keys(errs).length === 0 && panOk;
+  };
+
+  const handleContinue = () => {
     if (expired) return;
+    if (!validate()) return;
+    flow.setRoomGuests(guests);
+    flow.setIdentity({ pan: pan.trim().toUpperCase(), gstin: gstin.trim().toUpperCase() });
+    // Mirror primary guest into legacy guestInfo for downstream code.
+    const primary = guests[0];
+    if (primary) {
+      flow.setGuestInfo({
+        firstName: primary.firstName,
+        lastName: primary.lastName,
+        email: flow.guestInfo?.email ?? "",
+        phone: flow.guestInfo?.phone ?? "",
+        specialRequests: primary.specialRequests,
+      });
+    }
     router.push("/book/payment");
   };
 
-  const handleSearchAgain = () => {
-    router.push("/search");
+  const handleSearchAgain = () => router.push("/search");
+
+  const inputStyle = (hasError: boolean) => ({
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: 10,
+    border: `1px solid ${hasError ? "var(--error)" : "var(--cream-border)"}`,
+    background: "var(--white)",
+    fontFamily: "var(--sans)",
+    fontSize: "var(--text-body)",
+    color: "var(--ink)",
+    outline: "none",
+    boxSizing: "border-box" as const,
+  });
+
+  const labelStyle = {
+    fontFamily: "var(--sans)",
+    fontSize: "var(--text-body-sm)",
+    fontWeight: 500 as const,
+    color: "var(--ink-mid)",
+    marginBottom: 6,
+    display: "block" as const,
   };
 
-  const [city, country] = (flow.hotelCity || "").split(",").map((s) => s.trim());
+  const errorTextStyle = {
+    fontFamily: "var(--sans)",
+    fontSize: "var(--text-caption)",
+    color: "var(--error)",
+    marginTop: 4,
+    display: "block" as const,
+  };
+
+  const sectionTitle = useMemo(
+    () => ({
+      fontFamily: "var(--serif)",
+      fontSize: "var(--text-heading-3)",
+      fontWeight: 600,
+      color: "var(--ink)",
+      margin: 0,
+    }),
+    []
+  );
 
   return (
     <div>
-      {/* ELEMENT 2 — Urgency timer */}
+      {/* Carry-over urgency timer */}
       <div
         role="status"
         aria-live="polite"
@@ -134,42 +216,104 @@ export default function ReviewBookingPage() {
         </div>
       </div>
 
-      {/* ELEMENT 3 — Hotel card */}
-      <Card>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      {/* Per-room guest forms */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {guests.map((g, i) => (
           <div
+            key={i}
             style={{
-              position: "relative",
-              width: 60,
-              height: 60,
-              borderRadius: 12,
-              overflow: "hidden",
-              flexShrink: 0,
-              background: "var(--cream-deep)",
+              background: "var(--white)",
+              borderRadius: 16,
+              border: "1px solid var(--cream-border)",
+              padding: "20px 20px",
             }}
           >
-            {flow.hotelImage && (
-              <Image
-                src={flow.hotelImage}
-                alt={flow.hotelName}
-                fill
-                style={{ objectFit: "cover" }}
-                sizes="60px"
-              />
-            )}
-          </div>
-          <div style={{ minWidth: 0, flex: 1 }}>
             <div
               style={{
-                fontFamily: "var(--serif)",
-                fontSize: "var(--text-heading-3)",
-                fontWeight: 600,
+                fontFamily: "var(--sans)",
+                fontSize: "var(--text-body)",
+                fontWeight: 700,
                 color: "var(--ink)",
-                lineHeight: 1.2,
+                marginBottom: 14,
+                letterSpacing: "0.02em",
               }}
             >
-              {flow.hotelName}
+              Room {String(i + 1).padStart(2, "0")}
             </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 14,
+                marginBottom: 14,
+              }}
+            >
+              <div>
+                <label style={labelStyle}>First Name *</label>
+                <input
+                  type="text"
+                  value={g.firstName}
+                  onChange={(e) => updateGuest(i, "firstName", e.target.value)}
+                  placeholder="John"
+                  autoComplete="given-name"
+                  style={inputStyle(!!errors[i]?.firstName)}
+                />
+                {errors[i]?.firstName && <span style={errorTextStyle}>{errors[i]!.firstName}</span>}
+              </div>
+              <div>
+                <label style={labelStyle}>Last Name *</label>
+                <input
+                  type="text"
+                  value={g.lastName}
+                  onChange={(e) => updateGuest(i, "lastName", e.target.value)}
+                  placeholder="Smith"
+                  autoComplete="family-name"
+                  style={inputStyle(!!errors[i]?.lastName)}
+                />
+                {errors[i]?.lastName && <span style={errorTextStyle}>{errors[i]!.lastName}</span>}
+              </div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Special Requests (optional)</label>
+              <textarea
+                value={g.specialRequests}
+                onChange={(e) => updateGuest(i, "specialRequests", e.target.value)}
+                placeholder={"Room preferences, dietary needs, celebrations..."}
+                rows={3}
+                style={{
+                  ...inputStyle(false),
+                  resize: "vertical" as const,
+                  fontFamily: "var(--sans)",
+                  lineHeight: 1.5,
+                }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* GST Details — collapsed optional section */}
+      <div
+        style={{
+          background: "var(--white)",
+          borderRadius: 16,
+          border: "1px solid var(--cream-border)",
+          padding: "18px 20px",
+          marginTop: 16,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <h3 style={sectionTitle}>GST Details</h3>
             <div
               style={{
                 fontFamily: "var(--sans)",
@@ -178,84 +322,12 @@ export default function ReviewBookingPage() {
                 marginTop: 4,
               }}
             >
-              {city}
-              {country ? ` · ${country}` : ""}
-            </div>
-            <div style={{ display: "flex", gap: 2, marginTop: 6 }}>
-              {Array.from({ length: flow.hotelStars || 5 }).map((_, i) => (
-                <span key={i} style={{ color: GOLD, fontSize: 14 }}>
-                  ★
-                </span>
-              ))}
+              Optional — for business travellers
             </div>
           </div>
-        </div>
-      </Card>
-
-      {/* ELEMENT 4 — Dates card */}
-      <Card>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr auto 1fr",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          <DateColumn
-            label="Check-in"
-            date={formatLongDate(flow.checkIn)}
-            day={formatDayLabel(flow.checkIn, "3:00 PM")}
-            align="left"
-          />
-          <div
-            style={{
-              background: GOLD,
-              color: "var(--ink)",
-              fontFamily: "var(--sans)",
-              fontSize: "var(--text-caption)",
-              fontWeight: 600,
-              padding: "6px 14px",
-              borderRadius: 999,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {flow.nights} Night{flow.nights !== 1 ? "s" : ""}
-          </div>
-          <DateColumn
-            label="Check-out"
-            date={formatLongDate(flow.checkOut)}
-            day={formatDayLabel(flow.checkOut, "12:00 PM")}
-            align="right"
-          />
-        </div>
-      </Card>
-
-      {/* ELEMENT 5 — Room summary card */}
-      <Card>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 12,
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: "var(--sans)",
-              fontSize: "var(--text-body-sm)",
-              fontWeight: 600,
-              color: "var(--ink-light)",
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              margin: 0,
-            }}
-          >
-            Room
-          </h3>
           <button
-            onClick={() => router.push("/book/rooms")}
+            type="button"
+            onClick={() => setGstOpen((v) => !v)}
             style={{
               background: "none",
               border: "none",
@@ -265,179 +337,68 @@ export default function ReviewBookingPage() {
               fontWeight: 600,
               color: GOLD,
               cursor: "pointer",
+              whiteSpace: "nowrap",
             }}
+            aria-expanded={gstOpen}
           >
-            Room Details →
+            {gstOpen ? "Hide" : "Add GST"}
           </button>
         </div>
 
-        <div
-          style={{
-            fontFamily: "var(--serif)",
-            fontSize: "var(--text-heading-3)",
-            fontWeight: 600,
-            color: "var(--ink)",
-            lineHeight: 1.2,
-          }}
-        >
-          {roomType?.name}
-        </div>
+        {gstOpen && (
+          <div style={{ marginTop: 16 }}>
+            <label style={labelStyle}>GSTIN</label>
+            <input
+              type="text"
+              value={gstin}
+              onChange={(e) => setGstin(e.target.value.toUpperCase())}
+              placeholder="22ABCDE1234F1Z5"
+              maxLength={15}
+              style={inputStyle(false)}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Identity Verification (was PAN Details) */}
+      <div
+        style={{
+          background: "var(--white)",
+          borderRadius: 16,
+          border: "1px solid var(--cream-border)",
+          padding: "18px 20px",
+          marginTop: 16,
+        }}
+      >
+        <h3 style={sectionTitle}>Identity Verification</h3>
         <div
           style={{
             fontFamily: "var(--sans)",
             fontSize: "var(--text-body-sm)",
-            color: "var(--ink-mid)",
+            color: "var(--ink-light)",
             marginTop: 4,
+            marginBottom: 14,
           }}
         >
-          {packageName}
+          Required as per RBI
         </div>
 
-        <ul
-          style={{
-            listStyle: "none",
-            padding: 0,
-            margin: "14px 0 0",
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
+        <label style={labelStyle}>PAN Number *</label>
+        <input
+          type="text"
+          value={pan}
+          onChange={(e) => {
+            setPan(e.target.value.toUpperCase());
+            if (panError) setPanError(null);
           }}
-        >
-          {inclusions.map((item) => (
-            <li
-              key={item}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                fontFamily: "var(--sans)",
-                fontSize: "var(--text-body-sm)",
-                color: "var(--ink)",
-              }}
-            >
-              <span
-                aria-hidden
-                style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: "50%",
-                  background: "rgba(74,124,89,0.15)",
-                  color: "var(--success)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  flexShrink: 0,
-                }}
-              >
-                ✓
-              </span>
-              {item}
-            </li>
-          ))}
-        </ul>
+          placeholder="ABCDE1234F"
+          maxLength={10}
+          style={inputStyle(!!panError)}
+        />
+        {panError && <span style={errorTextStyle}>{panError}</span>}
+      </div>
 
-        <div
-          style={{
-            marginTop: 16,
-            paddingTop: 14,
-            borderTop: "1px dashed var(--cream-border)",
-            fontFamily: "var(--sans)",
-            fontSize: "var(--text-body-sm)",
-            color: "var(--success)",
-            fontWeight: 600,
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          <span aria-hidden>✓</span>
-          Free cancellation until {freeCancellationDate(flow.checkIn)}
-        </div>
-      </Card>
-
-      {/* ELEMENT 6 — Price card */}
-      <Card>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontFamily: "var(--sans)",
-            fontSize: "var(--text-body)",
-            color: "var(--ink-mid)",
-            marginBottom: 10,
-          }}
-        >
-          <span>
-            {formatInr(roomType ? roomType.pricePerNight * (firstRoom?.quantity ?? 1) : 0)}
-            {" × "}
-            {flow.nights} night{flow.nights !== 1 ? "s" : ""}
-          </span>
-          <span style={{ color: "var(--ink)", fontWeight: 500 }}>
-            {formatInrAmount(subtotalInr)}
-          </span>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontFamily: "var(--sans)",
-            fontSize: "var(--text-body)",
-            color: "var(--ink-mid)",
-            paddingBottom: 14,
-            borderBottom: "1px solid var(--cream-border)",
-          }}
-        >
-          <span>Taxes &amp; fees</span>
-          <span style={{ color: "var(--ink-mid)" }}>Included</span>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-            marginTop: 14,
-          }}
-        >
-          <span
-            style={{
-              fontFamily: "var(--sans)",
-              fontSize: "var(--text-body)",
-              fontWeight: 600,
-              color: "var(--ink)",
-            }}
-          >
-            Total
-          </span>
-          <span
-            style={{
-              fontFamily: "var(--serif)",
-              fontSize: "var(--text-heading-2)",
-              fontWeight: 600,
-              color: "var(--ink)",
-            }}
-          >
-            {formatInrAmount(grandTotalInr)}
-          </span>
-        </div>
-        <div
-          style={{
-            fontFamily: "var(--sans)",
-            fontSize: "var(--text-caption)",
-            color: "var(--success)",
-            fontWeight: 500,
-            marginTop: 4,
-            textAlign: "right",
-          }}
-        >
-          Taxes included
-        </div>
-      </Card>
-
-      {/* STICKY BOTTOM BAR — single full-width gold Pay button */}
+      {/* Sticky bottom bar */}
       <div
         style={{
           position: "fixed",
@@ -452,7 +413,7 @@ export default function ReviewBookingPage() {
       >
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <button
-            onClick={handlePay}
+            onClick={handleContinue}
             disabled={expired}
             style={{
               width: "100%",
@@ -472,7 +433,7 @@ export default function ReviewBookingPage() {
               gap: 8,
             }}
           >
-            Pay {formatInrAmount(grandTotalInr)} Securely →
+            Continue to payment →
           </button>
         </div>
       </div>
@@ -547,73 +508,6 @@ export default function ReviewBookingPage() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        background: "var(--white)",
-        borderRadius: 16,
-        border: "1px solid var(--cream-border)",
-        padding: "18px 20px",
-        marginBottom: 16,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function DateColumn({
-  label,
-  date,
-  day,
-  align,
-}: {
-  label: string;
-  date: string;
-  day: string;
-  align: "left" | "right";
-}) {
-  return (
-    <div style={{ textAlign: align, minWidth: 0 }}>
-      <div
-        style={{
-          fontFamily: "var(--sans)",
-          fontSize: "var(--text-caption)",
-          color: "var(--ink-light)",
-          letterSpacing: "0.04em",
-          textTransform: "uppercase",
-          fontWeight: 600,
-          marginBottom: 4,
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontFamily: "var(--serif)",
-          fontSize: "var(--text-heading-3)",
-          fontWeight: 600,
-          color: "var(--ink)",
-          lineHeight: 1.15,
-        }}
-      >
-        {date}
-      </div>
-      <div
-        style={{
-          fontFamily: "var(--sans)",
-          fontSize: "var(--text-caption)",
-          color: "var(--ink-light)",
-          marginTop: 4,
-        }}
-      >
-        {day}
-      </div>
     </div>
   );
 }

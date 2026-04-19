@@ -80,7 +80,7 @@ export default function RoomSelectionPage() {
       if (room) rooms.push({ roomType: room, quantity: qty });
     });
     flow.setSelectedRooms(rooms);
-    router.push("/book/guest-details");
+    router.push("/book/review");
   };
 
   const formatDate = (iso: string) => {

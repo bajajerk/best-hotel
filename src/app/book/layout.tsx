@@ -6,14 +6,22 @@ import Link from "next/link";
 
 const STEPS = [
   { key: "rooms", label: "Select Room", path: "/book/rooms" },
-  { key: "guest-details", label: "Review", path: "/book/guest-details" },
+  { key: "review", label: "Review", path: "/book/review" },
+  { key: "guest-details", label: "Guest Details", path: "/book/guest-details" },
   { key: "payment", label: "Payment", path: "/book/payment" },
   { key: "confirmation", label: "Confirmation", path: "/book/confirmation" },
 ];
 
 function StepIndicator() {
   const pathname = usePathname();
-  const currentIdx = STEPS.findIndex((s) => pathname.includes(s.key));
+  // Find the longest-matching step key to avoid prefix collisions
+  // (e.g. "rooms" sitting inside "/book/rooms" but also matching elsewhere).
+  const currentIdx = STEPS.reduce((best, s, i) => {
+    if (pathname.includes(s.key) && (best === -1 || s.key.length > STEPS[best].key.length)) {
+      return i;
+    }
+    return best;
+  }, -1);
 
   return (
     <div style={{
@@ -22,7 +30,7 @@ function StepIndicator() {
       justifyContent: "center",
       gap: 0,
       padding: "24px 16px 0",
-      maxWidth: 640,
+      maxWidth: 720,
       margin: "0 auto",
     }}>
       {STEPS.map((step, i) => {
@@ -84,9 +92,13 @@ function StepIndicator() {
 
 function BookHeader() {
   const pathname = usePathname();
-  const isReview = pathname.includes("guest-details");
 
-  if (isReview) {
+  let centerTitle: string | null = null;
+  if (pathname.includes("review")) centerTitle = "Review your booking";
+  else if (pathname.includes("guest-details")) centerTitle = "Who's checking in?";
+  else if (pathname.includes("payment")) centerTitle = "Payment";
+
+  if (centerTitle) {
     return (
       <header style={{
         background: "var(--ink)",
@@ -117,7 +129,7 @@ function BookHeader() {
           letterSpacing: "-0.01em",
           whiteSpace: "nowrap",
         }}>
-          Review your booking
+          {centerTitle}
         </h1>
         <Link href="/" style={{
           fontFamily: "var(--sans)",
@@ -178,7 +190,7 @@ export default function BookLayout({ children }: { children: ReactNode }) {
 
       <StepIndicator />
 
-      <main style={{ maxWidth: 800, margin: "0 auto", padding: "24px 16px 120px" }}>
+      <main style={{ maxWidth: 800, margin: "0 auto", padding: "24px 16px 140px" }}>
         {children}
       </main>
     </div>
