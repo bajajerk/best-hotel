@@ -282,7 +282,7 @@ export default function HotelResultCard({
                         fontFamily: "var(--font-body)",
                       }}
                     >
-                      Save {formatCurrency(saveAmount, hotel.rates_currency)}
+                      Save {formatCurrency(saveAmount, hotel.rates_currency)}/night
                     </span>
                   </div>
                 )}
