@@ -73,6 +73,17 @@ interface RoomDef {
   priceMult: number;
   inclusions: string[];
   tier: "preferred" | "standard";
+  photos?: string[];
+}
+
+type PackageKey = "room-only" | "breakfast";
+
+interface RoomPackage {
+  key: PackageKey;
+  name: "Room Only" | "Stay + Breakfast";
+  inclusions: string[];
+  rateMult: number;
+  refundable: boolean;
 }
 
 /* ────────────────────────── Helpers ────────────────────────── */
@@ -145,6 +156,80 @@ function generateRooms(hotel: HotelDetail): RoomDef[] {
     { id: "r3", name: "Superior Room", beds: "1 Queen Bed", guests: 2, size: "26 m\u00B2", priceMult: 1.2, inclusions: ["Free breakfast", "Free Wi-Fi"], tier: "preferred" },
     { id: "r4", name: "Triple Room", beds: "1 Queen + 1 Single Bed", guests: 3, size: "28 m\u00B2", priceMult: 1.25, inclusions: ["Free Wi-Fi"], tier: "standard" },
   ];
+}
+
+/* ────────────────────────── Package Generation ────────────────────────── */
+
+function isBreakfastInclusion(s: string): boolean {
+  return s.toLowerCase().includes("breakfast");
+}
+
+function generatePackages(room: RoomDef): RoomPackage[] {
+  const hasBreakfast = room.inclusions.some(isBreakfastInclusion);
+  const nonMealInclusions = room.inclusions.filter((i) => !isBreakfastInclusion(i));
+
+  const roomOnly: RoomPackage = {
+    key: "room-only",
+    name: "Room Only",
+    inclusions: nonMealInclusions,
+    rateMult: 1.0,
+    refundable: room.tier === "preferred",
+  };
+
+  if (!hasBreakfast) return [roomOnly];
+
+  const breakfast: RoomPackage = {
+    key: "breakfast",
+    name: "Stay + Breakfast",
+    inclusions: ["Free breakfast daily", ...nonMealInclusions],
+    rateMult: 1.08,
+    refundable: true,
+  };
+
+  return [roomOnly, breakfast];
+}
+
+function packageId(roomId: string, key: PackageKey): string {
+  return `${roomId}:${key}`;
+}
+
+function parsePackageId(id: string): { roomId: string; key: PackageKey } {
+  const [roomId, key] = id.split(":");
+  return { roomId, key: key as PackageKey };
+}
+
+/* ────────────────────────── Filters ────────────────────────── */
+
+type BedTypeFilter = "all" | "king" | "twin" | "double" | "single";
+type MealPlanFilter = "all" | "room-only" | "breakfast" | "half-board" | "full-board";
+
+function roomMatchesBedType(room: RoomDef, filter: BedTypeFilter): boolean {
+  if (filter === "all") return true;
+  const b = room.beds.toLowerCase();
+  if (filter === "king") return b.includes("king");
+  if (filter === "twin") return b.includes("twin") || b.includes("2 single");
+  if (filter === "double") return b.includes("double");
+  if (filter === "single") return b.includes("single") && !b.includes("2 single");
+  return true;
+}
+
+function roomMatchesMealPlan(room: RoomDef, filter: MealPlanFilter): boolean {
+  if (filter === "all") return true;
+  const hasBreakfast = room.inclusions.some(isBreakfastInclusion);
+  if (filter === "room-only") return true;
+  if (filter === "breakfast") return hasBreakfast;
+  return false;
+}
+
+function packageMatchesFilters(
+  pkg: RoomPackage,
+  filters: { freeCancellation: boolean; mealPlan: MealPlanFilter }
+): boolean {
+  if (filters.freeCancellation && !pkg.refundable) return false;
+  if (filters.mealPlan === "room-only" && pkg.key !== "room-only") return false;
+  if (filters.mealPlan === "breakfast" && pkg.key !== "breakfast") return false;
+  if (filters.mealPlan === "half-board" || filters.mealPlan === "full-board") return false;
+  return true;
 }
 
 /* ────────────────────────── Tabs ────────────────────────── */
@@ -240,81 +325,464 @@ function Lightbox({
   );
 }
 
-/* ────────────────────────── Room Card ────────────────────────── */
+/* ────────────────────────── Filter Bar ────────────────────────── */
 
-function RoomCard({
-  room,
+function FilterPillShell({
+  active,
+  children,
+  onClick,
+  as = "button",
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  onClick?: () => void;
+  as?: "button" | "label";
+}) {
+  const Component = as;
+  return (
+    <Component
+      onClick={onClick}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "8px 14px",
+        fontSize: "12px",
+        fontWeight: 500,
+        letterSpacing: "0.02em",
+        background: "var(--white)",
+        border: active ? "1px solid var(--gold)" : "1px solid var(--cream-border)",
+        color: active ? "var(--gold)" : "var(--ink-mid)",
+        cursor: "pointer",
+        fontFamily: "var(--font-body)",
+        transition: "border-color 0.15s, color 0.15s",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {children}
+    </Component>
+  );
+}
+
+function RoomFilterBar({
+  freeCancellation,
+  onToggleFreeCancellation,
+  bedType,
+  onChangeBedType,
+  mealPlan,
+  onChangeMealPlan,
+}: {
+  freeCancellation: boolean;
+  onToggleFreeCancellation: () => void;
+  bedType: BedTypeFilter;
+  onChangeBedType: (v: BedTypeFilter) => void;
+  mealPlan: MealPlanFilter;
+  onChangeMealPlan: (v: MealPlanFilter) => void;
+}) {
+  const bedLabel: Record<BedTypeFilter, string> = {
+    all: "Bed Type",
+    king: "King Bed",
+    twin: "Twin Beds",
+    double: "Double Bed",
+    single: "Single Bed",
+  };
+  const mealLabel: Record<MealPlanFilter, string> = {
+    all: "Meal Plan",
+    "room-only": "Room Only",
+    breakfast: "With Breakfast",
+    "half-board": "Half Board",
+    "full-board": "Full Board",
+  };
+
+  return (
+    <div
+      className="flex flex-wrap gap-2 mb-6"
+      style={{ alignItems: "center" }}
+    >
+      {/* Free Cancellation toggle pill */}
+      <FilterPillShell active={freeCancellation} onClick={onToggleFreeCancellation}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 14,
+            height: 14,
+            border: freeCancellation ? "1.5px solid var(--gold)" : "1.5px solid var(--cream-border)",
+            background: freeCancellation ? "var(--gold)" : "transparent",
+            transition: "all 0.15s",
+          }}
+        >
+          {freeCancellation && (
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+        </span>
+        Free Cancellation
+      </FilterPillShell>
+
+      {/* Bed Type dropdown */}
+      <div style={{ position: "relative" }}>
+        <FilterPillShell active={bedType !== "all"} as="label">
+          <span style={{ pointerEvents: "none" }}>{bedLabel[bedType]}</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: "none" }}>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+          <select
+            value={bedType}
+            onChange={(e) => onChangeBedType(e.target.value as BedTypeFilter)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: 0,
+              cursor: "pointer",
+              fontSize: "12px",
+              width: "100%",
+              height: "100%",
+            }}
+            aria-label="Bed type filter"
+          >
+            <option value="all">All Bed Types</option>
+            <option value="king">King Bed</option>
+            <option value="twin">Twin Beds</option>
+            <option value="double">Double Bed</option>
+            <option value="single">Single Bed</option>
+          </select>
+        </FilterPillShell>
+      </div>
+
+      {/* Meal Plan dropdown */}
+      <div style={{ position: "relative" }}>
+        <FilterPillShell active={mealPlan !== "all"} as="label">
+          <span style={{ pointerEvents: "none" }}>{mealLabel[mealPlan]}</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: "none" }}>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+          <select
+            value={mealPlan}
+            onChange={(e) => onChangeMealPlan(e.target.value as MealPlanFilter)}
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: 0,
+              cursor: "pointer",
+              fontSize: "12px",
+              width: "100%",
+              height: "100%",
+            }}
+            aria-label="Meal plan filter"
+          >
+            <option value="all">All Meal Plans</option>
+            <option value="room-only">Room Only</option>
+            <option value="breakfast">With Breakfast</option>
+            <option value="half-board">Half Board</option>
+            <option value="full-board">Full Board</option>
+          </select>
+        </FilterPillShell>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────── Package Card ────────────────────────── */
+
+function PackageCard({
+  pkg,
   voyagrRate,
   marketRate,
   isSelected,
-  isHighlighted,
   cancellation,
-  cardRef,
   onSelect,
   onProceed,
 }: {
-  room: RoomDef;
+  pkg: RoomPackage;
   voyagrRate: number;
   marketRate: number;
   isSelected: boolean;
-  isHighlighted: boolean;
   cancellation: { refundable: boolean; freeUntil?: string };
-  cardRef: (el: HTMLDivElement | null) => void;
   onSelect: () => void;
   onProceed: () => void;
 }) {
   const saving = marketRate - voyagrRate;
-  const savePercent = Math.round((saving / marketRate) * 100);
-  const [amenitiesExpanded, setAmenitiesExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const MAX_INCLUSIONS = 3;
-  const hasMoreInclusions = room.inclusions.length > MAX_INCLUSIONS;
-  const hiddenCount = room.inclusions.length - MAX_INCLUSIONS;
-  const shownInclusions =
-    amenitiesExpanded || !hasMoreInclusions
-      ? room.inclusions
-      : room.inclusions.slice(0, MAX_INCLUSIONS);
+  const hasMore = pkg.inclusions.length > MAX_INCLUSIONS;
+  const hiddenCount = pkg.inclusions.length - MAX_INCLUSIONS;
+  const shown = expanded || !hasMore ? pkg.inclusions : pkg.inclusions.slice(0, MAX_INCLUSIONS);
+
+  return (
+    <div
+      onClick={onSelect}
+      style={{
+        background: "var(--white)",
+        border: isSelected ? "2px solid #d4a24c" : "1px solid var(--cream-border)",
+        padding: isSelected ? "15px" : "16px",
+        cursor: "pointer",
+        transition: "border-color 0.25s, box-shadow 0.25s",
+        boxShadow: isSelected ? "0 0 0 3px rgba(212,162,76,0.15)" : "none",
+      }}
+    >
+      {/* Package name */}
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <h5
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: "14px",
+            fontWeight: 700,
+            color: "var(--ink)",
+            letterSpacing: "0.01em",
+          }}
+        >
+          {pkg.name}
+        </h5>
+        {isSelected && (
+          <span
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: "50%",
+              background: "var(--gold)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+        )}
+      </div>
+
+      {/* Cancellation line */}
+      <div
+        style={{
+          fontSize: "11px",
+          fontFamily: "var(--font-body)",
+          marginBottom: 10,
+          color: cancellation.refundable ? "var(--success)" : "var(--ink-light)",
+          fontWeight: cancellation.refundable ? 500 : 400,
+        }}
+      >
+        {cancellation.refundable
+          ? `\u2713 Free cancellation until ${cancellation.freeUntil}`
+          : "Non-refundable"}
+      </div>
+
+      {/* Inclusions list (clean list with checkmarks) */}
+      {shown.length > 0 && (
+        <div className="flex flex-col gap-1" style={{ marginBottom: 12 }}>
+          {shown.map((inc) => (
+            <div key={inc} className="flex items-center gap-2">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: "var(--ink-mid)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                {inc}
+              </span>
+            </div>
+          ))}
+          {hasMore && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((v) => !v);
+              }}
+              style={{
+                alignSelf: "flex-start",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "var(--gold)",
+                background: "none",
+                border: "none",
+                padding: "2px 0",
+                cursor: "pointer",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              {expanded ? "Show less" : `+ ${hiddenCount} more`}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Rate block + CTA */}
+      <div className="flex items-end justify-between">
+        <div>
+          <div
+            style={{
+              fontSize: "11px",
+              color: "var(--ink-light)",
+              textDecoration: "line-through",
+              fontFamily: "var(--font-mono)",
+            }}
+          >
+            {formatInr(marketRate)}
+          </div>
+          <div
+            style={{
+              fontSize: "20px",
+              fontWeight: 500,
+              color: "var(--gold)",
+              fontFamily: "var(--font-display)",
+              lineHeight: 1.2,
+              marginTop: 1,
+            }}
+          >
+            {formatInr(voyagrRate)}
+            <span style={{ fontSize: "12px", fontWeight: 400, color: "var(--ink-light)", marginLeft: 4 }}>/night</span>
+          </div>
+          {saving > 0 && (
+            <div
+              style={{
+                fontSize: "11px",
+                color: "var(--success)",
+                fontWeight: 600,
+                marginTop: 2,
+              }}
+            >
+              Save {formatInr(saving)}/night
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={(e) => { e.stopPropagation(); onProceed(); }}
+          style={{
+            padding: "8px 20px",
+            fontSize: "12px",
+            fontWeight: 600,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase" as const,
+            background: "var(--gold)",
+            color: "var(--ink)",
+            border: "none",
+            cursor: "pointer",
+            transition: "all 0.2s",
+            fontFamily: "var(--font-body)",
+          }}
+        >
+          Select
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────── Room Card ────────────────────────── */
+
+function RoomCard({
+  room,
+  baseRateInr,
+  selectedPackageId,
+  isHighlighted,
+  cancellation,
+  mealPlanFilter,
+  freeCancellationFilter,
+  cardRef,
+  onSelectPackage,
+  onProceedPackage,
+  onOpenRoomGallery,
+}: {
+  room: RoomDef;
+  baseRateInr: number;
+  selectedPackageId: string | null;
+  isHighlighted: boolean;
+  cancellation: { refundable: boolean; freeUntil?: string };
+  mealPlanFilter: MealPlanFilter;
+  freeCancellationFilter: boolean;
+  cardRef: (el: HTMLDivElement | null) => void;
+  onSelectPackage: (pid: string) => void;
+  onProceedPackage: (room: RoomDef, pkg: RoomPackage) => void;
+  onOpenRoomGallery: (photos: string[], startIdx: number) => void;
+}) {
+  const allPackages = generatePackages(room);
+  const visiblePackages = allPackages.filter((p) =>
+    packageMatchesFilters(p, { freeCancellation: freeCancellationFilter, mealPlan: mealPlanFilter })
+  );
+
+  if (visiblePackages.length === 0) return null;
+
+  const hasImages = !!(room.photos && room.photos.length > 0);
+
+  const packageCancellation = (pkg: RoomPackage) => ({
+    refundable: pkg.refundable && cancellation.refundable,
+    freeUntil: cancellation.freeUntil,
+  });
+
+  const basePrice = baseRateInr * room.priceMult;
+  const voyagrRate = (pkg: RoomPackage) => Math.round(basePrice * pkg.rateMult);
+  const marketRate = (pkg: RoomPackage) => Math.round(basePrice * pkg.rateMult * 1.3);
 
   return (
     <motion.div
       layout
       ref={cardRef}
-      onClick={onSelect}
       className={isHighlighted ? "room-card-highlight-pulse" : undefined}
       style={{
         background: "var(--white)",
-        border: isSelected ? "2px solid #d4a24c" : "1px solid var(--cream-border)",
-        padding: isSelected ? "19px" : "20px",
-        cursor: "pointer",
-        transition: "border-color 0.25s, box-shadow 0.25s",
-        boxShadow: isSelected ? "0 0 0 3px rgba(212,162,76,0.15)" : "none",
-        position: "relative",
+        border: "1px solid var(--cream-border)",
+        padding: 0,
+        overflow: "hidden",
       }}
-      whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Save badge */}
-      {savePercent > 0 && (
-        <div
+      {/* Room image (only if room-level photos exist) */}
+      {hasImages && (
+        <button
+          onClick={() => onOpenRoomGallery(room.photos as string[], 0)}
           style={{
-            position: "absolute",
-            top: 0,
-            right: 20,
-            background: "var(--success)",
-            color: "#fff",
-            fontSize: "10px",
-            fontWeight: 700,
-            letterSpacing: "0.06em",
-            padding: "4px 10px 5px",
-            fontFamily: "var(--font-body)",
+            position: "relative",
+            width: "100%",
+            aspectRatio: "16/9",
+            overflow: "hidden",
+            background: "var(--cream-deep)",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            display: "block",
           }}
+          aria-label={`Open ${room.name} gallery`}
         >
-          SAVE {savePercent}%
-        </div>
+          <img
+            src={safePhotoUrl((room.photos as string[])[0])}
+            alt={room.name}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+          />
+          <span
+            style={{
+              position: "absolute",
+              right: 12,
+              bottom: 12,
+              background: "rgba(26,23,16,0.7)",
+              color: "var(--cream)",
+              fontSize: "11px",
+              fontFamily: "var(--font-mono)",
+              padding: "4px 8px",
+              letterSpacing: "0.04em",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <span aria-hidden>📷</span>
+            {(room.photos as string[]).length}
+          </span>
+        </button>
       )}
 
-      {/* Room Name + Size */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div>
+      <div style={{ padding: 20 }}>
+        {/* Room Name + beds + size + guests */}
+        <div className="mb-4">
           <h4
             style={{
               fontFamily: "var(--font-display)",
@@ -337,142 +805,25 @@ function RoomCard({
             {room.beds} &middot; {room.size} &middot; Up to {room.guests} guests
           </p>
         </div>
-        {isSelected && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: "50%",
-              background: "var(--gold)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </motion.span>
-        )}
-      </div>
 
-      {/* Inclusions (max 3 shown, rest expandable) */}
-      <div className="flex flex-wrap items-center gap-1.5 mb-2">
-        {shownInclusions.map((inc) => (
-          <span
-            key={inc}
-            style={{
-              fontSize: "11px",
-              fontWeight: 500,
-              color: "var(--success)",
-              background: "var(--success-soft)",
-              padding: "3px 8px",
-              letterSpacing: "0.02em",
-            }}
-          >
-            {inc}
-          </span>
-        ))}
-        {hasMoreInclusions && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setAmenitiesExpanded((v) => !v);
-            }}
-            style={{
-              fontSize: "11px",
-              fontWeight: 600,
-              color: "var(--gold)",
-              background: "none",
-              border: "none",
-              padding: "3px 2px",
-              cursor: "pointer",
-              fontFamily: "var(--font-body)",
-              letterSpacing: "0.02em",
-            }}
-          >
-            {amenitiesExpanded
-              ? "Show less"
-              : `+ ${hiddenCount} more amenit${hiddenCount === 1 ? "y" : "ies"}`}
-          </button>
-        )}
-      </div>
-
-      {/* Cancellation policy */}
-      <div
-        style={{
-          fontSize: "11px",
-          fontFamily: "var(--font-body)",
-          marginBottom: 14,
-          color: cancellation.refundable ? "var(--success)" : "var(--ink-light)",
-          fontWeight: cancellation.refundable ? 500 : 400,
-        }}
-      >
-        {cancellation.refundable
-          ? `\u2713 Free cancellation until ${cancellation.freeUntil}`
-          : "Non-refundable"}
-      </div>
-
-      {/* Pricing row */}
-      <div className="flex items-end justify-between">
-        <div>
-          <div className="flex items-baseline gap-2">
-            <span
-              style={{
-                fontSize: "11px",
-                color: "var(--ink-light)",
-                textDecoration: "line-through",
-                fontFamily: "var(--font-mono)",
-              }}
-            >
-              {formatInr(marketRate)}
-            </span>
-            <span
-              style={{
-                fontSize: "11px",
-                color: "var(--success)",
-                fontWeight: 600,
-              }}
-            >
-              Save {formatInr(saving)}
-            </span>
-          </div>
-          <div
-            style={{
-              fontSize: "22px",
-              fontWeight: 500,
-              color: "var(--ink)",
-              fontFamily: "var(--font-display)",
-              lineHeight: 1.2,
-              marginTop: 2,
-            }}
-          >
-            {formatInr(voyagrRate)}
-            <span style={{ fontSize: "12px", fontWeight: 400, color: "var(--ink-light)", marginLeft: 4 }}>/night</span>
-          </div>
+        {/* Packages */}
+        <div className="flex flex-col gap-3">
+          {visiblePackages.map((pkg) => {
+            const pid = packageId(room.id, pkg.key);
+            return (
+              <PackageCard
+                key={pid}
+                pkg={pkg}
+                voyagrRate={voyagrRate(pkg)}
+                marketRate={marketRate(pkg)}
+                isSelected={selectedPackageId === pid}
+                cancellation={packageCancellation(pkg)}
+                onSelect={() => onSelectPackage(pid)}
+                onProceed={() => onProceedPackage(room, pkg)}
+              />
+            );
+          })}
         </div>
-
-        <button
-          onClick={(e) => { e.stopPropagation(); onProceed(); }}
-          style={{
-            padding: "8px 20px",
-            fontSize: "12px",
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase" as const,
-            background: isSelected ? "var(--ink)" : "var(--gold)",
-            color: isSelected ? "var(--cream)" : "var(--ink)",
-            border: "none",
-            cursor: "pointer",
-            transition: "all 0.2s",
-            fontFamily: "var(--font-body)",
-          }}
-        >
-          Select
-        </button>
       </div>
     </motion.div>
   );
@@ -574,15 +925,21 @@ export default function HotelPage() {
   /* Gallery */
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
+  const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
   const [activeGalleryCategory, setActiveGalleryCategory] = useState<GalleryCategory | null>(null);
 
   /* Tabs */
   const [activeTab, setActiveTab] = useState<TabName>("Rooms");
 
-  /* Room selection */
-  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  /* Room + package selection */
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
   const [highlightedRoomId, setHighlightedRoomId] = useState<string | null>(null);
   const roomCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  /* Filter bar state */
+  const [filterFreeCancellation, setFilterFreeCancellation] = useState(false);
+  const [filterBedType, setFilterBedType] = useState<BedTypeFilter>("all");
+  const [filterMealPlan, setFilterMealPlan] = useState<MealPlanFilter>("all");
 
   /* Unlock Rate modal */
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
@@ -592,7 +949,7 @@ export default function HotelPage() {
 
   /* Login gate modal (SELECT button on a room card, user not signed in) */
   const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [pendingRoomId, setPendingRoomId] = useState<string | null>(null);
+  const [pendingPackageId, setPendingPackageId] = useState<string | null>(null);
   const [loginIntent, setLoginIntent] = useState<"room-select" | "save-hotel">("room-select");
 
   /* Saved (heart) state — hero icon */
@@ -674,39 +1031,82 @@ export default function HotelPage() {
     return merged.length ? merged : photos;
   }, [hasCategorisedPhotos, photosByCategory, activeGalleryCategory, availableCategories, photos]);
 
-  const openLightbox = useCallback((idx: number) => {
+  const openLightbox = useCallback((idx: number, overridePhotos?: string[]) => {
+    setLightboxPhotos(overridePhotos && overridePhotos.length > 0 ? overridePhotos : photos);
     setLightboxIdx(idx);
     setLightboxOpen(true);
-    if (hotel) {
+    if (hotel && !overridePhotos) {
       trackHotelGalleryOpened({ hotel_id: hotel.hotel_id, hotel_name: hotel.hotel_name, photo_index: idx });
     }
-  }, [hotel]);
+  }, [hotel, photos]);
   const closeLightbox = useCallback(() => setLightboxOpen(false), []);
   const prevLightbox = useCallback(
-    () => setLightboxIdx((i) => (i - 1 + photos.length) % photos.length),
-    [photos.length]
+    () => setLightboxIdx((i) => (i - 1 + lightboxPhotos.length) % Math.max(lightboxPhotos.length, 1)),
+    [lightboxPhotos.length]
   );
   const nextLightbox = useCallback(
-    () => setLightboxIdx((i) => (i + 1) % photos.length),
-    [photos.length]
+    () => setLightboxIdx((i) => (i + 1) % Math.max(lightboxPhotos.length, 1)),
+    [lightboxPhotos.length]
   );
 
   /* ── Room data ── */
   const rooms = useMemo(() => (hotel ? generateRooms(hotel) : []), [hotel]);
-  const preferredRooms = useMemo(() => rooms.filter((r) => r.tier === "preferred"), [rooms]);
-  const standardRooms = useMemo(() => rooms.filter((r) => r.tier === "standard"), [rooms]);
-  const selectedRoom = useMemo(() => rooms.find((r) => r.id === selectedRoomId) || null, [rooms, selectedRoomId]);
+
+  /* Apply room-level filters (Bed Type; Free Cancellation + Meal Plan are applied per-package) */
+  const applyRoomFilters = useCallback(
+    (list: RoomDef[]) => {
+      return list.filter((room) => {
+        if (!roomMatchesBedType(room, filterBedType)) return false;
+        if (!roomMatchesMealPlan(room, filterMealPlan)) return false;
+        if (filterFreeCancellation) {
+          const pkgs = generatePackages(room);
+          const hasRefundable = pkgs.some((p) => p.refundable) && room.tier === "preferred";
+          if (!hasRefundable) return false;
+        }
+        return true;
+      });
+    },
+    [filterBedType, filterMealPlan, filterFreeCancellation]
+  );
+
+  const preferredRooms = useMemo(
+    () => applyRoomFilters(rooms.filter((r) => r.tier === "preferred")),
+    [rooms, applyRoomFilters]
+  );
+  const standardRooms = useMemo(
+    () => applyRoomFilters(rooms.filter((r) => r.tier === "standard")),
+    [rooms, applyRoomFilters]
+  );
+
+  /* Derive selected room + package from selectedPackageId */
+  const selectedRoom = useMemo(() => {
+    if (!selectedPackageId) return null;
+    const { roomId } = parsePackageId(selectedPackageId);
+    return rooms.find((r) => r.id === roomId) || null;
+  }, [rooms, selectedPackageId]);
+
+  const selectedPackage = useMemo<RoomPackage | null>(() => {
+    if (!selectedPackageId || !selectedRoom) return null;
+    const { key } = parsePackageId(selectedPackageId);
+    return generatePackages(selectedRoom).find((p) => p.key === key) || null;
+  }, [selectedPackageId, selectedRoom]);
+
+  const selectedRoomId = selectedRoom?.id ?? null;
 
   /* ── Pricing (all values displayed in INR) ── */
   const baseRate = hotel?.rates_from || 100;
   const sourceCurrency = hotel?.rates_currency || "USD";
   const baseRateInr = toInr(baseRate, sourceCurrency);
-  const getVoyagrRate = (room: RoomDef) => Math.round(baseRateInr * room.priceMult);
-  const getMarketRate = (room: RoomDef) => Math.round(baseRateInr * room.priceMult * 1.3);
 
   const nights = booking.nights || 1;
-  const selectedVoyagrRate = selectedRoom ? getVoyagrRate(selectedRoom) : 0;
-  const selectedMarketRate = selectedRoom ? getMarketRate(selectedRoom) : 0;
+  const selectedVoyagrRate =
+    selectedRoom && selectedPackage
+      ? Math.round(baseRateInr * selectedRoom.priceMult * selectedPackage.rateMult)
+      : 0;
+  const selectedMarketRate =
+    selectedRoom && selectedPackage
+      ? Math.round(baseRateInr * selectedRoom.priceMult * selectedPackage.rateMult * 1.3)
+      : 0;
   const selectedSaving = selectedMarketRate - selectedVoyagrRate;
   const totalPrice = selectedVoyagrRate * nights;
 
@@ -722,15 +1122,16 @@ export default function HotelPage() {
     return { refundable: true, freeUntil };
   }, [booking.checkIn]);
 
-  /* ── Proceed to booking from a room card SELECT button ── */
+  /* ── Proceed to booking from a package SELECT button ── */
   const proceedToBooking = useCallback(
-    (room: RoomDef) => {
+    (room: RoomDef, pkg: RoomPackage) => {
       if (!hotel) return;
-      const rate = Math.round(baseRateInr * room.priceMult);
+      const rate = Math.round(baseRateInr * room.priceMult * pkg.rateMult);
       const totalGuests = booking.rooms.reduce((s, r) => s + r.adults + r.children, 0);
       const qs = new URLSearchParams({
         hotelId: String(hotel.hotel_id),
         roomType: room.id,
+        package: pkg.key,
         rate: String(rate),
         currency: "INR",
         checkIn: booking.checkIn || "",
@@ -743,16 +1144,17 @@ export default function HotelPage() {
     [hotel, booking, router, baseRateInr]
   );
 
-  const handleRoomSelectCTA = useCallback(
-    (room: RoomDef) => {
-      setSelectedRoomId(room.id);
+  const handlePackageSelectCTA = useCallback(
+    (room: RoomDef, pkg: RoomPackage) => {
+      const pid = packageId(room.id, pkg.key);
+      setSelectedPackageId(pid);
       if (!user) {
-        setPendingRoomId(room.id);
+        setPendingPackageId(pid);
         setLoginIntent("room-select");
         setLoginModalOpen(true);
         return;
       }
-      proceedToBooking(room);
+      proceedToBooking(room, pkg);
     },
     [user, proceedToBooking]
   );
@@ -802,9 +1204,10 @@ export default function HotelPage() {
       setPendingSaveAfterLogin(false);
       return;
     }
-    const roomId = pendingRoomId;
-    if (roomId) {
-      setSelectedRoomId(roomId);
+    const pid = pendingPackageId;
+    if (pid) {
+      const { roomId } = parsePackageId(pid);
+      setSelectedPackageId(pid);
       setHighlightedRoomId(roomId);
       setTimeout(() => {
         roomCardRefs.current[roomId]?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -815,8 +1218,8 @@ export default function HotelPage() {
         document.getElementById("rooms")?.scrollIntoView({ behavior: "smooth" });
       }, 80);
     }
-    setPendingRoomId(null);
-  }, [pendingRoomId, pendingSaveAfterLogin, saveHotelToStorage]);
+    setPendingPackageId(null);
+  }, [pendingPackageId, pendingSaveAfterLogin, saveHotelToStorage]);
 
   /* ── Savings for hero badge ── */
   const heroSavePercent = 23; // Fixed "up to" percentage for hero
@@ -940,9 +1343,9 @@ export default function HotelPage() {
     <div className="min-h-screen" style={{ background: "var(--cream)", color: "var(--ink)" }}>
       {/* ═══════════════════ Lightbox ═══════════════════ */}
       <AnimatePresence>
-        {lightboxOpen && photos.length > 0 && (
+        {lightboxOpen && lightboxPhotos.length > 0 && (
           <Lightbox
-            photos={photos}
+            photos={lightboxPhotos}
             index={lightboxIdx}
             onClose={closeLightbox}
             onPrev={prevLightbox}
@@ -1229,7 +1632,7 @@ export default function HotelPage() {
               {!user && (
                 <button
                   onClick={() => {
-                    setPendingRoomId(null);
+                    setPendingPackageId(null);
                     setLoginIntent("room-select");
                     setLoginModalOpen(true);
                   }}
@@ -1253,6 +1656,34 @@ export default function HotelPage() {
                 </button>
               )}
             </div>
+
+            {/* ── Room filter bar ── */}
+            <RoomFilterBar
+              freeCancellation={filterFreeCancellation}
+              onToggleFreeCancellation={() => setFilterFreeCancellation((v) => !v)}
+              bedType={filterBedType}
+              onChangeBedType={setFilterBedType}
+              mealPlan={filterMealPlan}
+              onChangeMealPlan={setFilterMealPlan}
+            />
+
+            {/* ── Empty filter state ── */}
+            {preferredRooms.length === 0 && standardRooms.length === 0 && (
+              <div
+                style={{
+                  background: "var(--white)",
+                  border: "1px solid var(--cream-border)",
+                  padding: "24px",
+                  textAlign: "center",
+                  fontSize: "13px",
+                  color: "var(--ink-light)",
+                  fontFamily: "var(--font-body)",
+                  marginBottom: 24,
+                }}
+              >
+                No rooms match the current filters. Try clearing a filter to see more options.
+              </div>
+            )}
 
             {/* ── Preferred Rates Section ── */}
             {preferredRooms.length > 0 && (
@@ -1306,14 +1737,16 @@ export default function HotelPage() {
                     <RoomCard
                       key={room.id}
                       room={room}
-                      voyagrRate={getVoyagrRate(room)}
-                      marketRate={getMarketRate(room)}
-                      isSelected={selectedRoomId === room.id}
+                      baseRateInr={baseRateInr}
+                      selectedPackageId={selectedPackageId}
                       isHighlighted={highlightedRoomId === room.id}
                       cancellation={cancellationFor(room)}
+                      mealPlanFilter={filterMealPlan}
+                      freeCancellationFilter={filterFreeCancellation}
                       cardRef={(el) => { roomCardRefs.current[room.id] = el; }}
-                      onSelect={() => setSelectedRoomId(selectedRoomId === room.id ? null : room.id)}
-                      onProceed={() => handleRoomSelectCTA(room)}
+                      onSelectPackage={(pid) => setSelectedPackageId(selectedPackageId === pid ? null : pid)}
+                      onProceedPackage={(r, pkg) => handlePackageSelectCTA(r, pkg)}
+                      onOpenRoomGallery={(roomPhotos, startIdx) => openLightbox(startIdx, roomPhotos)}
                     />
                   ))}
                 </div>
@@ -1359,14 +1792,16 @@ export default function HotelPage() {
                     <RoomCard
                       key={room.id}
                       room={room}
-                      voyagrRate={getVoyagrRate(room)}
-                      marketRate={getMarketRate(room)}
-                      isSelected={selectedRoomId === room.id}
+                      baseRateInr={baseRateInr}
+                      selectedPackageId={selectedPackageId}
                       isHighlighted={highlightedRoomId === room.id}
                       cancellation={cancellationFor(room)}
+                      mealPlanFilter={filterMealPlan}
+                      freeCancellationFilter={filterFreeCancellation}
                       cardRef={(el) => { roomCardRefs.current[room.id] = el; }}
-                      onSelect={() => setSelectedRoomId(selectedRoomId === room.id ? null : room.id)}
-                      onProceed={() => handleRoomSelectCTA(room)}
+                      onSelectPackage={(pid) => setSelectedPackageId(selectedPackageId === pid ? null : pid)}
+                      onProceedPackage={(r, pkg) => handlePackageSelectCTA(r, pkg)}
+                      onOpenRoomGallery={(roomPhotos, startIdx) => openLightbox(startIdx, roomPhotos)}
                     />
                   ))}
                 </div>
@@ -1843,23 +2278,38 @@ export default function HotelPage() {
               ) : (
                 /* Room selected */
                 <motion.div
-                  key={selectedRoomId}
+                  key={selectedPackageId}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  {/* Selected room name */}
+                  {/* Selected room name + package */}
                   <p
                     style={{
                       fontSize: "15px",
                       fontWeight: 500,
                       color: "var(--ink)",
-                      marginBottom: 16,
+                      marginBottom: 4,
                       fontFamily: "var(--font-display)",
                     }}
                   >
                     {selectedRoom.name}
                   </p>
+                  {selectedPackage && (
+                    <p
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: "var(--gold)",
+                        marginBottom: 16,
+                        fontFamily: "var(--font-body)",
+                      }}
+                    >
+                      {selectedPackage.name}
+                    </p>
+                  )}
 
                   {/* Price per night */}
                   <div className="flex items-baseline justify-between mb-2">
@@ -1915,7 +2365,7 @@ export default function HotelPage() {
                   </div>
 
                   {/* Perks */}
-                  {selectedRoom.inclusions.length > 0 && (
+                  {selectedPackage && selectedPackage.inclusions.length > 0 && (
                     <div className="mb-4" style={{ paddingBottom: 16, borderBottom: "1px solid var(--cream-border)" }}>
                       <p
                         style={{
@@ -1930,7 +2380,7 @@ export default function HotelPage() {
                         Included perks
                       </p>
                       <div className="flex flex-col gap-1.5">
-                        {selectedRoom.inclusions.map((inc) => (
+                        {selectedPackage.inclusions.map((inc) => (
                           <div key={inc} className="flex items-center gap-2">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="20 6 9 17 4 12" />
@@ -2082,9 +2532,9 @@ export default function HotelPage() {
             >
               {hotel.hotel_name}
             </p>
-            {selectedRoom ? (
+            {selectedRoom && selectedPackage ? (
               <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
-                Member rate {formatInr(selectedVoyagrRate)}/night &middot; Save {formatInr(selectedSaving)}
+                {selectedPackage.name} &middot; Total {formatInr(totalPrice)} ({nights} night{nights > 1 ? "s" : ""})
               </p>
             ) : (
               <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
@@ -2097,7 +2547,7 @@ export default function HotelPage() {
           <button
             onClick={() => {
               if (!user) {
-                setPendingRoomId(null);
+                setPendingPackageId(null);
                 setLoginModalOpen(true);
                 return;
               }
@@ -2127,13 +2577,13 @@ export default function HotelPage() {
       </div>
 
       {/* ═══════════════════ Unlock Rate Modal ═══════════════════ */}
-      {selectedRoom && hotel && (
+      {selectedRoom && selectedPackage && hotel && (
         <UnlockRateModal
           open={unlockModalOpen}
           onClose={() => setUnlockModalOpen(false)}
           hotelId={hotel.hotel_id}
           hotelName={hotel.hotel_name}
-          roomName={selectedRoom.name}
+          roomName={`${selectedRoom.name} \u2022 ${selectedPackage.name}`}
           rateType={selectedRoom.tier}
           checkIn={booking.checkIn}
           checkOut={booking.checkOut}
@@ -2142,7 +2592,7 @@ export default function HotelPage() {
           nightlyRate={selectedVoyagrRate}
           marketRate={selectedMarketRate}
           currency="INR"
-          perks={selectedRoom.inclusions}
+          perks={selectedPackage.inclusions}
         />
       )}
 
@@ -2151,7 +2601,7 @@ export default function HotelPage() {
         <RoomSelectLoginModal
           onClose={() => {
             setLoginModalOpen(false);
-            setPendingRoomId(null);
+            setPendingPackageId(null);
             setPendingSaveAfterLogin(false);
           }}
           onSuccess={handleLoginSuccess}
