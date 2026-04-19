@@ -16,6 +16,18 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 /* ────────────────────────── Types ────────────────────────── */
 
+interface NearbyLandmark {
+  name: string;
+  distance_km: number;
+}
+
+type GalleryCategory =
+  | "Hotel View"
+  | "Guest Rooms"
+  | "Suites"
+  | "Pool & Spa"
+  | "Amenities";
+
 interface HotelDetail {
   hotel_id: number;
   hotel_name: string;
@@ -44,6 +56,12 @@ interface HotelDetail {
   yearrenovated: number | null;
   checkin: string | null;
   checkout: string | null;
+  /* Optional extended fields — rendered only if present on the payload */
+  rating_value?: number | null;
+  rating_service?: number | null;
+  rating_location?: number | null;
+  photo_categories?: Partial<Record<GalleryCategory, string[]>> | null;
+  nearby?: NearbyLandmark[] | null;
 }
 
 interface RoomDef {
@@ -556,6 +574,7 @@ export default function HotelPage() {
   /* Gallery */
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
+  const [activeGalleryCategory, setActiveGalleryCategory] = useState<GalleryCategory | null>(null);
 
   /* Tabs */
   const [activeTab, setActiveTab] = useState<TabName>("Rooms");
@@ -618,9 +637,42 @@ export default function HotelPage() {
   }, [hotelId]);
 
   /* ── Photos ── */
-  const photos = hotel
-    ? ([hotel.photo1, hotel.photo2, hotel.photo3, hotel.photo4, hotel.photo5].filter(Boolean) as string[])
-    : [];
+  const photos = useMemo<string[]>(
+    () =>
+      hotel
+        ? ([hotel.photo1, hotel.photo2, hotel.photo3, hotel.photo4, hotel.photo5].filter(Boolean) as string[])
+        : [],
+    [hotel]
+  );
+
+  /* ── Photo categories (only if backend provides photo_categories metadata) ── */
+  const GALLERY_CATEGORIES: GalleryCategory[] = useMemo(
+    () => ["Hotel View", "Guest Rooms", "Suites", "Pool & Spa", "Amenities"],
+    []
+  );
+  const photosByCategory = hotel?.photo_categories || null;
+  const availableCategories = useMemo<GalleryCategory[]>(() => {
+    if (!photosByCategory) return [];
+    return GALLERY_CATEGORIES.filter(
+      (c) => Array.isArray(photosByCategory[c]) && (photosByCategory[c] as string[]).length > 0
+    );
+  }, [photosByCategory, GALLERY_CATEGORIES]);
+  const hasCategorisedPhotos = availableCategories.length > 0;
+
+  const visibleGalleryPhotos = useMemo(() => {
+    if (!hasCategorisedPhotos || !photosByCategory) return photos;
+    if (activeGalleryCategory && photosByCategory[activeGalleryCategory]) {
+      return photosByCategory[activeGalleryCategory] as string[];
+    }
+    const seen = new Set<string>();
+    const merged: string[] = [];
+    for (const cat of availableCategories) {
+      for (const p of photosByCategory[cat] as string[]) {
+        if (!seen.has(p)) { seen.add(p); merged.push(p); }
+      }
+    }
+    return merged.length ? merged : photos;
+  }, [hasCategorisedPhotos, photosByCategory, activeGalleryCategory, availableCategories, photos]);
 
   const openLightbox = useCallback((idx: number) => {
     setLightboxIdx(idx);
@@ -959,19 +1011,6 @@ export default function HotelPage() {
             >
               {hotel.hotel_name}
             </h1>
-            {address && (
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "var(--cream)",
-                  opacity: 0.7,
-                  marginTop: 6,
-                  letterSpacing: "0.04em",
-                }}
-              >
-                {address}
-              </p>
-            )}
           </motion.div>
 
           {/* Save up to badge */}
@@ -1411,12 +1450,6 @@ export default function HotelPage() {
                   <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.yearrenovated}</div>
                 </div>
               )}
-              {hotel.chain_name && (
-                <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Hotel Chain</div>
-                  <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.chain_name}</div>
-                </div>
-              )}
               {hotel.accommodation_type && (
                 <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
                   <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Type</div>
@@ -1428,47 +1461,224 @@ export default function HotelPage() {
 
           {/* ══════ GALLERY SECTION ══════ */}
           <div ref={galleryRef} style={{ scrollMarginTop: "120px", paddingTop: 32 }}>
-            <div className="flex items-center gap-3 mb-5">
-              <div style={{ width: 4, height: 24, background: "var(--ink)", flexShrink: 0 }} />
-              <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 500, color: "var(--ink)" }}>
-                Gallery
-              </h3>
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <div className="flex items-center gap-3">
+                <div style={{ width: 4, height: 24, background: "var(--ink)", flexShrink: 0 }} />
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 500, color: "var(--ink)" }}>
+                  Gallery
+                </h3>
+              </div>
+              {photos.length > 0 && (
+                <button
+                  onClick={() => openLightbox(0)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    color: "var(--gold)",
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  View All →
+                </button>
+              )}
             </div>
 
             {photos.length > 0 ? (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                  gap: 8,
-                }}
-              >
-                {photos.map((photo, i) => (
+              <>
+                {hasCategorisedPhotos && photosByCategory && (
                   <div
-                    key={i}
-                    onClick={() => openLightbox(i)}
+                    className="flex gap-3 mb-5"
                     style={{
-                      cursor: "pointer",
-                      aspectRatio: "4/3",
-                      overflow: "hidden",
-                      background: "var(--cream-deep)",
+                      overflowX: "auto",
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
+                      paddingBottom: 4,
                     }}
                   >
-                    <img
-                      src={safePhotoUrl(photo)}
-                      alt={`${hotel.hotel_name} photo ${i + 1}`}
-                      style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s" }}
-                      onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                      onMouseEnter={(e) => { (e.target as HTMLImageElement).style.transform = "scale(1.05)"; }}
-                      onMouseLeave={(e) => { (e.target as HTMLImageElement).style.transform = "scale(1)"; }}
-                    />
+                    {availableCategories.map((cat) => {
+                      const catPhotos = (photosByCategory[cat] as string[]) || [];
+                      const thumb = catPhotos[0];
+                      const isActive = activeGalleryCategory === cat;
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() =>
+                            setActiveGalleryCategory((prev) => (prev === cat ? null : cat))
+                          }
+                          style={{
+                            flexShrink: 0,
+                            width: 120,
+                            background: "transparent",
+                            border: "none",
+                            padding: 0,
+                            cursor: "pointer",
+                            fontFamily: "var(--font-body)",
+                            textAlign: "center",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: "100%",
+                              aspectRatio: "4/3",
+                              overflow: "hidden",
+                              background: "var(--cream-deep)",
+                              border: isActive ? "2px solid var(--gold)" : "2px solid transparent",
+                              transition: "border-color 0.2s",
+                            }}
+                          >
+                            {thumb ? (
+                              <img
+                                src={safePhotoUrl(thumb)}
+                                alt={cat}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+                              />
+                            ) : null}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: isActive ? "var(--ink)" : "var(--ink-light)",
+                              fontWeight: isActive ? 600 : 500,
+                              marginTop: 6,
+                              letterSpacing: "0.02em",
+                            }}
+                          >
+                            {cat}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
+                )}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                    gap: 8,
+                  }}
+                >
+                  {visibleGalleryPhotos.map((photo, i) => (
+                    <div
+                      key={`${photo}-${i}`}
+                      onClick={() => {
+                        const idx = photos.indexOf(photo);
+                        openLightbox(idx >= 0 ? idx : 0);
+                      }}
+                      style={{
+                        cursor: "pointer",
+                        aspectRatio: "4/3",
+                        overflow: "hidden",
+                        background: "var(--cream-deep)",
+                      }}
+                    >
+                      <img
+                        src={safePhotoUrl(photo)}
+                        alt={`${hotel.hotel_name} photo ${i + 1}`}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s" }}
+                        onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+                        onMouseEnter={(e) => { (e.target as HTMLImageElement).style.transform = "scale(1.05)"; }}
+                        onMouseLeave={(e) => { (e.target as HTMLImageElement).style.transform = "scale(1)"; }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : (
               <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>No photos available for this property.</p>
             )}
           </div>
+
+          {/* ══════ LOCATION SECTION ══════ */}
+          {(address || (hotel.latitude != null && hotel.longitude != null)) && (() => {
+            const mapsQuery = encodeURIComponent(address || `${hotel.latitude},${hotel.longitude}`);
+            const mapsHref = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
+            return (
+              <div style={{ scrollMarginTop: "120px", paddingTop: 32 }}>
+                <div
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    color: "var(--gold)",
+                    fontFamily: "var(--font-body)",
+                    marginBottom: 10,
+                  }}
+                >
+                  Location
+                </div>
+                {address && (
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      color: "var(--ink-mid)",
+                      lineHeight: 1.6,
+                      marginBottom: 12,
+                    }}
+                  >
+                    {address}
+                  </p>
+                )}
+                <a
+                  href={mapsHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-block",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "var(--gold)",
+                    textDecoration: "none",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  View on Google Maps →
+                </a>
+              </div>
+            );
+          })()}
+
+          {/* ══════ WHAT'S NEARBY SECTION ══════ */}
+          {hotel.nearby && hotel.nearby.length > 0 && (
+            <div style={{ scrollMarginTop: "120px", paddingTop: 32 }}>
+              <div className="flex items-center gap-3 mb-5">
+                <div style={{ width: 4, height: 24, background: "var(--ink)", flexShrink: 0 }} />
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 500, color: "var(--ink)" }}>
+                  What&apos;s nearby
+                </h3>
+              </div>
+              <div style={{ background: "var(--white)", border: "1px solid var(--cream-border)" }}>
+                {hotel.nearby.slice(0, 5).map((item, i, arr) => (
+                  <div
+                    key={`${item.name}-${i}`}
+                    className="flex items-center justify-between"
+                    style={{
+                      padding: "14px 16px",
+                      borderBottom: i < arr.length - 1 ? "1px solid var(--cream-border)" : "none",
+                      fontSize: "14px",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    <span style={{ color: "var(--ink)" }}>{item.name}</span>
+                    <span
+                      style={{
+                        color: "var(--ink-light)",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "13px",
+                      }}
+                    >
+                      {item.distance_km.toFixed(1)} km
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ══════ REVIEWS SECTION ══════ */}
           <div ref={reviewsRef} style={{ scrollMarginTop: "120px", paddingTop: 32 }}>
@@ -1480,34 +1690,91 @@ export default function HotelPage() {
             </div>
 
             {hotel.rating_average > 0 ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-                <div
-                  style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: "50%",
-                    background: "var(--gold-pale)",
-                    border: "2px solid var(--gold)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontFamily: "var(--font-display)",
-                    fontSize: "24px",
-                    fontWeight: 500,
-                    color: "var(--ink)",
-                  }}
-                >
-                  {hotel.rating_average.toFixed(1)}
-                </div>
-                <div>
-                  <div style={{ fontSize: "16px", fontWeight: 500, color: "var(--ink)" }}>
-                    {hotel.rating_average >= 9 ? "Exceptional" : hotel.rating_average >= 8 ? "Excellent" : hotel.rating_average >= 7 ? "Very Good" : "Good"}
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+                  <div
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: "50%",
+                      background: "var(--gold-pale)",
+                      border: "2px solid var(--gold)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontFamily: "var(--font-display)",
+                      fontSize: "24px",
+                      fontWeight: 500,
+                      color: "var(--ink)",
+                    }}
+                  >
+                    {hotel.rating_average.toFixed(1)}
                   </div>
-                  <div style={{ fontSize: "13px", color: "var(--ink-light)" }}>
-                    Based on {hotel.number_of_reviews.toLocaleString()} verified reviews
+                  <div>
+                    <div style={{ fontSize: "16px", fontWeight: 500, color: "var(--ink)" }}>
+                      {hotel.rating_average >= 9 ? "Exceptional" : hotel.rating_average >= 8 ? "Excellent" : hotel.rating_average >= 7 ? "Very Good" : "Good"}
+                    </div>
+                    <div style={{ fontSize: "13px", color: "var(--ink-light)" }}>
+                      Based on {hotel.number_of_reviews.toLocaleString()} verified reviews
+                    </div>
                   </div>
                 </div>
-              </div>
+
+                {(hotel.rating_value != null || hotel.rating_service != null || hotel.rating_location != null) && (() => {
+                  const subScores: { label: string; value: number | null | undefined }[] = [
+                    { label: "Value", value: hotel.rating_value },
+                    { label: "Service", value: hotel.rating_service },
+                    { label: "Location", value: hotel.rating_location },
+                  ].filter((s) => s.value != null) as { label: string; value: number }[];
+                  if (subScores.length === 0) return null;
+                  return (
+                    <div
+                      className="flex items-stretch"
+                      style={{
+                        background: "var(--white)",
+                        border: "1px solid var(--cream-border)",
+                        marginBottom: 20,
+                      }}
+                    >
+                      {subScores.map((s, i) => (
+                        <div
+                          key={s.label}
+                          className="flex-1 text-center"
+                          style={{
+                            padding: "14px 12px",
+                            borderLeft: i === 0 ? "none" : "1px solid var(--cream-border)",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontFamily: "var(--font-display)",
+                              fontSize: "20px",
+                              fontWeight: 500,
+                              color: "var(--ink)",
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            {(s.value as number).toFixed(1)}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 600,
+                              letterSpacing: "0.1em",
+                              textTransform: "uppercase",
+                              color: "var(--ink-light)",
+                              marginTop: 4,
+                              fontFamily: "var(--font-body)",
+                            }}
+                          >
+                            {s.label}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </>
             ) : (
               <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>
                 No reviews available yet for this property.
