@@ -1,265 +1,618 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useBookingFlow, GuestInfo } from "@/context/BookingFlowContext";
+import Image from "next/image";
+import { useBookingFlow } from "@/context/BookingFlowContext";
 
-export default function GuestDetailsPage() {
+const GOLD = "#C9A84C";
+const USD_TO_INR = 83;
+
+const toInr = (usd: number) => Math.round(usd * USD_TO_INR);
+const formatInr = (usd: number) =>
+  `\u20B9${toInr(usd).toLocaleString("en-IN")}`;
+const formatInrAmount = (inr: number) =>
+  `\u20B9${Math.round(inr).toLocaleString("en-IN")}`;
+
+function formatTimer(totalSeconds: number) {
+  const safe = Math.max(0, totalSeconds);
+  const m = Math.floor(safe / 60);
+  const s = safe % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function formatLongDate(iso: string) {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatDayLabel(iso: string, time: string) {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  const day = d.toLocaleDateString("en-IN", { weekday: "long" });
+  return `${day}, ${time}`;
+}
+
+function freeCancellationDate(checkInIso: string) {
+  if (!checkInIso) return "";
+  const d = new Date(checkInIso + "T00:00:00");
+  d.setDate(d.getDate() - 1);
+  return d.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+export default function ReviewBookingPage() {
   const router = useRouter();
   const flow = useBookingFlow();
 
-  const [form, setForm] = useState<GuestInfo>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    specialRequests: "",
-  });
-  const [errors, setErrors] = useState<Partial<Record<keyof GuestInfo, string>>>({});
+  const [seconds, setSeconds] = useState(300);
+  const [expired, setExpired] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Redirect if no rooms selected
   useEffect(() => {
     if (flow.selectedRooms.length === 0) {
       router.replace("/book/rooms");
     }
-    // Restore previous info
-    if (flow.guestInfo) {
-      setForm(flow.guestInfo);
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const update = (field: keyof GuestInfo, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
+  // Countdown timer — held for 5 minutes
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      setSeconds((s) => {
+        if (s <= 1) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          setExpired(true);
+          return 0;
+        }
+        return s - 1;
       });
-    }
-  };
+    }, 1000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
-  const validate = (): boolean => {
-    const errs: Partial<Record<keyof GuestInfo, string>> = {};
-    if (!form.firstName.trim()) errs.firstName = "First name is required";
-    if (!form.lastName.trim()) errs.lastName = "Last name is required";
-    if (!form.email.trim()) errs.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Invalid email address";
-    if (!form.phone.trim()) errs.phone = "Phone number is required";
-    else if (!/^\+?[\d\s\-()]{7,}$/.test(form.phone)) errs.phone = "Invalid phone number";
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
+  const firstRoom = flow.selectedRooms[0];
+  const roomType = firstRoom?.roomType;
+  const inclusions = roomType?.amenities.slice(0, 3) ?? [];
+  const packageName = "Stay + Breakfast";
 
-  const handleContinue = () => {
-    if (!validate()) return;
-    flow.setGuestInfo(form);
+  // Pricing — taxes shown as "Included" per spec
+  const subtotalInr = toInr(flow.totalPrice);
+  const grandTotalInr = subtotalInr; // taxes inclusive
+
+  const handlePay = () => {
+    if (expired) return;
     router.push("/book/payment");
   };
 
-  const inputStyle = (hasError: boolean) => ({
-    width: "100%",
-    padding: "12px 16px",
-    borderRadius: 10,
-    border: `1px solid ${hasError ? "var(--error)" : "var(--cream-border)"}`,
-    background: "var(--white)",
-    fontFamily: "var(--sans)",
-    fontSize: "var(--text-body)",
-    color: "var(--ink)",
-    outline: "none",
-    boxSizing: "border-box" as const,
-    transition: "border-color 0.2s ease",
-  });
-
-  const labelStyle = {
-    fontFamily: "var(--sans)",
-    fontSize: "var(--text-body-sm)",
-    fontWeight: 500 as const,
-    color: "var(--ink-mid)",
-    marginBottom: 6,
-    display: "block" as const,
+  const handleSearchAgain = () => {
+    router.push("/search");
   };
+
+  const [city, country] = (flow.hotelCity || "").split(",").map((s) => s.trim());
 
   return (
     <div>
-      <h3 style={{
-        fontFamily: "var(--serif)",
-        fontSize: "var(--text-heading-3)",
-        fontWeight: 500,
-        color: "var(--ink)",
-        margin: "0 0 8px",
-      }}>
-        Guest Information
-      </h3>
-      <p style={{
-        fontFamily: "var(--sans)",
-        fontSize: "var(--text-body-sm)",
-        color: "var(--ink-light)",
-        margin: "0 0 24px",
-      }}>
-        Enter the primary guest&apos;s details for this booking.
-      </p>
-
-      {/* Booking summary mini card */}
-      <div style={{
-        background: "var(--cream-deep)",
-        borderRadius: 12,
-        padding: "14px 18px",
-        marginBottom: 24,
-        fontFamily: "var(--sans)",
-        fontSize: "var(--text-body-sm)",
-      }}>
-        <div style={{ fontWeight: 500, color: "var(--ink)", marginBottom: 4 }}>
-          {flow.hotelName}
-        </div>
-        <div style={{ color: "var(--ink-light)", display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <span>{flow.nights} night{flow.nights !== 1 ? "s" : ""}</span>
-          <span>&middot;</span>
-          <span>{flow.selectedRooms.map((r) => `${r.quantity}x ${r.roomType.name}`).join(", ")}</span>
-          <span>&middot;</span>
-          {/* TODO: implement USD→INR conversion via live rates. */}
-          <span style={{ fontWeight: 500, color: "var(--ink)" }}>
-            {"\u20B9"}{Math.round(flow.totalPrice * 83).toLocaleString("en-IN")}
-          </span>
+      {/* ELEMENT 2 — Urgency timer */}
+      <div
+        role="status"
+        aria-live="polite"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          marginBottom: 20,
+        }}
+      >
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "8px 16px",
+            borderRadius: 999,
+            background: "rgba(201,168,76,0.10)",
+            border: `1px solid ${GOLD}`,
+            fontFamily: "var(--sans)",
+            fontSize: "var(--text-body-sm)",
+            fontWeight: 600,
+            color: GOLD,
+          }}
+        >
+          <span aria-hidden>⏱</span>
+          <span>Rate held for {formatTimer(seconds)}</span>
         </div>
       </div>
 
-      {/* Form */}
-      <div style={{
-        background: "var(--white)",
-        borderRadius: 16,
-        border: "1px solid var(--cream-border)",
-        padding: "24px 20px",
-      }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-          <div>
-            <label style={labelStyle}>First Name *</label>
-            <input
-              type="text"
-              value={form.firstName}
-              onChange={(e) => update("firstName", e.target.value)}
-              placeholder="John"
-              style={inputStyle(!!errors.firstName)}
-            />
-            {errors.firstName && (
-              <span style={{ fontFamily: "var(--sans)", fontSize: "var(--text-caption)", color: "var(--error)", marginTop: 4, display: "block" }}>
-                {errors.firstName}
-              </span>
-            )}
-          </div>
-          <div>
-            <label style={labelStyle}>Last Name *</label>
-            <input
-              type="text"
-              value={form.lastName}
-              onChange={(e) => update("lastName", e.target.value)}
-              placeholder="Smith"
-              style={inputStyle(!!errors.lastName)}
-            />
-            {errors.lastName && (
-              <span style={{ fontFamily: "var(--sans)", fontSize: "var(--text-caption)", color: "var(--error)", marginTop: 4, display: "block" }}>
-                {errors.lastName}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Email Address *</label>
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) => update("email", e.target.value)}
-            placeholder="john.smith@email.com"
-            style={inputStyle(!!errors.email)}
-          />
-          {errors.email && (
-            <span style={{ fontFamily: "var(--sans)", fontSize: "var(--text-caption)", color: "var(--error)", marginTop: 4, display: "block" }}>
-              {errors.email}
-            </span>
-          )}
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={labelStyle}>Phone Number *</label>
-          <input
-            type="tel"
-            value={form.phone}
-            onChange={(e) => update("phone", e.target.value)}
-            placeholder="+1 (555) 123-4567"
-            style={inputStyle(!!errors.phone)}
-          />
-          {errors.phone && (
-            <span style={{ fontFamily: "var(--sans)", fontSize: "var(--text-caption)", color: "var(--error)", marginTop: 4, display: "block" }}>
-              {errors.phone}
-            </span>
-          )}
-        </div>
-
-        <div>
-          <label style={labelStyle}>Special Requests</label>
-          <textarea
-            value={form.specialRequests}
-            onChange={(e) => update("specialRequests", e.target.value)}
-            placeholder="Late check-in, extra pillows, dietary requirements..."
-            rows={3}
+      {/* ELEMENT 3 — Hotel card */}
+      <Card>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div
             style={{
-              ...inputStyle(false),
-              resize: "vertical" as const,
-              minHeight: 80,
+              position: "relative",
+              width: 60,
+              height: 60,
+              borderRadius: 12,
+              overflow: "hidden",
+              flexShrink: 0,
+              background: "var(--cream-deep)",
             }}
+          >
+            {flow.hotelImage && (
+              <Image
+                src={flow.hotelImage}
+                alt={flow.hotelName}
+                fill
+                style={{ objectFit: "cover" }}
+                sizes="60px"
+              />
+            )}
+          </div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "var(--text-heading-3)",
+                fontWeight: 600,
+                color: "var(--ink)",
+                lineHeight: 1.2,
+              }}
+            >
+              {flow.hotelName}
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--sans)",
+                fontSize: "var(--text-body-sm)",
+                color: "var(--ink-light)",
+                marginTop: 4,
+              }}
+            >
+              {city}
+              {country ? ` · ${country}` : ""}
+            </div>
+            <div style={{ display: "flex", gap: 2, marginTop: 6 }}>
+              {Array.from({ length: flow.hotelStars || 5 }).map((_, i) => (
+                <span key={i} style={{ color: GOLD, fontSize: 14 }}>
+                  ★
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* ELEMENT 4 — Dates card */}
+      <Card>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto 1fr",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <DateColumn
+            label="Check-in"
+            date={formatLongDate(flow.checkIn)}
+            day={formatDayLabel(flow.checkIn, "3:00 PM")}
+            align="left"
+          />
+          <div
+            style={{
+              background: GOLD,
+              color: "var(--ink)",
+              fontFamily: "var(--sans)",
+              fontSize: "var(--text-caption)",
+              fontWeight: 600,
+              padding: "6px 14px",
+              borderRadius: 999,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {flow.nights} Night{flow.nights !== 1 ? "s" : ""}
+          </div>
+          <DateColumn
+            label="Check-out"
+            date={formatLongDate(flow.checkOut)}
+            day={formatDayLabel(flow.checkOut, "12:00 PM")}
+            align="right"
           />
         </div>
-      </div>
+      </Card>
 
-      {/* Navigation buttons */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        marginTop: 24,
-        gap: 16,
-      }}>
-        <button
-          onClick={() => router.push("/book/rooms")}
+      {/* ELEMENT 5 — Room summary card */}
+      <Card>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 12,
+          }}
+        >
+          <h3
+            style={{
+              fontFamily: "var(--sans)",
+              fontSize: "var(--text-body-sm)",
+              fontWeight: 600,
+              color: "var(--ink-light)",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              margin: 0,
+            }}
+          >
+            Room
+          </h3>
+          <button
+            onClick={() => router.push("/book/rooms")}
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              fontFamily: "var(--sans)",
+              fontSize: "var(--text-body-sm)",
+              fontWeight: 600,
+              color: GOLD,
+              cursor: "pointer",
+            }}
+          >
+            Room Details →
+          </button>
+        </div>
+
+        <div
+          style={{
+            fontFamily: "var(--serif)",
+            fontSize: "var(--text-heading-3)",
+            fontWeight: 600,
+            color: "var(--ink)",
+            lineHeight: 1.2,
+          }}
+        >
+          {roomType?.name}
+        </div>
+        <div
           style={{
             fontFamily: "var(--sans)",
-            fontSize: "var(--text-body)",
-            fontWeight: 500,
-            padding: "14px 28px",
-            borderRadius: 10,
-            border: "1px solid var(--cream-border)",
-            background: "var(--white)",
+            fontSize: "var(--text-body-sm)",
             color: "var(--ink-mid)",
-            cursor: "pointer",
+            marginTop: 4,
+          }}
+        >
+          {packageName}
+        </div>
+
+        <ul
+          style={{
+            listStyle: "none",
+            padding: 0,
+            margin: "14px 0 0",
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          {inclusions.map((item) => (
+            <li
+              key={item}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                fontFamily: "var(--sans)",
+                fontSize: "var(--text-body-sm)",
+                color: "var(--ink)",
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  width: 18,
+                  height: 18,
+                  borderRadius: "50%",
+                  background: "rgba(74,124,89,0.15)",
+                  color: "var(--success)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  flexShrink: 0,
+                }}
+              >
+                ✓
+              </span>
+              {item}
+            </li>
+          ))}
+        </ul>
+
+        <div
+          style={{
+            marginTop: 16,
+            paddingTop: 14,
+            borderTop: "1px dashed var(--cream-border)",
+            fontFamily: "var(--sans)",
+            fontSize: "var(--text-body-sm)",
+            color: "var(--success)",
+            fontWeight: 600,
             display: "flex",
             alignItems: "center",
             gap: 6,
           }}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_back</span>
-          Back
-        </button>
-        <button
-          onClick={handleContinue}
+          <span aria-hidden>✓</span>
+          Free cancellation until {freeCancellationDate(flow.checkIn)}
+        </div>
+      </Card>
+
+      {/* ELEMENT 6 — Price card */}
+      <Card>
+        <div
           style={{
+            display: "flex",
+            justifyContent: "space-between",
             fontFamily: "var(--sans)",
             fontSize: "var(--text-body)",
-            fontWeight: 500,
-            padding: "14px 36px",
-            borderRadius: 10,
-            border: "none",
-            background: "var(--ink)",
-            color: "var(--white)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
+            color: "var(--ink-mid)",
+            marginBottom: 10,
           }}
         >
-          Continue to Payment
-          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
-        </button>
+          <span>
+            {formatInr(roomType ? roomType.pricePerNight * (firstRoom?.quantity ?? 1) : 0)}
+            {" × "}
+            {flow.nights} night{flow.nights !== 1 ? "s" : ""}
+          </span>
+          <span style={{ color: "var(--ink)", fontWeight: 500 }}>
+            {formatInrAmount(subtotalInr)}
+          </span>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontFamily: "var(--sans)",
+            fontSize: "var(--text-body)",
+            color: "var(--ink-mid)",
+            paddingBottom: 14,
+            borderBottom: "1px solid var(--cream-border)",
+          }}
+        >
+          <span>Taxes &amp; fees</span>
+          <span style={{ color: "var(--ink-mid)" }}>Included</span>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            marginTop: 14,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "var(--sans)",
+              fontSize: "var(--text-body)",
+              fontWeight: 600,
+              color: "var(--ink)",
+            }}
+          >
+            Total
+          </span>
+          <span
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: "var(--text-heading-2)",
+              fontWeight: 600,
+              color: "var(--ink)",
+            }}
+          >
+            {formatInrAmount(grandTotalInr)}
+          </span>
+        </div>
+        <div
+          style={{
+            fontFamily: "var(--sans)",
+            fontSize: "var(--text-caption)",
+            color: "var(--success)",
+            fontWeight: 500,
+            marginTop: 4,
+            textAlign: "right",
+          }}
+        >
+          Taxes included
+        </div>
+      </Card>
+
+      {/* STICKY BOTTOM BAR — single full-width gold Pay button */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "var(--white)",
+          borderTop: "1px solid var(--cream-border)",
+          padding: "14px 16px",
+          zIndex: 110,
+        }}
+      >
+        <div style={{ maxWidth: 800, margin: "0 auto" }}>
+          <button
+            onClick={handlePay}
+            disabled={expired}
+            style={{
+              width: "100%",
+              fontFamily: "var(--sans)",
+              fontSize: "var(--text-body)",
+              fontWeight: 600,
+              padding: "16px 24px",
+              borderRadius: 12,
+              border: "none",
+              background: GOLD,
+              color: "var(--ink)",
+              cursor: expired ? "not-allowed" : "pointer",
+              opacity: expired ? 0.5 : 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            Pay {formatInrAmount(grandTotalInr)} Securely →
+          </button>
+        </div>
+      </div>
+
+      {/* Rate expired modal */}
+      {expired && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rate-expired-title"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(26,23,16,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 200,
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              background: "var(--white)",
+              borderRadius: 16,
+              padding: "28px 24px",
+              maxWidth: 360,
+              width: "100%",
+              textAlign: "center",
+            }}
+          >
+            <h2
+              id="rate-expired-title"
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "var(--text-heading-2)",
+                fontWeight: 600,
+                color: "var(--ink)",
+                margin: "0 0 8px",
+              }}
+            >
+              Your rate has been released.
+            </h2>
+            <p
+              style={{
+                fontFamily: "var(--sans)",
+                fontSize: "var(--text-body-sm)",
+                color: "var(--ink-light)",
+                margin: "0 0 20px",
+                lineHeight: 1.5,
+              }}
+            >
+              The 5-minute hold has expired. Search again to see live availability.
+            </p>
+            <button
+              onClick={handleSearchAgain}
+              style={{
+                width: "100%",
+                fontFamily: "var(--sans)",
+                fontSize: "var(--text-body)",
+                fontWeight: 600,
+                padding: "14px 24px",
+                borderRadius: 12,
+                border: "none",
+                background: GOLD,
+                color: "var(--ink)",
+                cursor: "pointer",
+              }}
+            >
+              Search Again →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        background: "var(--white)",
+        borderRadius: 16,
+        border: "1px solid var(--cream-border)",
+        padding: "18px 20px",
+        marginBottom: 16,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function DateColumn({
+  label,
+  date,
+  day,
+  align,
+}: {
+  label: string;
+  date: string;
+  day: string;
+  align: "left" | "right";
+}) {
+  return (
+    <div style={{ textAlign: align, minWidth: 0 }}>
+      <div
+        style={{
+          fontFamily: "var(--sans)",
+          fontSize: "var(--text-caption)",
+          color: "var(--ink-light)",
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+          fontWeight: 600,
+          marginBottom: 4,
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontFamily: "var(--serif)",
+          fontSize: "var(--text-heading-3)",
+          fontWeight: 600,
+          color: "var(--ink)",
+          lineHeight: 1.15,
+        }}
+      >
+        {date}
+      </div>
+      <div
+        style={{
+          fontFamily: "var(--sans)",
+          fontSize: "var(--text-caption)",
+          color: "var(--ink-light)",
+          marginTop: 4,
+        }}
+      >
+        {day}
       </div>
     </div>
   );

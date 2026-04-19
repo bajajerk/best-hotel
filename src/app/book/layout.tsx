@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const STEPS = [
   { key: "rooms", label: "Select Room", path: "/book/rooms" },
-  { key: "guest-details", label: "Guest Details", path: "/book/guest-details" },
+  { key: "guest-details", label: "Review", path: "/book/guest-details" },
   { key: "payment", label: "Payment", path: "/book/payment" },
   { key: "confirmation", label: "Confirmation", path: "/book/confirmation" },
 ];
@@ -82,45 +82,103 @@ function StepIndicator() {
   );
 }
 
-export default function BookLayout({ children }: { children: ReactNode }) {
-  return (
-    <div style={{ minHeight: "100vh", background: "var(--cream)" }}>
-      {/* Top bar */}
+function BookHeader() {
+  const pathname = usePathname();
+  const isReview = pathname.includes("guest-details");
+
+  if (isReview) {
+    return (
       <header style={{
-        background: "var(--white)",
-        borderBottom: "1px solid var(--cream-border)",
-        padding: "14px 24px",
-        display: "flex",
+        background: "var(--ink)",
+        borderBottom: "1px solid var(--ink)",
+        padding: "16px 24px",
+        display: "grid",
+        gridTemplateColumns: "1fr auto 1fr",
         alignItems: "center",
-        justifyContent: "space-between",
       }}>
         <Link href="/" style={{
           fontFamily: "var(--serif)",
           fontSize: 22,
           fontWeight: 600,
-          color: "var(--ink)",
+          color: "var(--white)",
           textDecoration: "none",
           letterSpacing: "-0.02em",
+          justifySelf: "start",
         }}>
           Voyagr
         </Link>
+        <h1 style={{
+          fontFamily: "var(--serif)",
+          fontSize: 22,
+          fontWeight: 500,
+          color: "var(--white)",
+          margin: 0,
+          textAlign: "center",
+          letterSpacing: "-0.01em",
+          whiteSpace: "nowrap",
+        }}>
+          Review your booking
+        </h1>
         <Link href="/" style={{
           fontFamily: "var(--sans)",
           fontSize: "var(--text-body-sm)",
-          color: "var(--ink-light)",
+          color: "var(--white)",
           textDecoration: "none",
           display: "flex",
           alignItems: "center",
           gap: 4,
+          justifySelf: "end",
         }}>
           <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
           Cancel
         </Link>
       </header>
+    );
+  }
+
+  return (
+    <header style={{
+      background: "var(--white)",
+      borderBottom: "1px solid var(--cream-border)",
+      padding: "14px 24px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+    }}>
+      <Link href="/" style={{
+        fontFamily: "var(--serif)",
+        fontSize: 22,
+        fontWeight: 600,
+        color: "var(--ink)",
+        textDecoration: "none",
+        letterSpacing: "-0.02em",
+      }}>
+        Voyagr
+      </Link>
+      <Link href="/" style={{
+        fontFamily: "var(--sans)",
+        fontSize: "var(--text-body-sm)",
+        color: "var(--ink-light)",
+        textDecoration: "none",
+        display: "flex",
+        alignItems: "center",
+        gap: 4,
+      }}>
+        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
+        Cancel
+      </Link>
+    </header>
+  );
+}
+
+export default function BookLayout({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--cream)" }}>
+      <BookHeader />
 
       <StepIndicator />
 
-      <main style={{ maxWidth: 800, margin: "0 auto", padding: "24px 16px 100px" }}>
+      <main style={{ maxWidth: 800, margin: "0 auto", padding: "24px 16px 120px" }}>
         {children}
       </main>
     </div>

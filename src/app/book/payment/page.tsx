@@ -2,31 +2,45 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useBookingFlow, PaymentInfo } from "@/context/BookingFlowContext";
+import { useBookingFlow, PaymentInfo, GuestInfo } from "@/context/BookingFlowContext";
+
+type FormState = PaymentInfo & Pick<GuestInfo, "firstName" | "lastName" | "email" | "phone">;
+type FormField = keyof FormState;
 
 export default function PaymentPage() {
   const router = useRouter();
   const flow = useBookingFlow();
 
-  const [form, setForm] = useState<PaymentInfo>({
+  const [form, setForm] = useState<FormState>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
     cardholderName: "",
     cardNumber: "",
     expiry: "",
     cvv: "",
   });
-  const [errors, setErrors] = useState<Partial<Record<keyof PaymentInfo, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<FormField, string>>>({});
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     if (flow.selectedRooms.length === 0) {
       router.replace("/book/rooms");
-    } else if (!flow.guestInfo) {
-      router.replace("/book/guest-details");
+    }
+    if (flow.guestInfo) {
+      setForm((prev) => ({
+        ...prev,
+        firstName: flow.guestInfo!.firstName,
+        lastName: flow.guestInfo!.lastName,
+        email: flow.guestInfo!.email,
+        phone: flow.guestInfo!.phone,
+      }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const update = (field: keyof PaymentInfo, value: string) => {
+  const update = (field: FormField, value: string) => {
     let processed = value;
     if (field === "cardNumber") {
       processed = value.replace(/\D/g, "").slice(0, 16);
@@ -52,7 +66,12 @@ export default function PaymentPage() {
   };
 
   const validate = (): boolean => {
-    const errs: Partial<Record<keyof PaymentInfo, string>> = {};
+    const errs: Partial<Record<FormField, string>> = {};
+    if (!form.firstName.trim()) errs.firstName = "First name is required";
+    if (!form.lastName.trim()) errs.lastName = "Last name is required";
+    if (!form.email.trim()) errs.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Invalid email address";
+    if (!form.phone.trim()) errs.phone = "Phone number is required";
     if (!form.cardholderName.trim()) errs.cardholderName = "Cardholder name is required";
     const digits = form.cardNumber.replace(/\s/g, "");
     if (digits.length < 13) errs.cardNumber = "Valid card number required";
@@ -65,7 +84,19 @@ export default function PaymentPage() {
   const handlePay = async () => {
     if (!validate()) return;
     setProcessing(true);
-    flow.setPaymentInfo(form);
+    flow.setGuestInfo({
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      phone: form.phone,
+      specialRequests: flow.guestInfo?.specialRequests ?? "",
+    });
+    flow.setPaymentInfo({
+      cardholderName: form.cardholderName,
+      cardNumber: form.cardNumber,
+      expiry: form.expiry,
+      cvv: form.cvv,
+    });
     // Simulate payment processing
     await new Promise((r) => setTimeout(r, 2000));
     flow.confirmBooking();
@@ -181,6 +212,89 @@ export default function PaymentPage() {
             }}>
               {formatInr(grandTotal)}
             </span>
+          </div>
+        </div>
+
+        {/* Guest details */}
+        <div style={{
+          background: "var(--white)",
+          borderRadius: 16,
+          border: "1px solid var(--cream-border)",
+          padding: "24px 20px",
+        }}>
+          <h4 style={{
+            fontFamily: "var(--sans)",
+            fontSize: "var(--text-body)",
+            fontWeight: 600,
+            color: "var(--ink)",
+            margin: "0 0 16px",
+          }}>
+            Guest Details
+          </h4>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div>
+              <label style={labelStyle}>First Name *</label>
+              <input
+                type="text"
+                value={form.firstName}
+                onChange={(e) => update("firstName", e.target.value)}
+                placeholder="John"
+                style={inputStyle(!!errors.firstName)}
+              />
+              {errors.firstName && (
+                <span style={{ fontFamily: "var(--sans)", fontSize: "var(--text-caption)", color: "var(--error)", marginTop: 4, display: "block" }}>
+                  {errors.firstName}
+                </span>
+              )}
+            </div>
+            <div>
+              <label style={labelStyle}>Last Name *</label>
+              <input
+                type="text"
+                value={form.lastName}
+                onChange={(e) => update("lastName", e.target.value)}
+                placeholder="Smith"
+                style={inputStyle(!!errors.lastName)}
+              />
+              {errors.lastName && (
+                <span style={{ fontFamily: "var(--sans)", fontSize: "var(--text-caption)", color: "var(--error)", marginTop: 4, display: "block" }}>
+                  {errors.lastName}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Email *</label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => update("email", e.target.value)}
+              placeholder="john.smith@email.com"
+              style={inputStyle(!!errors.email)}
+            />
+            {errors.email && (
+              <span style={{ fontFamily: "var(--sans)", fontSize: "var(--text-caption)", color: "var(--error)", marginTop: 4, display: "block" }}>
+                {errors.email}
+              </span>
+            )}
+          </div>
+
+          <div>
+            <label style={labelStyle}>Phone *</label>
+            <input
+              type="tel"
+              value={form.phone}
+              onChange={(e) => update("phone", e.target.value)}
+              placeholder="+91 98765 43210"
+              style={inputStyle(!!errors.phone)}
+            />
+            {errors.phone && (
+              <span style={{ fontFamily: "var(--sans)", fontSize: "var(--text-caption)", color: "var(--error)", marginTop: 4, display: "block" }}>
+                {errors.phone}
+              </span>
+            )}
           </div>
         </div>
 
