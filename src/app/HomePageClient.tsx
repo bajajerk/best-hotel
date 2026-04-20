@@ -1838,33 +1838,6 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
       </section>
 
       {/* ================================================================
-          STICKY MOBILE BOTTOM CTA — emerald bar
-      ================================================================ */}
-      <div className="sticky-mobile-cta">
-        <div style={{ color: "#fff", flex: 1 }}>
-          <div style={{ fontSize: "13px", fontWeight: 600 }}>Join Voyagr Club</div>
-          <div style={{ fontSize: "10px", opacity: 0.85 }}>Free forever &bull; Perks on every stay</div>
-        </div>
-        <a
-          href="https://wa.me/919876543210?text=Hi%2C%20I%27d%20like%20to%20join%20Voyagr%20Club"
-          onClick={() => trackWhatsAppClicked({ page: 'home_sticky_cta' })}
-          style={{
-            background: "#fff",
-            color: "var(--emerald-dark)",
-            padding: "10px 20px",
-            fontSize: "12px",
-            fontWeight: 700,
-            textDecoration: "none",
-            letterSpacing: "0.04em",
-            whiteSpace: "nowrap",
-            borderRadius: "2px",
-          }}
-        >
-          Join Free &rarr;
-        </a>
-      </div>
-
-      {/* ================================================================
           WHATSAPP CONCIERGE — contextual section
       ================================================================ */}
       <WhatsAppConcierge />

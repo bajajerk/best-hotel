@@ -3,6 +3,7 @@ import { Cormorant_Garamond, DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import CompareBar from "@/components/CompareBar";
+import SiteSignInStickyBar from "@/components/SiteSignInStickyBar";
 import {
   SITE_URL,
   SITE_NAME,
@@ -138,6 +139,7 @@ export default function RootLayout({
         <Providers>
         {children}
         <CompareBar />
+        <SiteSignInStickyBar />
         </Providers>
       </body>
     </html>
