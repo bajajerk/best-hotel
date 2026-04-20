@@ -747,6 +747,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
 
           {/* Search bar */}
           <motion.div
+            id="hero-search"
             variants={fadeUp}
             className="hero-search-form"
             style={{

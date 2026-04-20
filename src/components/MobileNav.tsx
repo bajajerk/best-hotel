@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 /* ────────────────────────────────────────────────────────────
    Voyagr Club — Premium Side-Drawer Menu (Mobile-first)
@@ -58,7 +59,31 @@ export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { user } = useAuth();
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  /* "See Member Rates →" CTA — auth-aware destination.
+     Logged out + on homepage → smooth-scroll to the hero search bar (it's right there).
+     Logged out elsewhere → /search.
+     Logged in → /search directly (skip the discovery step). */
+  function handleSeeMemberRates(e: React.MouseEvent) {
+    e.preventDefault();
+    setOpen(false);
+    if (!user && pathname === "/") {
+      // Wait for the drawer close transition before scrolling so the target is in view.
+      setTimeout(() => {
+        const target = document.getElementById("hero-search");
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+        } else {
+          router.push("/search");
+        }
+      }, 250);
+      return;
+    }
+    router.push("/search");
+  }
 
   /* Portal requires client-side mount */
   useEffect(() => {
@@ -475,7 +500,7 @@ export default function MobileNav() {
         >
           <Link
             href="/search"
-            onClick={() => setOpen(false)}
+            onClick={handleSeeMemberRates}
             style={{
               display: "flex",
               alignItems: "center",
