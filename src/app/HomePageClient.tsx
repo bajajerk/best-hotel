@@ -22,7 +22,6 @@ import type { CityCardData } from "@/components/CityCard";
 import TopSellers, { computeTopSellers, type TopSellerHotel } from "@/components/TopSellers";
 import RecommendationHub from "@/components/RecommendationHub";
 import OccasionCarousel from "@/components/OccasionCarousel";
-import FeaturedDestinationsGrid from "@/components/FeaturedDestinationsGrid";
 import WhatsAppConcierge from "@/components/WhatsAppConcierge";
 
 export interface HomePageClientProps {
@@ -993,11 +992,6 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
           FEATURED PROPERTIES — unified tabbed carousel (GET /api/hotels/featured)
       ================================================================ */}
       <FeaturedPropertiesSection tabData={featuredTabData} isLoading={hotelsLoading} isError={hotelsError} />
-
-      {/* ================================================================
-          FEATURED DESTINATIONS — curated hotel card grid
-      ================================================================ */}
-      <FeaturedDestinationsGrid />
 
       {/* ================================================================
           TOP SELLERS — most booked properties
