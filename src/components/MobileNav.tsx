@@ -20,13 +20,7 @@ const PRIMARY_LINKS: {
   subtext?: string;
 }[] = [
   { label: "Home", href: "/", icon: "home" },
-  { label: "Hotels", href: "/search", icon: "hotel", highlighted: true, badge: "BROWSE" },
-  {
-    label: "Rate Challenge",
-    href: "/match-my-rates",
-    icon: "trending_down",
-    subtext: "See if we can beat your current hotel price",
-  },
+  { label: "Search", href: "/search", icon: "search", highlighted: true, badge: "BROWSE" },
   {
     label: "Preferred Rates",
     href: "/preferred-rates",
@@ -34,6 +28,13 @@ const PRIMARY_LINKS: {
     highlighted: true,
     badge: "VOYAGR CLUB",
   },
+  {
+    label: "Price Match",
+    href: "/match-my-rates",
+    icon: "trending_down",
+    subtext: "See if we can beat your current hotel price",
+  },
+  { label: "Sign In", href: "/login", icon: "login" },
   { label: "My Trips", href: "/booking-history", icon: "luggage" },
   { label: "Profile", href: "/profile", icon: "person" },
 ];
@@ -473,7 +474,7 @@ export default function MobileNav() {
           }}
         >
           <Link
-            href="/preferred-rates"
+            href="/search"
             onClick={() => setOpen(false)}
             style={{
               display: "flex",
@@ -496,14 +497,7 @@ export default function MobileNav() {
               textAlign: "center" as const,
             }}
           >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: "18px", fontVariationSettings: "'FILL' 1, 'wght' 400" }}
-              aria-hidden="true"
-            >
-              lock_open
-            </span>
-            Unlock Preferred Rates
+            See Member Rates &rarr;
           </Link>
         </div>
       </div>
