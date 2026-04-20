@@ -35,7 +35,6 @@ const PRIMARY_LINKS: {
     icon: "trending_down",
     subtext: "See if we can beat your current hotel price",
   },
-  { label: "Sign In", href: "/login", icon: "login" },
   { label: "My Trips", href: "/booking-history", icon: "luggage" },
   { label: "Profile", href: "/profile", icon: "person" },
 ];
@@ -60,7 +59,7 @@ export default function MobileNav() {
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const drawerRef = useRef<HTMLDivElement>(null);
 
   /* "See Member Rates →" CTA — auth-aware destination.
@@ -332,6 +331,88 @@ export default function MobileNav() {
               </Link>
             );
           })}
+
+          {user ? (
+            <button
+              type="button"
+              onClick={async () => {
+                await signOut();
+                setOpen(false);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                width: "100%",
+                fontFamily: "var(--font-display)",
+                fontSize: "20px",
+                fontWeight: 400,
+                color: "var(--ink, #1a1710)",
+                textAlign: "left",
+                background: "transparent",
+                border: "none",
+                borderLeft: "3px solid transparent",
+                padding: "14px 24px",
+                cursor: "pointer",
+                transition: "background 0.2s, color 0.2s",
+              }}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{
+                  fontSize: "22px",
+                  color: "var(--ink-light, #7a7465)",
+                  lineHeight: 1,
+                  fontVariationSettings: "'FILL' 0, 'wght' 300",
+                }}
+                aria-hidden="true"
+              >
+                key
+              </span>
+              <span style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: 0 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  Sign Out
+                </span>
+              </span>
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                fontFamily: "var(--font-display)",
+                fontSize: "20px",
+                fontWeight: 400,
+                color: "var(--ink, #1a1710)",
+                textDecoration: "none",
+                padding: "14px 24px",
+                transition: "background 0.2s, color 0.2s",
+                background: "transparent",
+                borderLeft: "3px solid transparent",
+              }}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{
+                  fontSize: "22px",
+                  color: "var(--ink-light, #7a7465)",
+                  lineHeight: 1,
+                  fontVariationSettings: "'FILL' 0, 'wght' 300",
+                }}
+                aria-hidden="true"
+              >
+                key
+              </span>
+              <span style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: 0 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  Sign In
+                </span>
+              </span>
+            </Link>
+          )}
         </nav>
 
         {/* ═══════════════════════════════════════════
