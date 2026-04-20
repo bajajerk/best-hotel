@@ -416,7 +416,7 @@ export default function VoyagerClubComparison() {
               exclusive perks at 1,500+ hotels worldwide.
             </p>
             <a
-              href="https://wa.me/919876543210?text=Hi%2C%20I%27d%20like%20to%20join%20Voyagr%20Club"
+              href="https://www.voyagrclub.com"
               className="btn-emerald"
               style={{
                 marginTop: "4px",
@@ -424,7 +424,7 @@ export default function VoyagerClubComparison() {
                 padding: "14px 36px",
               }}
             >
-              Join Free &rarr; Begin Your Journey
+              Join the club
             </a>
           </div>
         </motion.div>
