@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MobileNav from "./MobileNav";
+import { useAuth } from "@/context/AuthContext";
 
 /* ────────────────────────────────────────────────────────────
    Voyagr.Club — Sticky Navigation Bar
@@ -33,11 +34,14 @@ export default function Header() {
   const pathname = usePathname();
   const navRef = useRef<HTMLElement>(null);
   const [joinHover, setJoinHover] = useState(false);
+  const { user } = useAuth();
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
   }
+
+  const joinHref = user ? "/profile" : "/login";
 
   return (
     <>
@@ -129,9 +133,10 @@ export default function Header() {
               flexShrink: 0,
             }}
           >
-            {/* "Join the Club" button — desktop only */}
+            {/* "Join the Club" button — desktop only.
+                Logged out → /login (signup/OTP flow). Logged in → /profile dashboard. */}
             <Link
-              href="/preferred-rates"
+              href={joinHref}
               className="header-join-btn"
               onMouseEnter={() => setJoinHover(true)}
               onMouseLeave={() => setJoinHover(false)}

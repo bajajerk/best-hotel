@@ -702,7 +702,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               marginBottom: "24px",
             }}
           >
-            Preferred access to hotels that turn every stay into an unforgettable experience.
+            Hotels you know. Rates they don&rsquo;t show.
           </motion.h1>
 
           <motion.p
