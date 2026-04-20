@@ -17,15 +17,15 @@ const IVORY = "#fdfaf5";
 export const NAV_LINKS = [
   { label: "Search", href: "/search" },
   { label: "Preferred Rates", href: "/preferred-rates" },
-  { label: "Rate Check", href: "/match-my-rates" },
+  { label: "Price Match", href: "/match-my-rates" },
   { label: "My Trips", href: "/booking-history" },
 ];
 
 /* Desktop nav links */
 const DESKTOP_LINKS = [
-  { label: "Destinations", href: "/search" },
+  { label: "Search", href: "/search" },
   { label: "Preferred Rates", href: "/preferred-rates" },
-  { label: "About", href: "/about" },
+  { label: "Price Match", href: "/match-my-rates" },
   { label: "Sign In", href: "/login" },
 ];
 
@@ -180,7 +180,7 @@ const TAB_ICONS: Record<string, React.ReactNode> = {
       <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z" />
     </svg>
   ),
-  "Rate Check": (
+  "Price Match": (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
     </svg>
