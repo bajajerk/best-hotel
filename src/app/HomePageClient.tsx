@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CATEGORIES, SAMPLE_CITIES, CITY_IMAGES, FALLBACK_CITY_IMAGE, getCityImage } from "@/lib/constants";
 import { fetchCuratedCities, fetchFeaturedAll, CuratedCity, CuratedHotel } from "@/lib/api";
 import type { FeaturedResponse } from "@/lib/api";
@@ -12,6 +13,7 @@ import HotelCard from "@/components/HotelCard";
 import type { HotelCardData } from "@/components/HotelCard";
 import DestinationSearch from "@/components/DestinationSearch";
 import { useBooking } from "@/context/BookingContext";
+import { useAuth } from "@/context/AuthContext";
 import { getWhyVisitNow } from "@/lib/whyVisitNow";
 import { trackCtaClicked, trackWhatsAppClicked } from "@/lib/analytics";
 import VoyagerClubComparison from "@/components/VoyagerClubComparison";
@@ -546,6 +548,31 @@ function FeaturedPropertiesSection({ tabData, isLoading, isError }: { tabData: R
 // ============================================================================
 export default function Home({ initialCities, initialFeatured }: HomePageClientProps) {
   const { checkIn, checkOut, setCheckIn, setCheckOut, formatDate } = useBooking();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  /* "See Member Rates →" hero CTA — auth-aware destination.
+     Logged out → smooth-scroll to the hero search bar (it's right below the CTA).
+     Logged in → /search directly (skip the discovery step). */
+  function handleSeeMemberRates(e: React.MouseEvent) {
+    e.preventDefault();
+    const loggedIn = Boolean(user);
+    trackCtaClicked({
+      cta_name: 'see_member_rates_hero',
+      cta_location: 'hero',
+      destination_url: loggedIn ? '/search' : '#hero-search',
+    });
+    if (loggedIn) {
+      router.push('/search');
+      return;
+    }
+    const target = document.getElementById('hero-search');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      router.push('/search');
+    }
+  }
 
   // Pre-compute initial featured tab data from server-fetched props
   const initialTabData = initialFeatured
@@ -717,12 +744,12 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
             Member access to hotel rates travel agents have always paid. Never on MakeMyTrip or Booking.com.
           </motion.p>
 
-          {/* Join Free CTA + micro-copy */}
+          {/* See Member Rates CTA — auth-aware destination + micro-copy */}
           <motion.div variants={fadeUp} style={{ marginBottom: "32px" }}>
             <a
-              href="https://wa.me/919876543210?text=Hi%2C%20I%27d%20like%20to%20join%20Voyagr%20Club"
+              href={user ? "/search" : "#hero-search"}
               className="btn-emerald"
-              onClick={() => trackCtaClicked({ cta_name: 'join_free_hero', cta_location: 'hero', destination_url: 'whatsapp' })}
+              onClick={handleSeeMemberRates}
               style={{
                 padding: "16px 40px",
                 fontSize: "14px",
