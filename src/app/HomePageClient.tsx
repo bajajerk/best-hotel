@@ -714,7 +714,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               marginBottom: "32px",
             }}
           >
-            Enjoy preferred rates at distinguished hotels in over 50 cities worldwide, with uncompromised room quality and a thoughtfully curated travel experience.
+            Member access to hotel rates travel agents have always paid. Never on MakeMyTrip or Booking.com.
           </motion.p>
 
           {/* Join Free CTA + micro-copy */}
@@ -732,7 +732,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
                 gap: "8px",
               }}
             >
-              Join Free &rarr; Begin Your Journey
+              See Member Rates &rarr;
             </a>
             <p style={{
               fontSize: "11px",
