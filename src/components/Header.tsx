@@ -34,7 +34,7 @@ export default function Header() {
   const pathname = usePathname();
   const navRef = useRef<HTMLElement>(null);
   const [joinHover, setJoinHover] = useState(false);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
@@ -42,6 +42,10 @@ export default function Header() {
   }
 
   const joinHref = user ? "/profile" : "/login";
+  // Show a compact Sign In on mobile (the desktop Sign In link lives in
+  // .header-nav-center which is display:none < 768px). Hide while auth is
+  // resolving to avoid a flash, and hide when logged in.
+  const showMobileSignIn = !loading && !user;
 
   return (
     <>
@@ -158,6 +162,32 @@ export default function Header() {
             >
               Join the Club
             </Link>
+
+            {/* Mobile-only compact Sign In — mirrors the desktop "Sign In"
+                nav link, which is hidden below 768px. Link gets native
+                keyboard (Enter) activation for free. */}
+            {showMobileSignIn && (
+              <Link
+                href="/login"
+                className="header-signin-mobile"
+                aria-label="Sign in"
+                style={{
+                  color: IVORY,
+                  border: `1px solid ${GOLD}`,
+                  fontFamily: "var(--font-body)",
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  textDecoration: "none",
+                  padding: "7px 14px",
+                  borderRadius: "2px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Sign In
+              </Link>
+            )}
 
             {/* Hamburger / Drawer toggle */}
             <MobileNav />

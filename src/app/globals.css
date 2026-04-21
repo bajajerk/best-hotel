@@ -177,6 +177,17 @@ body {
   }
 }
 
+/* ── Mobile-only Sign In in header ── */
+.header-signin-mobile {
+  display: inline-flex;
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .header-signin-mobile {
+    display: none !important;
+  }
+}
+
 /* ── Mobile bottom tab bar — visible <640px ── */
 .mobile-tab-bar {
   display: none;
