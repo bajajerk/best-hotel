@@ -57,10 +57,28 @@ const WHATSAPP_URL =
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
   const drawerRef = useRef<HTMLDivElement>(null);
+  const touchStartXRef = useRef<number | null>(null);
+
+  /* Swipe-right-to-close handlers on the drawer itself.
+     Only tracks rightward motion so vertical scrolling and taps still work. */
+  function onTouchStart(e: React.TouchEvent) {
+    touchStartXRef.current = e.touches[0].clientX;
+  }
+  function onTouchMove(e: React.TouchEvent) {
+    if (touchStartXRef.current == null) return;
+    const delta = e.touches[0].clientX - touchStartXRef.current;
+    setDragOffset(delta > 0 ? delta : 0);
+  }
+  function onTouchEnd() {
+    if (dragOffset > 60) setOpen(false);
+    setDragOffset(0);
+    touchStartXRef.current = null;
+  }
 
   /* "See Member Rates →" CTA — auth-aware destination.
      Logged out + on homepage → smooth-scroll to the hero search bar (it's right there).
@@ -131,38 +149,60 @@ export default function MobileNav() {
   const overlay = mounted
     ? createPortal(
         <>
-          {/* ── Backdrop overlay (hidden — full-screen menu) ── */}
+          {/* ── Dark backdrop overlay — covers the area left of the drawer,
+                tapping it closes the drawer. Full-screen underneath so it
+                still covers the 25% gap regardless of drawer max-width cap. ── */}
           <div
             onClick={() => setOpen(false)}
             style={{
               position: "fixed",
               inset: 0,
               zIndex: 10000,
-              background: "transparent",
-              pointerEvents: "none",
+              background: "rgba(0,0,0,0.4)",
+              opacity: open ? 1 : 0,
+              pointerEvents: open ? "auto" : "none",
+              transition: open
+                ? "opacity 0.28s ease-out"
+                : "opacity 0.22s ease-in",
             }}
           />
 
-          {/* ── Full-screen overlay menu ── */}
+          {/* ── Right-side slide-in drawer ── */}
           <div
             ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-label="Navigation menu"
             tabIndex={-1}
+            className={`mobile-menu${open ? " open" : ""}`}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            onTouchCancel={onTouchEnd}
             style={{
               position: "fixed",
-              inset: 0,
+              top: 0,
+              right: 0,
+              width: "75%",
+              maxWidth: "300px",
+              height: "100vh",
               zIndex: 10001,
               background: "var(--white, #fdfaf5)",
-              opacity: open ? 1 : 0,
+              transform: open
+                ? `translateX(${dragOffset}px)`
+                : "translateX(100%)",
+              transition: dragOffset > 0
+                ? "none"
+                : open
+                ? "transform 0.28s ease-out"
+                : "transform 0.22s ease-in",
               pointerEvents: open ? "auto" : "none",
-              transition: "opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               display: "flex",
               flexDirection: "column",
               overflowY: "auto",
               WebkitOverflowScrolling: "touch",
               outline: "none",
+              boxShadow: open ? "-4px 0 24px rgba(0,0,0,0.15)" : "none",
             }}
           >
         {/* ═══════════════════════════════════════════
