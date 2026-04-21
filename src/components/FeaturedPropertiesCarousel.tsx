@@ -286,7 +286,7 @@ export default function FeaturedPropertiesCarousel({
                 )}
 
                 <Link
-                  href={`/city/${current.citySlug}`}
+                  href={`/hotel/${current.hotelId}`}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",

@@ -7,6 +7,7 @@ import Link from "next/link";
 // Types
 // ---------------------------------------------------------------------------
 export type HotelCardData = {
+  hotelId: number;
   name: string;
   city: string;
   citySlug: string;
@@ -21,6 +22,7 @@ export type HotelCardData = {
 
 /** Deal variant includes market-rate vs Voyagr-rate pricing */
 export type HotelDealData = {
+  hotelId: number;
   name: string;
   city: string;
   citySlug: string;
@@ -68,7 +70,7 @@ function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
   const perks = getPerksForHotel(hotel.tags);
 
   return (
-    <Link href={`/city/${hotel.citySlug}`} style={{ textDecoration: "none", display: "block" }}>
+    <Link href={`/hotel/${hotel.hotelId}`} style={{ textDecoration: "none", display: "block" }}>
       <div
         className="card-hover"
         style={{
@@ -280,7 +282,7 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
   const perks = getPerksForHotel(deal.tags);
 
   return (
-    <Link href={`/city/${deal.citySlug}`} style={{ textDecoration: "none", display: "block" }}>
+    <Link href={`/hotel/${deal.hotelId}`} style={{ textDecoration: "none", display: "block" }}>
       <div
         className="card-hover"
         style={{

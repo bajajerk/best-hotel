@@ -10,6 +10,7 @@ import Carousel from "./Carousel";
 // Types
 // ---------------------------------------------------------------------------
 export interface TopSellerHotel {
+  hotelId: number;
   name: string;
   city: string;
   citySlug: string;
@@ -31,6 +32,7 @@ export function computeTopSellers(hotels: CuratedHotel[], limit = 8): TopSellerH
   const scored = computeTopSellerScores(hotels, limit);
 
   return scored.map((item, idx) => ({
+    hotelId: item.hotel.hotel_id,
     name: item.hotel.hotel_name,
     city: `${item.hotel.city_name}, ${item.hotel.country}`,
     citySlug: item.hotel.city_slug,
@@ -101,7 +103,7 @@ function TopSellerCard({ hotel }: { hotel: TopSellerHotel }) {
   const medal = MEDAL_COLORS[hotel.rank];
 
   return (
-    <Link href={`/city/${hotel.citySlug}`} style={{ textDecoration: "none", display: "block" }}>
+    <Link href={`/hotel/${hotel.hotelId}`} style={{ textDecoration: "none", display: "block" }}>
       <div
         className="card-hover"
         style={{
