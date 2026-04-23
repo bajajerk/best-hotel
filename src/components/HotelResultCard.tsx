@@ -61,14 +61,27 @@ function StarRating({ count }: { count: number }) {
 export default function HotelResultCard({
   hotel,
   index,
+  liveMrp,
+  liveSavingsPct,
 }: {
   hotel: CuratedHotel;
   index: number;
+  /** Real Agoda MRP from batch rates. Overrides the fake ×1.25 market rate. */
+  liveMrp?: { agoda_rate: number; currency: string } | null;
+  /** Real savings percent from the backend (integer). */
+  liveSavingsPct?: number | null;
 }) {
   const photo = sanitizePhoto(hotel.photo1);
-  const marketRate = hotel.rates_from ? Math.round(hotel.rates_from * 1.25) : null;
+  // Prefer real MRP from the batch endpoint; fall back to the legacy ×1.25 heuristic.
+  const marketRate = liveMrp?.agoda_rate
+    ? Math.round(liveMrp.agoda_rate)
+    : hotel.rates_from
+    ? Math.round(hotel.rates_from * 1.25)
+    : null;
   const savePercent =
-    hotel.rates_from && marketRate
+    liveSavingsPct != null
+      ? liveSavingsPct
+      : hotel.rates_from && marketRate
       ? Math.round(((marketRate - hotel.rates_from) / marketRate) * 100)
       : null;
   const saveAmount =

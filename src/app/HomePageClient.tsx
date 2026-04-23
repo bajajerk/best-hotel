@@ -5,8 +5,15 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CATEGORIES, SAMPLE_CITIES, CITY_IMAGES, FALLBACK_CITY_IMAGE, getCityImage } from "@/lib/constants";
-import { fetchCuratedCities, fetchFeaturedAll, CuratedCity } from "@/lib/api";
-import type { FeaturedResponse } from "@/lib/api";
+import {
+  fetchCuratedCities,
+  fetchFeaturedAll,
+  fetchBatchRates,
+  defaultBookingDates,
+  CuratedCity,
+  CuratedHotel,
+} from "@/lib/api";
+import type { FeaturedResponse, BatchRatesResponse } from "@/lib/api";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DestinationSearch from "@/components/DestinationSearch";
@@ -348,7 +355,15 @@ function SeasonalCarousel({ trips }: { trips: SeasonalTrip[] }) {
 // Main Page
 // ============================================================================
 export default function Home({ initialCities, initialFeatured }: HomePageClientProps) {
-  const { checkIn, checkOut, setCheckIn, setCheckOut, formatDate } = useBooking();
+  const {
+    checkIn,
+    checkOut,
+    setCheckIn,
+    setCheckOut,
+    formatDate,
+    totalAdults,
+    totalChildren,
+  } = useBooking();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -378,9 +393,9 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
   const [cities, setCities] = useState<CuratedCity[]>(initialCities);
   const [loading, setLoading] = useState(initialCities.length === 0);
   const [heroIdx, setHeroIdx] = useState(0);
-  const [topSellers, setTopSellers] = useState<TopSellerHotel[]>(
-    initialFeatured ? computeTopSellers(initialFeatured.topRated, 8) : []
-  );
+  const [featured, setFeatured] = useState<FeaturedResponse | null>(initialFeatured);
+  const [batchRates, setBatchRates] = useState<BatchRatesResponse | null>(null);
+  const [batchLoading, setBatchLoading] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -414,13 +429,89 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
     async function loadFeaturedHotels() {
       try {
         const data: FeaturedResponse = await fetchFeaturedAll();
-        setTopSellers(computeTopSellers(data.topRated, 8));
+        setFeatured(data);
       } catch (err) {
         console.error("[Voyagr] Failed to load featured hotels:", err);
       }
     }
     loadFeaturedHotels();
   }, [initialFeatured]);
+
+  // Batch-fetch live rates for all featured hotel IDs. Merge into card data
+  // and filter out unmatched hotels (those with no TripJack availability).
+  useEffect(() => {
+    if (!featured) return;
+    const allHotels: CuratedHotel[] = [
+      ...(featured.topRated ?? []),
+      ...(featured.bestValue ?? []),
+      ...(featured.soloTravel ?? []),
+      ...(featured.familyFriendly ?? []),
+    ];
+    const ids = Array.from(new Set(allHotels.map((h) => h.hotel_id))).filter(Boolean);
+    if (ids.length === 0) return;
+
+    const { checkin: defIn, checkout: defOut } = defaultBookingDates();
+    const checkin = checkIn || defIn;
+    const checkout = checkOut || defOut;
+    const adults = totalAdults > 0 ? totalAdults : 2;
+    const children = totalChildren;
+
+    let cancelled = false;
+    setBatchLoading(true);
+    fetchBatchRates(ids, checkin, checkout, adults, children)
+      .then((data) => {
+        if (!cancelled) setBatchRates(data);
+      })
+      .catch((err) => {
+        console.error("[Voyagr] Batch rates failed:", err);
+      })
+      .finally(() => {
+        if (!cancelled) setBatchLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [featured, checkIn, checkOut, totalAdults, totalChildren]);
+
+  /**
+   * Derive the `topSellers` list for the carousel.
+   * - While batch rates are loading: render with the stale `rates_from` so the UI
+   *   is never empty (the spec calls this the "skeleton with static data first" UX).
+   * - Once rates arrive: hide hotels in `unmatched_ids`, override `rates_from` with
+   *   the live `from_price`, and let `computeTopSellers` pick up real `savePercent`
+   *   from the MRP (via the ranking scorer; we also expose `batchRates` to cards).
+   */
+  const topSellers: TopSellerHotel[] = (() => {
+    if (!featured) return [];
+    const source = featured.topRated ?? [];
+    if (!batchRates) {
+      return computeTopSellers(source, 8);
+    }
+    const unmatched = new Set(batchRates.unmatched_ids);
+    const merged = source
+      .filter((h) => !unmatched.has(h.hotel_id))
+      .map((h): CuratedHotel => {
+        const rate = batchRates.results[String(h.hotel_id)];
+        if (!rate) return h;
+        return {
+          ...h,
+          rates_from: rate.from_price,
+          rates_currency: rate.mrp?.currency || h.rates_currency || "INR",
+        };
+      })
+      // Defensive: drop any hotel that has no live price
+      .filter((h) => batchRates.results[String(h.hotel_id)]);
+
+    const sellers = computeTopSellers(merged, 8);
+    // Override savePercent with the server-computed value when present
+    return sellers.map((s) => {
+      const rate = batchRates.results[String(s.hotelId)];
+      if (rate?.savings_pct != null) {
+        return { ...s, savePercent: rate.savings_pct };
+      }
+      return s;
+    });
+  })();
 
   // Rotate hero background
   useEffect(() => {
@@ -430,7 +521,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
     return () => clearInterval(timer);
   }, []);
 
-  const featured = cities.slice(0, 6);
+  const featuredCities = cities.slice(0, 6);
 
 
   return (

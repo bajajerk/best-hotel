@@ -4,7 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { fetchCityCurations, CuratedHotel } from "@/lib/api";
+import {
+  fetchCityCurations,
+  fetchBatchRates,
+  defaultBookingDates,
+  CuratedHotel,
+} from "@/lib/api";
+import type { BatchRatesResponse } from "@/lib/api";
 import { rankHotels, sortRankedHotels, type SortStrategy } from "@/lib/ranking";
 import { useBooking } from "@/context/BookingContext";
 import Header from "@/components/Header";
@@ -501,6 +507,7 @@ export default function CityPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
+  const { checkIn, checkOut, totalAdults, totalChildren } = useBooking();
   const [curations, setCurations] = useState<Record<Category, CuratedHotel[]>>({
     singles: [],
     couples: [],
@@ -511,6 +518,7 @@ export default function CityPage() {
   const [tagline, setTagline] = useState("");
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
+  const [batchRates, setBatchRates] = useState<BatchRatesResponse | null>(null);
   const [priceMin, setPriceMin] = useState(0);
   const [priceMax, setPriceMax] = useState(0);
   const [filterMin, setFilterMin] = useState(0);
@@ -554,6 +562,36 @@ export default function CityPage() {
       .finally(() => setLoading(false));
   }, [slug]);
 
+  // Batch-fetch live rates for all hotels on this city page. Unmatched IDs are
+  // hidden from the list; matched IDs get their `rates_from` overridden.
+  useEffect(() => {
+    const all = [
+      ...(curations.couples ?? []),
+      ...(curations.singles ?? []),
+      ...(curations.families ?? []),
+    ];
+    const ids = Array.from(new Set(all.map((h) => h.hotel_id))).filter(Boolean);
+    if (ids.length === 0) return;
+
+    const { checkin: defIn, checkout: defOut } = defaultBookingDates();
+    const ci = checkIn || defIn;
+    const co = checkOut || defOut;
+    const adults = totalAdults > 0 ? totalAdults : 2;
+    const children = totalChildren;
+
+    let cancelled = false;
+    fetchBatchRates(ids, ci, co, adults, children)
+      .then((data) => {
+        if (!cancelled) setBatchRates(data);
+      })
+      .catch((err) => {
+        console.error("[Voyagr] Batch rates failed:", err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [curations, checkIn, checkOut, totalAdults, totalChildren]);
+
   useEffect(() => {
     const allHotels = [
       ...curations.couples,
@@ -592,13 +630,30 @@ export default function CityPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [sortOpen, priceOpen]);
 
-  const allHotels = Array.from(
+  const rawAllHotels = Array.from(
     new Map(
       [...curations.couples, ...curations.singles, ...curations.families].map(
         (h) => [h.hotel_id, h]
       )
     ).values()
   );
+
+  // When live batch rates are available, hide unmatched hotels and override the
+  // stale curated `rates_from`/currency with live `from_price` / mrp currency.
+  const allHotels: CuratedHotel[] = batchRates
+    ? rawAllHotels
+        .filter((h) => !batchRates.unmatched_ids.includes(h.hotel_id))
+        .map((h) => {
+          const rate = batchRates.results[String(h.hotel_id)];
+          if (!rate) return h;
+          return {
+            ...h,
+            rates_from: rate.from_price,
+            rates_currency: rate.mrp?.currency || h.rates_currency || "INR",
+          };
+        })
+        .filter((h) => batchRates.results[String(h.hotel_id)])
+    : rawAllHotels;
 
   const rankedAll = rankHotels(allHotels);
   const rankedFiltered = rankedAll.filter((r) => {
@@ -1018,9 +1073,18 @@ export default function CityPage() {
               >
                 {hotels.length > 0 ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    {hotels.map((hotel, i) => (
-                      <HotelResultCard key={hotel.hotel_id} hotel={hotel} index={i} />
-                    ))}
+                    {hotels.map((hotel, i) => {
+                      const rate = batchRates?.results[String(hotel.hotel_id)];
+                      return (
+                        <HotelResultCard
+                          key={hotel.hotel_id}
+                          hotel={hotel}
+                          index={i}
+                          liveMrp={rate?.mrp ?? null}
+                          liveSavingsPct={rate?.savings_pct ?? null}
+                        />
+                      );
+                    })}
                   </div>
                 ) : (
                   <motion.div

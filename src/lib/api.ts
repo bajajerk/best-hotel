@@ -322,3 +322,97 @@ export async function searchFlights(params: {
 
   return parseTripJackFlights(data);
 }
+
+// ── Live hotel rates ──────────────────────────────────────────────────────
+
+export type RatePlan = {
+  option_id: string;
+  room_name: string;
+  room_id?: string;
+  meal_basis: string;
+  refundable: boolean;
+  free_cancel_until?: string;
+  base_price: number;
+  total_price: number;
+  taxes?: number;
+  commission?: number;
+  currency: string;
+};
+
+export type RatesResponse = {
+  hotel: { hotel_id: number; hotel_name: string; city: string; country: string; star_rating: number; photo1?: string; photo2?: string; photo3?: string; photo4?: string; photo5?: string; overview?: string; latitude?: number; longitude?: number; addressline1?: string };
+  mrp: { agoda_rate: number; currency: string } | null;
+  rates: RatePlan[];
+  savings_pct: number | null;
+  tripjack_hotel_id: string;
+  checkin: string;
+  checkout: string;
+  nights: number;
+  warning?: string;
+};
+
+export type NoMatchError = { error: "no_tripjack_match"; hotel_id: number };
+
+export async function fetchHotelRates(
+  hotelId: number | string,
+  checkin: string,
+  checkout: string,
+  adults: number = 2,
+  children: number = 0,
+  currency: string = "INR"
+): Promise<RatesResponse | NoMatchError> {
+  const params = new URLSearchParams({ checkin, checkout, adults: String(adults), children: String(children), currency });
+  const res = await fetch(`${API_BASE}/api/hotels/${hotelId}/rates?${params}`, { cache: "no-store" });
+  if (res.status === 404) {
+    const body = await res.json().catch(() => ({}));
+    return { error: "no_tripjack_match", hotel_id: Number(hotelId), ...body };
+  }
+  if (!res.ok) throw new Error(`Failed to load rates: ${res.status}`);
+  return res.json();
+}
+
+// ── Batch live rates ──────────────────────────────────────────────────────
+// Calls POST /api/hotels/rates/batch to resolve live TripJack rates + MRP +
+// savings for a set of hotels. Hotels without a TripJack match are returned
+// in `unmatched_ids` so the UI can filter them out.
+
+export type BatchRate = {
+  from_price: number;
+  mrp: { agoda_rate: number; currency: string } | null;
+  savings_pct: number | null;
+  tripjack_hotel_id: string;
+};
+
+export type BatchRatesResponse = {
+  checkin: string;
+  checkout: string;
+  results: Record<string, BatchRate>;
+  unmatched_ids: number[];
+};
+
+export async function fetchBatchRates(
+  hotelIds: number[],
+  checkin: string,
+  checkout: string,
+  adults: number = 2,
+  children: number = 0
+): Promise<BatchRatesResponse> {
+  const res = await fetch(`${API_BASE}/api/hotels/rates/batch`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ hotel_ids: hotelIds, checkin, checkout, adults, children }),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Batch rates failed: ${res.status}`);
+  return res.json();
+}
+
+/** Convenience: default dates = tonight + 1 night. Used when user hasn't chosen. */
+export function defaultBookingDates(): { checkin: string; checkout: string } {
+  const d = new Date();
+  const day = 24 * 60 * 60 * 1000;
+  const tonight = new Date(d.getTime() + day);
+  const tomorrow = new Date(d.getTime() + 2 * day);
+  const iso = (x: Date) => x.toISOString().slice(0, 10);
+  return { checkin: iso(tonight), checkout: iso(tomorrow) };
+}
