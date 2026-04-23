@@ -11,6 +11,7 @@ import HotelPageWhatsAppTrigger from "@/components/HotelPageWhatsAppTrigger";
 import { trackHotelViewed, trackHotelGalleryOpened, trackHotelTabClicked } from "@/lib/analytics";
 import { useBooking } from "@/context/BookingContext";
 import { useAuth } from "@/context/AuthContext";
+import { fetchHotelRates, type RatePlan, type RatesResponse } from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -64,28 +65,6 @@ interface HotelDetail {
   nearby?: NearbyLandmark[] | null;
 }
 
-interface RoomDef {
-  id: string;
-  name: string;
-  beds: string;
-  guests: number;
-  size: string;
-  priceMult: number;
-  inclusions: string[];
-  tier: "preferred" | "standard";
-  photos?: string[];
-}
-
-type PackageKey = "room-only" | "breakfast";
-
-interface RoomPackage {
-  key: PackageKey;
-  name: "Room Only" | "Stay + Breakfast";
-  inclusions: string[];
-  rateMult: number;
-  refundable: boolean;
-}
-
 /* ────────────────────────── Helpers ────────────────────────── */
 
 const FALLBACK_IMG =
@@ -97,138 +76,41 @@ function safePhotoUrl(raw: string): string {
   return `https://photos.hotelbeds.com/giata/${raw}`;
 }
 
-/** Approximate FX rates to INR. Used so every price on the hotel page
- *  renders in ₹ regardless of what currency the backend returns. */
-const INR_PER: Record<string, number> = {
-  INR: 1, USD: 83, EUR: 90, GBP: 105, AUD: 55, SGD: 62,
-  AED: 23, THB: 2.4, JPY: 0.56, MYR: 19, IDR: 0.0053, KRW: 0.063,
-};
-
-function toInr(amount: number, currency?: string): number {
-  const code = (currency || "USD").toUpperCase();
-  const rate = INR_PER[code] ?? 83;
-  return amount * rate;
+function formatInr(amount: number): string {
+  return `₹${Math.round(amount).toLocaleString("en-IN")}`;
 }
 
-function formatInr(amount: number): string {
-  return `\u20B9${Math.round(amount).toLocaleString("en-IN")}`;
+function formatPrice(amount: number, currency: string): string {
+  const code = (currency || "INR").toUpperCase();
+  if (code === "INR") return formatInr(amount);
+  const rounded = Math.round(amount);
+  return `${code} ${rounded.toLocaleString("en-IN")}`;
+}
+
+function formatFreeCancelDate(raw?: string): string {
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
 /* ── Urgency / Social Proof generators (deterministic per hotel_id) ── */
-
-function getUrgencyData(hotelId: number) {
-  const seed = hotelId % 100;
-  const roomsLeft = (seed % 4) + 2; // 2–5
-  return { roomsLeft };
-}
 
 function getMemberCount(hotelId: number) {
   return 12400 + (hotelId % 3000);
 }
 
-/* ────────────────────────── Room Generation ────────────────────────── */
-
-function generateRooms(hotel: HotelDetail): RoomDef[] {
-  const stars = hotel.star_rating || 3;
-
-  if (stars >= 5) return [
-    { id: "r1", name: "Deluxe Room", beds: "1 King Bed", guests: 2, size: "35 m\u00B2", priceMult: 1.0, inclusions: ["Free breakfast", "Free Wi-Fi", "Late checkout", "Club lounge access"], tier: "preferred" },
-    { id: "r2", name: "Deluxe Twin", beds: "2 Single Beds", guests: 2, size: "35 m\u00B2", priceMult: 1.0, inclusions: ["Free breakfast", "Free Wi-Fi", "Late checkout"], tier: "preferred" },
-    { id: "r3", name: "Premier Suite", beds: "1 King Bed + Living Area", guests: 3, size: "55 m\u00B2", priceMult: 1.65, inclusions: ["Free breakfast", "Free Wi-Fi", "Butler service", "Club lounge access", "Airport transfer"], tier: "preferred" },
-    { id: "r4", name: "Family Room", beds: "1 King + 2 Single Beds", guests: 4, size: "50 m\u00B2", priceMult: 1.45, inclusions: ["Free breakfast", "Free Wi-Fi", "Kids amenities"], tier: "preferred" },
-    { id: "r5", name: "Standard Room", beds: "1 Queen Bed", guests: 2, size: "28 m\u00B2", priceMult: 0.85, inclusions: ["Free Wi-Fi"], tier: "standard" },
-    { id: "r6", name: "Standard Twin", beds: "2 Single Beds", guests: 2, size: "28 m\u00B2", priceMult: 0.85, inclusions: ["Free Wi-Fi"], tier: "standard" },
-    { id: "r7", name: "Presidential Suite", beds: "1 King Bed + Lounge", guests: 2, size: "80 m\u00B2", priceMult: 2.8, inclusions: ["Free breakfast", "Free Wi-Fi", "Butler service", "Club lounge access", "Airport transfer", "Spa credit"], tier: "preferred" },
-  ];
-
-  if (stars >= 4) return [
-    { id: "r1", name: "Superior Room", beds: "1 King Bed", guests: 2, size: "30 m\u00B2", priceMult: 1.0, inclusions: ["Free breakfast", "Free Wi-Fi", "Late checkout"], tier: "preferred" },
-    { id: "r2", name: "Superior Twin", beds: "2 Single Beds", guests: 2, size: "30 m\u00B2", priceMult: 1.0, inclusions: ["Free breakfast", "Free Wi-Fi"], tier: "preferred" },
-    { id: "r3", name: "Deluxe Room", beds: "1 King Bed", guests: 2, size: "38 m\u00B2", priceMult: 1.35, inclusions: ["Free breakfast", "Free Wi-Fi", "Late checkout", "Minibar"], tier: "preferred" },
-    { id: "r4", name: "Standard Room", beds: "1 Queen Bed", guests: 2, size: "24 m\u00B2", priceMult: 0.8, inclusions: ["Free Wi-Fi"], tier: "standard" },
-    { id: "r5", name: "Standard Twin", beds: "2 Single Beds", guests: 2, size: "24 m\u00B2", priceMult: 0.8, inclusions: ["Free Wi-Fi"], tier: "standard" },
-    { id: "r6", name: "Family Suite", beds: "1 King + 2 Single Beds", guests: 4, size: "45 m\u00B2", priceMult: 1.55, inclusions: ["Free breakfast", "Free Wi-Fi", "Kids amenities"], tier: "preferred" },
-  ];
-
-  return [
-    { id: "r1", name: "Standard Room", beds: "1 Queen Bed", guests: 2, size: "22 m\u00B2", priceMult: 1.0, inclusions: ["Free Wi-Fi"], tier: "standard" },
-    { id: "r2", name: "Standard Twin", beds: "2 Single Beds", guests: 2, size: "22 m\u00B2", priceMult: 1.0, inclusions: ["Free Wi-Fi"], tier: "standard" },
-    { id: "r3", name: "Superior Room", beds: "1 Queen Bed", guests: 2, size: "26 m\u00B2", priceMult: 1.2, inclusions: ["Free breakfast", "Free Wi-Fi"], tier: "preferred" },
-    { id: "r4", name: "Triple Room", beds: "1 Queen + 1 Single Bed", guests: 3, size: "28 m\u00B2", priceMult: 1.25, inclusions: ["Free Wi-Fi"], tier: "standard" },
-  ];
-}
-
-/* ────────────────────────── Package Generation ────────────────────────── */
-
-function isBreakfastInclusion(s: string): boolean {
-  return s.toLowerCase().includes("breakfast");
-}
-
-function generatePackages(room: RoomDef): RoomPackage[] {
-  const hasBreakfast = room.inclusions.some(isBreakfastInclusion);
-  const nonMealInclusions = room.inclusions.filter((i) => !isBreakfastInclusion(i));
-
-  const roomOnly: RoomPackage = {
-    key: "room-only",
-    name: "Room Only",
-    inclusions: nonMealInclusions,
-    rateMult: 1.0,
-    refundable: room.tier === "preferred",
-  };
-
-  if (!hasBreakfast) return [roomOnly];
-
-  const breakfast: RoomPackage = {
-    key: "breakfast",
-    name: "Stay + Breakfast",
-    inclusions: ["Free breakfast daily", ...nonMealInclusions],
-    rateMult: 1.08,
-    refundable: true,
-  };
-
-  return [roomOnly, breakfast];
-}
-
-function packageId(roomId: string, key: PackageKey): string {
-  return `${roomId}:${key}`;
-}
-
-function parsePackageId(id: string): { roomId: string; key: PackageKey } {
-  const [roomId, key] = id.split(":");
-  return { roomId, key: key as PackageKey };
-}
-
 /* ────────────────────────── Filters ────────────────────────── */
 
-type BedTypeFilter = "all" | "king" | "twin" | "double" | "single";
 type MealPlanFilter = "all" | "room-only" | "breakfast" | "half-board" | "full-board";
 
-function roomMatchesBedType(room: RoomDef, filter: BedTypeFilter): boolean {
+function mealBasisMatchesFilter(mealBasis: string, filter: MealPlanFilter): boolean {
   if (filter === "all") return true;
-  const b = room.beds.toLowerCase();
-  if (filter === "king") return b.includes("king");
-  if (filter === "twin") return b.includes("twin") || b.includes("2 single");
-  if (filter === "double") return b.includes("double");
-  if (filter === "single") return b.includes("single") && !b.includes("2 single");
-  return true;
-}
-
-function roomMatchesMealPlan(room: RoomDef, filter: MealPlanFilter): boolean {
-  if (filter === "all") return true;
-  const hasBreakfast = room.inclusions.some(isBreakfastInclusion);
-  if (filter === "room-only") return true;
-  if (filter === "breakfast") return hasBreakfast;
-  return false;
-}
-
-function packageMatchesFilters(
-  pkg: RoomPackage,
-  filters: { freeCancellation: boolean; mealPlan: MealPlanFilter }
-): boolean {
-  if (filters.freeCancellation && !pkg.refundable) return false;
-  if (filters.mealPlan === "room-only" && pkg.key !== "room-only") return false;
-  if (filters.mealPlan === "breakfast" && pkg.key !== "breakfast") return false;
-  if (filters.mealPlan === "half-board" || filters.mealPlan === "full-board") return false;
+  const mb = (mealBasis || "").toLowerCase();
+  if (filter === "room-only") return mb.includes("room only") || mb.includes("room-only") || mb === "" || mb.includes("no meal");
+  if (filter === "breakfast") return mb.includes("breakfast");
+  if (filter === "half-board") return mb.includes("half");
+  if (filter === "full-board") return mb.includes("full");
   return true;
 }
 
@@ -364,28 +246,17 @@ function FilterPillShell({
   );
 }
 
-function RoomFilterBar({
+function RateFilterBar({
   freeCancellation,
   onToggleFreeCancellation,
-  bedType,
-  onChangeBedType,
   mealPlan,
   onChangeMealPlan,
 }: {
   freeCancellation: boolean;
   onToggleFreeCancellation: () => void;
-  bedType: BedTypeFilter;
-  onChangeBedType: (v: BedTypeFilter) => void;
   mealPlan: MealPlanFilter;
   onChangeMealPlan: (v: MealPlanFilter) => void;
 }) {
-  const bedLabel: Record<BedTypeFilter, string> = {
-    all: "Bed Type",
-    king: "King Bed",
-    twin: "Twin Beds",
-    double: "Double Bed",
-    single: "Single Bed",
-  };
   const mealLabel: Record<MealPlanFilter, string> = {
     all: "Meal Plan",
     "room-only": "Room Only",
@@ -422,36 +293,6 @@ function RoomFilterBar({
         Free Cancellation
       </FilterPillShell>
 
-      {/* Bed Type dropdown */}
-      <div style={{ position: "relative" }}>
-        <FilterPillShell active={bedType !== "all"} as="label">
-          <span style={{ pointerEvents: "none" }}>{bedLabel[bedType]}</span>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: "none" }}>
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-          <select
-            value={bedType}
-            onChange={(e) => onChangeBedType(e.target.value as BedTypeFilter)}
-            style={{
-              position: "absolute",
-              inset: 0,
-              opacity: 0,
-              cursor: "pointer",
-              fontSize: "12px",
-              width: "100%",
-              height: "100%",
-            }}
-            aria-label="Bed type filter"
-          >
-            <option value="all">All Bed Types</option>
-            <option value="king">King Bed</option>
-            <option value="twin">Twin Beds</option>
-            <option value="double">Double Bed</option>
-            <option value="single">Single Bed</option>
-          </select>
-        </FilterPillShell>
-      </div>
-
       {/* Meal Plan dropdown */}
       <div style={{ position: "relative" }}>
         <FilterPillShell active={mealPlan !== "all"} as="label">
@@ -485,62 +326,81 @@ function RoomFilterBar({
   );
 }
 
-/* ────────────────────────── Package Card ────────────────────────── */
+/* ────────────────────────── Rate Card ────────────────────────── */
 
-function PackageCard({
-  pkg,
-  voyagrRate,
-  marketRate,
+function RateCard({
+  plan,
+  nights,
+  mrpRate,
+  mrpCurrency,
+  savingsPct,
   isSelected,
-  cancellation,
+  isHighlighted,
+  cardRef,
   onSelect,
   onProceed,
 }: {
-  pkg: RoomPackage;
-  voyagrRate: number;
-  marketRate: number;
+  plan: RatePlan;
+  nights: number;
+  mrpRate: number | null;
+  mrpCurrency: string | null;
+  savingsPct: number | null;
   isSelected: boolean;
-  cancellation: { refundable: boolean; freeUntil?: string };
+  isHighlighted: boolean;
+  cardRef: (el: HTMLDivElement | null) => void;
   onSelect: () => void;
   onProceed: () => void;
 }) {
-  const saving = marketRate - voyagrRate;
-  const [expanded, setExpanded] = useState(false);
-  const MAX_INCLUSIONS = 3;
-  const hasMore = pkg.inclusions.length > MAX_INCLUSIONS;
-  const hiddenCount = pkg.inclusions.length - MAX_INCLUSIONS;
-  const shown = expanded || !hasMore ? pkg.inclusions : pkg.inclusions.slice(0, MAX_INCLUSIONS);
+  const nightsSafe = Math.max(nights, 1);
+  const perNight = plan.total_price / nightsSafe;
+  const cancelDate = formatFreeCancelDate(plan.free_cancel_until);
 
   return (
-    <div
+    <motion.div
+      layout
+      ref={cardRef}
       onClick={onSelect}
+      className={isHighlighted ? "room-card-highlight-pulse" : undefined}
       style={{
         background: "var(--white)",
         border: isSelected ? "2px solid #d4a24c" : "1px solid var(--cream-border)",
-        padding: isSelected ? "15px" : "16px",
+        padding: isSelected ? "19px" : "20px",
         cursor: "pointer",
         transition: "border-color 0.25s, box-shadow 0.25s",
         boxShadow: isSelected ? "0 0 0 3px rgba(212,162,76,0.15)" : "none",
       }}
+      transition={{ duration: 0.2 }}
     >
-      {/* Package name */}
-      <div className="flex items-center justify-between gap-3 mb-2">
-        <h5
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "14px",
-            fontWeight: 700,
-            color: "var(--ink)",
-            letterSpacing: "0.01em",
-          }}
-        >
-          {pkg.name}
-        </h5>
+      {/* Header: room name + selected check */}
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h4
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "18px",
+              fontWeight: 500,
+              color: "var(--ink)",
+              lineHeight: 1.25,
+            }}
+          >
+            {plan.room_name}
+          </h4>
+          <p
+            style={{
+              fontSize: "12px",
+              color: "var(--ink-light)",
+              marginTop: 4,
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            {plan.meal_basis || "Room Only"}
+          </p>
+        </div>
         {isSelected && (
           <span
             style={{
-              width: 20,
-              height: 20,
+              width: 22,
+              height: 22,
               borderRadius: "50%",
               background: "var(--gold)",
               display: "flex",
@@ -559,77 +419,39 @@ function PackageCard({
       {/* Cancellation line */}
       <div
         style={{
-          fontSize: "11px",
+          fontSize: "12px",
           fontFamily: "var(--font-body)",
-          marginBottom: 10,
-          color: cancellation.refundable ? "var(--success)" : "var(--ink-light)",
-          fontWeight: cancellation.refundable ? 500 : 400,
+          marginTop: 8,
+          marginBottom: 14,
+          color: plan.refundable ? "var(--success)" : "var(--ink-light)",
+          fontWeight: plan.refundable ? 500 : 400,
         }}
       >
-        {cancellation.refundable
-          ? `\u2713 Free cancellation until ${cancellation.freeUntil}`
+        {plan.refundable
+          ? cancelDate
+            ? `✓ Free cancellation until ${cancelDate}`
+            : "✓ Free cancellation"
           : "Non-refundable"}
       </div>
-
-      {/* Inclusions list (clean list with checkmarks) */}
-      {shown.length > 0 && (
-        <div className="flex flex-col gap-1" style={{ marginBottom: 12 }}>
-          {shown.map((inc) => (
-            <div key={inc} className="flex items-center gap-2">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              <span
-                style={{
-                  fontSize: "12px",
-                  color: "var(--ink-mid)",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                {inc}
-              </span>
-            </div>
-          ))}
-          {hasMore && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpanded((v) => !v);
-              }}
-              style={{
-                alignSelf: "flex-start",
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "var(--gold)",
-                background: "none",
-                border: "none",
-                padding: "2px 0",
-                cursor: "pointer",
-                fontFamily: "var(--font-body)",
-              }}
-            >
-              {expanded ? "Show less" : `+ ${hiddenCount} more`}
-            </button>
-          )}
-        </div>
-      )}
 
       {/* Rate block + CTA */}
       <div className="flex items-end justify-between">
         <div>
+          {mrpRate && mrpRate > plan.total_price && (
+            <div
+              style={{
+                fontSize: "11px",
+                color: "var(--ink-light)",
+                textDecoration: "line-through",
+                fontFamily: "var(--font-mono)",
+              }}
+            >
+              {formatPrice(mrpRate, mrpCurrency || plan.currency)}
+            </div>
+          )}
           <div
             style={{
-              fontSize: "11px",
-              color: "var(--ink-light)",
-              textDecoration: "line-through",
-              fontFamily: "var(--font-mono)",
-            }}
-          >
-            {formatInr(marketRate)}
-          </div>
-          <div
-            style={{
-              fontSize: "20px",
+              fontSize: "22px",
               fontWeight: 500,
               color: "var(--gold)",
               fontFamily: "var(--font-display)",
@@ -637,19 +459,37 @@ function PackageCard({
               marginTop: 1,
             }}
           >
-            {formatInr(voyagrRate)}
-            <span style={{ fontSize: "12px", fontWeight: 400, color: "var(--ink-light)", marginLeft: 4 }}>/night</span>
+            {formatPrice(plan.total_price, plan.currency)}
+            {nightsSafe > 1 && (
+              <span style={{ fontSize: "12px", fontWeight: 400, color: "var(--ink-light)", marginLeft: 6 }}>
+                total
+              </span>
+            )}
           </div>
-          {saving > 0 && (
+          <div
+            style={{
+              fontSize: "12px",
+              color: "var(--ink-light)",
+              marginTop: 2,
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            {formatPrice(perNight, plan.currency)}/night
+            {nightsSafe > 1 && <> &middot; {nightsSafe} nights</>}
+          </div>
+          {savingsPct && savingsPct > 0 && mrpRate && mrpRate > plan.total_price && (
             <div
               style={{
+                display: "inline-block",
+                marginTop: 6,
                 fontSize: "11px",
                 color: "var(--success)",
                 fontWeight: 600,
-                marginTop: 2,
+                padding: "2px 6px",
+                background: "rgba(34,139,34,0.08)",
               }}
             >
-              Save {formatInr(saving)}/night
+              -{savingsPct}% vs. public rates
             </div>
           )}
         </div>
@@ -657,7 +497,7 @@ function PackageCard({
         <button
           onClick={(e) => { e.stopPropagation(); onProceed(); }}
           style={{
-            padding: "8px 20px",
+            padding: "10px 22px",
             fontSize: "12px",
             fontWeight: 600,
             letterSpacing: "0.08em",
@@ -673,159 +513,32 @@ function PackageCard({
           Select
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
-/* ────────────────────────── Room Card ────────────────────────── */
+/* ────────────────────────── Skeleton Rate Card ────────────────────────── */
 
-function RoomCard({
-  room,
-  baseRateInr,
-  selectedPackageId,
-  isHighlighted,
-  cancellation,
-  mealPlanFilter,
-  freeCancellationFilter,
-  cardRef,
-  onSelectPackage,
-  onProceedPackage,
-  onOpenRoomGallery,
-}: {
-  room: RoomDef;
-  baseRateInr: number;
-  selectedPackageId: string | null;
-  isHighlighted: boolean;
-  cancellation: { refundable: boolean; freeUntil?: string };
-  mealPlanFilter: MealPlanFilter;
-  freeCancellationFilter: boolean;
-  cardRef: (el: HTMLDivElement | null) => void;
-  onSelectPackage: (pid: string) => void;
-  onProceedPackage: (room: RoomDef, pkg: RoomPackage) => void;
-  onOpenRoomGallery: (photos: string[], startIdx: number) => void;
-}) {
-  const allPackages = generatePackages(room);
-  const visiblePackages = allPackages.filter((p) =>
-    packageMatchesFilters(p, { freeCancellation: freeCancellationFilter, mealPlan: mealPlanFilter })
-  );
-
-  if (visiblePackages.length === 0) return null;
-
-  const hasImages = !!(room.photos && room.photos.length > 0);
-
-  const packageCancellation = (pkg: RoomPackage) => ({
-    refundable: pkg.refundable && cancellation.refundable,
-    freeUntil: cancellation.freeUntil,
-  });
-
-  const basePrice = baseRateInr * room.priceMult;
-  const voyagrRate = (pkg: RoomPackage) => Math.round(basePrice * pkg.rateMult);
-  const marketRate = (pkg: RoomPackage) => Math.round(basePrice * pkg.rateMult * 1.3);
-
+function RateCardSkeleton() {
   return (
-    <motion.div
-      layout
-      ref={cardRef}
-      className={isHighlighted ? "room-card-highlight-pulse" : undefined}
+    <div
       style={{
         background: "var(--white)",
         border: "1px solid var(--cream-border)",
-        padding: 0,
-        overflow: "hidden",
+        padding: 20,
       }}
-      transition={{ duration: 0.2 }}
     >
-      {/* Room image (only if room-level photos exist) */}
-      {hasImages && (
-        <button
-          onClick={() => onOpenRoomGallery(room.photos as string[], 0)}
-          style={{
-            position: "relative",
-            width: "100%",
-            aspectRatio: "16/9",
-            overflow: "hidden",
-            background: "var(--cream-deep)",
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-            display: "block",
-          }}
-          aria-label={`Open ${room.name} gallery`}
-        >
-          <img
-            src={safePhotoUrl((room.photos as string[])[0])}
-            alt={room.name}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-          />
-          <span
-            style={{
-              position: "absolute",
-              right: 12,
-              bottom: 12,
-              background: "rgba(26,23,16,0.7)",
-              color: "var(--cream)",
-              fontSize: "11px",
-              fontFamily: "var(--font-mono)",
-              padding: "4px 8px",
-              letterSpacing: "0.04em",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            <span aria-hidden>📷</span>
-            {(room.photos as string[]).length}
-          </span>
-        </button>
-      )}
-
-      <div style={{ padding: 20 }}>
-        {/* Room Name + beds + size + guests */}
-        <div className="mb-4">
-          <h4
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "18px",
-              fontWeight: 500,
-              color: "var(--ink)",
-              lineHeight: 1.2,
-            }}
-          >
-            {room.name}
-          </h4>
-          <p
-            style={{
-              fontSize: "12px",
-              color: "var(--ink-light)",
-              marginTop: 4,
-              fontFamily: "var(--font-body)",
-            }}
-          >
-            {room.beds} &middot; {room.size} &middot; Up to {room.guests} guests
-          </p>
+      <div style={{ height: 18, width: "55%", background: "var(--cream-deep)", marginBottom: 10 }} />
+      <div style={{ height: 12, width: "35%", background: "var(--cream-deep)", marginBottom: 18 }} />
+      <div style={{ height: 14, width: "40%", background: "var(--cream-deep)", marginBottom: 16 }} />
+      <div className="flex items-end justify-between">
+        <div>
+          <div style={{ height: 24, width: 120, background: "var(--cream-deep)", marginBottom: 8 }} />
+          <div style={{ height: 12, width: 90, background: "var(--cream-deep)" }} />
         </div>
-
-        {/* Packages */}
-        <div className="flex flex-col gap-3">
-          {visiblePackages.map((pkg) => {
-            const pid = packageId(room.id, pkg.key);
-            return (
-              <PackageCard
-                key={pid}
-                pkg={pkg}
-                voyagrRate={voyagrRate(pkg)}
-                marketRate={marketRate(pkg)}
-                isSelected={selectedPackageId === pid}
-                cancellation={packageCancellation(pkg)}
-                onSelect={() => onSelectPackage(pid)}
-                onProceed={() => onProceedPackage(room, pkg)}
-              />
-            );
-          })}
-        </div>
+        <div style={{ height: 36, width: 90, background: "var(--cream-deep)" }} />
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -886,30 +599,6 @@ function TrustSignals({ hotelId, rating, reviewCount }: { hotelId: number; ratin
   );
 }
 
-/* ────────────────────────── Urgency Banner ────────────────────────── */
-
-function UrgencyBanner({ hotelId }: { hotelId: number }) {
-  const { roomsLeft } = getUrgencyData(hotelId);
-
-  return (
-    <div
-      className="flex flex-wrap gap-2 items-center justify-center"
-      style={{
-        padding: "10px 20px",
-        background: "rgba(201, 168, 76, 0.08)",
-        border: "1px solid rgba(201, 168, 76, 0.22)",
-        fontSize: "12px",
-        fontFamily: "var(--font-body)",
-        fontWeight: 600,
-      }}
-    >
-      <span style={{ color: "#C9A84C" }}>
-        Only {roomsLeft} rooms left at this rate
-      </span>
-    </div>
-  );
-}
-
 /* ────────────────────────── Main Page ────────────────────────── */
 
 export default function HotelPage() {
@@ -922,6 +611,13 @@ export default function HotelPage() {
   const [hotel, setHotel] = useState<HotelDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
+  /* Live rates */
+  const [rates, setRates] = useState<RatesResponse | null>(null);
+  const [ratesLoading, setRatesLoading] = useState(false);
+  const [noMatch, setNoMatch] = useState(false);
+  const [ratesError, setRatesError] = useState<string | null>(null);
+  const [ratesRefreshKey, setRatesRefreshKey] = useState(0);
+
   /* Gallery */
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
@@ -931,14 +627,13 @@ export default function HotelPage() {
   /* Tabs */
   const [activeTab, setActiveTab] = useState<TabName>("Rooms");
 
-  /* Room + package selection */
-  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
-  const [highlightedRoomId, setHighlightedRoomId] = useState<string | null>(null);
-  const roomCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  /* Rate plan selection */
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const [highlightedOptionId, setHighlightedOptionId] = useState<string | null>(null);
+  const rateCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   /* Filter bar state */
   const [filterFreeCancellation, setFilterFreeCancellation] = useState(false);
-  const [filterBedType, setFilterBedType] = useState<BedTypeFilter>("all");
   const [filterMealPlan, setFilterMealPlan] = useState<MealPlanFilter>("all");
 
   /* Unlock Rate modal */
@@ -947,9 +642,9 @@ export default function HotelPage() {
   /* Overview expanded state (show first 3 sentences by default) */
   const [overviewExpanded, setOverviewExpanded] = useState(false);
 
-  /* Login gate modal (SELECT button on a room card, user not signed in) */
+  /* Login gate modal (SELECT button on a rate card, user not signed in) */
   const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [pendingPackageId, setPendingPackageId] = useState<string | null>(null);
+  const [pendingOptionId, setPendingOptionId] = useState<string | null>(null);
   const [loginIntent, setLoginIntent] = useState<"room-select" | "save-hotel">("room-select");
 
   /* Saved (heart) state — hero icon */
@@ -971,7 +666,7 @@ export default function HotelPage() {
   const galleryRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
 
-  /* ── Fetch data ── */
+  /* ── Fetch hotel detail (static) ── */
   useEffect(() => {
     fetch(`${API_BASE}/api/hotels/${hotelId}`)
       .then((r) => (r.ok ? r.json() : null))
@@ -992,6 +687,49 @@ export default function HotelPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [hotelId]);
+
+  /* ── Guest counts (sum across rooms) ── */
+  const adultsCount = booking.totalAdults;
+  const childrenCount = booking.totalChildren;
+
+  /* ── Fetch live rates whenever dates / guests / hotel change ── */
+  useEffect(() => {
+    if (!hotelId || !booking.checkIn || !booking.checkOut) {
+      setRates(null);
+      setNoMatch(false);
+      setRatesError(null);
+      setRatesLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setRatesLoading(true);
+    setRatesError(null);
+    fetchHotelRates(hotelId, booking.checkIn, booking.checkOut, adultsCount, childrenCount)
+      .then((res) => {
+        if (cancelled) return;
+        if ("error" in res && res.error === "no_tripjack_match") {
+          setNoMatch(true);
+          setRates(null);
+        } else {
+          setNoMatch(false);
+          setRates(res as RatesResponse);
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) setRatesError(e?.message || "Failed to load rates");
+      })
+      .finally(() => {
+        if (!cancelled) setRatesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [hotelId, booking.checkIn, booking.checkOut, adultsCount, childrenCount, ratesRefreshKey]);
+
+  /* Reset selection when the rate set changes */
+  useEffect(() => {
+    setSelectedOptionId(null);
+  }, [rates]);
 
   /* ── Photos ── */
   const photos = useMemo<string[]>(
@@ -1049,91 +787,38 @@ export default function HotelPage() {
     [lightboxPhotos.length]
   );
 
-  /* ── Room data ── */
-  const rooms = useMemo(() => (hotel ? generateRooms(hotel) : []), [hotel]);
+  /* ── Rates: filtered list ── */
+  const nights = rates?.nights || booking.nights || 1;
 
-  /* Apply room-level filters (Bed Type; Free Cancellation + Meal Plan are applied per-package) */
-  const applyRoomFilters = useCallback(
-    (list: RoomDef[]) => {
-      return list.filter((room) => {
-        if (!roomMatchesBedType(room, filterBedType)) return false;
-        if (!roomMatchesMealPlan(room, filterMealPlan)) return false;
-        if (filterFreeCancellation) {
-          const pkgs = generatePackages(room);
-          const hasRefundable = pkgs.some((p) => p.refundable) && room.tier === "preferred";
-          if (!hasRefundable) return false;
-        }
-        return true;
-      });
-    },
-    [filterBedType, filterMealPlan, filterFreeCancellation]
-  );
+  const filteredRates = useMemo<RatePlan[]>(() => {
+    if (!rates) return [];
+    return rates.rates.filter((p) => {
+      if (filterFreeCancellation && !p.refundable) return false;
+      if (!mealBasisMatchesFilter(p.meal_basis, filterMealPlan)) return false;
+      return true;
+    });
+  }, [rates, filterFreeCancellation, filterMealPlan]);
 
-  const preferredRooms = useMemo(
-    () => applyRoomFilters(rooms.filter((r) => r.tier === "preferred")),
-    [rooms, applyRoomFilters]
-  );
-  const standardRooms = useMemo(
-    () => applyRoomFilters(rooms.filter((r) => r.tier === "standard")),
-    [rooms, applyRoomFilters]
-  );
+  const selectedPlan = useMemo<RatePlan | null>(() => {
+    if (!rates || !selectedOptionId) return null;
+    return rates.rates.find((p) => p.option_id === selectedOptionId) || null;
+  }, [rates, selectedOptionId]);
 
-  /* Derive selected room + package from selectedPackageId */
-  const selectedRoom = useMemo(() => {
-    if (!selectedPackageId) return null;
-    const { roomId } = parsePackageId(selectedPackageId);
-    return rooms.find((r) => r.id === roomId) || null;
-  }, [rooms, selectedPackageId]);
+  const mrpRate = rates?.mrp?.agoda_rate ?? null;
+  const mrpCurrency = rates?.mrp?.currency ?? null;
+  const savingsPct = rates?.savings_pct ?? null;
 
-  const selectedPackage = useMemo<RoomPackage | null>(() => {
-    if (!selectedPackageId || !selectedRoom) return null;
-    const { key } = parsePackageId(selectedPackageId);
-    return generatePackages(selectedRoom).find((p) => p.key === key) || null;
-  }, [selectedPackageId, selectedRoom]);
-
-  const selectedRoomId = selectedRoom?.id ?? null;
-
-  /* ── Pricing (all values displayed in INR) ── */
-  const baseRate = hotel?.rates_from || 100;
-  const sourceCurrency = hotel?.rates_currency || "USD";
-  const baseRateInr = toInr(baseRate, sourceCurrency);
-
-  const nights = booking.nights || 1;
-  const selectedVoyagrRate =
-    selectedRoom && selectedPackage
-      ? Math.round(baseRateInr * selectedRoom.priceMult * selectedPackage.rateMult)
-      : 0;
-  const selectedMarketRate =
-    selectedRoom && selectedPackage
-      ? Math.round(baseRateInr * selectedRoom.priceMult * selectedPackage.rateMult * 1.3)
-      : 0;
-  const selectedSaving = selectedMarketRate - selectedVoyagrRate;
-  const totalPrice = selectedVoyagrRate * nights;
-
-  /* ── Per-room cancellation policy (deterministic, refundable for preferred tier) ── */
-  const cancellationFor = useCallback((room: RoomDef) => {
-    const refundable = room.tier === "preferred";
-    if (!refundable) return { refundable: false };
-    const checkIn = booking.checkIn ? new Date(booking.checkIn) : null;
-    const cutoff = checkIn && !isNaN(checkIn.getTime())
-      ? new Date(checkIn.getTime() - 2 * 24 * 60 * 60 * 1000)
-      : new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
-    const freeUntil = cutoff.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-    return { refundable: true, freeUntil };
-  }, [booking.checkIn]);
-
-  /* ── Proceed to booking from a package SELECT button ── */
+  /* ── Proceed to booking from a rate SELECT button ── */
   const proceedToBooking = useCallback(
-    (room: RoomDef, pkg: RoomPackage) => {
+    (plan: RatePlan) => {
       if (!hotel) return;
-      const rate = Math.round(baseRateInr * room.priceMult * pkg.rateMult);
       const totalGuests = booking.rooms.reduce((s, r) => s + r.adults + r.children, 0);
       const qs = new URLSearchParams({
         hotelId: String(hotel.hotel_id),
-        roomType: room.id,
-        package: pkg.key,
-        rate: String(rate),
-        currency: "INR",
+        optionId: plan.option_id,
+        roomName: plan.room_name,
+        rate: String(Math.round(plan.total_price)),
+        currency: plan.currency,
         checkIn: booking.checkIn || "",
         checkOut: booking.checkOut || "",
         guests: String(totalGuests),
@@ -1141,20 +826,19 @@ export default function HotelPage() {
       });
       router.push(`/book?${qs.toString()}`);
     },
-    [hotel, booking, router, baseRateInr]
+    [hotel, booking, router]
   );
 
-  const handlePackageSelectCTA = useCallback(
-    (room: RoomDef, pkg: RoomPackage) => {
-      const pid = packageId(room.id, pkg.key);
-      setSelectedPackageId(pid);
+  const handlePlanSelectCTA = useCallback(
+    (plan: RatePlan) => {
+      setSelectedOptionId(plan.option_id);
       if (!user) {
-        setPendingPackageId(pid);
+        setPendingOptionId(plan.option_id);
         setLoginIntent("room-select");
         setLoginModalOpen(true);
         return;
       }
-      proceedToBooking(room, pkg);
+      proceedToBooking(plan);
     },
     [user, proceedToBooking]
   );
@@ -1204,29 +888,25 @@ export default function HotelPage() {
       setPendingSaveAfterLogin(false);
       return;
     }
-    const pid = pendingPackageId;
-    if (pid) {
-      const { roomId } = parsePackageId(pid);
-      setSelectedPackageId(pid);
-      setHighlightedRoomId(roomId);
+    const oid = pendingOptionId;
+    if (oid) {
+      setSelectedOptionId(oid);
+      setHighlightedOptionId(oid);
       setTimeout(() => {
-        roomCardRefs.current[roomId]?.scrollIntoView({ behavior: "smooth", block: "center" });
+        rateCardRefs.current[oid]?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 80);
-      setTimeout(() => setHighlightedRoomId(null), 2400);
+      setTimeout(() => setHighlightedOptionId(null), 2400);
     } else {
       setTimeout(() => {
         document.getElementById("rooms")?.scrollIntoView({ behavior: "smooth" });
       }, 80);
     }
-    setPendingPackageId(null);
-  }, [pendingPackageId, pendingSaveAfterLogin, saveHotelToStorage]);
-
-  /* ── Savings for hero badge ── */
-  const heroSavePercent = 23; // Fixed "up to" percentage for hero
+    setPendingOptionId(null);
+  }, [pendingOptionId, pendingSaveAfterLogin, saveHotelToStorage]);
 
   /* ── Star display ── */
   const starDisplay = hotel && hotel.star_rating > 0
-    ? "\u2605".repeat(Math.round(hotel.star_rating))
+    ? "★".repeat(Math.round(hotel.star_rating))
     : "";
 
   /* ── Tab click handler — scrolls to section ── */
@@ -1338,6 +1018,14 @@ export default function HotelPage() {
   }
 
   const address = [hotel.addressline1, hotel.city, hotel.country].filter(Boolean).join(", ");
+  const datesSelected = !!(booking.checkIn && booking.checkOut);
+  const heroSavePercent = savingsPct && savingsPct > 0 ? savingsPct : 23;
+
+  /* Sidebar derived values */
+  const sidebarNightly = selectedPlan ? selectedPlan.total_price / Math.max(nights, 1) : 0;
+  const sidebarTotal = selectedPlan ? selectedPlan.total_price : 0;
+  const sidebarMarket = selectedPlan && mrpRate && mrpRate > selectedPlan.total_price ? mrpRate : 0;
+  const sidebarSaving = sidebarMarket - sidebarTotal;
 
   return (
     <div className="min-h-screen" style={{ background: "var(--cream)", color: "var(--ink)" }}>
@@ -1525,11 +1213,6 @@ export default function HotelPage() {
         <TrustSignals hotelId={hotel.hotel_id} rating={hotel.rating_average} reviewCount={hotel.number_of_reviews} />
       </div>
 
-      {/* ═══════════════════ Urgency Banner ═══════════════════ */}
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
-        <UrgencyBanner hotelId={hotel.hotel_id} />
-      </div>
-
       {/* ═══════════════════ Tab Bar (Sticky) ═══════════════════ */}
       <div
         className="tab-navigation flex gap-0 sticky top-[60px] overflow-x-auto"
@@ -1632,7 +1315,7 @@ export default function HotelPage() {
               {!user && (
                 <button
                   onClick={() => {
-                    setPendingPackageId(null);
+                    setPendingOptionId(null);
                     setLoginIntent("room-select");
                     setLoginModalOpen(true);
                   }}
@@ -1657,18 +1340,133 @@ export default function HotelPage() {
               )}
             </div>
 
-            {/* ── Room filter bar ── */}
-            <RoomFilterBar
-              freeCancellation={filterFreeCancellation}
-              onToggleFreeCancellation={() => setFilterFreeCancellation((v) => !v)}
-              bedType={filterBedType}
-              onChangeBedType={setFilterBedType}
-              mealPlan={filterMealPlan}
-              onChangeMealPlan={setFilterMealPlan}
-            />
-
-            {/* ── Empty filter state ── */}
-            {preferredRooms.length === 0 && standardRooms.length === 0 && (
+            {/* ══════ RATES BODY ══════ */}
+            {!datesSelected ? (
+              /* No dates prompt */
+              <div
+                style={{
+                  background: "var(--white)",
+                  border: "1px solid var(--cream-border)",
+                  padding: "40px 24px",
+                  textAlign: "center",
+                  fontSize: "14px",
+                  color: "var(--ink-mid)",
+                  fontFamily: "var(--font-body)",
+                  marginBottom: 24,
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: "18px",
+                    fontStyle: "italic",
+                    color: "var(--ink)",
+                    marginBottom: 8,
+                  }}
+                >
+                  Select your dates to see rates
+                </div>
+                <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>
+                  Choose a check-in and check-out date above to unlock live pricing.
+                </p>
+              </div>
+            ) : noMatch ? (
+              /* No TripJack mapping — concierge quote */
+              <div
+                style={{
+                  background: "var(--white)",
+                  border: "1px solid var(--cream-border)",
+                  padding: "32px 24px",
+                  marginBottom: 24,
+                }}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div style={{ width: 4, height: 24, background: "var(--gold)", flexShrink: 0 }} />
+                  <h3
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "20px",
+                      fontWeight: 500,
+                      color: "var(--ink)",
+                    }}
+                  >
+                    Rates on request
+                  </h3>
+                </div>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    color: "var(--ink-mid)",
+                    lineHeight: 1.7,
+                    marginBottom: 20,
+                    maxWidth: 560,
+                  }}
+                >
+                  Our concierge will source the best possible rate for this hotel and get back to you on WhatsApp within 15 minutes.
+                </p>
+                <button
+                  onClick={() => setUnlockModalOpen(true)}
+                  style={{
+                    padding: "12px 28px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    background: "var(--gold)",
+                    color: "var(--ink)",
+                    border: "none",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  Contact concierge
+                </button>
+              </div>
+            ) : ratesError ? (
+              /* Error state */
+              <div
+                style={{
+                  background: "var(--white)",
+                  border: "1px solid var(--cream-border)",
+                  padding: "24px",
+                  textAlign: "center",
+                  marginBottom: 24,
+                }}
+              >
+                <p style={{ fontSize: "14px", color: "var(--ink)", marginBottom: 12 }}>
+                  Rates unavailable right now
+                </p>
+                <p style={{ fontSize: "12px", color: "var(--ink-light)", marginBottom: 16 }}>
+                  {ratesError}
+                </p>
+                <button
+                  onClick={() => setRatesRefreshKey((k) => k + 1)}
+                  style={{
+                    padding: "10px 20px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    background: "var(--gold)",
+                    color: "var(--ink)",
+                    border: "none",
+                    cursor: "pointer",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : ratesLoading ? (
+              /* Skeletons */
+              <div className="flex flex-col gap-4 mb-6">
+                <RateCardSkeleton />
+                <RateCardSkeleton />
+                <RateCardSkeleton />
+                <RateCardSkeleton />
+              </div>
+            ) : rates && rates.rates.length === 0 ? (
+              /* Empty rates */
               <div
                 style={{
                   background: "var(--white)",
@@ -1681,132 +1479,103 @@ export default function HotelPage() {
                   marginBottom: 24,
                 }}
               >
-                No rooms match the current filters. Try clearing a filter to see more options.
+                No rates for these dates — try different dates.
               </div>
-            )}
+            ) : rates ? (
+              <>
+                {/* ── Rate filter bar ── */}
+                <RateFilterBar
+                  freeCancellation={filterFreeCancellation}
+                  onToggleFreeCancellation={() => setFilterFreeCancellation((v) => !v)}
+                  mealPlan={filterMealPlan}
+                  onChangeMealPlan={setFilterMealPlan}
+                />
 
-            {/* ── Preferred Rates Section ── */}
-            {preferredRooms.length > 0 && (
-              <div className="mb-10">
-                <div className="flex items-center gap-3 mb-5">
+                {filteredRates.length === 0 ? (
                   <div
                     style={{
-                      width: 4,
-                      height: 24,
-                      background: "var(--gold)",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <h3
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "20px",
-                      fontWeight: 500,
-                      color: "var(--ink)",
+                      background: "var(--white)",
+                      border: "1px solid var(--cream-border)",
+                      padding: "24px",
+                      textAlign: "center",
+                      fontSize: "13px",
+                      color: "var(--ink-light)",
+                      fontFamily: "var(--font-body)",
+                      marginBottom: 24,
                     }}
                   >
-                    Preferred Rates
-                  </h3>
-                  <span
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: 600,
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      color: "var(--gold)",
-                      background: "var(--gold-pale)",
-                      padding: "3px 8px",
-                    }}
-                  >
-                    Voyagr Club
-                  </span>
-                </div>
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: "var(--ink-light)",
-                    marginBottom: 16,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  The same rates travel agents pay. Never listed publicly.
-                </p>
+                    No rates match the current filters. Try clearing a filter to see more options.
+                  </div>
+                ) : (
+                  <div className="mb-10">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div
+                        style={{
+                          width: 4,
+                          height: 24,
+                          background: "var(--gold)",
+                          flexShrink: 0,
+                        }}
+                      />
+                      <h3
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontSize: "20px",
+                          fontWeight: 500,
+                          color: "var(--ink)",
+                        }}
+                      >
+                        Available Rates
+                      </h3>
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          color: "var(--gold)",
+                          background: "var(--gold-pale)",
+                          padding: "3px 8px",
+                        }}
+                      >
+                        Live pricing
+                      </span>
+                    </div>
+                    <p
+                      style={{
+                        fontSize: "13px",
+                        color: "var(--ink-light)",
+                        marginBottom: 16,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {filteredRates.length} option{filteredRates.length !== 1 ? "s" : ""} for your stay
+                      {rates.nights > 0 ? ` (${rates.nights} night${rates.nights > 1 ? "s" : ""})` : ""}.
+                    </p>
 
-                <div className="flex flex-col gap-4">
-                  {preferredRooms.map((room) => (
-                    <RoomCard
-                      key={room.id}
-                      room={room}
-                      baseRateInr={baseRateInr}
-                      selectedPackageId={selectedPackageId}
-                      isHighlighted={highlightedRoomId === room.id}
-                      cancellation={cancellationFor(room)}
-                      mealPlanFilter={filterMealPlan}
-                      freeCancellationFilter={filterFreeCancellation}
-                      cardRef={(el) => { roomCardRefs.current[room.id] = el; }}
-                      onSelectPackage={(pid) => setSelectedPackageId(selectedPackageId === pid ? null : pid)}
-                      onProceedPackage={(r, pkg) => handlePackageSelectCTA(r, pkg)}
-                      onOpenRoomGallery={(roomPhotos, startIdx) => openLightbox(startIdx, roomPhotos)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* ── Standard Rates Section ── */}
-            {standardRooms.length > 0 && (
-              <div className="mb-10">
-                <div className="flex items-center gap-3 mb-5">
-                  <div
-                    style={{
-                      width: 4,
-                      height: 24,
-                      background: "var(--cream-border)",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <h3
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "20px",
-                      fontWeight: 500,
-                      color: "var(--ink)",
-                    }}
-                  >
-                    Standard Rates
-                  </h3>
-                </div>
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: "var(--ink-light)",
-                    marginBottom: 16,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  Room-only rates at discounted prices.
-                </p>
-
-                <div className="flex flex-col gap-4">
-                  {standardRooms.map((room) => (
-                    <RoomCard
-                      key={room.id}
-                      room={room}
-                      baseRateInr={baseRateInr}
-                      selectedPackageId={selectedPackageId}
-                      isHighlighted={highlightedRoomId === room.id}
-                      cancellation={cancellationFor(room)}
-                      mealPlanFilter={filterMealPlan}
-                      freeCancellationFilter={filterFreeCancellation}
-                      cardRef={(el) => { roomCardRefs.current[room.id] = el; }}
-                      onSelectPackage={(pid) => setSelectedPackageId(selectedPackageId === pid ? null : pid)}
-                      onProceedPackage={(r, pkg) => handlePackageSelectCTA(r, pkg)}
-                      onOpenRoomGallery={(roomPhotos, startIdx) => openLightbox(startIdx, roomPhotos)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+                    <div className="flex flex-col gap-4">
+                      {filteredRates.map((plan) => (
+                        <RateCard
+                          key={plan.option_id}
+                          plan={plan}
+                          nights={rates.nights || nights}
+                          mrpRate={mrpRate}
+                          mrpCurrency={mrpCurrency}
+                          savingsPct={savingsPct}
+                          isSelected={selectedOptionId === plan.option_id}
+                          isHighlighted={highlightedOptionId === plan.option_id}
+                          cardRef={(el) => { rateCardRefs.current[plan.option_id] = el; }}
+                          onSelect={() =>
+                            setSelectedOptionId(selectedOptionId === plan.option_id ? null : plan.option_id)
+                          }
+                          onProceed={() => handlePlanSelectCTA(plan)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : null}
           </div>
 
           {/* ══════ OVERVIEW SECTION ══════ */}
@@ -1845,7 +1614,7 @@ export default function HotelPage() {
                           fontSize: "14px",
                         }}
                       >
-                        {overviewExpanded ? "Read less" : "Read more \u2192"}
+                        {overviewExpanded ? "Read less" : "Read more →"}
                       </button>
                     </>
                   )}
@@ -2264,7 +2033,7 @@ export default function HotelPage() {
             </div>
 
             <div style={{ padding: "24px" }}>
-              {!selectedRoom ? (
+              {!selectedPlan ? (
                 /* Empty state */
                 <div className="text-center" style={{ padding: "20px 0" }}>
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--cream-border)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 auto 12px" }}>
@@ -2272,18 +2041,18 @@ export default function HotelPage() {
                     <polyline points="9 22 9 12 15 12 15 22" />
                   </svg>
                   <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>
-                    Select a room to unlock your rate
+                    {datesSelected ? "Select a room to unlock your rate" : "Select dates to see live rates"}
                   </p>
                 </div>
               ) : (
-                /* Room selected */
+                /* Plan selected */
                 <motion.div
-                  key={selectedPackageId}
+                  key={selectedPlan.option_id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  {/* Selected room name + package */}
+                  {/* Selected room name + meal basis */}
                   <p
                     style={{
                       fontSize: "15px",
@@ -2293,27 +2062,25 @@ export default function HotelPage() {
                       fontFamily: "var(--font-display)",
                     }}
                   >
-                    {selectedRoom.name}
+                    {selectedPlan.room_name}
                   </p>
-                  {selectedPackage && (
-                    <p
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                        color: "var(--gold)",
-                        marginBottom: 16,
-                        fontFamily: "var(--font-body)",
-                      }}
-                    >
-                      {selectedPackage.name}
-                    </p>
-                  )}
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: "var(--gold)",
+                      marginBottom: 16,
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    {selectedPlan.meal_basis || "Room Only"}
+                  </p>
 
-                  {/* Price per night */}
+                  {/* Nightly */}
                   <div className="flex items-baseline justify-between mb-2">
-                    <span style={{ fontSize: "13px", color: "var(--ink-mid)" }}>Preferred rate</span>
+                    <span style={{ fontSize: "13px", color: "var(--ink-mid)" }}>Voyagr rate</span>
                     <span
                       style={{
                         fontSize: "20px",
@@ -2322,26 +2089,28 @@ export default function HotelPage() {
                         color: "var(--ink)",
                       }}
                     >
-                      {formatInr(selectedVoyagrRate)}
+                      {formatPrice(sidebarNightly, selectedPlan.currency)}
                     </span>
                   </div>
 
                   {/* Market rate */}
-                  <div className="flex items-baseline justify-between mb-2">
-                    <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>Public rate</span>
-                    <span
-                      style={{
-                        fontSize: "13px",
-                        color: "var(--ink-light)",
-                        textDecoration: "line-through",
-                        fontFamily: "var(--font-mono)",
-                      }}
-                    >
-                      {formatInr(selectedMarketRate)}
-                    </span>
-                  </div>
+                  {sidebarMarket > 0 && (
+                    <div className="flex items-baseline justify-between mb-2">
+                      <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>Public rate</span>
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          color: "var(--ink-light)",
+                          textDecoration: "line-through",
+                          fontFamily: "var(--font-mono)",
+                        }}
+                      >
+                        {formatPrice(sidebarMarket, mrpCurrency || selectedPlan.currency)}
+                      </span>
+                    </div>
+                  )}
 
-                  {/* Saving */}
+                  {/* Cancellation */}
                   <div
                     className="flex items-baseline justify-between mb-4"
                     style={{
@@ -2349,53 +2118,21 @@ export default function HotelPage() {
                       borderBottom: "1px solid var(--cream-border)",
                     }}
                   >
-                    <span style={{ fontSize: "12px", color: "var(--success)", fontWeight: 600 }}>
-                      You save per night
-                    </span>
                     <span
                       style={{
-                        fontSize: "14px",
-                        color: "var(--success)",
-                        fontWeight: 600,
-                        fontFamily: "var(--font-mono)",
+                        fontSize: "12px",
+                        color: selectedPlan.refundable ? "var(--success)" : "var(--ink-light)",
+                        fontWeight: selectedPlan.refundable ? 600 : 500,
                       }}
                     >
-                      {formatInr(selectedSaving)}
+                      {selectedPlan.refundable ? "Free cancellation" : "Non-refundable"}
                     </span>
                   </div>
-
-                  {/* Perks */}
-                  {selectedPackage && selectedPackage.inclusions.length > 0 && (
-                    <div className="mb-4" style={{ paddingBottom: 16, borderBottom: "1px solid var(--cream-border)" }}>
-                      <p
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          letterSpacing: "0.1em",
-                          textTransform: "uppercase",
-                          color: "var(--ink-light)",
-                          marginBottom: 8,
-                        }}
-                      >
-                        Included perks
-                      </p>
-                      <div className="flex flex-col gap-1.5">
-                        {selectedPackage.inclusions.map((inc) => (
-                          <div key={inc} className="flex items-center gap-2">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                            <span style={{ fontSize: "13px", color: "var(--ink-mid)" }}>{inc}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                   {/* Nights x rate breakdown */}
                   <div className="flex items-baseline justify-between mb-2">
                     <span style={{ fontSize: "13px", color: "var(--ink-mid)" }}>
-                      {nights} night{nights > 1 ? "s" : ""} &times; {formatInr(selectedVoyagrRate)}
+                      {nights} night{nights > 1 ? "s" : ""} &times; {formatPrice(sidebarNightly, selectedPlan.currency)}
                     </span>
                     <span
                       style={{
@@ -2404,7 +2141,7 @@ export default function HotelPage() {
                         fontFamily: "var(--font-mono)",
                       }}
                     >
-                      {formatInr(totalPrice)}
+                      {formatPrice(sidebarTotal, selectedPlan.currency)}
                     </span>
                   </div>
 
@@ -2428,34 +2165,36 @@ export default function HotelPage() {
                         color: "var(--ink)",
                       }}
                     >
-                      {formatInr(totalPrice)}
+                      {formatPrice(sidebarTotal, selectedPlan.currency)}
                     </span>
                   </div>
 
                   {/* Total saving */}
-                  <p
-                    className="text-right"
-                    style={{
-                      fontSize: "12px",
-                      color: "var(--success)",
-                      fontWeight: 500,
-                      marginTop: 4,
-                    }}
-                  >
-                    Total saving: {formatInr(selectedSaving * nights)}
-                  </p>
+                  {sidebarSaving > 0 && (
+                    <p
+                      className="text-right"
+                      style={{
+                        fontSize: "12px",
+                        color: "var(--success)",
+                        fontWeight: 500,
+                        marginTop: 4,
+                      }}
+                    >
+                      Total saving: {formatPrice(sidebarSaving, mrpCurrency || selectedPlan.currency)}
+                    </p>
+                  )}
                 </motion.div>
               )}
 
               {/* Unlock Preferred Rate button */}
               <button
-                disabled={!selectedRoom}
+                disabled={!selectedPlan}
                 onClick={() => {
-                  if (selectedRoom) {
+                  if (selectedPlan) {
                     setUnlockModalOpen(true);
                   }
                 }}
-                className={selectedRoom ? "unlock-rate-btn-pulse" : ""}
+                className={selectedPlan ? "unlock-rate-btn-pulse" : ""}
                 style={{
                   width: "100%",
                   marginTop: 24,
@@ -2464,13 +2203,13 @@ export default function HotelPage() {
                   fontWeight: 600,
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  background: selectedRoom ? "var(--gold)" : "var(--cream-border)",
-                  color: selectedRoom ? "var(--ink)" : "var(--ink-light)",
+                  background: selectedPlan ? "var(--gold)" : "var(--cream-border)",
+                  color: selectedPlan ? "var(--ink)" : "var(--ink-light)",
                   border: "none",
-                  cursor: selectedRoom ? "pointer" : "not-allowed",
+                  cursor: selectedPlan ? "pointer" : "not-allowed",
                   transition: "all 0.3s",
                   fontFamily: "var(--font-body)",
-                  opacity: selectedRoom ? 1 : 0.6,
+                  opacity: selectedPlan ? 1 : 0.6,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -2481,7 +2220,7 @@ export default function HotelPage() {
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                {selectedRoom ? "Unlock Preferred Rate" : "Select a Room"}
+                {selectedPlan ? "Unlock Preferred Rate" : "Select a Room"}
               </button>
 
               {/* Trust note */}
@@ -2532,13 +2271,17 @@ export default function HotelPage() {
             >
               {hotel.hotel_name}
             </p>
-            {selectedRoom && selectedPackage ? (
+            {selectedPlan ? (
               <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
-                {selectedPackage.name} &middot; Total {formatInr(totalPrice)} ({nights} night{nights > 1 ? "s" : ""})
+                {selectedPlan.meal_basis || "Room Only"} &middot; Total {formatPrice(sidebarTotal, selectedPlan.currency)} ({nights} night{nights > 1 ? "s" : ""})
+              </p>
+            ) : rates && rates.rates.length > 0 ? (
+              <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
+                From {formatPrice(Math.min(...rates.rates.map((r) => r.total_price / Math.max(nights, 1))), rates.rates[0].currency)}/night
               </p>
             ) : (
               <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
-                Member rate from {formatInr(baseRateInr)}/night
+                {datesSelected ? "Loading rates..." : "Select dates to see rates"}
               </p>
             )}
           </div>
@@ -2547,7 +2290,7 @@ export default function HotelPage() {
           <button
             onClick={() => {
               if (!user) {
-                setPendingPackageId(null);
+                setPendingOptionId(null);
                 setLoginModalOpen(true);
                 return;
               }
@@ -2577,22 +2320,42 @@ export default function HotelPage() {
       </div>
 
       {/* ═══════════════════ Unlock Rate Modal ═══════════════════ */}
-      {selectedRoom && selectedPackage && hotel && (
+      {selectedPlan && hotel && (
         <UnlockRateModal
           open={unlockModalOpen}
           onClose={() => setUnlockModalOpen(false)}
           hotelId={hotel.hotel_id}
           hotelName={hotel.hotel_name}
-          roomName={`${selectedRoom.name} \u2022 ${selectedPackage.name}`}
-          rateType={selectedRoom.tier}
+          roomName={`${selectedPlan.room_name} • ${selectedPlan.meal_basis || "Room Only"}`}
+          rateType={selectedPlan.refundable ? "preferred" : "standard"}
           checkIn={booking.checkIn}
           checkOut={booking.checkOut}
           nights={nights}
           guests={booking.guestSummary}
-          nightlyRate={selectedVoyagrRate}
-          marketRate={selectedMarketRate}
+          nightlyRate={Math.round(sidebarNightly)}
+          marketRate={Math.round(sidebarMarket || sidebarTotal)}
+          currency={selectedPlan.currency}
+          perks={[]}
+        />
+      )}
+
+      {/* No-match concierge fallback modal */}
+      {!selectedPlan && noMatch && hotel && (
+        <UnlockRateModal
+          open={unlockModalOpen}
+          onClose={() => setUnlockModalOpen(false)}
+          hotelId={hotel.hotel_id}
+          hotelName={hotel.hotel_name}
+          roomName="Rates on request"
+          rateType="preferred"
+          checkIn={booking.checkIn}
+          checkOut={booking.checkOut}
+          nights={nights}
+          guests={booking.guestSummary}
+          nightlyRate={0}
+          marketRate={0}
           currency="INR"
-          perks={selectedPackage.inclusions}
+          perks={[]}
         />
       )}
 
@@ -2601,7 +2364,7 @@ export default function HotelPage() {
         <RoomSelectLoginModal
           onClose={() => {
             setLoginModalOpen(false);
-            setPendingPackageId(null);
+            setPendingOptionId(null);
             setPendingSaveAfterLogin(false);
           }}
           onSuccess={handleLoginSuccess}

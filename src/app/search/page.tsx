@@ -4,7 +4,14 @@ import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } fro
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { searchHotels, fetchCuratedCities, CuratedCity } from "@/lib/api";
+import {
+  searchHotels,
+  fetchCuratedCities,
+  fetchBatchRates,
+  defaultBookingDates,
+  CuratedCity,
+} from "@/lib/api";
+import type { BatchRatesResponse } from "@/lib/api";
 import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import { useBooking } from "@/context/BookingContext";
 import { trackSearch, trackSearchFilterApplied } from "@/lib/analytics";
@@ -273,10 +280,11 @@ export default function SearchPage() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
 
-  const { checkIn, checkOut } = useBooking();
+  const { checkIn, checkOut, totalAdults, totalChildren } = useBooking();
   const [query, setQuery] = useState(initialQuery);
   const [cities, setCities] = useState<CuratedCity[]>([]);
   const [hotelResults, setHotelResults] = useState<HotelResult[]>([]);
+  const [batchRates, setBatchRates] = useState<BatchRatesResponse | null>(null);
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
@@ -316,6 +324,34 @@ export default function SearchPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Batch-fetch live rates for the hotels returned by search. Hotels with no
+  // TripJack match are filtered out of the displayed list.
+  useEffect(() => {
+    const ids = Array.from(new Set(hotelResults.map((h) => h.hotel_id))).filter(Boolean);
+    if (ids.length === 0) {
+      setBatchRates(null);
+      return;
+    }
+
+    const { checkin: defIn, checkout: defOut } = defaultBookingDates();
+    const ci = checkIn || defIn;
+    const co = checkOut || defOut;
+    const adults = totalAdults > 0 ? totalAdults : 2;
+    const children = totalChildren;
+
+    let cancelled = false;
+    fetchBatchRates(ids, ci, co, adults, children)
+      .then((data) => {
+        if (!cancelled) setBatchRates(data);
+      })
+      .catch((err) => {
+        console.error("[Voyagr] Batch rates failed:", err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [hotelResults, checkIn, checkOut, totalAdults, totalChildren]);
 
   const performSearch = useCallback(async (q: string, options?: { persist?: boolean }) => {
     if (!q.trim()) {
@@ -382,8 +418,26 @@ export default function SearchPage() {
     ? matchingCities
     : matchingCities.filter((c) => c.continent === regionFilter);
 
+  // Merge batch rates into results: hide unmatched, override `rates_from` with
+  // the live `from_price`. Until the batch call completes, render with the
+  // stale values so the list is never empty (progressive enhancement).
+  const livePricedResults = batchRates
+    ? hotelResults
+        .filter((h) => !batchRates.unmatched_ids.includes(h.hotel_id))
+        .map((h) => {
+          const rate = batchRates.results[String(h.hotel_id)];
+          if (!rate) return h;
+          return {
+            ...h,
+            rates_from: rate.from_price,
+            rates_currency: rate.mrp?.currency || h.rates_currency || "INR",
+          };
+        })
+        .filter((h) => batchRates.results[String(h.hotel_id)])
+    : hotelResults;
+
   // Apply star filter + region filter + sort to hotel results
-  const filteredHotels = hotelResults
+  const filteredHotels = livePricedResults
     .filter((h) => {
       if (starFilter > 0) {
         if (starFilter === 5 && h.star_rating !== 5) return false;
@@ -1139,7 +1193,9 @@ export default function SearchPage() {
                                 border: "1px solid var(--cream-border)",
                                 fontWeight: 500,
                               }}>
-                                From ${Math.round(hotel.rates_from)}
+                                {hotel.rates_currency === "INR"
+                                  ? `From ₹${Math.round(hotel.rates_from).toLocaleString("en-IN")}`
+                                  : `From $${Math.round(hotel.rates_from).toLocaleString("en-US")}`}
                               </span>
                             )}
                           </div>
