@@ -16,15 +16,16 @@ const NAVY = "#0B1B2B";
 const IVORY = "#fdfaf5";
 
 export const NAV_LINKS = [
-  { label: "Search", href: "/search" },
+  { label: "Hotels", href: "/search" },
+  { label: "Flights", href: "/flights" },
   { label: "Preferred Rates", href: "/preferred-rates" },
-  { label: "Price Match", href: "/match-my-rates" },
   { label: "My Trips", href: "/booking-history" },
 ];
 
 /* Desktop nav links */
 const DESKTOP_LINKS = [
-  { label: "Search", href: "/search" },
+  { label: "Hotels", href: "/search" },
+  { label: "Flights", href: "/flights" },
   { label: "Preferred Rates", href: "/preferred-rates" },
   { label: "Price Match", href: "/match-my-rates" },
   { label: "Sign In", href: "/login" },
@@ -204,10 +205,15 @@ export default function Header() {
 /* ── Mobile bottom tab bar ── */
 
 const TAB_ICONS: Record<string, React.ReactNode> = {
-  Search: (
+  Hotels: (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
+  Flights: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
     </svg>
   ),
   "Preferred Rates": (

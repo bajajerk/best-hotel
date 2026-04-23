@@ -194,3 +194,131 @@ export async function fetchFeaturedAll(): Promise<FeaturedResponse> {
   if (!res.ok) throw new Error('Failed to fetch featured hotels');
   return res.json();
 }
+
+// ── Flight types ──────────────────────────────────────────────────────────
+
+export interface FlightSegment {
+  id: string;
+  airline: { code: string; name: string };
+  flightNumber: string;
+  from: { code: string; city: string; terminal?: string };
+  to: { code: string; city: string; terminal?: string };
+  departureTime: string;
+  arrivalTime: string;
+  durationMins: number;
+  stops: number;
+}
+
+export interface FlightFare {
+  id: string;
+  fareIdentifier: string;
+  totalFare: number;
+  baseFare: number;
+  taxes: number;
+}
+
+export interface ParsedFlight {
+  key: string;
+  segments: FlightSegment[];
+  fares: FlightFare[];
+  cheapestFare: FlightFare | null;
+}
+
+export interface FlightSearchResult {
+  flights: ParsedFlight[];
+  totalCount: number;
+}
+
+function parseTripJackFlights(data: any): FlightSearchResult {
+  const tripInfos: Record<string, any[]> = data?.searchResult?.tripInfos ?? {};
+  const flights: ParsedFlight[] = [];
+
+  for (const [, options] of Object.entries(tripInfos)) {
+    for (const option of options ?? []) {
+      const segments: FlightSegment[] = (option.sI ?? []).map((seg: any, i: number) => ({
+        id: seg.id ?? String(i),
+        airline: {
+          code: seg.fD?.aI?.code ?? '',
+          name: seg.fD?.aI?.name ?? seg.fD?.aI?.code ?? 'Unknown',
+        },
+        flightNumber: `${seg.fD?.aI?.code ?? ''}${seg.fD?.fN ?? ''}`,
+        from: {
+          code: seg.da?.code ?? '',
+          city: seg.da?.city ?? seg.da?.code ?? '',
+          terminal: seg.da?.terminal,
+        },
+        to: {
+          code: seg.aa?.code ?? '',
+          city: seg.aa?.city ?? seg.aa?.code ?? '',
+          terminal: seg.aa?.terminal,
+        },
+        departureTime: seg.dt ?? '',
+        arrivalTime: seg.at ?? '',
+        durationMins: seg.duration ?? 0,
+        stops: seg.so ?? 0,
+      }));
+
+      const fares: FlightFare[] = (option.totalPriceList ?? []).map((f: any) => ({
+        id: f.id ?? '',
+        fareIdentifier: f.fareIdentifier ?? '',
+        totalFare: f.fd?.ADULT?.fC?.TF ?? 0,
+        baseFare: f.fd?.ADULT?.fC?.BF ?? 0,
+        taxes: f.fd?.ADULT?.fC?.TAF ?? 0,
+      })).filter((f: FlightFare) => f.totalFare > 0);
+
+      const cheapestFare = fares.length
+        ? fares.reduce((a, b) => (a.totalFare <= b.totalFare ? a : b))
+        : null;
+
+      if (segments.length > 0 && cheapestFare) {
+        flights.push({
+          key: `${segments[0].airline.code}-${segments[0].departureTime}`,
+          segments,
+          fares,
+          cheapestFare,
+        });
+      }
+    }
+  }
+
+  // Sort cheapest first
+  flights.sort((a, b) => (a.cheapestFare?.totalFare ?? 0) - (b.cheapestFare?.totalFare ?? 0));
+
+  return { flights, totalCount: flights.length };
+}
+
+export async function searchFlights(params: {
+  from: string;
+  to: string;
+  date: string;
+  adults?: number;
+  cabinClass?: string;
+  tripType?: string;
+  token?: string | null;
+}): Promise<FlightSearchResult> {
+  const { from, to, date, adults = 1, cabinClass = 'ECONOMY', tripType = 'O', token } = params;
+
+  const res = await fetch(`${API_BASE}/api/flights/search`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({
+      searchQuery: {
+        tripType,
+        cabinClass,
+        paxInfo: { ADULT: String(adults), CHILD: '0', INFANT: '0' },
+        routeInfos: [{ fromCityOrAirport: { code: from }, toCityOrAirport: { code: to }, travelDate: date }],
+      },
+    }),
+  });
+
+  const data = await res.json();
+  if (data.error) {
+    const msg = typeof data.error === 'string' ? data.error : data.error?.message ?? 'Search failed';
+    throw new Error(msg);
+  }
+
+  return parseTripJackFlights(data);
+}
