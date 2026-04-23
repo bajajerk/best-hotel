@@ -434,12 +434,22 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
 
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
+    <div
+      className="precision-theme"
+      style={{
+        minHeight: "100vh",
+        background: "#080808",
+        color: "var(--pl-ivory)",
+      }}
+    >
 
       {/* ================================================================
           FIXED NAV — reusable Header component
       ================================================================ */}
       <Header />
+
+      {/* Film Grain — SVG turbulence overlay (editorial "print" texture) */}
+      <div className="film-grain" aria-hidden="true" />
 
       {/* ================================================================
           HERO — split layout: text left, image right
@@ -472,62 +482,59 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
         >
           <motion.p
             variants={fadeUp}
-            className="type-eyebrow"
+            className="type-tech"
             style={{
-              marginBottom: "20px",
+              marginBottom: "28px",
             }}
           >
-            Voyagr Club
+            Voyagr Club &mdash; Est. Mumbai
           </motion.p>
 
           <motion.h1
             variants={fadeUp}
-            className="type-display-1"
+            className="type-manifesto"
             style={{
-              color: "var(--ink)",
-              marginBottom: "24px",
+              marginBottom: "28px",
             }}
           >
-            Hotels you know. Rates they don&rsquo;t show.
+            Hotels you <em>know</em>.
+            <br />
+            Rates they <em>don&rsquo;t show</em>.
           </motion.h1>
 
           <motion.p
             variants={fadeUp}
-            className="type-body-lg"
+            className="editorial-body"
             style={{
-              color: "var(--ink-light)",
-              maxWidth: "420px",
-              marginBottom: "32px",
+              color: "var(--pl-ivory-60)",
+              maxWidth: "440px",
+              marginBottom: "36px",
+              fontSize: "15px",
             }}
           >
-            Member access to hotel rates travel agents have always paid. Never on MakeMyTrip or Booking.com.
+            Member access to hotel rates travel agents have always paid.
+            <br />
+            Never on MakeMyTrip or Booking.com.
           </motion.p>
 
-          {/* See Member Rates CTA — auth-aware destination + micro-copy */}
-          <motion.div variants={fadeUp} style={{ marginBottom: "32px" }}>
+          {/* See Member Rates — ghost-to-solid tactile switch CTA */}
+          <motion.div variants={fadeUp} style={{ marginBottom: "36px" }}>
             <a
               href={user ? "/search" : "#hero-search"}
-              className="btn-emerald"
+              className="btn-tactile"
               onClick={handleSeeMemberRates}
+            >
+              See Member Rates
+            </a>
+            <p
+              className="type-tech"
               style={{
-                padding: "16px 40px",
-                fontSize: "14px",
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
+                color: "var(--slate-muted)",
+                marginTop: "18px",
+                lineHeight: 1.8,
               }}
             >
-              See Member Rates &rarr;
-            </a>
-            <p style={{
-              fontSize: "11px",
-              color: "var(--ink-light)",
-              marginTop: "14px",
-              letterSpacing: "0.02em",
-              lineHeight: 1.6,
-            }}>
-              Free forever &bull; No annual fees &bull; 24/7 personal concierge &bull; Perks included on every stay
+              Free forever &middot; No annual fees &middot; 24/7 concierge
             </p>
           </motion.div>
 
@@ -664,27 +671,54 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
             </button>
           </motion.div>
 
-          {/* Hero stats */}
+          {/* Hero stats — editorial data strip */}
           <motion.div
             variants={fadeUp}
             className="hero-stats"
-            style={{ display: "flex", gap: "40px", marginTop: "48px" }}
+            style={{
+              display: "flex",
+              gap: "0",
+              marginTop: "56px",
+              paddingTop: "28px",
+              borderTop: "0.5px solid rgba(255,255,255,0.08)",
+            }}
           >
             {[
-              { num: "1,500+", label: "Hotels" },
-              { num: "50+", label: "Cities" },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <div className="type-stat" style={{
-                  color: "var(--ink)",
-                }}>
+              { num: "1,500+", label: "Partner Hotels" },
+              { num: "50+", label: "Cities Worldwide" },
+              { num: "24/7", label: "Concierge" },
+            ].map((stat, i, arr) => (
+              <div
+                key={stat.label}
+                style={{
+                  flex: 1,
+                  paddingRight: "24px",
+                  borderRight:
+                    i < arr.length - 1
+                      ? "0.5px solid rgba(255,255,255,0.08)"
+                      : "none",
+                  paddingLeft: i > 0 ? "24px" : 0,
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 300,
+                    fontSize: "36px",
+                    color: "var(--white-soft)",
+                    lineHeight: 1,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
                   {stat.num}
                 </div>
-                <div className="type-label" style={{
-                  color: "var(--ink-light)",
-                  letterSpacing: "0.08em",
-                  marginTop: "4px",
-                }}>
+                <div
+                  className="type-tech"
+                  style={{
+                    color: "var(--slate-muted)",
+                    marginTop: "10px",
+                  }}
+                >
                   {stat.label}
                 </div>
               </div>
@@ -693,7 +727,15 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
         </motion.div>
 
         {/* Right side — hero image with overlay card */}
-        <div className="hero-image" style={{ position: "relative", overflow: "hidden" }}>
+        <div
+          className="hero-image anim-mask-unreveal"
+          style={{
+            position: "relative",
+            overflow: "hidden",
+            borderRadius: 0,
+            margin: 0,
+          }}
+        >
           <AnimatePresence mode="sync">
             {HERO_IMAGES.map((src, i) =>
               i === heroIdx ? (
@@ -711,7 +753,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
-                    filter: "saturate(0.85) brightness(0.97)",
+                    filter: "grayscale(0.2) saturate(0.88) contrast(1.08) brightness(0.86)",
                   }}
                   loading="lazy"
                   onError={(e) => {
@@ -723,17 +765,11 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
             )}
           </AnimatePresence>
 
-          {/* Gradient overlay — blends into cream on the left edge */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(to right, var(--cream) 0%, transparent 30%)",
-              pointerEvents: "none",
-            }}
-          />
+          {/* Depth via Shadow Gradient — transparent to obsidian. No blur. */}
+          <div className="depth-overlay-left" style={{ zIndex: 1 }} />
+          <div className="depth-overlay-bottom" style={{ zIndex: 1 }} />
 
-          {/* Floating perks card */}
+          {/* Floating dossier card — hairline-framed, no glass blur */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -741,30 +777,49 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
             style={{
               position: "absolute",
               bottom: "40px",
-              left: "-20px",
-              background: "var(--white)",
-              border: "1px solid var(--cream-border)",
-              padding: "18px 22px",
-              width: "240px",
-              boxShadow: "0 8px 40px rgba(26,23,16,0.12)",
+              left: "28px",
+              padding: "22px 24px",
+              width: "260px",
               zIndex: 3,
+              background: "rgba(8, 8, 8, 0.78)",
+              border: "0.5px solid rgba(255,255,255,0.08)",
+              borderRadius: 0,
             }}
           >
-            <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--ink)" }}>
+            <div className="type-tech" style={{ marginBottom: "14px" }}>
+              Member Dossier
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-display)",
+                fontStyle: "italic",
+                fontWeight: 300,
+                fontSize: "22px",
+                color: "var(--white-soft)",
+                letterSpacing: "-0.01em",
+                lineHeight: 1.15,
+                marginBottom: "10px",
+              }}
+            >
               The Ritz-Carlton, Bali
             </div>
-            <div style={{ fontSize: "11px", color: "var(--ink-light)", marginTop: "2px" }}>
-              Member Perks Included
+            <div
+              className="type-tech"
+              style={{
+                color: "var(--brass-raw)",
+                marginBottom: "14px",
+              }}
+            >
+              Perks Included
             </div>
             <div style={{
-              marginTop: "10px",
               display: "flex",
               flexDirection: "column",
-              gap: "4px",
+              gap: "6px",
             }}>
               {["Room upgrade", "Late checkout", "Welcome drinks"].map((perk) => (
-                <div key={perk} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "var(--ink-mid)" }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <div key={perk} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12px", fontWeight: 300, letterSpacing: "0.02em", color: "var(--white-soft)", lineHeight: 1.6 }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--brass-raw)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   {perk}

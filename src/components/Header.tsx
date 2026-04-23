@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MobileNav from "./MobileNav";
@@ -42,24 +42,37 @@ export default function Header() {
   }
 
   const joinHref = user ? "/profile" : "/login";
-  // Show a compact Sign In on mobile (the desktop Sign In link lives in
-  // .header-nav-center which is display:none < 768px). Hide while auth is
-  // resolving to avoid a flash, and hide when logged in.
   const showMobileSignIn = !loading && !user;
+
+  // On the homepage we run in "Precision Luxury" mode — pill-shaped
+  // floating nav with glass-morphism and a Gold Glow CTA. Other pages
+  // retain the classic navy bar so we don't recolour the whole site.
+  const precisionMode = pathname === "/";
+
+  // Shrinking Monolith: structured full-width bar → centered floating
+  // pill after the first 48px of scroll.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    if (!precisionMode) return;
+    const onScroll = () => setScrolled(window.scrollY > 48);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [precisionMode]);
 
   return (
     <>
       <nav
         ref={navRef}
-        className="voyagr-nav"
+        className={`voyagr-nav${precisionMode ? " precision-nav" : ""}${precisionMode && scrolled ? " is-shrunk" : ""}`}
         style={{
           position: "fixed",
           top: 0,
           left: 0,
           right: 0,
           zIndex: 100,
-          background: NAVY,
-          borderBottom: "1px solid rgba(201,168,76,0.1)",
+          background: precisionMode ? undefined : NAVY,
+          borderBottom: precisionMode ? "none" : "1px solid rgba(201,168,76,0.1)",
         }}
       >
         <div
@@ -67,8 +80,9 @@ export default function Header() {
           style={{
             display: "flex",
             alignItems: "center",
-            maxWidth: "1400px",
+            maxWidth: precisionMode ? "1360px" : "1400px",
             margin: "0 auto",
+            padding: precisionMode ? "0 28px" : undefined,
           }}
         >
           {/* ── Left: Logo ── */}
@@ -138,52 +152,76 @@ export default function Header() {
             }}
           >
             {/* "Join the Club" button — desktop only.
-                Logged out → /login (signup/OTP flow). Logged in → /profile dashboard. */}
+                Logged out → /login (signup/OTP flow). Logged in → /profile dashboard.
+                Precision mode upgrades to a Gold Glow pill. */}
             <Link
               href={joinHref}
-              className="header-join-btn"
+              className={`header-join-btn${precisionMode ? " precision-join-btn" : ""}`}
               onMouseEnter={() => setJoinHover(true)}
               onMouseLeave={() => setJoinHover(false)}
-              style={{
-                background: joinHover ? GOLD : "transparent",
-                color: joinHover ? NAVY : IVORY,
-                border: `1px solid ${GOLD}`,
-                fontFamily: "var(--font-body)",
-                fontWeight: 600,
-                fontSize: "12px",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                textDecoration: "none",
-                padding: "8px 22px",
-                borderRadius: "2px",
-                transition: "background 0.25s, color 0.25s",
-                whiteSpace: "nowrap",
-              }}
+              style={
+                precisionMode
+                  ? {
+                      fontFamily: "var(--font-body)",
+                      fontWeight: 600,
+                      fontSize: "11px",
+                      textTransform: "uppercase",
+                      textDecoration: "none",
+                      whiteSpace: "nowrap",
+                    }
+                  : {
+                      background: joinHover ? GOLD : "transparent",
+                      color: joinHover ? NAVY : IVORY,
+                      border: `1px solid ${GOLD}`,
+                      fontFamily: "var(--font-body)",
+                      fontWeight: 600,
+                      fontSize: "12px",
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      textDecoration: "none",
+                      padding: "8px 22px",
+                      borderRadius: "2px",
+                      transition: "background 0.25s, color 0.25s",
+                      whiteSpace: "nowrap",
+                    }
+              }
             >
               Join the Club
             </Link>
 
             {/* Mobile-only compact Sign In — mirrors the desktop "Sign In"
-                nav link, which is hidden below 768px. Link gets native
-                keyboard (Enter) activation for free. */}
+                nav link, which is hidden below 768px. */}
             {showMobileSignIn && (
               <Link
                 href="/login"
-                className="header-signin-mobile"
+                className={`header-signin-mobile${precisionMode ? " precision-signin-pill" : ""}`}
                 aria-label="Sign in"
-                style={{
-                  color: IVORY,
-                  border: `1px solid ${GOLD}`,
-                  fontFamily: "var(--font-body)",
-                  fontWeight: 600,
-                  fontSize: "12px",
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  textDecoration: "none",
-                  padding: "7px 14px",
-                  borderRadius: "2px",
-                  whiteSpace: "nowrap",
-                }}
+                style={
+                  precisionMode
+                    ? {
+                        color: IVORY,
+                        fontFamily: "var(--font-body)",
+                        fontWeight: 500,
+                        fontSize: "11px",
+                        letterSpacing: "0.16em",
+                        textTransform: "uppercase",
+                        textDecoration: "none",
+                        whiteSpace: "nowrap",
+                      }
+                    : {
+                        color: IVORY,
+                        border: `1px solid ${GOLD}`,
+                        fontFamily: "var(--font-body)",
+                        fontWeight: 600,
+                        fontSize: "12px",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        textDecoration: "none",
+                        padding: "7px 14px",
+                        borderRadius: "2px",
+                        whiteSpace: "nowrap",
+                      }
+                }
               >
                 Sign In
               </Link>
