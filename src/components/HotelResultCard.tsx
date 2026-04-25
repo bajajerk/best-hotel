@@ -72,20 +72,14 @@ export default function HotelResultCard({
   liveSavingsPct?: number | null;
 }) {
   const photo = sanitizePhoto(hotel.photo1);
-  // Prefer real MRP from the batch endpoint; fall back to the legacy ×1.25 heuristic.
-  const marketRate = liveMrp?.agoda_rate
-    ? Math.round(liveMrp.agoda_rate)
-    : hotel.rates_from
-    ? Math.round(hotel.rates_from * 1.25)
-    : null;
-  const savePercent =
-    liveSavingsPct != null
-      ? liveSavingsPct
-      : hotel.rates_from && marketRate
-      ? Math.round(((marketRate - hotel.rates_from) / marketRate) * 100)
-      : null;
+  // Only show MRP/savings when we have a real Agoda rate from the batch endpoint.
+  // No more fake ×1.25 heuristic — if MRP is missing, we just show the price.
+  const marketRate = liveMrp?.agoda_rate ? Math.round(liveMrp.agoda_rate) : null;
+  const savePercent = liveSavingsPct != null ? liveSavingsPct : null;
   const saveAmount =
-    hotel.rates_from && marketRate ? marketRate - hotel.rates_from : null;
+    hotel.rates_from && marketRate && marketRate > hotel.rates_from
+      ? marketRate - hotel.rates_from
+      : null;
 
   const isPreferred = index === 0;
   const location = [hotel.city_name, hotel.country].filter(Boolean).join(" \u00B7 ");

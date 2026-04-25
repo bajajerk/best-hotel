@@ -40,7 +40,7 @@ export function computeTopSellers(hotels: CuratedHotel[], limit = 8): TopSellerH
     rating: item.hotel.rating_average || 8.0,
     reviews: item.reviews,
     priceFrom: item.hotel.rates_from || 0,
-    savePercent: item.savePercent,
+    savePercent: item.savePercent ?? 0,
     score: Math.round(item.score * 100),
     rank: idx + 1,
     img: sanitizePhoto(item.hotel.photo1),

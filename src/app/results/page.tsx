@@ -26,12 +26,12 @@ const SearchMapView = lazy(() => import("@/components/SearchMapView"));
 const RESULTS_PER_PAGE = 24;
 
 const SORT_OPTIONS: { label: string; value: SortStrategy }[] = [
-  { label: "Lowest Voyagr Rate", value: "price_asc" },
-  { label: "Best Value", value: "deal_desc" },
-  { label: "Traveller Favourites", value: "popularity_desc" },
+  { label: "Highest Rated", value: "rating_desc" },
+  { label: "Price: Low to High", value: "price_asc" },
+  { label: "Price: High to Low", value: "price_desc" },
+  { label: "Most Reviewed", value: "popularity_desc" },
   { label: "Recommended", value: "recommended" },
-  { label: "Guest Rating", value: "rating_desc" },
-  { label: "Stars: High to Low", value: "stars_desc" },
+  { label: "Star Rating", value: "stars_desc" },
 ];
 
 const STAR_OPTIONS = [
@@ -90,7 +90,7 @@ export default function ResultsPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Filter state
-  const [sortBy, setSortBy] = useState<SortStrategy>("recommended");
+  const [sortBy, setSortBy] = useState<SortStrategy>("rating_desc");
   const [starFilter, setStarFilter] = useState(0);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
   const [maxPrice, setMaxPrice] = useState(50000);
@@ -306,7 +306,7 @@ export default function ResultsPage() {
     setPriceRange([minPrice, maxPrice]);
     setSelectedAmenities([]);
     setSelectedPerks([]);
-    setSortBy("recommended");
+    setSortBy("rating_desc");
     setVisibleCount(RESULTS_PER_PAGE);
   }, [minPrice, maxPrice]);
 

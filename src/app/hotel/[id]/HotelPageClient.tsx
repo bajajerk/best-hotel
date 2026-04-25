@@ -11,7 +11,7 @@ import HotelPageWhatsAppTrigger from "@/components/HotelPageWhatsAppTrigger";
 import { trackHotelViewed, trackHotelGalleryOpened, trackHotelTabClicked } from "@/lib/analytics";
 import { useBooking } from "@/context/BookingContext";
 import { useAuth } from "@/context/AuthContext";
-import { fetchHotelRates, type RatePlan, type RatesResponse } from "@/lib/api";
+import { fetchHotelRates, defaultBookingDates, type RatePlan, type RatesResponse } from "@/lib/api";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -691,6 +691,16 @@ export default function HotelPage() {
   /* ── Guest counts (sum across rooms) ── */
   const adultsCount = booking.totalAdults;
   const childrenCount = booking.totalChildren;
+
+  /* ── Auto-default dates to tonight + 1 night if user hasn't picked any ── */
+  useEffect(() => {
+    if (!booking.checkIn || !booking.checkOut) {
+      const { checkin, checkout } = defaultBookingDates();
+      booking.setDates(checkin, checkout);
+    }
+    // run once on mount; booking.setDates is stable from context
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ── Fetch live rates whenever dates / guests / hotel change ── */
   useEffect(() => {
