@@ -381,12 +381,15 @@ function ResultsContent() {
         .fc-select.sel-state { background: #C9A84C; color: #0B1B2B; padding: 5px 12px; border-radius: 4px; }
 
         /* ── Sticky CTA ── */
-        .sticky { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(253,250,245,0.97); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid #ece6dc; display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; padding-bottom: max(13px, env(safe-area-inset-bottom)); z-index: 50; box-shadow: 0 -4px 20px rgba(0,0,0,0.07); }
-        .sticky-l { display: flex; flex-direction: column; gap: 3px; }
-        .sticky-lbl { font-size: 12px; color: #7a7465; font-family: var(--font-body); }
+        .sticky { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(253,250,245,0.97); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid #ece6dc; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 16px; padding-bottom: max(13px, env(safe-area-inset-bottom)); z-index: 50; box-shadow: 0 -4px 20px rgba(0,0,0,0.07); }
+        .sticky-l { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+        .sticky-lbl { font-size: 12px; color: #7a7465; font-family: var(--font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .sticky-total { font-size: 19px; font-weight: 700; color: #1a1710; font-family: var(--font-mono); }
-        .sticky-btn { background: #C9A84C; color: #0B1B2B; padding: 12px 28px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border: none; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; }
+        .sticky-btn { background: #C9A84C; color: #0B1B2B; padding: 12px 28px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border: none; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; flex-shrink: 0; }
         .sticky-btn.dim { background: #e0d8c8; color: #aaa; cursor: not-allowed; }
+        @media (max-width: 380px) {
+          .sticky-btn { padding: 12px 18px; }
+        }
 
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
       `}</style>

@@ -287,6 +287,184 @@ function parseTripJackFlights(data: any): FlightSearchResult {
   return { flights, totalCount: flights.length };
 }
 
+export interface ReviewFareOption {
+  id: string;
+  fareIdentifier: string;
+  cabinClass: string;
+  totalFare: number;
+  baseFare: number;
+  taxes: number;
+  cabinBaggage: string;
+  checkinBaggage: string;
+  mealIncluded: boolean;
+  refundable: boolean;
+  seatChargeable: boolean;
+}
+
+export interface FlightReviewResult {
+  bookingId: string;
+  flight: ParsedFlight;
+  fareOptions: ReviewFareOption[];
+  totalAdultFare: number;
+}
+
+function parseTripJackReview(data: any): FlightReviewResult {
+  const tripInfos: any[] = data?.tripInfos ?? [];
+  const segs: FlightSegment[] = [];
+  const fareOptions: ReviewFareOption[] = [];
+
+  for (const leg of tripInfos) {
+    for (const seg of leg.sI ?? []) {
+      segs.push({
+        id: String(seg.id ?? segs.length),
+        airline: { code: seg.fD?.aI?.code ?? '', name: seg.fD?.aI?.name ?? seg.fD?.aI?.code ?? 'Unknown' },
+        flightNumber: `${seg.fD?.aI?.code ?? ''}${seg.fD?.fN ?? ''}`,
+        from: { code: seg.da?.code ?? '', city: seg.da?.city ?? seg.da?.code ?? '', terminal: seg.da?.terminal },
+        to: { code: seg.aa?.code ?? '', city: seg.aa?.city ?? seg.aa?.code ?? '', terminal: seg.aa?.terminal },
+        departureTime: seg.dt ?? '',
+        arrivalTime: seg.at ?? '',
+        durationMins: seg.duration ?? 0,
+        stops: seg.so ?? 0,
+      });
+    }
+    for (const f of leg.totalPriceList ?? []) {
+      const adult = f.fd?.ADULT ?? {};
+      fareOptions.push({
+        id: f.id ?? '',
+        fareIdentifier: f.fareIdentifier ?? '',
+        cabinClass: adult.cc ?? 'ECONOMY',
+        totalFare: adult.fC?.TF ?? 0,
+        baseFare: adult.fC?.BF ?? 0,
+        taxes: adult.fC?.TAF ?? 0,
+        cabinBaggage: adult.bI?.cB ?? '',
+        checkinBaggage: adult.bI?.iB ?? '',
+        mealIncluded: !!adult.mI,
+        refundable: (adult.rT ?? 0) > 0,
+        seatChargeable: (adult.sR ?? 0) > 0,
+      });
+    }
+  }
+
+  const cheapest = fareOptions.length
+    ? fareOptions.reduce((a, b) => (a.totalFare <= b.totalFare ? a : b))
+    : null;
+
+  const flight: ParsedFlight = {
+    key: segs[0] ? `${segs[0].airline.code}-${segs[0].departureTime}` : 'review',
+    segments: segs,
+    fares: fareOptions.map((f) => ({ id: f.id, fareIdentifier: f.fareIdentifier, totalFare: f.totalFare, baseFare: f.baseFare, taxes: f.taxes })),
+    cheapestFare: cheapest ? { id: cheapest.id, fareIdentifier: cheapest.fareIdentifier, totalFare: cheapest.totalFare, baseFare: cheapest.baseFare, taxes: cheapest.taxes } : null,
+  };
+
+  return {
+    bookingId: data?.bookingId ?? '',
+    flight,
+    fareOptions,
+    totalAdultFare: data?.totalPriceInfo?.totalFareDetail?.fC?.TF ?? cheapest?.totalFare ?? 0,
+  };
+}
+
+export async function reviewFlight(params: {
+  priceIds: string[];
+  token?: string | null;
+}): Promise<FlightReviewResult> {
+  const { priceIds, token } = params;
+
+  const res = await fetch(`${API_BASE}/api/flights/review`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ priceIds }),
+  });
+
+  const data = await res.json();
+  if (data.error) {
+    const msg = typeof data.error === 'string' ? data.error : data.error?.message ?? 'Review failed';
+    throw new Error(msg);
+  }
+
+  return parseTripJackReview(data);
+}
+
+export interface FlightPassenger {
+  ti: string;        // "Mr" / "Mrs" / "Ms" / "Mstr" / "Miss"
+  fN: string;        // first name
+  lN: string;        // last name
+  dob: string;       // YYYY-MM-DD
+  pt: "ADULT" | "CHILD" | "INFANT";
+  fF?: string;       // frequent flyer
+  bf?: number;       // bonus field (TripJack — default 0)
+}
+
+export interface FlightDeliveryInfo {
+  emails: string[];
+  contacts: string[];
+}
+
+export async function validatePrebookFlight(params: {
+  bookingId: string;
+  passengers: FlightPassenger[];
+  token?: string | null;
+}): Promise<unknown> {
+  const { bookingId, passengers, token } = params;
+  const res = await fetch(`${API_BASE}/api/flights/fare-validate-prebook`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ bookingId, passengers }),
+  });
+  const data = await res.json();
+  if (data.error) {
+    const msg = typeof data.error === 'string' ? data.error : data.error?.message ?? 'Prebook validation failed';
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export interface BookFlightResult {
+  bookingId: string;
+  status: "BOOKED" | "HOLD" | string;
+  raw: unknown;
+}
+
+export async function bookFlight(params: {
+  bookingId: string;
+  passengers: FlightPassenger[];
+  deliveryInfo: FlightDeliveryInfo;
+  paymentInfos?: { amount: number; paymentType: string }[];
+  token?: string | null;
+}): Promise<BookFlightResult> {
+  const { bookingId, passengers, deliveryInfo, paymentInfos, token } = params;
+  const body: Record<string, unknown> = {
+    bookingId,
+    passengers,
+    deliveryInfo,
+  };
+  if (paymentInfos && paymentInfos.length) body.paymentInfos = paymentInfos;
+
+  const res = await fetch(`${API_BASE}/api/flights/book`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (data.error) {
+    const msg = typeof data.error === 'string' ? data.error : data.error?.message ?? 'Booking failed';
+    throw new Error(msg);
+  }
+
+  const returnedId = data?.bookingId ?? data?.data?.bookingId ?? bookingId;
+  const status = paymentInfos && paymentInfos.length ? 'BOOKED' : 'HOLD';
+  return { bookingId: returnedId, status, raw: data };
+}
+
 export async function searchFlights(params: {
   from: string;
   to: string;
