@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
 import { useAuth } from "@/context/AuthContext";
-import { reviewFlight, type FlightReviewResult, type ReviewFareOption } from "@/lib/api";
+import { reviewFlight, type FlightReviewResult, type ReviewFareOption, type ParsedFlight, type FlightFare } from "@/lib/api";
 
 function fmtTime(iso: string) {
   if (!iso) return "--:--";
@@ -33,7 +33,7 @@ function FareCard({
   onSelect,
   badge,
 }: {
-  fare: ReviewFareOption;
+  fare: FlightFare;
   selected: boolean;
   onSelect: () => void;
   badge: "cheap" | null;
@@ -85,6 +85,7 @@ function FareSelectContent() {
   const router = useRouter();
   const { getIdToken } = useAuth();
 
+  const flightKey = searchParams.get("flightKey") ?? "";
   const priceIdsRaw = searchParams.get("priceIds") ?? "";
   const priceIds = priceIdsRaw.split(",").filter(Boolean);
   const from = searchParams.get("from") ?? "";
@@ -94,7 +95,7 @@ function FareSelectContent() {
   const date = searchParams.get("date") ?? "";
   const adults = Number(searchParams.get("adults") ?? "1");
 
-  const [data, setData] = useState<FlightReviewResult | null>(null);
+  const [flight, setFlight] = useState<ParsedFlight | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -103,22 +104,66 @@ function FareSelectContent() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      if (!priceIds.length) {
-        setError("No fare selected. Please go back and pick a flight.");
-        setLoading(false);
-        return;
-      }
       setLoading(true);
       setError(null);
+
+      // Primary path: use the flight stashed in sessionStorage by results page.
+      // This avoids calling /api/flights/review with multiple priceIds, which
+      // TripJack rejects (errCode 1091: priceIds count must equal trip count).
+      if (flightKey && typeof window !== "undefined") {
+        try {
+          const raw = sessionStorage.getItem(`flight:${flightKey}`);
+          if (raw) {
+            const cached: ParsedFlight = JSON.parse(raw);
+            if (!cancelled) {
+              setFlight(cached);
+              const cheapest = cached.fares.length
+                ? cached.fares.reduce((a, b) => (a.totalFare <= b.totalFare ? a : b))
+                : null;
+              setSelectedId(cheapest?.id ?? null);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch {
+          // fall through to fallback
+        }
+      }
+
+      // Fallback (direct URL or stale tab): review with first priceId only.
+      // Single fare option is shown — user can't switch fare class without
+      // going back to results.
+      if (!priceIds.length) {
+        if (!cancelled) {
+          setError("No fare selected. Please go back and pick a flight.");
+          setLoading(false);
+        }
+        return;
+      }
       try {
         const token = await getIdToken();
-        const result = await reviewFlight({ priceIds, token });
+        const result: FlightReviewResult = await reviewFlight({ priceIds: [priceIds[0]], token });
         if (cancelled) return;
-        setData(result);
-        const cheapest = result.fareOptions.length
-          ? result.fareOptions.reduce((a, b) => (a.totalFare <= b.totalFare ? a : b))
-          : null;
-        setSelectedId(cheapest?.id ?? null);
+        const fares: FlightFare[] = result.fareOptions.map((f: ReviewFareOption) => ({
+          id: f.id,
+          fareIdentifier: f.fareIdentifier,
+          totalFare: f.totalFare,
+          baseFare: f.baseFare,
+          taxes: f.taxes,
+          cabinBaggage: f.cabinBaggage,
+          checkinBaggage: f.checkinBaggage,
+          mealIncluded: f.mealIncluded,
+          refundable: f.refundable,
+          cabinClass: f.cabinClass,
+        }));
+        const fallback: ParsedFlight = {
+          key: result.flight.key || "fallback",
+          segments: result.flight.segments,
+          fares,
+          cheapestFare: result.flight.cheapestFare,
+        };
+        setFlight(fallback);
+        setSelectedId(fares[0]?.id ?? null);
       } catch (e: unknown) {
         if (cancelled) return;
         setError(e instanceof Error ? e.message : "Failed to load fare details");
@@ -128,26 +173,26 @@ function FareSelectContent() {
     }
     load();
     return () => { cancelled = true; };
-  }, [priceIdsRaw]);
+  }, [flightKey, priceIdsRaw]);
 
-  const cheapestPrice = data?.fareOptions.length
-    ? Math.min(...data.fareOptions.map((f) => f.totalFare))
+  const cheapestPrice = flight?.fares.length
+    ? Math.min(...flight.fares.map((f) => f.totalFare))
     : 0;
 
-  const selectedFare = data?.fareOptions.find((f) => f.id === selectedId) ?? null;
-  const seg = data?.flight.segments[0];
-  const lastSeg = data?.flight.segments[data.flight.segments.length - 1];
-  const totalDur = data?.flight.segments.reduce((s, x) => s + x.durationMins, 0) ?? 0;
-  const stops = (data?.flight.segments.length ?? 1) - 1;
+  const selectedFare = flight?.fares.find((f) => f.id === selectedId) ?? null;
+  const seg = flight?.segments[0];
+  const lastSeg = flight?.segments[flight.segments.length - 1];
+  const totalDur = flight?.segments.reduce((s, x) => s + x.durationMins, 0) ?? 0;
+  const stops = (flight?.segments.length ?? 1) - 1;
 
   async function handleContinue() {
-    if (!selectedFare || !data || continuing) return;
+    if (!selectedFare || !flight || continuing) return;
     setContinuing(true);
     setError(null);
     try {
       const token = await getIdToken();
-      // Re-review with the single selected priceId so the bookingId is scoped
-      // to exactly this fare. Payment amount must equal this review's total.
+      // Review with the single selected priceId so the bookingId is scoped to
+      // exactly this fare. Payment amount must equal this review's total.
       const fresh = await reviewFlight({ priceIds: [selectedFare.id], token });
       const p = new URLSearchParams({
         bookingId: fresh.bookingId,
@@ -189,7 +234,7 @@ function FareSelectContent() {
           </div>
         )}
 
-        {!loading && !error && data && (
+        {!loading && !error && flight && (
           <>
             {/* Flight summary */}
             <div className="flight-sum">
@@ -214,7 +259,7 @@ function FareSelectContent() {
             <div className="section-title">Choose your fare</div>
 
             <div className="fare-list">
-              {data.fareOptions.map((f) => (
+              {flight.fares.map((f) => (
                 <FareCard
                   key={f.id}
                   fare={f}
@@ -223,7 +268,7 @@ function FareSelectContent() {
                   badge={f.totalFare === cheapestPrice ? "cheap" : null}
                 />
               ))}
-              {data.fareOptions.length === 0 && (
+              {flight.fares.length === 0 && (
                 <div className="fs-empty">No fare options available for this flight.</div>
               )}
             </div>
@@ -234,7 +279,7 @@ function FareSelectContent() {
       </div>
 
       {/* Sticky CTA */}
-      {!loading && !error && data && (
+      {!loading && !error && flight && (
         <div className="sticky-fs">
           <div className="sticky-l">
             {selectedFare ? (

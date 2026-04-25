@@ -236,7 +236,16 @@ function ResultsContent() {
 
   function handleContinue() {
     if (!selectedFlight) return;
+    // Stash full flight (with rich fare details) so fare-select can render
+    // without calling /api/flights/review with multiple priceIds (TripJack
+    // rejects with errCode 1091 when N priceIds != N trip legs).
+    try {
+      sessionStorage.setItem(`flight:${selectedFlight.key}`, JSON.stringify(selectedFlight));
+    } catch {
+      // sessionStorage unavailable — fare-select will fall back to single-priceId review
+    }
     const p = new URLSearchParams({
+      flightKey: selectedFlight.key,
       priceIds: selectedFlight.fares.map(f => f.id).join(","),
       from, to, fromCity, toCity, date, adults: String(adults), cabin,
     });

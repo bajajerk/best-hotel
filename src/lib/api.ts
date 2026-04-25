@@ -215,6 +215,11 @@ export interface FlightFare {
   totalFare: number;
   baseFare: number;
   taxes: number;
+  cabinBaggage?: string;
+  checkinBaggage?: string;
+  mealIncluded?: boolean;
+  refundable?: boolean;
+  cabinClass?: string;
 }
 
 export interface ParsedFlight {
@@ -258,13 +263,21 @@ function parseTripJackFlights(data: any): FlightSearchResult {
         stops: seg.so ?? 0,
       }));
 
-      const fares: FlightFare[] = (option.totalPriceList ?? []).map((f: any) => ({
-        id: f.id ?? '',
-        fareIdentifier: f.fareIdentifier ?? '',
-        totalFare: f.fd?.ADULT?.fC?.TF ?? 0,
-        baseFare: f.fd?.ADULT?.fC?.BF ?? 0,
-        taxes: f.fd?.ADULT?.fC?.TAF ?? 0,
-      })).filter((f: FlightFare) => f.totalFare > 0);
+      const fares: FlightFare[] = (option.totalPriceList ?? []).map((f: any) => {
+        const adult = f.fd?.ADULT ?? {};
+        return {
+          id: f.id ?? '',
+          fareIdentifier: f.fareIdentifier ?? '',
+          totalFare: adult.fC?.TF ?? 0,
+          baseFare: adult.fC?.BF ?? 0,
+          taxes: adult.fC?.TAF ?? 0,
+          cabinBaggage: adult.bI?.cB ?? '',
+          checkinBaggage: adult.bI?.iB ?? '',
+          mealIncluded: !!adult.mI,
+          refundable: (adult.rT ?? 0) > 0,
+          cabinClass: adult.cc ?? 'ECONOMY',
+        };
+      }).filter((f: FlightFare) => f.totalFare > 0);
 
       const cheapestFare = fares.length
         ? fares.reduce((a, b) => (a.totalFare <= b.totalFare ? a : b))
