@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { RankedHotel } from "@/lib/ranking";
-import type { BatchRate } from "@/lib/api";
 import { AmenityChips } from "@/components/AmenityIcons";
 import { useBookingFlow } from "@/context/BookingFlowContext";
 
@@ -43,24 +42,21 @@ function formatCurrency(amount: number, currency?: string | null): string {
 export default function ResultCard({
   ranked,
   index,
-  liveRate,
 }: {
   ranked: RankedHotel;
   index: number;
-  /** Real batch rate for this hotel (Agoda MRP + savings). When null, no MRP/savings is shown. */
-  liveRate?: BatchRate | null;
 }) {
   const hotel = ranked.hotel;
   const router = useRouter();
   const { setHotel } = useBookingFlow();
   const photo = sanitizePhoto(hotel.photo1);
-  // Only show market rate / savings when we have real Agoda MRP from batch rates.
-  const marketRate = liveRate?.mrp?.agoda_rate ? Math.round(liveRate.mrp.agoda_rate) : null;
-  const savePercent = liveRate?.savings_pct != null ? liveRate.savings_pct : null;
-  const savingsAmount =
-    hotel.rates_from && marketRate && marketRate > hotel.rates_from
-      ? marketRate - hotel.rates_from
+  const marketRate = hotel.rates_from ? Math.round(hotel.rates_from * 1.25) : null;
+  const savePercent =
+    hotel.rates_from && marketRate
+      ? Math.round(((marketRate - hotel.rates_from) / marketRate) * 100)
       : null;
+  const savingsAmount =
+    hotel.rates_from && marketRate ? marketRate - hotel.rates_from : null;
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.preventDefault();

@@ -7,12 +7,6 @@
 
 import type { CuratedHotel } from "./api";
 
-// Optional rate metadata used to compute real (not-fabricated) deal scores.
-// `savings_pct` comes from the batch-rates endpoint (real Agoda MRP comparison).
-export interface RateMeta {
-  savings_pct: number | null;
-}
-
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -20,7 +14,7 @@ export interface RankedHotel<T = CuratedHotel> {
   hotel: T;
   valueScore: number;       // 0–100 composite quality/value score
   popularityScore: number;  // 0–100 based on review volume
-  dealScore: number;        // 0–100 based on real savings_pct (or 0 when unavailable)
+  dealScore: number;        // 0–100 based on price vs market rate
 }
 
 export type SortStrategy =
@@ -60,13 +54,7 @@ function invertNormalize(value: number, min: number, max: number): number {
 // ---------------------------------------------------------------------------
 // Compute ranking scores for a set of CuratedHotels
 // ---------------------------------------------------------------------------
-// `rateMeta` is an optional map keyed by hotel_id with the live batch-rate
-// payload. When provided, dealScore reflects real savings_pct from Agoda MRP.
-// When absent, dealScore is 0 (so deal_desc sorts those hotels last).
-export function rankHotels(
-  hotels: CuratedHotel[],
-  rateMeta?: Record<string, RateMeta | undefined>
-): RankedHotel[] {
+export function rankHotels(hotels: CuratedHotel[]): RankedHotel[] {
   if (hotels.length === 0) return [];
 
   // Collect ranges for normalization
@@ -94,17 +82,12 @@ export function rankHotels(
     const popularityNorm = normalize(reviewCount, minReviews, maxReviews);
     const popularityScore = Math.round(popularityNorm * 100);
 
-    // Deal score: real savings_pct from batch-rate response. When the rate
-    // is unavailable (no Agoda MRP comparison), score is 0 — these hotels
-    // sort last under "deal_desc".
-    const realSavings = rateMeta?.[String(hotel.hotel_id)]?.savings_pct ?? null;
-    const dealScore =
-      realSavings != null && realSavings > 0
-        ? Math.round(Math.min(realSavings * 2.5, 100)) // scale 0-40% → 0-100
-        : 0;
+    // Deal score: estimated savings vs market rate
+    const marketRate = price > 0 ? Math.round(price * 1.25) : 0;
+    const savingsPercent = marketRate > 0 ? ((marketRate - price) / marketRate) * 100 : 0;
+    const dealScore = Math.round(Math.min(savingsPercent * 2.5, 100)); // scale 0-40% → 0-100
 
-    // Value score: weighted composite (rating + popularity + price + stars).
-    // No fake savings here — we drop it entirely.
+    // Value score: weighted composite
     const ratingNorm = normalize(rating, minRating, maxRating);
     const priceNorm = price > 0 ? invertNormalize(price, minPrice, maxPrice) : 0.5;
     const starsNorm = normalize(starRating, minStars, maxStars);
@@ -188,23 +171,20 @@ export function rankAndSort(
 // ---------------------------------------------------------------------------
 // Top sellers algorithm (extracted from TopSellers component)
 // ---------------------------------------------------------------------------
-// Pure rating + review-volume score. No fabricated savings — when real Agoda
-// MRP isn't available the marketRate / savePercent fields are null.
-const TOP_SELLER_REVIEWS_WEIGHT = 0.6;
-const TOP_SELLER_RATING_WEIGHT = 0.4;
+const TOP_SELLER_BOOKING_WEIGHT = 0.6;
+const TOP_SELLER_SAVINGS_WEIGHT = 0.4;
 
 export interface TopSellerScore {
   hotel: CuratedHotel;
   score: number;
   reviews: number;
-  savePercent: number | null;
-  marketRate: number | null;
+  savePercent: number;
+  marketRate: number;
 }
 
 export function computeTopSellerScores(
   hotels: CuratedHotel[],
-  limit = 8,
-  rateMeta?: Record<string, { savings_pct: number | null; mrp_rate: number | null } | undefined>
+  limit = 8
 ): TopSellerScore[] {
   const eligible = hotels.filter(
     (h) => h.rates_from && h.rates_from > 0 && h.number_of_reviews && h.number_of_reviews > 0
@@ -213,19 +193,21 @@ export function computeTopSellerScores(
   if (eligible.length === 0) return [];
 
   const maxReviews = Math.max(...eligible.map((h) => h.number_of_reviews || 0));
-  const maxRating = Math.max(...eligible.map((h) => h.rating_average || 0), 1);
+  const maxSavePercent = 40;
 
   const scored = eligible.map((h) => {
     const reviews = h.number_of_reviews || 0;
-    const meta = rateMeta?.[String(h.hotel_id)];
-    const savePercent = meta?.savings_pct ?? null;
-    const marketRate = meta?.mrp_rate ?? null;
+    const marketRate = Math.round((h.rates_from || 0) * 1.25);
+    const savePercent =
+      h.rates_from && marketRate
+        ? Math.round(((marketRate - h.rates_from) / marketRate) * 100)
+        : 20;
 
     const normalizedBookings = reviews / maxReviews;
-    const normalizedRating = (h.rating_average || 0) / maxRating;
+    const normalizedSavings = Math.min(savePercent, maxSavePercent) / maxSavePercent;
     const score =
-      TOP_SELLER_REVIEWS_WEIGHT * normalizedBookings +
-      TOP_SELLER_RATING_WEIGHT * normalizedRating;
+      TOP_SELLER_BOOKING_WEIGHT * normalizedBookings +
+      TOP_SELLER_SAVINGS_WEIGHT * normalizedSavings;
 
     return { hotel: h, score, reviews, savePercent, marketRate };
   });

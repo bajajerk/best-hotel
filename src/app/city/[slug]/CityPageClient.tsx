@@ -523,7 +523,7 @@ export default function CityPage() {
   const [priceMax, setPriceMax] = useState(0);
   const [filterMin, setFilterMin] = useState(0);
   const [filterMax, setFilterMax] = useState(0);
-  const [sortBy, setSortBy] = useState<SortStrategy>("rating_desc");
+  const [sortBy, setSortBy] = useState<SortStrategy>("deal_desc");
   const [minStars, setMinStars] = useState<number>(0);
 
   const [searchOpen, setSearchOpen] = useState(false);
@@ -534,12 +534,11 @@ export default function CityPage() {
   const priceRef = useRef<HTMLDivElement>(null);
 
   const citySortOptions: { label: string; value: SortStrategy }[] = [
-    { label: "Highest Rated", value: "rating_desc" },
+    { label: "Saving: Highest", value: "deal_desc" },
     { label: "Recommended", value: "recommended" },
     { label: "Price: Low to High", value: "price_asc" },
     { label: "Price: High to Low", value: "price_desc" },
-    { label: "Most Reviewed", value: "popularity_desc" },
-    { label: "Star Rating", value: "stars_desc" },
+    { label: "Rating: Highest", value: "rating_desc" },
   ];
 
   useEffect(() => {
@@ -673,7 +672,7 @@ export default function CityPage() {
   const isStarFilterActive = minStars > 0;
   const currency = allHotels.find((h) => h.rates_currency)?.rates_currency || null;
 
-  const currentSortLabel = citySortOptions.find((o) => o.value === sortBy)?.label || "Highest Rated";
+  const currentSortLabel = citySortOptions.find((o) => o.value === sortBy)?.label || "Saving: Highest";
 
   return (
     <div
