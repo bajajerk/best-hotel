@@ -415,7 +415,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
           SAMPLE_CITIES.map((c, i) => ({
             ...c,
             city_id: null,
-            hotel_count: 100 + Math.floor(Math.random() * 900),
+            hotel_count: 0,
             display_order: i + 1,
           }))
         );
@@ -428,8 +428,8 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
     if (initialFeatured) return;
     async function loadFeaturedHotels() {
       try {
-        const data: FeaturedResponse = await fetchFeaturedAll();
-        setFeatured(data);
+        const data = await fetchFeaturedAll();
+        if (data) setFeatured(data);
       } catch (err) {
         console.error("[Voyagr] Failed to load featured hotels:", err);
       }
@@ -1783,8 +1783,6 @@ function FeaturedCityCard({
   isLarge?: boolean;
 }) {
   const img = getCityImage(city.city_slug);
-  // Generate a fake savings percentage for display
-  const savePercent = 20 + Math.floor(Math.random() * 21);
 
   return (
     <Link
@@ -1863,15 +1861,6 @@ function FeaturedCityCard({
             color: "var(--cream)",
           }}>
             {city.hotel_count > 0 ? `${city.hotel_count}+ hotels` : "Explore"}
-          </span>
-          <span style={{
-            fontSize: "11px",
-            background: "var(--gold)",
-            color: "var(--ink)",
-            padding: "2px 8px",
-            fontWeight: 500,
-          }}>
-            Save up to {savePercent}%
           </span>
         </div>
       </div>

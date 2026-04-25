@@ -477,7 +477,7 @@ function RateCard({
             {formatPrice(perNight, plan.currency)}/night
             {nightsSafe > 1 && <> &middot; {nightsSafe} nights</>}
           </div>
-          {savingsPct && savingsPct > 0 && mrpRate && mrpRate > plan.total_price && (
+          {savingsPct != null && savingsPct > 0 && mrpRate != null && mrpRate > plan.total_price ? (
             <div
               style={{
                 display: "inline-block",
@@ -491,7 +491,7 @@ function RateCard({
             >
               -{savingsPct}% vs. public rates
             </div>
-          )}
+          ) : null}
         </div>
 
         <button
@@ -1019,7 +1019,8 @@ export default function HotelPage() {
 
   const address = [hotel.addressline1, hotel.city, hotel.country].filter(Boolean).join(", ");
   const datesSelected = !!(booking.checkIn && booking.checkOut);
-  const heroSavePercent = savingsPct && savingsPct > 0 ? savingsPct : 23;
+  // Real savings only — no synthetic fallback. Badge hidden when null/0.
+  const heroSavePercent = savingsPct != null && savingsPct > 0 ? savingsPct : null;
 
   /* Sidebar derived values */
   const sidebarNightly = selectedPlan ? selectedPlan.total_price / Math.max(nights, 1) : 0;
@@ -1104,40 +1105,67 @@ export default function HotelPage() {
             </h1>
           </motion.div>
 
-          {/* Save up to badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="shrink-0 text-center hidden sm:block"
-            style={{
-              background: "var(--gold)",
-              color: "var(--ink)",
-              padding: "12px 24px",
-            }}
-          >
-            <div
+          {/* Save up to badge — only when real savings available, else show "Preferred Rate" */}
+          {heroSavePercent != null ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="shrink-0 text-center hidden sm:block"
               style={{
-                fontSize: "10px",
-                fontWeight: 600,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
+                background: "var(--gold)",
+                color: "var(--ink)",
+                padding: "12px 24px",
               }}
             >
-              Save up to
-            </div>
-            <div
+              <div
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Save up to
+              </div>
+              <div
+                style={{
+                  fontSize: "26px",
+                  fontWeight: 500,
+                  fontFamily: "var(--font-display)",
+                  lineHeight: 1.2,
+                }}
+              >
+                {heroSavePercent}%
+              </div>
+              <div style={{ fontSize: "10px", opacity: 0.7 }}>vs. public rates</div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="shrink-0 text-center hidden sm:block"
               style={{
-                fontSize: "26px",
-                fontWeight: 500,
-                fontFamily: "var(--font-display)",
-                lineHeight: 1.2,
+                background: "var(--gold)",
+                color: "var(--ink)",
+                padding: "16px 24px",
               }}
             >
-              {heroSavePercent}%
-            </div>
-            <div style={{ fontSize: "10px", opacity: 0.7 }}>vs. public rates</div>
-          </motion.div>
+              <div
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  fontFamily: "var(--font-display)",
+                }}
+              >
+                Preferred Rate
+              </div>
+              <div style={{ fontSize: "10px", opacity: 0.7, marginTop: 2 }}>Member exclusive</div>
+            </motion.div>
+          )}
         </div>
 
         {/* Save / Heart button */}

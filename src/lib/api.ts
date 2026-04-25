@@ -188,11 +188,87 @@ export interface FeaturedResponse {
   familyFriendly: CuratedHotel[];
 }
 
-/** Fetch all featured hotel categories from the aggregated endpoint */
-export async function fetchFeaturedAll(): Promise<FeaturedResponse> {
-  const res = await fetch(`${API_BASE}/api/hotels/featured`);
-  if (!res.ok) throw new Error('Failed to fetch featured hotels');
-  return res.json();
+// In-memory cache for the client-side featured aggregator.
+// Backend has no /api/hotels/featured endpoint, so we build the response
+// from /api/curations/cities + per-city /api/curations/{slug} fan-out.
+// Cache for 5 minutes to avoid hammering the curations API on remounts.
+const FEATURED_CACHE_TTL_MS = 5 * 60 * 1000;
+let _featuredCache: { at: number; data: FeaturedResponse } | null = null;
+
+const FEATURED_TOP_CITY_COUNT = 5;
+
+function isRenderable(h: CuratedHotel): boolean {
+  return Boolean(h.hotel_name && h.rating_average);
+}
+
+/**
+ * Build the home-page featured response client-side from existing curation
+ * endpoints. Returns `null` on any failure so the caller can quietly skip
+ * the carousels (the existing UI already handles null).
+ */
+export async function fetchFeaturedAll(): Promise<FeaturedResponse | null> {
+  try {
+    const now = Date.now();
+    if (_featuredCache && now - _featuredCache.at < FEATURED_CACHE_TTL_MS) {
+      return _featuredCache.data;
+    }
+
+    // 1) Fetch top cities
+    const citiesRes = await fetch(`${API_BASE}/api/curations/cities?limit=20`);
+    if (!citiesRes.ok) throw new Error(`cities ${citiesRes.status}`);
+    const citiesJson = await citiesRes.json();
+    const cities: CuratedCity[] = citiesJson.results ?? [];
+    const topCities = cities.slice(0, FEATURED_TOP_CITY_COUNT);
+    if (topCities.length === 0) return null;
+
+    // 2) Fan out to per-city curations in parallel
+    const slug = (c: CuratedCity) => c.city_slug;
+    const couplesResults = await Promise.allSettled(
+      topCities.map((c) => fetchCityCurations(slug(c), 'couples'))
+    );
+    const familiesResults = await Promise.allSettled(
+      topCities.map((c) => fetchCityCurations(slug(c), 'families'))
+    );
+
+    const collect = (
+      arr: PromiseSettledResult<{ curations: { singles: CuratedHotel[]; couples: CuratedHotel[]; families: CuratedHotel[] } }>[],
+      key: 'singles' | 'couples' | 'families'
+    ): CuratedHotel[] => {
+      const out: CuratedHotel[] = [];
+      for (const r of arr) {
+        if (r.status === 'fulfilled') {
+          out.push(...((r.value.curations?.[key] ?? []) as CuratedHotel[]));
+        }
+      }
+      return out;
+    };
+
+    const couplesPool = collect(couplesResults, 'couples').filter(isRenderable);
+    const familiesPool = collect(familiesResults, 'families').filter(isRenderable);
+
+    // 3) Sort heuristics — same shape as the deprecated /api/hotels/featured
+    const byRating = (a: CuratedHotel, b: CuratedHotel) =>
+      (b.rating_average ?? 0) - (a.rating_average ?? 0);
+    const byPriceAsc = (a: CuratedHotel, b: CuratedHotel) =>
+      (a.rates_from ?? Number.POSITIVE_INFINITY) - (b.rates_from ?? Number.POSITIVE_INFINITY);
+
+    const topRated = [...couplesPool].sort(byRating).slice(0, 8);
+    const bestValue = [...couplesPool]
+      .filter((h) => (h.rates_from ?? 0) > 0)
+      .sort(byPriceAsc)
+      .slice(0, 8);
+    // Solo proxy: highest-rated couples-curated hotels (no `singles` curation
+    // tier exists in the dataset for these cities — couples is the closest)
+    const soloTravel = [...couplesPool].sort(byRating).slice(0, 8);
+    const familyFriendly = [...familiesPool].sort(byRating).slice(0, 8);
+
+    const data: FeaturedResponse = { topRated, bestValue, soloTravel, familyFriendly };
+    _featuredCache = { at: now, data };
+    return data;
+  } catch (err) {
+    console.error('[fetchFeaturedAll] client-side aggregation failed:', err);
+    return null;
+  }
 }
 
 // ── Flight types ──────────────────────────────────────────────────────────

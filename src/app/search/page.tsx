@@ -305,7 +305,7 @@ export default function SearchPage() {
           SAMPLE_CITIES.map((c, i) => ({
             ...c,
             city_id: null,
-            hotel_count: 100 + Math.floor(Math.random() * 900),
+            hotel_count: 0,
             display_order: i + 1,
           }))
         );
