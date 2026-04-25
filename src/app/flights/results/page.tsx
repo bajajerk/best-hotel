@@ -37,55 +37,6 @@ function stopCount(f: ParsedFlight) {
   return f.segments.length - 1;
 }
 
-// ── Demo flights (shown when API is unavailable) ──────────────────────────────
-
-const DEMO: ParsedFlight[] = [
-  {
-    key: "6E-demo1",
-    segments: [{
-      id: "s1", airline: { code: "6E", name: "IndiGo" }, flightNumber: "6E-204",
-      from: { code: "BOM", city: "Mumbai" }, to: { code: "DXB", city: "Dubai" },
-      departureTime: "2026-05-25T06:00:00", arrivalTime: "2026-05-25T08:45:00",
-      durationMins: 165, stops: 0,
-    }],
-    fares: [{ id: "f1", fareIdentifier: "LITE", totalFare: 8400, baseFare: 7500, taxes: 900 }],
-    cheapestFare: { id: "f1", fareIdentifier: "LITE", totalFare: 8400, baseFare: 7500, taxes: 900 },
-  },
-  {
-    key: "AI-demo2",
-    segments: [{
-      id: "s2", airline: { code: "AI", name: "Air India" }, flightNumber: "AI-992",
-      from: { code: "BOM", city: "Mumbai" }, to: { code: "DXB", city: "Dubai" },
-      departureTime: "2026-05-25T09:15:00", arrivalTime: "2026-05-25T12:10:00",
-      durationMins: 175, stops: 0,
-    }],
-    fares: [{ id: "f2", fareIdentifier: "VALUE", totalFare: 9200, baseFare: 8200, taxes: 1000 }],
-    cheapestFare: { id: "f2", fareIdentifier: "VALUE", totalFare: 9200, baseFare: 8200, taxes: 1000 },
-  },
-  {
-    key: "EK-demo3",
-    segments: [{
-      id: "s3", airline: { code: "EK", name: "Emirates" }, flightNumber: "EK-500",
-      from: { code: "BOM", city: "Mumbai" }, to: { code: "DXB", city: "Dubai" },
-      departureTime: "2026-05-25T11:30:00", arrivalTime: "2026-05-25T14:00:00",
-      durationMins: 150, stops: 0,
-    }],
-    fares: [{ id: "f3", fareIdentifier: "FLEX", totalFare: 14100, baseFare: 12000, taxes: 2100 }],
-    cheapestFare: { id: "f3", fareIdentifier: "FLEX", totalFare: 14100, baseFare: 12000, taxes: 2100 },
-  },
-  {
-    key: "SG-demo4",
-    segments: [{
-      id: "s4", airline: { code: "SG", name: "SpiceJet" }, flightNumber: "SG-74",
-      from: { code: "BOM", city: "Mumbai" }, to: { code: "DXB", city: "Dubai" },
-      departureTime: "2026-05-25T14:20:00", arrivalTime: "2026-05-25T17:05:00",
-      durationMins: 165, stops: 0,
-    }],
-    fares: [{ id: "f4", fareIdentifier: "SAVER", totalFare: 8850, baseFare: 7800, taxes: 1050 }],
-    cheapestFare: { id: "f4", fareIdentifier: "SAVER", totalFare: 8850, baseFare: 7800, taxes: 1050 },
-  },
-];
-
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
 function Skeleton() {
@@ -206,6 +157,7 @@ function ResultsContent() {
 
   const [flights,     setFlights]     = useState<ParsedFlight[]>([]);
   const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState<string | null>(null);
   const [sortKey,     setSortKey]     = useState<SortKey>("cheapest");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
@@ -213,12 +165,14 @@ function ResultsContent() {
 
   async function load() {
     setLoading(true);
+    setError(null);
     try {
       const token  = await getIdToken();
       const result = await searchFlights({ from, to, date, adults, cabinClass: cabin, tripType, token });
-      setFlights(result.flights.length ? result.flights : DEMO);
-    } catch {
-      setFlights(DEMO);
+      setFlights(result.flights);
+    } catch (e: unknown) {
+      setFlights([]);
+      setError(e instanceof Error ? e.message : "Failed to load flights. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -288,9 +242,25 @@ function ResultsContent() {
         </div>
 
         {/* Count */}
-        {!loading && (
+        {!loading && !error && display.length > 0 && (
           <div className="res-count">
             {display.length} flight{display.length !== 1 ? "s" : ""} found · {fromCity} → {toCity}
+          </div>
+        )}
+
+        {/* Empty / error states */}
+        {!loading && error && (
+          <div className="res-empty">
+            <div className="empty-title">Couldn&apos;t load flights</div>
+            <div className="empty-sub">{error}</div>
+            <Link href="/flights" className="empty-link">← Edit search</Link>
+          </div>
+        )}
+        {!loading && !error && display.length === 0 && (
+          <div className="res-empty">
+            <div className="empty-title">No flights found</div>
+            <div className="empty-sub">No availability for {fromCity} → {toCity} on {fmtDate(date)}. Try a different date or route.</div>
+            <Link href="/flights" className="empty-link">← Edit search</Link>
           </div>
         )}
 
@@ -353,6 +323,12 @@ function ResultsContent() {
 
         /* ── Count ── */
         .res-count { font-size: 11px; color: #7a7465; padding: 10px 16px 4px; font-family: var(--font-body); letter-spacing: 0.04em; }
+
+        /* ── Empty / error ── */
+        .res-empty { text-align: center; padding: 48px 24px; }
+        .empty-title { font-size: 16px; font-weight: 700; color: #1a1710; font-family: var(--font-body); margin-bottom: 6px; }
+        .empty-sub { font-size: 13px; color: #7a7465; font-family: var(--font-body); margin-bottom: 16px; line-height: 1.5; }
+        .empty-link { color: #C9A84C; text-decoration: none; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 
         /* ── Cards ── */
         .cards-wrap { padding: 8px 0; }
