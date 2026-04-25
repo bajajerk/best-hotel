@@ -1,14 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import RoomSelectLoginModal from "@/components/RoomSelectLoginModal";
 import { trackCtaClicked } from "@/lib/analytics";
 
 export default function SiteSignInStickyBar() {
   const { user, loading } = useAuth();
+  const pathname = usePathname();
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Flight booking pages have their own sticky CTA (Continue / Confirm & Pay).
+  // Hide the sign-in upsell so the two don't stack on mobile.
+  if (pathname?.startsWith("/flights/")) return null;
   if (loading || user) return null;
 
   const openModal = () => {
