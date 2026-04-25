@@ -588,7 +588,7 @@ export default function Home({ initialCities, initialFeatured }: HomePageClientP
               marginBottom: "28px",
             }}
           >
-            all Hotels you <em>know</em>.
+            Hotels you <em>know</em>.
             <br />
             Rates they <em>don&rsquo;t show</em>.
           </motion.h1>
