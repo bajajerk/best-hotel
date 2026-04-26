@@ -1034,7 +1034,7 @@ export default function HotelPage() {
   const sidebarSaving = sidebarMarket - sidebarTotal;
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--cream)", color: "var(--ink)" }}>
+    <div className="luxe min-h-screen" style={{ background: "var(--cream)", color: "var(--ink)" }}>
       {/* ═══════════════════ Lightbox ═══════════════════ */}
       <AnimatePresence>
         {lightboxOpen && lightboxPhotos.length > 0 && (
@@ -1322,17 +1322,16 @@ export default function HotelPage() {
               <span>{booking.guestSummary}</span>
             </div>
 
-            {/* "Member rates" callout */}
+            {/* Preferred rates callout */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 12,
+                gap: 14,
                 padding: "12px 16px",
                 background: "var(--gold-pale)",
                 border: "1px solid var(--gold-light)",
                 marginBottom: 24,
-                fontSize: "13px",
                 fontFamily: "var(--font-body)",
                 color: "var(--ink-mid)",
                 flexWrap: "wrap",
@@ -1342,35 +1341,46 @@ export default function HotelPage() {
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <strong style={{ color: "var(--ink)" }}>Member rates</strong> — not available on MakeMyTrip, Booking.com, or any public platform. Join free to see your rate.
-              </span>
-              {!user && (
-                <button
-                  onClick={() => {
-                    setPendingOptionId(null);
-                    setLoginIntent("room-select");
-                    setLoginModalOpen(true);
-                  }}
+              <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+                <span
                   style={{
-                    fontSize: "12px",
-                    fontWeight: 500,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    padding: "8px 18px",
-                    border: "1px solid var(--gold)",
-                    background: "transparent",
-                    color: "var(--gold)",
-                    cursor: "pointer",
-                    fontFamily: "var(--font-body)",
-                    transition: "all 0.15s ease",
-                    whiteSpace: "nowrap",
-                    flexShrink: 0,
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "var(--ink)",
+                    letterSpacing: "0.01em",
                   }}
                 >
-                  Join Free →
-                </button>
-              )}
+                  Preferred rates &middot; Voyagr Club
+                </span>
+                {!datesSelected ? (
+                  <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>
+                    Pick your dates to see live, member-only rates.
+                  </span>
+                ) : !user ? (
+                  <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>
+                    <button
+                      onClick={() => {
+                        setPendingOptionId(null);
+                        setLoginIntent("room-select");
+                        setLoginModalOpen(true);
+                      }}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        color: "var(--gold)",
+                        textDecoration: "underline",
+                        fontFamily: "var(--font-body)",
+                        fontSize: "12px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Sign in
+                    </button>
+                    {" to unlock the lowest available rate."}
+                  </span>
+                ) : null}
+              </div>
             </div>
 
             {/* ══════ RATES BODY ══════ */}
@@ -2403,13 +2413,13 @@ export default function HotelPage() {
           onSuccess={handleLoginSuccess}
           heading={
             loginIntent === "save-hotel"
-              ? "Join free to save this hotel"
-              : "Join free to book this room"
+              ? "Sign in to save this hotel"
+              : "Sign in to confirm your rate"
           }
           subtext={
             loginIntent === "save-hotel"
-              ? "Join free to save hotels and access them anytime"
-              : "See member rates and book in minutes. Free forever."
+              ? "Save hotels to your shortlist and access them anytime."
+              : "Voyagr members get rates negotiated directly with hotels — securely confirmed by our concierge."
           }
         />
       )}

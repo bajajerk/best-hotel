@@ -60,9 +60,6 @@ export default function SiteSignInStickyBar() {
         <RoomSelectLoginModal
           onClose={() => setModalOpen(false)}
           onSuccess={() => setModalOpen(false)}
-          eyebrow="Members Only"
-          heading="Sign in to see member rates"
-          subtext="Access preferred rates and book in minutes. Free forever."
         />
       )}
     </>

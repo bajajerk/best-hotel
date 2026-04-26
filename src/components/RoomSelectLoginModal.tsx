@@ -17,9 +17,9 @@ type Mode = "choose" | "phone" | "otp";
 export default function RoomSelectLoginModal({
   onClose,
   onSuccess,
-  eyebrow = "Members Only",
-  heading = "Join free to book this hotel",
-  subtext = "See member rates and book in minutes. Free forever.",
+  eyebrow = "Voyagr Club",
+  heading = "Sign in to confirm your rate",
+  subtext = "Voyagr members get rates negotiated directly with hotels — securely confirmed by our concierge.",
 }: RoomSelectLoginModalProps) {
   const { signInWithGoogle, sendPhoneOtp, verifyPhoneOtp } = useAuth();
 

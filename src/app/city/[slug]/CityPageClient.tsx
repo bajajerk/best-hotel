@@ -795,8 +795,8 @@ export default function CityPage() {
                   maxWidth: 520,
                 }}
               >
-                <span style={{ color: "var(--gold)", fontWeight: 500 }}>Member rates</span>
-                {" \u00B7 Save up to 25% vs. MakeMyTrip and Booking.com"}
+                <span style={{ color: "var(--gold)", fontWeight: 500 }}>Preferred rates</span>
+                {" \u00B7 Voyagr Club members save on every stay."}
               </p>
             </motion.div>
 

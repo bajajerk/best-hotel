@@ -477,7 +477,7 @@ export default function UnlockRateModal({
                         <line x1="12" y1="8" x2="12.01" y2="8" />
                       </svg>
                       <span>
-                        These are <strong style={{ color: "var(--ink)" }}>private preferred rates</strong> not available on Booking.com, Expedia, or any public OTA. Share your details and our concierge will confirm your rate within 15 minutes on WhatsApp.
+                        <strong style={{ color: "var(--ink)" }}>Preferred rates</strong> are negotiated directly with hotels by our concierge. Share your details and we&apos;ll confirm your rate on WhatsApp within 15 minutes.
                       </span>
                     </div>
 
