@@ -702,3 +702,45 @@ export function defaultBookingDates(): { checkin: string; checkout: string } {
   const iso = (x: Date) => x.toISOString().slice(0, 10);
   return { checkin: iso(tonight), checkout: iso(tomorrow) };
 }
+
+// ── Bookings ──────────────────────────────────────────────────────────────
+// POST /api/bookings — creates a `bookings` row. Backend accepts an optional
+// Authorization: Bearer <firebase id token> header to associate the booking
+// with the signed-in user. Pass it via the `idToken` argument when available.
+
+export interface CreateBookingBody {
+  hotel_id: number;
+  provider: string;
+  checkin: string;
+  checkout: string;
+  currency: string;
+  booked_rate: number;
+  best_market_rate?: number;
+  adults: number;
+  children: number;
+  status?: "pending" | "confirmed";
+  guest_name?: string;
+  guest_email?: string;
+  special_requests?: string;
+}
+
+export interface CreateBookingResult {
+  id: number;
+  status: string;
+}
+
+export async function createBooking(
+  body: CreateBookingBody,
+  idToken?: string | null,
+): Promise<CreateBookingResult> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+  const res = await fetch(`${API_BASE}/api/bookings`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(`Booking failed: ${res.status}`);
+  return res.json();
+}

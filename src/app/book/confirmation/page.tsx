@@ -1,22 +1,47 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { useBookingFlow } from "@/context/BookingFlowContext";
 
-const WHATSAPP_LINK =
-  "https://wa.me/919876543210?text=Hi%20Priya%2C%20I%20just%20booked%20and%20would%20love%20to%20connect";
+const GOLD = "#C9A84C";
+const CONCIERGE_WHATSAPP =
+  process.env.NEXT_PUBLIC_CONCIERGE_WHATSAPP || "919876543210";
+
+const inrFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+const formatInr = (n: number) => inrFormatter.format(Math.round(n || 0));
+
+function formatDateShort(iso: string) {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function formatShortMonthDay(iso: string) {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+function formatYear(iso: string) {
+  if (!iso) return "";
+  return new Date(iso + "T00:00:00").getFullYear();
+}
 
 export default function ConfirmationPage() {
   const router = useRouter();
   const flow = useBookingFlow();
   const [mounted, setMounted] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const referralRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!flow.bookingId) {
-      router.replace("/book/rooms");
+      router.replace("/");
       return;
     }
     setMounted(true);
@@ -24,155 +49,319 @@ export default function ConfirmationPage() {
 
   if (!mounted || !flow.bookingId) return null;
 
-  const formatDateShort = (iso: string) => {
-    if (!iso) return "";
-    const d = new Date(iso + "T00:00:00");
-    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-  };
+  const reference = `VG-${String(flow.bookingId).padStart(5, "0")}`;
+  const nights = flow.nights || 1;
 
-  const roomName = flow.selectedRooms[0]?.roomType.name || "Deluxe Room";
+  const datesLine = `${formatShortMonthDay(flow.checkIn)} → ${formatShortMonthDay(flow.checkOut)}, ${formatYear(flow.checkOut)} (${nights} night${nights !== 1 ? "s" : ""})`;
+  const guestsLine = `${flow.adults} adult${flow.adults !== 1 ? "s" : ""}${flow.children > 0 ? ` · ${flow.children} child${flow.children !== 1 ? "ren" : ""}` : ""}`;
+  const cancelClause = flow.refundable && flow.freeCancelUntil
+    ? ` (free cancellation until ${formatShortMonthDay(flow.freeCancelUntil.slice(0, 10))})`
+    : "";
+  const totalLine = `${formatInr(flow.totalPrice)}${cancelClause}`;
+  const roomLine = `${flow.roomName}${flow.mealBasis ? ` (${flow.mealBasis})` : ""}`;
+  const cityLine = flow.hotelCity ? `, ${flow.hotelCity}` : "";
 
-  /* Calendar link (Google Calendar) */
-  const calStart = flow.checkIn.replace(/-/g, "");
-  const calEnd = flow.checkOut.replace(/-/g, "");
-  const calTitle = encodeURIComponent(`Stay at ${flow.hotelName}`);
-  const calDetails = encodeURIComponent(`Booking ref: ${flow.bookingId}\n${flow.hotelCity}`);
-  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${calTitle}&dates=${calStart}/${calEnd}&details=${calDetails}`;
+  const messageText =
+    `Hi Voyagr Concierge!\n\n` +
+    `Booking request: ${reference}\n\n` +
+    `🏨 ${flow.hotelName}${cityLine}\n` +
+    `🛏️ ${roomLine}\n` +
+    `📅 ${datesLine}\n` +
+    `👥 ${guestsLine}\n` +
+    `💰 ${totalLine}\n\n` +
+    `Please confirm and send payment details. Thanks!`;
 
-  const referralCode = `https://voyagr.club/r/${flow.bookingId?.split("-")[1]?.toLowerCase() || "invite"}`;
+  const whatsappUrl = `https://wa.me/${CONCIERGE_WHATSAPP}?text=${encodeURIComponent(messageText)}`;
 
-  const handleCopy = () => {
-    if (referralRef.current) {
-      navigator.clipboard.writeText(referralRef.current.value);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  /* Extract city name from hotelCity (e.g. "Jaipur, India" → "Jaipur") */
-  const destination = flow.hotelCity?.split(",")[0]?.trim() || flow.hotelCity;
+  const [city, country] = (flow.hotelCity || "").split(",").map((s) => s.trim());
 
   return (
-    <div className="confirmation-overlay">
-      <div className="confirmation-scroll">
-        {/* ── Animated checkmark ── */}
-        <div className="confirm-check-wrap">
-          <svg className="confirm-check-svg" viewBox="0 0 52 52">
-            <circle
-              className="confirm-check-circle"
-              cx="26" cy="26" r="24"
-              fill="none"
-              stroke="#C9A84C"
-              strokeWidth="1"
-            />
-            <path
-              className="confirm-check-path"
-              fill="none"
-              stroke="#C9A84C"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 27l7 7 15-15"
-            />
-          </svg>
-        </div>
-
-        {/* ── Headline ── */}
-        <h1 className="confirm-headline">
-          You&rsquo;re going to <em>{destination}.</em>
-        </h1>
-        <p className="confirm-subhead">
-          Your booking is confirmed.<br />
-          Priya will be in touch within the hour.
-        </p>
-
-        {/* ── Booking card ── */}
-        <div className="confirm-card">
-          <div className="confirm-card-hotel">{flow.hotelName}</div>
-
-          <div className="confirm-card-details">
-            <div className="confirm-detail-item">
-              <span className="confirm-detail-label">CHECK-IN</span>
-              <span className="confirm-detail-value">{formatDateShort(flow.checkIn)}</span>
-            </div>
-            <div className="confirm-detail-item">
-              <span className="confirm-detail-label">CHECK-OUT</span>
-              <span className="confirm-detail-value">{formatDateShort(flow.checkOut)}</span>
-            </div>
-            <div className="confirm-detail-item">
-              <span className="confirm-detail-label">ROOM</span>
-              <span className="confirm-detail-value">{roomName}</span>
-            </div>
-            <div className="confirm-detail-item">
-              <span className="confirm-detail-label">REFERENCE</span>
-              <span className="confirm-detail-value">{flow.bookingId}</span>
-            </div>
-          </div>
-
-          <div className="confirm-savings-pill">
-            You saved ₹14,800 on this booking
-          </div>
-        </div>
-
-        {/* ── Next step cards ── */}
-        <div className="confirm-actions">
-          <a
-            href={calendarUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="confirm-action-card"
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>calendar_add_on</span>
-            <span>Add to Calendar</span>
-          </a>
-
-          <a
-            href={WHATSAPP_LINK}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="confirm-action-card confirm-action-sage"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-            </svg>
-            <span>Message Priya</span>
-          </a>
-
-          <div className="confirm-action-card confirm-action-gold">
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>share</span>
-            <span>Share with a friend</span>
-            <span className="confirm-action-sub">Give ₹2,000 off their first booking</span>
-          </div>
-        </div>
-
-        {/* ── Referral section ── */}
-        <div className="confirm-referral">
-          <p className="confirm-referral-title">Know someone who&rsquo;d love this?</p>
-
-          <div className="confirm-referral-box">
-            <input
-              ref={referralRef}
-              type="text"
-              readOnly
-              value={referralCode}
-              className="confirm-referral-input"
-            />
-            <button onClick={handleCopy} className="confirm-referral-copy">
-              {copied ? "Copied" : "Copy"}
-            </button>
-          </div>
-
-          <p className="confirm-referral-desc">
-            Your friend gets ₹2,000 off.<br />
-            You get credit on your next booking.
-          </p>
-        </div>
-
-        {/* ── Footer ── */}
-        <div className="confirm-footer">
-          Confirmation sent to {flow.guestInfo?.email} &middot; Reference: {flow.bookingId}
-        </div>
+    <div style={{ paddingBottom: 24 }}>
+      {/* Big checkmark */}
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
+        <svg width="80" height="80" viewBox="0 0 52 52" aria-hidden>
+          <circle cx="26" cy="26" r="24" fill="none" stroke={GOLD} strokeWidth="2" />
+          <path
+            d="M15 27l7 7 15-15"
+            fill="none"
+            stroke={GOLD}
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </div>
+
+      {/* Headline */}
+      <h1
+        style={{
+          fontFamily: "var(--serif)",
+          fontSize: "var(--text-display-3)",
+          fontWeight: 600,
+          color: "var(--ink)",
+          textAlign: "center",
+          margin: "20px 0 6px",
+          letterSpacing: "-0.01em",
+        }}
+      >
+        Booking request submitted ✓
+      </h1>
+      <p
+        style={{
+          fontFamily: "var(--sans)",
+          fontSize: "var(--text-body)",
+          color: "var(--ink-light)",
+          textAlign: "center",
+          margin: "0 0 8px",
+        }}
+      >
+        Reference{" "}
+        <span style={{ fontWeight: 700, color: "var(--ink)" }}>{reference}</span>
+      </p>
+      <p
+        style={{
+          fontFamily: "var(--sans)",
+          fontSize: "var(--text-body-sm)",
+          color: "var(--ink-light)",
+          textAlign: "center",
+          margin: "0 auto 24px",
+          maxWidth: 460,
+          lineHeight: 1.5,
+        }}
+      >
+        Our concierge will WhatsApp you within 15 minutes to confirm rate and
+        collect payment.
+      </p>
+
+      {/* Summary card */}
+      <div
+        style={{
+          background: "var(--white)",
+          borderRadius: 16,
+          border: "1px solid var(--cream-border)",
+          padding: "20px 20px",
+          marginBottom: 16,
+        }}
+      >
+        <div style={{ display: "flex", gap: 14, alignItems: "center", marginBottom: 16 }}>
+          <div
+            style={{
+              position: "relative",
+              width: 64,
+              height: 64,
+              borderRadius: 12,
+              overflow: "hidden",
+              flexShrink: 0,
+              background: "var(--cream-deep)",
+            }}
+          >
+            {flow.hotelPhoto && (
+              <Image
+                src={flow.hotelPhoto}
+                alt={flow.hotelName}
+                fill
+                style={{ objectFit: "cover" }}
+                sizes="64px"
+                unoptimized
+              />
+            )}
+          </div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "var(--text-heading-3)",
+                fontWeight: 600,
+                color: "var(--ink)",
+                lineHeight: 1.2,
+              }}
+            >
+              {flow.hotelName}
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--sans)",
+                fontSize: "var(--text-body-sm)",
+                color: "var(--ink-light)",
+                marginTop: 4,
+              }}
+            >
+              {city}
+              {country ? ` · ${country}` : ""}
+            </div>
+          </div>
+        </div>
+
+        <SummaryRow label="Room" value={roomLine} />
+        <SummaryRow label="Check-in" value={formatDateShort(flow.checkIn)} />
+        <SummaryRow label="Check-out" value={formatDateShort(flow.checkOut)} />
+        <SummaryRow label="Guests" value={guestsLine} />
+        <SummaryRow label="Reference" value={reference} mono />
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            marginTop: 14,
+            paddingTop: 14,
+            borderTop: "1px solid var(--cream-border)",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "var(--sans)",
+              fontSize: "var(--text-body)",
+              fontWeight: 600,
+              color: "var(--ink)",
+            }}
+          >
+            Total
+          </span>
+          <span
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: "var(--text-heading-2)",
+              fontWeight: 600,
+              color: "var(--ink)",
+            }}
+          >
+            {formatInr(flow.totalPrice)}
+          </span>
+        </div>
+        {flow.refundable && flow.freeCancelUntil && (
+          <div
+            style={{
+              fontFamily: "var(--sans)",
+              fontSize: "var(--text-caption)",
+              color: "var(--success)",
+              fontWeight: 500,
+              textAlign: "right",
+              marginTop: 4,
+            }}
+          >
+            Free cancellation until {formatDateShort(flow.freeCancelUntil.slice(0, 10))}
+          </div>
+        )}
+      </div>
+
+      {/* Primary CTA — WhatsApp */}
+      <a
+        href={whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          width: "100%",
+          fontFamily: "var(--sans)",
+          fontSize: "var(--text-body)",
+          fontWeight: 600,
+          padding: "16px 24px",
+          borderRadius: 12,
+          background: "#25D366",
+          color: "#fff",
+          textDecoration: "none",
+          marginBottom: 12,
+          boxShadow: "0 2px 12px rgba(37,211,102,0.18)",
+        }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+        </svg>
+        Confirm on WhatsApp
+      </a>
+
+      {/* Secondary CTAs */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <Link
+          href="/profile"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px 16px",
+            borderRadius: 12,
+            background: "var(--white)",
+            border: "1px solid var(--cream-border)",
+            fontFamily: "var(--sans)",
+            fontSize: "var(--text-body-sm)",
+            fontWeight: 600,
+            color: "var(--ink)",
+            textDecoration: "none",
+            textAlign: "center",
+          }}
+        >
+          View My Bookings
+        </Link>
+        <Link
+          href="/"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "12px 16px",
+            borderRadius: 12,
+            background: "var(--white)",
+            border: "1px solid var(--cream-border)",
+            fontFamily: "var(--sans)",
+            fontSize: "var(--text-body-sm)",
+            fontWeight: 600,
+            color: "var(--ink)",
+            textDecoration: "none",
+            textAlign: "center",
+          }}
+        >
+          Browse more hotels
+        </Link>
+      </div>
+
+      {/* Footer */}
+      <div
+        style={{
+          textAlign: "center",
+          fontFamily: "var(--sans)",
+          fontSize: "var(--text-caption)",
+          color: "var(--ink-light)",
+          marginTop: 24,
+          lineHeight: 1.6,
+        }}
+      >
+        {flow.guestEmail
+          ? <>Confirmation will be emailed to {flow.guestEmail} · Reference {reference}</>
+          : <>Reference {reference}</>}
+      </div>
+    </div>
+  );
+}
+
+function SummaryRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "baseline",
+        gap: 16,
+        padding: "6px 0",
+        fontFamily: "var(--sans)",
+        fontSize: "var(--text-body-sm)",
+      }}
+    >
+      <span style={{ color: "var(--ink-light)", flexShrink: 0 }}>{label}</span>
+      <span
+        style={{
+          color: "var(--ink)",
+          fontWeight: 500,
+          textAlign: "right",
+          fontFamily: mono ? "var(--mono, ui-monospace)" : undefined,
+          minWidth: 0,
+        }}
+      >
+        {value}
+      </span>
     </div>
   );
 }

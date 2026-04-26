@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 const STEPS = [
-  { key: "rooms", label: "Select Room", path: "/book/rooms" },
   { key: "review", label: "Review", path: "/book/review" },
   { key: "guest-details", label: "Guest Details", path: "/book/guest-details" },
   { key: "payment", label: "Payment", path: "/book/payment" },

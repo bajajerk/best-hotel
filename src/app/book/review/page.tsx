@@ -1,173 +1,198 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useBookingFlow } from "@/context/BookingFlowContext";
+import { fetchHotelDetail } from "@/lib/api";
 
 const GOLD = "#C9A84C";
-const HOLD_SECONDS = 300;
-const USD_TO_INR = 83;
 
-const toInr = (usd: number) => Math.round(usd * USD_TO_INR);
-const formatInr = (usd: number) =>
-  `\u20B9${toInr(usd).toLocaleString("en-IN")}`;
-const formatInrAmount = (inr: number) =>
-  `\u20B9${Math.round(inr).toLocaleString("en-IN")}`;
-
-function formatTimer(totalSeconds: number) {
-  const safe = Math.max(0, totalSeconds);
-  const m = Math.floor(safe / 60);
-  const s = safe % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
+const inrFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+const formatInr = (n: number) => inrFormatter.format(Math.round(n || 0));
 
 function formatLongDate(iso: string) {
   if (!iso) return "";
   const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function formatDayLabel(iso: string, time: string) {
+function formatShortMonthDay(iso: string) {
   if (!iso) return "";
   const d = new Date(iso + "T00:00:00");
-  const day = d.toLocaleDateString("en-IN", { weekday: "long" });
-  return `${day}, ${time}`;
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
 
-function freeCancellationDate(checkInIso: string) {
-  if (!checkInIso) return "";
-  const d = new Date(checkInIso + "T00:00:00");
-  d.setDate(d.getDate() - 1);
-  return d.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+function diffNights(checkIn: string, checkOut: string) {
+  if (!checkIn || !checkOut) return 0;
+  return Math.max(
+    1,
+    Math.round(
+      (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24)
+    )
+  );
 }
 
 export default function ReviewBookingPage() {
   const router = useRouter();
+  const search = useSearchParams();
   const flow = useBookingFlow();
 
-  const [seconds, setSeconds] = useState(HOLD_SECONDS);
-  const [expired, setExpired] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
-  // Redirect if no rooms selected
+  // ── Read query params first; fall back to context ──
+  const qHotelId = search.get("hotelId");
+  const qOptionId = search.get("optionId") || "";
+  const qRoomName = search.get("roomName") || "";
+  const qMealBasis = search.get("mealBasis") || "";
+  const qRefundable = search.get("refundable");
+  const qFreeCancelUntil = search.get("freeCancelUntil") || "";
+  const qTotalPrice = search.get("totalPrice");
+  const qCurrency = search.get("currency") || "INR";
+  const qCheckIn = search.get("checkIn") || "";
+  const qCheckOut = search.get("checkOut") || "";
+  const qAdults = search.get("adults");
+  const qChildren = search.get("children");
+  const qRooms = search.get("rooms");
+
+  const hotelId = qHotelId ? Number(qHotelId) : flow.hotelId;
+  const optionId = qOptionId || flow.optionId;
+  const roomName = qRoomName || flow.roomName;
+  const mealBasis = qMealBasis || flow.mealBasis;
+  const refundable = qRefundable !== null ? qRefundable === "true" : flow.refundable;
+  const freeCancelUntil = qFreeCancelUntil || flow.freeCancelUntil;
+  const totalPrice = qTotalPrice ? Number(qTotalPrice) : flow.totalPrice;
+  const currency = qCurrency || flow.currency;
+  const checkIn = qCheckIn || flow.checkIn;
+  const checkOut = qCheckOut || flow.checkOut;
+  const adults = qAdults ? Number(qAdults) : flow.adults || 2;
+  const children = qChildren ? Number(qChildren) : flow.children || 0;
+  const rooms = qRooms ? Number(qRooms) : flow.rooms || 1;
+
+  const nights = useMemo(() => diffNights(checkIn, checkOut), [checkIn, checkOut]);
+
+  // Hotel meta — pull from query/context, or fetch from API if missing
+  const [hotelName, setHotelName] = useState(flow.hotelName);
+  const [hotelPhoto, setHotelPhoto] = useState(flow.hotelPhoto || flow.hotelImage);
+  const [hotelCity, setHotelCity] = useState(flow.hotelCity);
+  const [hotelStars, setHotelStars] = useState(flow.hotelStars);
+
+  // ── Bounce back to home if essential params missing ──
   useEffect(() => {
-    if (flow.selectedRooms.length === 0) {
-      router.replace("/book/rooms");
+    if (!hotelId || !optionId || !checkIn || !checkOut) {
+      router.replace("/");
+      return;
     }
+    setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Start the rate hold the first time Review is reached, then drive the
-  // countdown off the shared timestamp so later pages stay in sync.
+  // ── Lazy-fetch hotel meta if missing ──
   useEffect(() => {
-    flow.startHold();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!flow.holdStartedAt) return;
-    const tick = () => {
-      const elapsed = Math.floor((Date.now() - (flow.holdStartedAt ?? Date.now())) / 1000);
-      const remaining = HOLD_SECONDS - elapsed;
-      if (remaining <= 0) {
-        setSeconds(0);
-        setExpired(true);
-        if (intervalRef.current) clearInterval(intervalRef.current);
-      } else {
-        setSeconds(remaining);
-      }
-    };
-    tick();
-    intervalRef.current = setInterval(tick, 1000);
+    if (!hotelId) return;
+    if (hotelName && hotelPhoto && hotelCity) return;
+    let cancelled = false;
+    fetchHotelDetail(hotelId)
+      .then((h) => {
+        if (cancelled || !h) return;
+        const name = h.hotel_name || "";
+        const photo = h.photo1 || "";
+        const city = [h.city, h.country].filter(Boolean).join(", ");
+        setHotelName(name);
+        setHotelPhoto(photo);
+        setHotelCity(city);
+        setHotelStars(h.star_rating || 5);
+      })
+      .catch(() => {});
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      cancelled = true;
     };
-  }, [flow.holdStartedAt]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hotelId]);
 
-  const firstRoom = flow.selectedRooms[0];
-  const roomType = firstRoom?.roomType;
-  const inclusions = roomType?.amenities.slice(0, 3) ?? [];
-  const packageName = "Stay + Breakfast";
+  // ── Persist into context whenever inputs change so downstream pages have it ──
+  useEffect(() => {
+    if (!hydrated || !hotelId) return;
+    flow.setRatePlan({
+      hotelId,
+      hotelName,
+      hotelPhoto,
+      hotelCity,
+      hotelStars,
+      optionId,
+      roomName,
+      mealBasis,
+      refundable,
+      freeCancelUntil,
+      totalPrice,
+      currency,
+      checkIn,
+      checkOut,
+      adults,
+      children,
+      rooms,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, hotelId, optionId, roomName, mealBasis, refundable, freeCancelUntil, totalPrice, currency, checkIn, checkOut, adults, children, rooms, hotelName, hotelPhoto, hotelCity, hotelStars]);
 
-  // Pricing — taxes shown as "Included" per spec
-  const subtotalInr = toInr(flow.totalPrice);
-  const grandTotalInr = subtotalInr; // taxes inclusive
+  if (!hydrated) return null;
 
   const handleContinue = () => {
-    if (expired) return;
+    flow.setRatePlan({
+      hotelId: hotelId as number,
+      hotelName,
+      hotelPhoto,
+      hotelCity,
+      hotelStars,
+      optionId,
+      roomName,
+      mealBasis,
+      refundable,
+      freeCancelUntil,
+      totalPrice,
+      currency,
+      checkIn,
+      checkOut,
+      adults,
+      children,
+      rooms,
+    });
     router.push("/book/guest-details");
   };
 
-  const handleSearchAgain = () => {
-    router.push("/search");
-  };
-
-  const [city, country] = (flow.hotelCity || "").split(",").map((s) => s.trim());
+  const [city, country] = (hotelCity || "").split(",").map((s) => s.trim());
+  const datesPill = `${formatShortMonthDay(checkIn)} → ${formatShortMonthDay(checkOut)}, ${nights} night${nights !== 1 ? "s" : ""}`;
 
   return (
     <div>
-      {/* Urgency timer */}
-      <div
-        role="status"
-        aria-live="polite"
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginBottom: 20,
-        }}
-      >
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "8px 16px",
-            borderRadius: 999,
-            background: "rgba(201,168,76,0.10)",
-            border: `1px solid ${GOLD}`,
-            fontFamily: "var(--sans)",
-            fontSize: "var(--text-body-sm)",
-            fontWeight: 600,
-            color: GOLD,
-          }}
-        >
-          <span aria-hidden>⏱</span>
-          <span>Rate held for {formatTimer(seconds)}</span>
-        </div>
-      </div>
-
-      {/* Hotel card */}
+      {/* Hotel hero */}
       <Card>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div
             style={{
               position: "relative",
-              width: 60,
-              height: 60,
+              width: 72,
+              height: 72,
               borderRadius: 12,
               overflow: "hidden",
               flexShrink: 0,
               background: "var(--cream-deep)",
             }}
           >
-            {flow.hotelImage && (
+            {hotelPhoto ? (
               <Image
-                src={flow.hotelImage}
-                alt={flow.hotelName}
+                src={hotelPhoto}
+                alt={hotelName}
                 fill
                 style={{ objectFit: "cover" }}
-                sizes="60px"
+                sizes="72px"
+                unoptimized
               />
-            )}
+            ) : null}
           </div>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div
@@ -179,7 +204,7 @@ export default function ReviewBookingPage() {
                 lineHeight: 1.2,
               }}
             >
-              {flow.hotelName}
+              {hotelName || "Loading…"}
             </div>
             <div
               style={{
@@ -192,96 +217,34 @@ export default function ReviewBookingPage() {
               {city}
               {country ? ` · ${country}` : ""}
             </div>
-            <div style={{ display: "flex", gap: 2, marginTop: 6 }}>
-              {Array.from({ length: flow.hotelStars || 5 }).map((_, i) => (
-                <span key={i} style={{ color: GOLD, fontSize: 14 }}>
-                  ★
-                </span>
-              ))}
-            </div>
+            {hotelStars > 0 && (
+              <div style={{ display: "flex", gap: 2, marginTop: 6 }}>
+                {Array.from({ length: hotelStars }).map((_, i) => (
+                  <span key={i} style={{ color: GOLD, fontSize: 14 }}>
+                    ★
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </Card>
 
-      {/* Dates card */}
+      {/* Room + meal basis */}
       <Card>
-        <div
+        <h3
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr auto 1fr",
-            alignItems: "center",
-            gap: 12,
+            fontFamily: "var(--sans)",
+            fontSize: "var(--text-body-sm)",
+            fontWeight: 600,
+            color: "var(--ink-light)",
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            margin: "0 0 8px",
           }}
         >
-          <DateColumn
-            label="Check-in"
-            date={formatLongDate(flow.checkIn)}
-            day={formatDayLabel(flow.checkIn, "3:00 PM")}
-            align="left"
-          />
-          <div
-            style={{
-              background: GOLD,
-              color: "var(--ink)",
-              fontFamily: "var(--sans)",
-              fontSize: "var(--text-caption)",
-              fontWeight: 600,
-              padding: "6px 14px",
-              borderRadius: 999,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {flow.nights} Night{flow.nights !== 1 ? "s" : ""}
-          </div>
-          <DateColumn
-            label="Check-out"
-            date={formatLongDate(flow.checkOut)}
-            day={formatDayLabel(flow.checkOut, "12:00 PM")}
-            align="right"
-          />
-        </div>
-      </Card>
-
-      {/* Room summary card */}
-      <Card>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 12,
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: "var(--sans)",
-              fontSize: "var(--text-body-sm)",
-              fontWeight: 600,
-              color: "var(--ink-light)",
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              margin: 0,
-            }}
-          >
-            Room
-          </h3>
-          <button
-            onClick={() => router.push("/book/rooms")}
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              fontFamily: "var(--sans)",
-              fontSize: "var(--text-body-sm)",
-              fontWeight: 600,
-              color: GOLD,
-              cursor: "pointer",
-            }}
-          >
-            Room Details →
-          </button>
-        </div>
-
+          Room
+        </h3>
         <div
           style={{
             fontFamily: "var(--serif)",
@@ -291,84 +254,55 @@ export default function ReviewBookingPage() {
             lineHeight: 1.2,
           }}
         >
-          {roomType?.name}
+          {roomName}
         </div>
-        <div
-          style={{
-            fontFamily: "var(--sans)",
-            fontSize: "var(--text-body-sm)",
-            color: "var(--ink-mid)",
-            marginTop: 4,
-          }}
-        >
-          {packageName}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+          <Pill>{mealBasis || "Room Only"}</Pill>
+          <Pill>{datesPill}</Pill>
+          <Pill>
+            {adults} adult{adults !== 1 ? "s" : ""}
+            {children > 0 ? ` · ${children} child${children !== 1 ? "ren" : ""}` : ""}
+          </Pill>
         </div>
 
-        <ul
-          style={{
-            listStyle: "none",
-            padding: 0,
-            margin: "14px 0 0",
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-          }}
-        >
-          {inclusions.map((item) => (
-            <li
-              key={item}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                fontFamily: "var(--sans)",
-                fontSize: "var(--text-body-sm)",
-                color: "var(--ink)",
-              }}
-            >
-              <span
-                aria-hidden
-                style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: "50%",
-                  background: "rgba(74,124,89,0.15)",
-                  color: "var(--success)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  flexShrink: 0,
-                }}
-              >
-                ✓
-              </span>
-              {item}
-            </li>
-          ))}
-        </ul>
-
-        <div
-          style={{
-            marginTop: 16,
-            paddingTop: 14,
-            borderTop: "1px dashed var(--cream-border)",
-            fontFamily: "var(--sans)",
-            fontSize: "var(--text-body-sm)",
-            color: "var(--success)",
-            fontWeight: 600,
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          <span aria-hidden>✓</span>
-          Free cancellation until {freeCancellationDate(flow.checkIn)}
-        </div>
+        {refundable && (
+          <div
+            style={{
+              marginTop: 14,
+              paddingTop: 14,
+              borderTop: "1px dashed var(--cream-border)",
+              fontFamily: "var(--sans)",
+              fontSize: "var(--text-body-sm)",
+              color: "var(--success)",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <span aria-hidden>✓</span>
+            Free cancellation
+            {freeCancelUntil ? ` until ${formatLongDate(freeCancelUntil.slice(0, 10))}` : ""}
+          </div>
+        )}
+        {!refundable && (
+          <div
+            style={{
+              marginTop: 14,
+              paddingTop: 14,
+              borderTop: "1px dashed var(--cream-border)",
+              fontFamily: "var(--sans)",
+              fontSize: "var(--text-body-sm)",
+              color: "var(--ink-light)",
+              fontWeight: 500,
+            }}
+          >
+            Non-refundable rate
+          </div>
+        )}
       </Card>
 
-      {/* Price card */}
+      {/* Price breakdown */}
       <Card>
         <div
           style={{
@@ -381,13 +315,9 @@ export default function ReviewBookingPage() {
           }}
         >
           <span>
-            {formatInr(roomType ? roomType.pricePerNight * (firstRoom?.quantity ?? 1) : 0)}
-            {" × "}
-            {flow.nights} night{flow.nights !== 1 ? "s" : ""}
+            Subtotal · {nights} night{nights !== 1 ? "s" : ""}
           </span>
-          <span style={{ color: "var(--ink)", fontWeight: 500 }}>
-            {formatInrAmount(subtotalInr)}
-          </span>
+          <span style={{ color: "var(--ink)", fontWeight: 500 }}>{formatInr(totalPrice)}</span>
         </div>
 
         <div
@@ -431,22 +361,24 @@ export default function ReviewBookingPage() {
               color: "var(--ink)",
             }}
           >
-            {formatInrAmount(grandTotalInr)}
+            {formatInr(totalPrice)}
           </span>
         </div>
-        <div
-          style={{
-            fontFamily: "var(--sans)",
-            fontSize: "var(--text-caption)",
-            color: "var(--success)",
-            fontWeight: 500,
-            marginTop: 4,
-            textAlign: "right",
-          }}
-        >
-          Taxes included
-        </div>
       </Card>
+
+      {/* Trust line */}
+      <div
+        style={{
+          textAlign: "center",
+          fontFamily: "var(--sans)",
+          fontSize: "var(--text-body-sm)",
+          color: "var(--ink-light)",
+          margin: "12px 0 24px",
+          lineHeight: 1.6,
+        }}
+      >
+        No payment now · Concierge confirms within 15 min · Free cancellation if applicable
+      </div>
 
       {/* Sticky bottom bar */}
       <div
@@ -464,7 +396,6 @@ export default function ReviewBookingPage() {
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <button
             onClick={handleContinue}
-            disabled={expired}
             style={{
               width: "100%",
               fontFamily: "var(--sans)",
@@ -475,8 +406,7 @@ export default function ReviewBookingPage() {
               border: "none",
               background: GOLD,
               color: "var(--ink)",
-              cursor: expired ? "not-allowed" : "pointer",
-              opacity: expired ? 0.5 : 1,
+              cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -487,77 +417,6 @@ export default function ReviewBookingPage() {
           </button>
         </div>
       </div>
-
-      {/* Rate expired modal */}
-      {expired && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="rate-expired-title"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(26,23,16,0.6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 200,
-            padding: 16,
-          }}
-        >
-          <div
-            style={{
-              background: "var(--white)",
-              borderRadius: 16,
-              padding: "28px 24px",
-              maxWidth: 360,
-              width: "100%",
-              textAlign: "center",
-            }}
-          >
-            <h2
-              id="rate-expired-title"
-              style={{
-                fontFamily: "var(--serif)",
-                fontSize: "var(--text-heading-2)",
-                fontWeight: 600,
-                color: "var(--ink)",
-                margin: "0 0 8px",
-              }}
-            >
-              Your rate has been released.
-            </h2>
-            <p
-              style={{
-                fontFamily: "var(--sans)",
-                fontSize: "var(--text-body-sm)",
-                color: "var(--ink-light)",
-                margin: "0 0 20px",
-                lineHeight: 1.5,
-              }}
-            >
-              The 5-minute hold has expired. Search again to see live availability.
-            </p>
-            <button
-              onClick={handleSearchAgain}
-              style={{
-                width: "100%",
-                fontFamily: "var(--sans)",
-                fontSize: "var(--text-body)",
-                fontWeight: 600,
-                padding: "14px 24px",
-                borderRadius: 12,
-                border: "none",
-                background: GOLD,
-                color: "var(--ink)",
-                cursor: "pointer",
-              }}
-            >
-              Search Again →
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -578,53 +437,23 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
-function DateColumn({
-  label,
-  date,
-  day,
-  align,
-}: {
-  label: string;
-  date: string;
-  day: string;
-  align: "left" | "right";
-}) {
+function Pill({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ textAlign: align, minWidth: 0 }}>
-      <div
-        style={{
-          fontFamily: "var(--sans)",
-          fontSize: "var(--text-caption)",
-          color: "var(--ink-light)",
-          letterSpacing: "0.04em",
-          textTransform: "uppercase",
-          fontWeight: 600,
-          marginBottom: 4,
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontFamily: "var(--serif)",
-          fontSize: "var(--text-heading-3)",
-          fontWeight: 600,
-          color: "var(--ink)",
-          lineHeight: 1.15,
-        }}
-      >
-        {date}
-      </div>
-      <div
-        style={{
-          fontFamily: "var(--sans)",
-          fontSize: "var(--text-caption)",
-          color: "var(--ink-light)",
-          marginTop: 4,
-        }}
-      >
-        {day}
-      </div>
-    </div>
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "6px 12px",
+        borderRadius: 999,
+        background: "var(--cream-deep)",
+        border: "1px solid var(--cream-border)",
+        fontFamily: "var(--sans)",
+        fontSize: "var(--text-caption)",
+        fontWeight: 500,
+        color: "var(--ink)",
+      }}
+    >
+      {children}
+    </span>
   );
 }

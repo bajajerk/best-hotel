@@ -812,19 +812,24 @@ export default function HotelPage() {
   const proceedToBooking = useCallback(
     (plan: RatePlan) => {
       if (!hotel) return;
-      const totalGuests = booking.rooms.reduce((s, r) => s + r.adults + r.children, 0);
+      const adults = booking.rooms.reduce((s, r) => s + r.adults, 0);
+      const children = booking.rooms.reduce((s, r) => s + r.children, 0);
       const qs = new URLSearchParams({
         hotelId: String(hotel.hotel_id),
         optionId: plan.option_id,
         roomName: plan.room_name,
-        rate: String(Math.round(plan.total_price)),
+        mealBasis: plan.meal_basis || "",
+        refundable: String(!!plan.refundable),
+        freeCancelUntil: plan.free_cancel_until || "",
+        totalPrice: String(Math.round(plan.total_price)),
         currency: plan.currency,
         checkIn: booking.checkIn || "",
         checkOut: booking.checkOut || "",
-        guests: String(totalGuests),
+        adults: String(adults),
+        children: String(children),
         rooms: String(booking.rooms.length),
       });
-      router.push(`/book?${qs.toString()}`);
+      router.push(`/book/review?${qs.toString()}`);
     },
     [hotel, booking, router]
   );

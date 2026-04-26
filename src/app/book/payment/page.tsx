@@ -3,15 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useBookingFlow, PaymentMethodKind } from "@/context/BookingFlowContext";
+import { useBookingFlow } from "@/context/BookingFlowContext";
+import { useAuth } from "@/context/AuthContext";
+import { createBooking } from "@/lib/api";
 
 const GOLD = "#C9A84C";
 const HOLD_SECONDS = 300;
-const USD_TO_INR = 83;
 
-const toInr = (usd: number) => Math.round(usd * USD_TO_INR);
-const formatInrAmount = (inr: number) =>
-  `\u20B9${Math.round(inr).toLocaleString("en-IN")}`;
+const inrFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+const formatInr = (n: number) => inrFormatter.format(Math.round(n || 0));
 
 function formatTimer(totalSeconds: number) {
   const safe = Math.max(0, totalSeconds);
@@ -23,106 +27,25 @@ function formatTimer(totalSeconds: number) {
 function formatShortDate(iso: string) {
   if (!iso) return "";
   const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-  });
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
-
-interface PaymentMethodOption {
-  kind: PaymentMethodKind;
-  name: string;
-  subLabel: string;
-  icon: React.ReactNode;
-}
-
-function UpiIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden focusable="false">
-      <rect x="1" y="1" width="30" height="30" rx="6" fill="#fff" stroke="#e0d8c8" />
-      <path d="M14 7l-5 9h4l-3 9 9-12h-5z" fill="#FF6F00" />
-      <path d="M21 7l-3 9h2.5L18 25l7-12h-3l1-6z" fill="#388E3C" />
-    </svg>
-  );
-}
-
-function CardIcon({ stroke = "#1a1710" }: { stroke?: string }) {
-  return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden focusable="false">
-      <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" stroke={stroke} strokeWidth="1.5" />
-      <path d="M2.5 10h19" stroke={stroke} strokeWidth="1.5" />
-      <path d="M6 15h4" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function EmiIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden focusable="false">
-      <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" stroke="#1a1710" strokeWidth="1.5" />
-      <path d="M6 12h12" stroke="#1a1710" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M6 15.5h6" stroke="#1a1710" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function BankIcon() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden focusable="false">
-      <path d="M3 10l9-5 9 5" stroke="#1a1710" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M5 10v8M9 10v8M15 10v8M19 10v8" stroke="#1a1710" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M3 19h18" stroke="#1a1710" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-const PAYMENT_METHODS: PaymentMethodOption[] = [
-  {
-    kind: "upi",
-    name: "UPI",
-    subLabel: "GPay, PhonePe, Paytm & more",
-    icon: <UpiIcon />,
-  },
-  {
-    kind: "credit-card",
-    name: "Credit Card",
-    subLabel: "Visa, Mastercard, Amex, RuPay",
-    icon: <CardIcon />,
-  },
-  {
-    kind: "debit-card",
-    name: "Debit Card",
-    subLabel: "Visa, Mastercard, RuPay & more",
-    icon: <CardIcon />,
-  },
-  {
-    kind: "emi",
-    name: "EMI",
-    subLabel: "Credit/Debit Card & Cardless EMI available",
-    icon: <EmiIcon />,
-  },
-  {
-    kind: "net-banking",
-    name: "Net Banking",
-    subLabel: "40+ Banks Available",
-    icon: <BankIcon />,
-  },
-];
 
 export default function PaymentPage() {
   const router = useRouter();
   const flow = useBookingFlow();
+  const { getIdToken } = useAuth();
 
   const [seconds, setSeconds] = useState(HOLD_SECONDS);
   const [expired, setExpired] = useState(false);
-  const [processing, setProcessing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (flow.selectedRooms.length === 0) {
-      router.replace("/book/rooms");
+    if (!flow.hotelId || !flow.optionId) {
+      router.replace("/");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line core/exhaustive-deps,react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -148,29 +71,50 @@ export default function PaymentPage() {
     };
   }, [flow.holdStartedAt]);
 
-  // Total — taxes & fees included per booking flow
-  const grandTotalInr = toInr(flow.totalPrice);
+  const grandTotalInr = flow.totalPrice;
 
-  const handleSelect = async (method: PaymentMethodKind) => {
-    if (expired || processing) return;
-    flow.setPaymentMethod(method);
-    setProcessing(true);
-    // Simulate handing off to the payment provider
-    await new Promise((r) => setTimeout(r, 1200));
-    flow.confirmBooking();
-    router.push("/book/confirmation");
-  };
-
-  const handlePay = () => {
-    const method = flow.paymentMethod ?? "upi";
-    handleSelect(method);
+  const handleConfirmConcierge = async () => {
+    if (expired || submitting) return;
+    if (!flow.hotelId) {
+      setErrorMsg("Missing hotel context. Please go back and re-select.");
+      return;
+    }
+    setErrorMsg(null);
+    setSubmitting(true);
+    try {
+      const idToken = await getIdToken().catch(() => null);
+      const result = await createBooking(
+        {
+          hotel_id: flow.hotelId,
+          provider: "tripjack",
+          checkin: flow.checkIn,
+          checkout: flow.checkOut,
+          currency: flow.currency || "INR",
+          booked_rate: Math.round(flow.totalPrice),
+          best_market_rate: flow.bestMarketRate ?? undefined,
+          adults: flow.adults || 2,
+          children: flow.children || 0,
+          status: "pending",
+          guest_name: flow.guestName || undefined,
+          guest_email: flow.guestEmail || undefined,
+          special_requests: flow.specialRequests || undefined,
+        },
+        idToken
+      );
+      flow.setBookingId(result.id);
+      router.push("/book/confirmation");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setErrorMsg(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSearchAgain = () => router.push("/search");
 
   const [city, country] = (flow.hotelCity || "").split(",").map((s) => s.trim());
   const datesLabel = `${formatShortDate(flow.checkIn)} – ${formatShortDate(flow.checkOut)}`;
-  const roomsLabel = `${flow.totalRoomCount} Room${flow.totalRoomCount !== 1 ? "s" : ""}`;
 
   return (
     <div>
@@ -178,11 +122,7 @@ export default function PaymentPage() {
       <div
         role="status"
         aria-live="polite"
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginBottom: 20,
-        }}
+        style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}
       >
         <div
           style={{
@@ -228,13 +168,14 @@ export default function PaymentPage() {
             background: "var(--cream-deep)",
           }}
         >
-          {flow.hotelImage && (
+          {flow.hotelPhoto && (
             <Image
-              src={flow.hotelImage}
+              src={flow.hotelPhoto}
               alt={flow.hotelName}
               fill
               style={{ objectFit: "cover" }}
               sizes="56px"
+              unoptimized
             />
           )}
         </div>
@@ -262,7 +203,7 @@ export default function PaymentPage() {
             }}
           >
             {city}
-            {country ? ` · ${country}` : ""} · {datesLabel} · {roomsLabel}
+            {country ? ` · ${country}` : ""} · {datesLabel}
           </div>
         </div>
       </div>
@@ -289,7 +230,7 @@ export default function PaymentPage() {
             marginBottom: 6,
           }}
         >
-          Total Due
+          Total
         </div>
         <div
           style={{
@@ -300,7 +241,7 @@ export default function PaymentPage() {
             lineHeight: 1.1,
           }}
         >
-          {formatInrAmount(grandTotalInr)}
+          {formatInr(grandTotalInr)}
         </div>
         <div
           style={{
@@ -315,99 +256,197 @@ export default function PaymentPage() {
         </div>
       </div>
 
-      {/* Payment methods list */}
+      {/* Error banner */}
+      {errorMsg && (
+        <div
+          role="alert"
+          style={{
+            background: "rgba(192,53,53,0.08)",
+            border: "1px solid var(--error)",
+            color: "var(--error)",
+            borderRadius: 12,
+            padding: "12px 14px",
+            marginBottom: 16,
+            fontFamily: "var(--sans)",
+            fontSize: "var(--text-body-sm)",
+          }}
+        >
+          {errorMsg}
+        </div>
+      )}
+
+      {/* Option 1 — Pay now (disabled) */}
       <div
         style={{
+          position: "relative",
           background: "var(--white)",
           borderRadius: 16,
           border: "1px solid var(--cream-border)",
-          overflow: "hidden",
+          padding: "18px 20px",
           marginBottom: 16,
+          opacity: 0.85,
         }}
       >
-        {PAYMENT_METHODS.map((method, idx) => (
-          <button
-            key={method.kind}
-            type="button"
-            onClick={() => handleSelect(method.kind)}
-            disabled={expired || processing}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              width: "100%",
-              padding: "16px 18px",
-              background: flow.paymentMethod === method.kind ? "rgba(201,168,76,0.08)" : "var(--white)",
-              border: "none",
-              borderTop: idx === 0 ? "none" : "1px solid var(--cream-border)",
-              cursor: expired || processing ? "not-allowed" : "pointer",
-              textAlign: "left",
-              fontFamily: "var(--sans)",
-              opacity: expired ? 0.5 : 1,
-            }}
-          >
-            <span style={{ flexShrink: 0, display: "inline-flex", alignItems: "center" }}>
-              {method.icon}
-            </span>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span
-                style={{
-                  display: "block",
-                  fontFamily: "var(--sans)",
-                  fontSize: "var(--text-body)",
-                  fontWeight: 600,
-                  color: "var(--ink)",
-                }}
-              >
-                {method.name}
-              </span>
-              <span
-                style={{
-                  display: "block",
-                  fontFamily: "var(--sans)",
-                  fontSize: "var(--text-body-sm)",
-                  color: "var(--ink-light)",
-                  marginTop: 2,
-                }}
-              >
-                {method.subLabel}
-              </span>
-            </span>
-            <span
-              aria-hidden
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <div
               style={{
-                color: "var(--ink-light)",
-                fontSize: 22,
-                lineHeight: 1,
-                flexShrink: 0,
+                fontFamily: "var(--serif)",
+                fontSize: "var(--text-heading-3)",
+                fontWeight: 600,
+                color: "var(--ink)",
               }}
             >
-              ›
-            </span>
-          </button>
-        ))}
+              Pay now via card / UPI
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--sans)",
+                fontSize: "var(--text-body-sm)",
+                color: "var(--ink-light)",
+                marginTop: 4,
+              }}
+            >
+              Visa, Mastercard, RuPay, GPay, PhonePe, Paytm
+            </div>
+          </div>
+          <span
+            aria-hidden
+            style={{
+              padding: "4px 10px",
+              borderRadius: 999,
+              background: "var(--cream-deep)",
+              fontFamily: "var(--sans)",
+              fontSize: "var(--text-caption)",
+              fontWeight: 600,
+              color: "var(--ink-light)",
+            }}
+          >
+            Soon
+          </span>
+        </div>
+
+        {/* Disabled overlay */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: 16,
+            background: "rgba(245,241,232,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 16px",
+            cursor: "not-allowed",
+          }}
+        >
+          <div
+            style={{
+              background: "var(--white)",
+              borderRadius: 999,
+              border: "1px solid var(--cream-border)",
+              padding: "8px 14px",
+              fontFamily: "var(--sans)",
+              fontSize: "var(--text-body-sm)",
+              fontWeight: 600,
+              color: "var(--ink-mid)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              textAlign: "center",
+            }}
+          >
+            Coming soon — secure gateway integration in progress
+          </div>
+        </div>
       </div>
 
-      {/* Trust badges */}
-      <div
+      {/* Option 2 — Concierge (primary) */}
+      <button
+        type="button"
+        onClick={handleConfirmConcierge}
+        disabled={expired || submitting}
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 16,
-          marginBottom: 24,
+          display: "block",
+          width: "100%",
+          textAlign: "left",
+          background: "var(--white)",
+          borderRadius: 16,
+          border: `2px solid ${GOLD}`,
+          padding: "18px 20px",
+          marginBottom: 12,
+          cursor: expired || submitting ? "not-allowed" : "pointer",
+          opacity: expired ? 0.5 : 1,
           fontFamily: "var(--sans)",
-          fontSize: "var(--text-caption)",
-          color: "var(--ink-light)",
+          boxShadow: "0 2px 12px rgba(201,168,76,0.10)",
         }}
       >
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-          <span aria-hidden>🔒</span> SSL Encrypted
-        </span>
-        <span aria-hidden style={{ color: "var(--cream-border)" }}>·</span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-          <span aria-hidden>🛡</span> 100% Safe Transactions
-        </span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "var(--text-heading-3)",
+                fontWeight: 600,
+                color: "var(--ink)",
+              }}
+            >
+              Confirm with concierge
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--sans)",
+                fontSize: "var(--text-body-sm)",
+                color: "var(--ink-light)",
+                marginTop: 4,
+              }}
+            >
+              No payment now — we&rsquo;ll WhatsApp you to confirm
+            </div>
+          </div>
+          <span
+            aria-hidden
+            style={{
+              padding: "6px 14px",
+              borderRadius: 999,
+              background: GOLD,
+              fontFamily: "var(--sans)",
+              fontSize: "var(--text-caption)",
+              fontWeight: 700,
+              color: "var(--ink)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {submitting ? "Submitting…" : "Recommended"}
+          </span>
+        </div>
+      </button>
+
+      {/* Trust line */}
+      <div
+        style={{
+          textAlign: "center",
+          fontFamily: "var(--sans)",
+          fontSize: "var(--text-body-sm)",
+          color: "var(--ink-light)",
+          margin: "12px 0 24px",
+          lineHeight: 1.6,
+        }}
+      >
+        Voyagr concierge will WhatsApp you within 15 minutes to confirm rate and collect payment securely. No charges until you confirm.
       </div>
 
       {/* Sticky bottom bar */}
@@ -434,11 +473,14 @@ export default function PaymentPage() {
               marginBottom: 8,
             }}
           >
-            Total Due · <span style={{ color: "var(--ink)", fontWeight: 700 }}>{formatInrAmount(grandTotalInr)}</span>
+            Total ·{" "}
+            <span style={{ color: "var(--ink)", fontWeight: 700 }}>
+              {formatInr(grandTotalInr)}
+            </span>
           </div>
           <button
-            onClick={handlePay}
-            disabled={expired || processing}
+            onClick={handleConfirmConcierge}
+            disabled={expired || submitting}
             style={{
               width: "100%",
               fontFamily: "var(--sans)",
@@ -449,7 +491,7 @@ export default function PaymentPage() {
               border: "none",
               background: GOLD,
               color: "var(--ink)",
-              cursor: expired || processing ? "not-allowed" : "pointer",
+              cursor: expired || submitting ? "not-allowed" : "pointer",
               opacity: expired ? 0.5 : 1,
               display: "flex",
               alignItems: "center",
@@ -457,7 +499,7 @@ export default function PaymentPage() {
               gap: 8,
             }}
           >
-            {processing ? "Processing…" : `Pay ${formatInrAmount(grandTotalInr)} Securely →`}
+            {submitting ? "Submitting…" : "Confirm with concierge →"}
           </button>
         </div>
       </div>

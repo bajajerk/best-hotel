@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useBookingFlow, RoomGuest } from "@/context/BookingFlowContext";
+import { useBookingFlow } from "@/context/BookingFlowContext";
+import { useAuth } from "@/context/AuthContext";
 
 const GOLD = "#C9A84C";
 const HOLD_SECONDS = 300;
+const SPECIAL_REQUESTS_MAX = 500;
 
 function formatTimer(totalSeconds: number) {
   const safe = Math.max(0, totalSeconds);
@@ -14,53 +16,47 @@ function formatTimer(totalSeconds: number) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function blankGuest(): RoomGuest {
-  return { firstName: "", lastName: "", specialRequests: "" };
-}
-
 export default function GuestDetailsPage() {
   const router = useRouter();
   const flow = useBookingFlow();
+  const { user } = useAuth();
 
-  const totalRooms = flow.totalRoomCount || 1;
+  // Prefill from auth + previously-saved context
+  const [name, setName] = useState(flow.guestName || "");
+  const [email, setEmail] = useState(flow.guestEmail || "");
+  const [phone, setPhone] = useState(flow.guestPhone || "");
+  const [specialRequests, setSpecialRequests] = useState(flow.specialRequests || "");
 
-  const [guests, setGuests] = useState<RoomGuest[]>(() => {
-    const seed = flow.roomGuests.slice(0, totalRooms);
-    while (seed.length < totalRooms) seed.push(blankGuest());
-    return seed;
-  });
-  const [errors, setErrors] = useState<Record<number, { firstName?: string; lastName?: string }>>({});
   const [gstOpen, setGstOpen] = useState(!!flow.identity.gstin);
   const [gstin, setGstin] = useState(flow.identity.gstin);
   const [pan, setPan] = useState(flow.identity.pan);
   const [panError, setPanError] = useState<string | null>(null);
 
+  const [errors, setErrors] = useState<{ name?: string; email?: string; phone?: string }>({});
+
   const [seconds, setSeconds] = useState(HOLD_SECONDS);
   const [expired, setExpired] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Bounce back to room selection if state is missing.
+  // Bounce back to home if essential rate plan data is missing.
   useEffect(() => {
-    if (flow.selectedRooms.length === 0) {
-      router.replace("/book/rooms");
+    if (!flow.hotelId || !flow.optionId) {
+      router.replace("/");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Resize the per-room form list if the user changed room counts upstream.
+  // Prefill from Firebase auth (only if fields are still empty)
   useEffect(() => {
-    setGuests((prev) => {
-      if (prev.length === totalRooms) return prev;
-      const next = prev.slice(0, totalRooms);
-      while (next.length < totalRooms) next.push(blankGuest());
-      return next;
-    });
-  }, [totalRooms]);
+    if (!user) return;
+    setName((prev) => prev || user.displayName || "");
+    setEmail((prev) => prev || user.email || "");
+    setPhone((prev) => prev || user.phoneNumber || "");
+  }, [user]);
 
   // Drive the same countdown the Review page started.
   useEffect(() => {
     if (!flow.holdStartedAt) {
-      // Direct navigation — no hold yet — start one so the timer is meaningful.
       flow.startHold();
       return;
     }
@@ -82,33 +78,15 @@ export default function GuestDetailsPage() {
     };
   }, [flow.holdStartedAt]);
 
-  const updateGuest = (idx: number, field: keyof RoomGuest, value: string) => {
-    setGuests((prev) => {
-      const next = [...prev];
-      next[idx] = { ...next[idx], [field]: value };
-      return next;
-    });
-    if (field === "firstName" || field === "lastName") {
-      setErrors((prev) => {
-        if (!prev[idx]?.[field]) return prev;
-        const next = { ...prev };
-        next[idx] = { ...next[idx], [field]: undefined };
-        return next;
-      });
-    }
-  };
-
   const isPanValid = (val: string) => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(val.trim().toUpperCase());
 
   const validate = () => {
-    const errs: Record<number, { firstName?: string; lastName?: string }> = {};
-    guests.forEach((g, i) => {
-      const e: { firstName?: string; lastName?: string } = {};
-      if (!g.firstName.trim()) e.firstName = "First name required";
-      if (!g.lastName.trim()) e.lastName = "Last name required";
-      if (e.firstName || e.lastName) errs[i] = e;
-    });
+    const errs: typeof errors = {};
+    if (!name.trim()) errs.name = "Name is required";
+    if (!email.trim()) errs.email = "Email is required";
+    else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) errs.email = "Enter a valid email";
     setErrors(errs);
+
     let panOk = true;
     if (!pan.trim()) {
       setPanError("PAN is required as per RBI guidelines");
@@ -119,25 +97,29 @@ export default function GuestDetailsPage() {
     } else {
       setPanError(null);
     }
+
     return Object.keys(errs).length === 0 && panOk;
   };
 
   const handleContinue = () => {
     if (expired) return;
     if (!validate()) return;
-    flow.setRoomGuests(guests);
+    flow.setGuestDetails({
+      guestName: name.trim(),
+      guestEmail: email.trim(),
+      guestPhone: phone.trim(),
+      specialRequests: specialRequests.trim(),
+    });
     flow.setIdentity({ pan: pan.trim().toUpperCase(), gstin: gstin.trim().toUpperCase() });
     // Mirror primary guest into legacy guestInfo for downstream code.
-    const primary = guests[0];
-    if (primary) {
-      flow.setGuestInfo({
-        firstName: primary.firstName,
-        lastName: primary.lastName,
-        email: flow.guestInfo?.email ?? "",
-        phone: flow.guestInfo?.phone ?? "",
-        specialRequests: primary.specialRequests,
-      });
-    }
+    const [firstName, ...rest] = name.trim().split(/\s+/);
+    flow.setGuestInfo({
+      firstName: firstName || name.trim(),
+      lastName: rest.join(" "),
+      email: email.trim(),
+      phone: phone.trim(),
+      specialRequests: specialRequests.trim(),
+    });
     router.push("/book/payment");
   };
 
@@ -190,11 +172,7 @@ export default function GuestDetailsPage() {
       <div
         role="status"
         aria-live="polite"
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginBottom: 20,
-        }}
+        style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}
       >
         <div
           style={{
@@ -216,82 +194,127 @@ export default function GuestDetailsPage() {
         </div>
       </div>
 
-      {/* Per-room guest forms */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {guests.map((g, i) => (
-          <div
-            key={i}
-            style={{
-              background: "var(--white)",
-              borderRadius: 16,
-              border: "1px solid var(--cream-border)",
-              padding: "20px 20px",
+      {/* Primary guest card */}
+      <div
+        style={{
+          background: "var(--white)",
+          borderRadius: 16,
+          border: "1px solid var(--cream-border)",
+          padding: "20px 20px",
+          marginBottom: 16,
+        }}
+      >
+        <h3 style={sectionTitle}>Primary guest</h3>
+        <div
+          style={{
+            fontFamily: "var(--sans)",
+            fontSize: "var(--text-body-sm)",
+            color: "var(--ink-light)",
+            marginTop: 4,
+            marginBottom: 14,
+          }}
+        >
+          Used for booking confirmation
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>Full name *</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (errors.name) setErrors({ ...errors, name: undefined });
             }}
-          >
-            <div
-              style={{
-                fontFamily: "var(--sans)",
-                fontSize: "var(--text-body)",
-                fontWeight: 700,
-                color: "var(--ink)",
-                marginBottom: 14,
-                letterSpacing: "0.02em",
-              }}
-            >
-              Room {String(i + 1).padStart(2, "0")}
-            </div>
+            placeholder="Jane Doe"
+            autoComplete="name"
+            style={inputStyle(!!errors.name)}
+          />
+          {errors.name && <span style={errorTextStyle}>{errors.name}</span>}
+        </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 14,
-                marginBottom: 14,
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 14,
+          }}
+        >
+          <div>
+            <label style={labelStyle}>Email *</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) setErrors({ ...errors, email: undefined });
               }}
-            >
-              <div>
-                <label style={labelStyle}>First Name *</label>
-                <input
-                  type="text"
-                  value={g.firstName}
-                  onChange={(e) => updateGuest(i, "firstName", e.target.value)}
-                  placeholder="John"
-                  autoComplete="given-name"
-                  style={inputStyle(!!errors[i]?.firstName)}
-                />
-                {errors[i]?.firstName && <span style={errorTextStyle}>{errors[i]!.firstName}</span>}
-              </div>
-              <div>
-                <label style={labelStyle}>Last Name *</label>
-                <input
-                  type="text"
-                  value={g.lastName}
-                  onChange={(e) => updateGuest(i, "lastName", e.target.value)}
-                  placeholder="Smith"
-                  autoComplete="family-name"
-                  style={inputStyle(!!errors[i]?.lastName)}
-                />
-                {errors[i]?.lastName && <span style={errorTextStyle}>{errors[i]!.lastName}</span>}
-              </div>
-            </div>
-
-            <div>
-              <label style={labelStyle}>Special Requests (optional)</label>
-              <textarea
-                value={g.specialRequests}
-                onChange={(e) => updateGuest(i, "specialRequests", e.target.value)}
-                placeholder={"Room preferences, dietary needs, celebrations..."}
-                rows={3}
-                style={{
-                  ...inputStyle(false),
-                  resize: "vertical" as const,
-                  fontFamily: "var(--sans)",
-                  lineHeight: 1.5,
-                }}
-              />
-            </div>
+              placeholder="jane@example.com"
+              autoComplete="email"
+              style={inputStyle(!!errors.email)}
+            />
+            {errors.email && <span style={errorTextStyle}>{errors.email}</span>}
           </div>
-        ))}
+          <div>
+            <label style={labelStyle}>Phone</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+91 98765 43210"
+              autoComplete="tel"
+              style={inputStyle(false)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Special requests */}
+      <div
+        style={{
+          background: "var(--white)",
+          borderRadius: 16,
+          border: "1px solid var(--cream-border)",
+          padding: "20px 20px",
+          marginBottom: 16,
+        }}
+      >
+        <h3 style={sectionTitle}>Special requests / preferences</h3>
+        <div
+          style={{
+            fontFamily: "var(--sans)",
+            fontSize: "var(--text-body-sm)",
+            color: "var(--ink-light)",
+            marginTop: 4,
+            marginBottom: 14,
+          }}
+        >
+          Anything we should know? Bed type, dietary needs, celebrations…
+        </div>
+        <textarea
+          value={specialRequests}
+          onChange={(e) => setSpecialRequests(e.target.value.slice(0, SPECIAL_REQUESTS_MAX))}
+          placeholder="High floor with city view, late check-in around 11 PM…"
+          rows={4}
+          maxLength={SPECIAL_REQUESTS_MAX}
+          style={{
+            ...inputStyle(false),
+            resize: "vertical" as const,
+            fontFamily: "var(--sans)",
+            lineHeight: 1.5,
+          }}
+        />
+        <div
+          style={{
+            fontFamily: "var(--sans)",
+            fontSize: "var(--text-caption)",
+            color: "var(--ink-light)",
+            textAlign: "right",
+            marginTop: 6,
+          }}
+        >
+          {specialRequests.length} / {SPECIAL_REQUESTS_MAX}
+        </div>
       </div>
 
       {/* GST Details — collapsed optional section */}
@@ -301,7 +324,7 @@ export default function GuestDetailsPage() {
           borderRadius: 16,
           border: "1px solid var(--cream-border)",
           padding: "18px 20px",
-          marginTop: 16,
+          marginBottom: 16,
         }}
       >
         <div
@@ -360,14 +383,13 @@ export default function GuestDetailsPage() {
         )}
       </div>
 
-      {/* Identity Verification (was PAN Details) */}
+      {/* Identity Verification (PAN) */}
       <div
         style={{
           background: "var(--white)",
           borderRadius: 16,
           border: "1px solid var(--cream-border)",
           padding: "18px 20px",
-          marginTop: 16,
         }}
       >
         <h3 style={sectionTitle}>Identity Verification</h3>
