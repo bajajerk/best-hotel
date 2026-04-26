@@ -726,7 +726,7 @@ const s: Record<string, React.CSSProperties> = {
     border: "none",
     borderRadius: 8,
     background: "var(--gold)",
-    color: "var(--white)",
+    color: "#1a1710",
     fontFamily: "var(--font-body)",
     fontSize: 14,
     fontWeight: 500,

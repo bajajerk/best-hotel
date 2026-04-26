@@ -184,7 +184,7 @@ function PartnerTile({ partner }: { partner: Partner }) {
               padding: "3px 10px",
               borderRadius: "20px",
               background: "var(--gold)",
-              color: "var(--white)",
+              color: "#1a1710",
             }}
           >
             Perks Available

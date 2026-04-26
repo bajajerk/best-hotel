@@ -1541,7 +1541,7 @@ function HotelRecommendationCard({ hotel }: { hotel: RecommendationHotel }) {
             top: "12px",
             left: "12px",
             background: "var(--gold)",
-            color: "var(--white)",
+            color: "#1a1710",
             fontSize: "9px",
             fontWeight: 600,
             padding: "5px 12px",

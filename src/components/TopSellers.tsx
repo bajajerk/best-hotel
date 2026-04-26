@@ -167,7 +167,7 @@ function TopSellerCard({ hotel }: { hotel: TopSellerHotel }) {
                 top: "12px",
                 right: "12px",
                 background: "var(--gold)",
-                color: "var(--white)",
+                color: "#1a1710",
                 fontSize: "12px",
                 fontWeight: 600,
                 padding: "4px 10px",

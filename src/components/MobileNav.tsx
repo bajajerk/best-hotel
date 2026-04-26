@@ -630,7 +630,7 @@ export default function MobileNav() {
               width: "100%",
               padding: "14px 20px",
               background: "var(--gold, #C9A84C)",
-              color: "#ffffff",
+              color: "#1a1710",
               border: "none",
               borderRadius: "10px",
               fontFamily: "var(--font-display)",

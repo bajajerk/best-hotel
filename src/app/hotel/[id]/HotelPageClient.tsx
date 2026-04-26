@@ -503,7 +503,7 @@ function RateCard({
             letterSpacing: "0.08em",
             textTransform: "uppercase" as const,
             background: "var(--gold)",
-            color: "var(--ink)",
+            color: "#1a1710",
             border: "none",
             cursor: "pointer",
             transition: "all 0.2s",
@@ -1119,7 +1119,7 @@ export default function HotelPage() {
               className="shrink-0 text-center hidden sm:block"
               style={{
                 background: "var(--gold)",
-                color: "var(--ink)",
+                color: "#1a1710",
                 padding: "12px 24px",
               }}
             >
@@ -1153,7 +1153,7 @@ export default function HotelPage() {
               className="shrink-0 text-center hidden sm:block"
               style={{
                 background: "var(--gold)",
-                color: "var(--ink)",
+                color: "#1a1710",
                 padding: "16px 24px",
               }}
             >
@@ -1456,7 +1456,7 @@ export default function HotelPage() {
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
                     background: "var(--gold)",
-                    color: "var(--ink)",
+                    color: "#1a1710",
                     border: "none",
                     cursor: "pointer",
                     fontFamily: "var(--font-body)",
@@ -1491,7 +1491,7 @@ export default function HotelPage() {
                     letterSpacing: "0.08em",
                     textTransform: "uppercase",
                     background: "var(--gold)",
-                    color: "var(--ink)",
+                    color: "#1a1710",
                     border: "none",
                     cursor: "pointer",
                     fontFamily: "var(--font-body)",
@@ -2346,7 +2346,7 @@ export default function HotelPage() {
               letterSpacing: "0.1em",
               textTransform: "uppercase",
               background: "var(--gold)",
-              color: "var(--ink)",
+              color: "#1a1710",
               border: "none",
               cursor: "pointer",
               fontFamily: "var(--font-body)",

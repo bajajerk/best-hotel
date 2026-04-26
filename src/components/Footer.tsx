@@ -41,8 +41,8 @@ export default function Footer() {
     <footer
       className="site-footer"
       style={{
-        background: "var(--ink)",
-        color: "var(--cream)",
+        background: "#1a1710",
+        color: "#f5f0e8",
         padding: "80px 60px 40px",
       }}
     >
@@ -69,7 +69,7 @@ export default function Footer() {
               <span
                 className="type-logo"
                 style={{
-                  color: "var(--cream)",
+                  color: "#f5f0e8",
                   letterSpacing: "0.08em",
                 }}
               >
@@ -196,7 +196,7 @@ export default function Footer() {
                     transition: "color 0.2s",
                   }}
                   onMouseEnter={(e) => {
-                    (e.target as HTMLAnchorElement).style.color = "var(--cream)";
+                    (e.target as HTMLAnchorElement).style.color = "#f5f0e8";
                   }}
                   onMouseLeave={(e) => {
                     (e.target as HTMLAnchorElement).style.color =
@@ -235,7 +235,7 @@ export default function Footer() {
                     transition: "color 0.2s",
                   }}
                   onMouseEnter={(e) => {
-                    (e.target as HTMLAnchorElement).style.color = "var(--cream)";
+                    (e.target as HTMLAnchorElement).style.color = "#f5f0e8";
                   }}
                   onMouseLeave={(e) => {
                     (e.target as HTMLAnchorElement).style.color =
@@ -274,7 +274,7 @@ export default function Footer() {
                     transition: "color 0.2s",
                   }}
                   onMouseEnter={(e) => {
-                    (e.target as HTMLAnchorElement).style.color = "var(--cream)";
+                    (e.target as HTMLAnchorElement).style.color = "#f5f0e8";
                   }}
                   onMouseLeave={(e) => {
                     (e.target as HTMLAnchorElement).style.color =
@@ -319,7 +319,7 @@ export default function Footer() {
                       transition: "color 0.2s",
                     }}
                     onMouseEnter={(e) => {
-                      (e.target as HTMLElement).style.color = "var(--cream)";
+                      (e.target as HTMLElement).style.color = "#f5f0e8";
                     }}
                     onMouseLeave={(e) => {
                       (e.target as HTMLElement).style.color =

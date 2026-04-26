@@ -211,7 +211,7 @@ export default function Tab2Premium() {
           style={{
             padding: 16,
             background: "var(--gold)",
-            color: "var(--ink)",
+            color: "#1a1710",
             fontFamily: "var(--font-dm-sans)",
             fontSize: 14,
             fontWeight: 500,

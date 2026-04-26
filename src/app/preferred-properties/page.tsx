@@ -131,7 +131,7 @@ export default function PreferredPropertiesPage() {
                 display: "inline-block",
                 padding: "14px 36px",
                 background: "var(--gold)",
-                color: "var(--white)",
+                color: "#1a1710",
                 borderRadius: "6px",
                 textDecoration: "none",
                 letterSpacing: "0.06em",
