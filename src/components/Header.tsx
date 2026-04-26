@@ -92,7 +92,7 @@ export default function Header() {
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                fontSize: "20px",
+                fontSize: "22px",
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
                 color: IVORY,
@@ -105,12 +105,12 @@ export default function Header() {
                 fontFamily: "var(--font-display)",
                 fontStyle: "italic",
                 fontWeight: 500,
-                fontSize: "20px",
+                fontSize: "22px",
                 letterSpacing: "0.08em",
                 color: GOLD,
               }}
             >
-              .CLUB
+              CLUB
             </span>
           </Link>
 
@@ -120,21 +120,21 @@ export default function Header() {
               <Link
                 key={link.label}
                 href={link.href}
+                className={`header-nav-link${isActive(link.href) ? " is-active" : ""}`}
                 style={{
                   fontFamily: "var(--font-body)",
                   fontWeight: 500,
-                  fontSize: "13px",
-                  letterSpacing: "0.08em",
+                  fontSize: "12px",
+                  letterSpacing: "0.25em",
                   textTransform: "uppercase",
-                  color: isActive(link.href)
-                    ? IVORY
-                    : `rgba(253,250,245,0.6)`,
+                  color: IVORY,
                   textDecoration: "none",
                   padding: "8px 0",
                   borderBottom: isActive(link.href)
                     ? `2px solid ${GOLD}`
                     : "2px solid transparent",
-                  transition: "color 0.25s, border-color 0.25s",
+                  whiteSpace: "nowrap",
+                  transition: "opacity 0.25s, border-color 0.25s",
                 }}
               >
                 {link.label}

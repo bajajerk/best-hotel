@@ -135,11 +135,18 @@ body {
 /* ── Header nav links — centred, show on desktop, hide on mobile <768px ── */
 .header-nav-center {
   display: none;
-  gap: 32px;
+  gap: 40px;
   align-items: center;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+}
+.header-nav-link {
+  opacity: 0.65;
+}
+.header-nav-link:hover,
+.header-nav-link.is-active {
+  opacity: 1;
 }
 .header-join-btn {
   display: none;
@@ -3856,51 +3863,58 @@ body:has(.precision-theme) {
   color: var(--slate-muted);
 }
 
-/* ── Shrinking Monolith nav — structured bar that collapses to
-      a centered floating pill on scroll. ── */
+/* ── Floating pill nav — premium glassmorphism per spec.
+      Starts as a wide pill at the top of the hero; collapses
+      slightly on scroll into a tighter centered pill. ── */
 .precision-nav {
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  border-radius: 0 !important;
-  background: rgba(8, 8, 8, 0.88) !important;
-  border: 0 !important;
-  border-bottom: 0.5px solid var(--hairline-white) !important;
-  box-shadow: none !important;
-  backdrop-filter: blur(12px) saturate(1.05);
-  -webkit-backdrop-filter: blur(12px) saturate(1.05);
-  transition:
-    top 500ms cubic-bezier(0.22, 1, 0.36, 1),
-    left 500ms cubic-bezier(0.22, 1, 0.36, 1),
-    right 500ms cubic-bezier(0.22, 1, 0.36, 1),
-    max-width 500ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-radius 500ms cubic-bezier(0.22, 1, 0.36, 1),
-    background 500ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.precision-nav.is-shrunk {
-  top: 14px !important;
+  top: 18px !important;
   left: 50% !important;
   right: auto !important;
   transform: translateX(-50%);
-  max-width: min(860px, calc(100% - 32px));
+  max-width: min(1240px, calc(100% - 32px));
   width: 100%;
-  border: 1px solid var(--hairline-white) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 999px !important;
-  background: rgba(8, 8, 8, 0.68) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  transition:
+    top 500ms cubic-bezier(0.22, 1, 0.36, 1),
+    max-width 500ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.precision-nav .voyagr-nav-inner {
+  padding: 0 36px !important;
+  height: 64px;
+}
+.precision-nav.is-shrunk {
+  top: 14px !important;
+  max-width: min(1180px, calc(100% - 32px));
+  background: rgba(8, 8, 8, 0.62) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
 }
 .precision-nav.is-shrunk .voyagr-nav-inner {
   height: 56px;
-  padding: 0 22px;
+  padding: 0 32px !important;
 }
 @media (max-width: 767px) {
+  .precision-nav {
+    top: 10px !important;
+    max-width: calc(100% - 20px);
+  }
+  .precision-nav .voyagr-nav-inner {
+    padding: 0 18px !important;
+    height: 56px;
+  }
   .precision-nav.is-shrunk {
     top: 10px !important;
     max-width: calc(100% - 20px);
   }
   .precision-nav.is-shrunk .voyagr-nav-inner {
     height: 52px;
-    padding: 0 14px;
+    padding: 0 16px !important;
   }
 }
 
