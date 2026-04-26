@@ -4552,3 +4552,26 @@ body:has(.precision-theme) {
   outline-offset: 2px;
   border-radius: 2px;
 }
+
+/* ── Redesign-v2 button hover states (paired with GoldButton/OutlineButton) ── */
+.redesign-gold-btn:not([disabled]):hover {
+  background: var(--color-white-soft);
+  color: var(--color-black-rich);
+  transform: translateY(-1px);
+}
+.redesign-gold-btn[data-invert-hover="true"]:hover {
+  background: var(--color-black-rich);
+  color: var(--color-white-soft);
+}
+.redesign-gold-btn:not([disabled]):active {
+  transform: translateY(0) scale(0.98);
+}
+
+.redesign-outline-btn:not([disabled]):hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-gold);
+}
+.redesign-outline-btn:not([disabled]):active {
+  transform: scale(0.98);
+}
