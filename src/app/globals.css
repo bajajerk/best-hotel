@@ -4454,3 +4454,71 @@ body:has(.precision-theme) {
 /* Default link colour stays inherited; but ensure underline treatments don't
    blow out on dark */
 .luxe a:hover { color: #c8aa76; }
+
+/* ────────────────────────────────────────────────────────────
+   Luxe Skeleton System
+   Champagne-gold sweep over a neutral surface. Use the React
+   primitives in `src/components/skeletons/` — never hand-roll
+   shimmer rectangles. Two surface variants:
+
+   - `.luxe-skeleton--cream` (default): ivory→champagne→ivory
+     sweep on the cream-themed pages (search, city, hotel).
+   - `.luxe-skeleton--dark`: subtle champagne-on-charcoal sweep
+     for `.luxe` scope (profile, dark editorial sections).
+
+   Honour `prefers-reduced-motion` — the sweep stills.
+   ──────────────────────────────────────────────────────────── */
+
+.luxe-skeleton {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  background-size: 200% 100%;
+  animation: luxeSkeletonShimmer 1.6s ease-in-out infinite;
+  will-change: background-position;
+}
+
+.luxe-skeleton--cream {
+  background-image: linear-gradient(
+    90deg,
+    var(--cream-deep) 0%,
+    rgba(200, 170, 118, 0.22) 50%,
+    var(--cream-deep) 100%
+  );
+}
+
+.luxe-skeleton--dark {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(200, 170, 118, 0.18) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+}
+
+@keyframes luxeSkeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .luxe-skeleton {
+    animation: none;
+    background-position: 50% 0;
+  }
+}
+
+/* Visually hidden helper used by skeleton screens to expose
+   "Loading hotels…" to AT users without painting it on screen. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

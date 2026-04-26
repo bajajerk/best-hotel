@@ -528,15 +528,15 @@ function RateCardSkeleton() {
         padding: 20,
       }}
     >
-      <div style={{ height: 18, width: "55%", background: "var(--cream-deep)", marginBottom: 10 }} />
-      <div style={{ height: 12, width: "35%", background: "var(--cream-deep)", marginBottom: 18 }} />
-      <div style={{ height: 14, width: "40%", background: "var(--cream-deep)", marginBottom: 16 }} />
+      <div className="luxe-skeleton luxe-skeleton--cream" style={{ height: 18, width: "55%", marginBottom: 10 }} />
+      <div className="luxe-skeleton luxe-skeleton--cream" style={{ height: 12, width: "35%", marginBottom: 18 }} />
+      <div className="luxe-skeleton luxe-skeleton--cream" style={{ height: 14, width: "40%", marginBottom: 16 }} />
       <div className="flex items-end justify-between">
         <div>
-          <div style={{ height: 24, width: 120, background: "var(--cream-deep)", marginBottom: 8 }} />
-          <div style={{ height: 12, width: 90, background: "var(--cream-deep)" }} />
+          <div className="luxe-skeleton luxe-skeleton--cream" style={{ height: 24, width: 120, marginBottom: 8 }} />
+          <div className="luxe-skeleton luxe-skeleton--cream" style={{ height: 12, width: 90 }} />
         </div>
-        <div style={{ height: 36, width: 90, background: "var(--cream-deep)" }} />
+        <div className="luxe-skeleton luxe-skeleton--cream" style={{ height: 36, width: 90 }} />
       </div>
     </div>
   );
@@ -960,29 +960,81 @@ export default function HotelPage() {
     return () => observer.disconnect();
   }, [hotel]);
 
-  /* ── Loading ── */
+  /* ── Loading ── full-page luxe skeleton (hero + chrome shimmer) */
   if (loading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--cream)" }}
-      >
-        <div className="text-center">
-          <div className="relative w-10 h-10 mx-auto mb-6">
-            <div
-              className="absolute inset-0 rounded-full animate-spin"
-              style={{
-                border: "2px solid var(--cream-border)",
-                borderTopColor: "var(--gold)",
-              }}
+      <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
+        <Header />
+        <div
+          aria-busy="true"
+          style={{
+            maxWidth: 1280,
+            margin: "0 auto",
+            padding: "88px 24px 120px",
+          }}
+        >
+          {/* Breadcrumb */}
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+              marginBottom: 20,
+            }}
+          >
+            <span
+              className="luxe-skeleton luxe-skeleton--cream"
+              style={{ display: "inline-block", height: 10, width: 60, borderRadius: 2 }}
+            />
+            <span
+              className="luxe-skeleton luxe-skeleton--cream"
+              style={{ display: "inline-block", height: 10, width: 90, borderRadius: 2 }}
+            />
+            <span
+              className="luxe-skeleton luxe-skeleton--cream"
+              style={{ display: "inline-block", height: 10, width: 140, borderRadius: 2 }}
             />
           </div>
-          <p
-            className="text-xs tracking-[0.15em] uppercase"
-            style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
+
+          {/* Hero image */}
+          <div
+            className="luxe-skeleton luxe-skeleton--cream"
+            style={{ height: 460, width: "100%", borderRadius: 0, marginBottom: 28 }}
+          />
+
+          {/* Title + meta */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 36 }}>
+            <span
+              className="luxe-skeleton luxe-skeleton--cream"
+              style={{ display: "block", height: 28, width: "55%", borderRadius: 4 }}
+            />
+            <span
+              className="luxe-skeleton luxe-skeleton--cream"
+              style={{ display: "block", height: 14, width: "32%", borderRadius: 3 }}
+            />
+          </div>
+
+          {/* Body grid: rates list + sticky card */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1fr) 360px",
+              gap: 36,
+            }}
           >
-            Loading hotel
-          </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <RateCardSkeleton />
+              <RateCardSkeleton />
+              <RateCardSkeleton />
+              <RateCardSkeleton />
+            </div>
+            <div
+              className="luxe-skeleton luxe-skeleton--cream"
+              style={{ height: 320, width: "100%", borderRadius: 0 }}
+            />
+          </div>
+
+          <span className="sr-only">Loading hotel…</span>
         </div>
       </div>
     );
@@ -2322,9 +2374,23 @@ export default function HotelPage() {
               <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
                 From {formatPrice(Math.min(...rates.rates.map((r) => r.total_price / Math.max(nights, 1))), rates.rates[0].currency)}/night
               </p>
+            ) : datesSelected ? (
+              <div style={{ marginTop: 6 }}>
+                <span
+                  className="luxe-skeleton luxe-skeleton--dark"
+                  aria-hidden="true"
+                  style={{
+                    display: "inline-block",
+                    height: 12,
+                    width: 140,
+                    borderRadius: 3,
+                  }}
+                />
+                <span className="sr-only">Loading rates…</span>
+              </div>
             ) : (
               <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
-                {datesSelected ? "Loading rates..." : "Select dates to see rates"}
+                Select dates to see rates
               </p>
             )}
           </div>

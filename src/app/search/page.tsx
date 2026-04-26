@@ -19,6 +19,8 @@ import Header from "@/components/Header";
 import DateBar, { DateBarHandle } from "@/components/DateBar";
 import DestinationSearch from "@/components/DestinationSearch";
 import RegionFilterTabs from "@/components/RegionFilterTabs";
+import SearchResultsSkeleton from "@/components/skeletons/SearchResultsSkeleton";
+import { LuxeSkeleton } from "@/components/skeletons";
 
 const SearchMapView = lazy(() => import("@/components/SearchMapView"));
 
@@ -1015,19 +1017,10 @@ export default function SearchPage() {
           </motion.div>
         )}
 
-        {/* Hotel results */}
+        {/* Hotel results — luxe shimmer while results stream in */}
         {searching && (
-          <div style={{ textAlign: "center", padding: "60px 0" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "600px", margin: "0 auto" }}>
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="shimmer" style={{
-                  height: "140px",
-                  background: "var(--cream-deep)",
-                  borderRadius: "0",
-                }} />
-              ))}
-            </div>
-            <p style={{ fontSize: "13px", color: "var(--ink-light)", marginTop: "16px" }}>Searching hotels...</p>
+          <div style={{ padding: "8px 0 24px" }}>
+            <SearchResultsSkeleton count={8} />
           </div>
         )}
 
@@ -1046,8 +1039,17 @@ export default function SearchPage() {
               </span>
             </div>
             <Suspense fallback={
-              <div style={{ height: "600px", background: "var(--cream-deep)", border: "1px solid var(--cream-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>Loading map...</p>
+              <div
+                aria-busy="true"
+                style={{
+                  position: "relative",
+                  height: 600,
+                  border: "1px solid var(--cream-border)",
+                  overflow: "hidden",
+                }}
+              >
+                <LuxeSkeleton width="100%" height="100%" radius={0} />
+                <span className="sr-only">Loading map…</span>
               </div>
             }>
               <SearchMapView hotels={filteredHotels} />
