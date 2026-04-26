@@ -1,25 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   fetchCuratedCities,
   fetchFeaturedAll,
+  fetchHomeFeaturedCities,
   CuratedCity,
   CuratedHotel,
 } from "@/lib/api";
-import type { FeaturedResponse } from "@/lib/api";
-import {
-  SAMPLE_CITIES,
-  FALLBACK_CITY_IMAGE,
-  getCityImage,
-} from "@/lib/constants";
+import type { FeaturedResponse, HomeFeaturedCity } from "@/lib/api";
+import { SAMPLE_CITIES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DestinationSearch from "@/components/DestinationSearch";
-import BentoCarousel, { type BentoItem } from "@/components/BentoCarousel";
 import { useBooking } from "@/context/BookingContext";
 import { useAuth } from "@/context/AuthContext";
 import { trackCtaClicked } from "@/lib/analytics";
@@ -27,6 +24,7 @@ import { trackCtaClicked } from "@/lib/analytics";
 export interface HomePageClientProps {
   initialCities: CuratedCity[];
   initialFeatured: FeaturedResponse | null;
+  initialHomeCities: HomeFeaturedCity[];
 }
 
 const HERO_BG =
@@ -38,64 +36,14 @@ function safeImg(u: string | null | undefined): string {
   return u;
 }
 
-// ---------------------------------------------------------------------------
-// Build the Bento items from cities + featured hotels (interleaved)
-// ---------------------------------------------------------------------------
-function buildBentoItems(
-  cities: CuratedCity[],
-  featured: FeaturedResponse | null
-): BentoItem[] {
-  const items: BentoItem[] = [];
-
-  const allHotels: CuratedHotel[] = featured
-    ? [
-        ...featured.topRated,
-        ...featured.bestValue,
-        ...featured.familyFriendly,
-        ...featured.soloTravel,
-      ]
-    : [];
-
-  const seenHotel = new Set<number>();
-  const uniqueHotels = allHotels.filter((h) => {
-    if (seenHotel.has(h.hotel_id)) return false;
-    seenHotel.add(h.hotel_id);
-    return true;
-  });
-
-  const cityList = cities.slice(0, 12);
-  const hotelList = uniqueHotels.slice(0, 12);
-
-  // Interleave city → hotel → hotel → city for an asymmetric feel
-  const max = Math.max(cityList.length, hotelList.length);
-  for (let i = 0; i < max; i++) {
-    if (cityList[i]) {
-      items.push({
-        key: `city-${cityList[i].city_slug}`,
-        title: cityList[i].city_name,
-        meta: cityList[i].country.toUpperCase(),
-        img: safeImg(getCityImage(cityList[i].city_slug)),
-        href: `/city/${cityList[i].city_slug}`,
-      });
-    }
-    if (hotelList[i]) {
-      const h = hotelList[i];
-      items.push({
-        key: `hotel-${h.hotel_id}`,
-        title: h.hotel_name,
-        meta: `${h.city_name.toUpperCase()} · ${h.country.toUpperCase()}`,
-        img: safeImg(h.photo1 || h.photo2 || getCityImage(h.city_slug)),
-        href: `/hotel/${h.hotel_id}`,
-      });
-    }
-  }
-
-  return items;
-}
+// Tasteful champagne→charcoal gradient used when a city/hotel has no image_url.
+const CITY_FALLBACK_GRADIENT =
+  "linear-gradient(135deg, rgba(200,170,118,0.32) 0%, rgba(20,18,15,0.92) 100%)";
 
 export default function Home({
   initialCities,
   initialFeatured,
+  initialHomeCities,
 }: HomePageClientProps) {
   const {
     checkIn,
@@ -110,8 +58,14 @@ export default function Home({
   const { user } = useAuth();
   const router = useRouter();
 
-  const [cities, setCities] = useState<CuratedCity[]>(initialCities);
-  const [featured, setFeatured] = useState<FeaturedResponse | null>(initialFeatured);
+  // `cities` powers the legacy SEO list / fallback flows; we still keep the
+  // setter wired for the API rehydration effect below.
+  const [, setCities] = useState<CuratedCity[]>(initialCities);
+  const [featured, setFeatured] = useState<FeaturedResponse | null>(
+    initialFeatured
+  );
+  const [homeCities, setHomeCities] =
+    useState<HomeFeaturedCity[]>(initialHomeCities);
   // Local hero search state — fed by DestinationSearch via onValueChange/onSelect.
   // Without this, the parent had no way to know what the user typed, so the
   // Search button always navigated to /search with no params.
@@ -138,9 +92,17 @@ export default function Home({
         .then((d) => d && setFeatured(d))
         .catch(() => {});
     }
-  }, [initialCities.length, initialFeatured]);
+    if (initialHomeCities.length === 0) {
+      fetchHomeFeaturedCities()
+        .then(setHomeCities)
+        .catch(() => {});
+    }
+  }, [initialCities.length, initialFeatured, initialHomeCities.length]);
 
-  const bentoItems = useMemo(() => buildBentoItems(cities, featured), [cities, featured]);
+  // Editor's Picks — collapse the previous 4 buckets (top-rated / best-value /
+  // solo / family) into a single row of the highest-rated 8 hotels across all
+  // featured cities. Reuses the cached `fetchFeaturedAll` aggregation.
+  const editorsPicks: CuratedHotel[] = (featured?.topRated ?? []).slice(0, 8);
 
   function handleHeroSearch() {
     const q = heroDestination.trim();
@@ -188,7 +150,7 @@ export default function Home({
     <div className="luxe">
       <Header />
 
-      {/* ── HERO with Bento Carousel ──────────────────────────────────────── */}
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <motion.section
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -359,12 +321,12 @@ export default function Home({
           </div>
         </div>
 
-        {/* Bento Carousel — auto-rotates every 5s */}
+        {/* ── Top Cities — admin-curated grid ──────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          style={{ marginTop: 36 }}
+          style={{ marginTop: 44 }}
         >
           <div
             className="luxe-container"
@@ -372,37 +334,304 @@ export default function Home({
               display: "flex",
               alignItems: "flex-end",
               justifyContent: "space-between",
-              marginBottom: 16,
+              marginBottom: 18,
+              gap: 24,
+              flexWrap: "wrap",
             }}
           >
-            <div>
+            <div style={{ maxWidth: 640 }}>
               <div className="luxe-tech" style={{ marginBottom: 8 }}>
-                Featured Now
+                Top Cities
               </div>
-              <h2 className="luxe-display" style={{ fontSize: "clamp(24px, 2.4vw, 32px)" }}>
-                Destinations &amp; <em>handpicked stays</em>
+              <h2
+                className="luxe-display"
+                style={{ fontSize: "clamp(26px, 2.8vw, 36px)", marginBottom: 8 }}
+              >
+                India travellers&rsquo; <em>favourites</em>
               </h2>
+              <p
+                style={{
+                  color: "var(--luxe-soft-white-70)",
+                  fontSize: 14,
+                  lineHeight: 1.65,
+                  margin: 0,
+                }}
+              >
+                The cities our members keep returning to &mdash; quietly curated.
+              </p>
             </div>
-            <Link href="/search" className="luxe-tech" style={{ color: "var(--luxe-champagne)" }}>
+            <Link
+              href="/search"
+              className="luxe-tech"
+              style={{ color: "var(--luxe-champagne)" }}
+            >
               Browse All &rarr;
             </Link>
           </div>
-          {bentoItems.length > 0 ? (
-            <BentoCarousel items={bentoItems} />
+
+          <div className="luxe-container">
+            {homeCities.length > 0 ? (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                  gap: 16,
+                }}
+              >
+                {homeCities.map((c) => (
+                  <Link
+                    key={c.city_slug}
+                    href={`/city/${c.city_slug}`}
+                    className="top-city-tile"
+                    style={{
+                      display: "block",
+                      textDecoration: "none",
+                      color: "inherit",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "relative",
+                        width: "100%",
+                        aspectRatio: "4 / 5",
+                        borderRadius: 14,
+                        overflow: "hidden",
+                        border: "1px solid rgba(200,170,118,0.22)",
+                        background: CITY_FALLBACK_GRADIENT,
+                        boxShadow: "0 1px 0 rgba(255,255,255,0.04) inset",
+                      }}
+                    >
+                      {c.image_url ? (
+                        <Image
+                          src={safeImg(c.image_url)}
+                          alt={`${c.city_name}, ${c.country}`}
+                          fill
+                          sizes="(max-width: 768px) 50vw, 25vw"
+                          className="top-city-img"
+                          style={{ objectFit: "cover" }}
+                        />
+                      ) : null}
+                      {/* Bottom gradient for legibility */}
+                      <div
+                        aria-hidden="true"
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          background:
+                            "linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,0.72) 100%)",
+                          pointerEvents: "none",
+                        }}
+                      />
+                      {/* Hotel-count chip */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 12,
+                          left: 12,
+                          padding: "4px 10px",
+                          borderRadius: 9999,
+                          background: "rgba(12,11,10,0.65)",
+                          backdropFilter: "blur(6px)",
+                          border: "1px solid rgba(200,170,118,0.28)",
+                          fontFamily: "var(--font-mono, monospace)",
+                          fontSize: 10,
+                          letterSpacing: "0.14em",
+                          textTransform: "uppercase",
+                          color: "var(--luxe-champagne)",
+                        }}
+                      >
+                        {c.hotel_count} stays
+                      </div>
+                      {/* Title block */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: 14,
+                          right: 14,
+                          bottom: 14,
+                          color: "var(--luxe-soft-white)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontFamily: "var(--font-mono, monospace)",
+                            fontSize: 10,
+                            letterSpacing: "0.18em",
+                            textTransform: "uppercase",
+                            color: "var(--luxe-soft-white-70)",
+                            marginBottom: 6,
+                          }}
+                        >
+                          {c.country}
+                        </div>
+                        <div
+                          style={{
+                            fontFamily: "var(--font-display)",
+                            fontSize: 22,
+                            fontWeight: 500,
+                            letterSpacing: "-0.015em",
+                            lineHeight: 1.15,
+                          }}
+                        >
+                          {c.city_name}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div
+                style={{
+                  color: "var(--luxe-soft-white-50)",
+                  fontSize: 13,
+                  paddingTop: 24,
+                  paddingBottom: 24,
+                }}
+              >
+                Curating featured cities&hellip;
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </motion.section>
+
+      {/* ── Editor's Picks — single row of top-rated stays ──────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.6 }}
+        style={{
+          padding: "64px 0 48px",
+          borderTop: "1px solid var(--luxe-hairline)",
+        }}
+      >
+        <div className="luxe-container">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              marginBottom: 24,
+              gap: 24,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ maxWidth: 640 }}>
+              <div className="luxe-tech" style={{ marginBottom: 8 }}>
+                Editor&rsquo;s Picks
+              </div>
+              <h2
+                className="luxe-display"
+                style={{ fontSize: "clamp(26px, 2.8vw, 36px)", marginBottom: 8 }}
+              >
+                Stays our concierge <em>keeps revisiting</em>
+              </h2>
+            </div>
+            <Link
+              href="/search"
+              className="luxe-tech"
+              style={{ color: "var(--luxe-champagne)" }}
+            >
+              See More &rarr;
+            </Link>
+          </div>
+
+          {editorsPicks.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: 16,
+              }}
+            >
+              {editorsPicks.map((h) => (
+                <Link
+                  key={h.hotel_id}
+                  href={`/hotel/${h.hotel_id}`}
+                  style={{
+                    display: "block",
+                    textDecoration: "none",
+                    color: "inherit",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      aspectRatio: "4 / 3",
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      border: "1px solid rgba(200,170,118,0.18)",
+                      background: CITY_FALLBACK_GRADIENT,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <Image
+                      src={safeImg(h.photo1 || h.photo2)}
+                      alt={h.hotel_name}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      style={{ objectFit: "cover" }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono, monospace)",
+                      fontSize: 10,
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      color: "var(--luxe-soft-white-50)",
+                      marginBottom: 4,
+                    }}
+                  >
+                    {h.city_name} &middot; {h.country}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 17,
+                      fontWeight: 500,
+                      color: "var(--luxe-soft-white)",
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1.25,
+                      marginBottom: 4,
+                    }}
+                  >
+                    {h.hotel_name}
+                  </div>
+                  {h.rating_average ? (
+                    <div
+                      style={{
+                        fontSize: 12.5,
+                        color: "var(--luxe-soft-white-70)",
+                      }}
+                    >
+                      {h.rating_average.toFixed(1)}/10
+                      {h.star_rating ? (
+                        <span style={{ marginLeft: 8, color: "var(--luxe-champagne)" }}>
+                          {"★".repeat(Math.round(h.star_rating))}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </Link>
+              ))}
+            </div>
           ) : (
             <div
-              className="luxe-container"
               style={{
                 color: "var(--luxe-soft-white-50)",
                 fontSize: 13,
-                paddingTop: 24,
-                paddingBottom: 24,
+                paddingTop: 12,
+                paddingBottom: 12,
               }}
             >
-              Curating featured stays&hellip;
+              Curating editor&rsquo;s picks&hellip;
             </div>
           )}
-        </motion.div>
+        </div>
       </motion.section>
 
       {/* ── Why Voyagr — concise 4-up grid ────────────────────────────────── */}

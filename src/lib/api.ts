@@ -207,6 +207,26 @@ export interface FeaturedResponse {
   familyFriendly: CuratedHotel[];
 }
 
+// ── Home page featured cities ─────────────────────────────────────────────
+// Admin-curated `featured_on_home=TRUE` cities, sorted by `home_display_order`.
+// Backed by GET /api/curations/home-cities.
+export type HomeFeaturedCity = {
+  city_slug: string;
+  city_name: string;
+  country: string;
+  image_url: string | null;
+  tagline: string | null;
+  hotel_count: number;
+  home_display_order: number | null;
+};
+
+export async function fetchHomeFeaturedCities(): Promise<HomeFeaturedCity[]> {
+  const res = await fetch(`${API_BASE}/api/curations/home-cities`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`home-cities ${res.status}`);
+  const json = await res.json();
+  return json.cities ?? [];
+}
+
 // In-memory cache for the client-side featured aggregator.
 // Backend has no /api/hotels/featured endpoint, so we build the response
 // from /api/curations/cities + per-city /api/curations/{slug} fan-out.

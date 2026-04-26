@@ -1,5 +1,10 @@
-import { fetchCuratedCities, fetchFeaturedAll, CuratedCity } from "@/lib/api";
-import type { FeaturedResponse } from "@/lib/api";
+import {
+  fetchCuratedCities,
+  fetchFeaturedAll,
+  fetchHomeFeaturedCities,
+  CuratedCity,
+} from "@/lib/api";
+import type { FeaturedResponse, HomeFeaturedCity } from "@/lib/api";
 import { SAMPLE_CITIES } from "@/lib/constants";
 import { SITE_NAME, SITE_URL, DEFAULT_DESCRIPTION } from "@/lib/seo";
 import Home from "./HomePageClient";
@@ -14,13 +19,14 @@ export const dynamic = "force-dynamic";
 async function getHomeData(): Promise<{
   cities: CuratedCity[];
   featured: FeaturedResponse | null;
+  homeCities: HomeFeaturedCity[];
 }> {
   const timeout = (ms: number) =>
     new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error("timeout")), ms)
     );
 
-  const [cities, featured] = await Promise.all([
+  const [cities, featured, homeCities] = await Promise.all([
     Promise.race([fetchCuratedCities(), timeout(8000)]).catch(() =>
       SAMPLE_CITIES.map((c, i) => ({
         ...c,
@@ -30,9 +36,12 @@ async function getHomeData(): Promise<{
       }))
     ),
     Promise.race([fetchFeaturedAll(), timeout(8000)]).catch(() => null),
+    Promise.race([fetchHomeFeaturedCities(), timeout(8000)]).catch(
+      () => [] as HomeFeaturedCity[]
+    ),
   ]);
 
-  return { cities, featured };
+  return { cities, featured, homeCities };
 }
 
 // ---------------------------------------------------------------------------
@@ -40,7 +49,7 @@ async function getHomeData(): Promise<{
 // ---------------------------------------------------------------------------
 
 export default async function HomePage() {
-  const { cities, featured } = await getHomeData();
+  const { cities, featured, homeCities } = await getHomeData();
 
   // Flatten featured hotels for SEO content
   const allFeaturedHotels = featured
@@ -60,7 +69,11 @@ export default async function HomePage() {
   return (
     <>
       {/* Interactive client-side homepage with pre-fetched data */}
-      <Home initialCities={cities} initialFeatured={featured} />
+      <Home
+        initialCities={cities}
+        initialFeatured={featured}
+        initialHomeCities={homeCities}
+      />
 
       {/*
         SEO Content Block — visually hidden but fully crawlable.
