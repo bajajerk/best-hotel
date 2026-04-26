@@ -45,7 +45,7 @@ export default function Tab2Premium() {
   return (
     <div
       className="h-full overflow-y-auto"
-      style={{ background: "var(--bg-black)" }}
+      style={{ background: "var(--cream)" }}
     >
       {/* Gold glow */}
       <div
@@ -75,7 +75,7 @@ export default function Tab2Premium() {
             fontSize: 18,
             fontWeight: 400,
             fontStyle: "italic",
-            color: "var(--white-80)",
+            color: "var(--ink-mid)",
             letterSpacing: -0.3,
             marginBottom: 4,
           }}
@@ -120,7 +120,7 @@ export default function Tab2Premium() {
             fontFamily: "var(--font-dm-sans)",
             fontSize: 14,
             fontWeight: 300,
-            color: "var(--white-30)",
+            color: "var(--ink-light)",
             lineHeight: 1.5,
           }}
         >
@@ -173,7 +173,7 @@ export default function Tab2Premium() {
                     fontFamily: "var(--font-dm-sans)",
                     fontSize: 14,
                     fontWeight: 500,
-                    color: "var(--white-80)",
+                    color: "var(--ink)",
                     marginBottom: 4,
                     lineHeight: 1.3,
                   }}
@@ -184,7 +184,7 @@ export default function Tab2Premium() {
                   style={{
                     fontSize: 12,
                     fontWeight: 300,
-                    color: "var(--white-30)",
+                    color: "var(--ink-light)",
                     lineHeight: 1.55,
                   }}
                 >
@@ -211,7 +211,7 @@ export default function Tab2Premium() {
           style={{
             padding: 16,
             background: "var(--gold)",
-            color: "var(--bg-black)",
+            color: "var(--ink)",
             fontFamily: "var(--font-dm-sans)",
             fontSize: 14,
             fontWeight: 500,
@@ -235,7 +235,7 @@ export default function Tab2Premium() {
           style={{
             padding: 14,
             background: "transparent",
-            color: "var(--white-50)",
+            color: "var(--ink-mid)",
             fontFamily: "var(--font-dm-sans)",
             fontSize: 13,
             fontWeight: 400,
@@ -252,7 +252,7 @@ export default function Tab2Premium() {
           style={{
             marginTop: 14,
             fontSize: 11,
-            color: "var(--white-30)",
+            color: "var(--ink-light)",
             fontWeight: 300,
             lineHeight: 1.5,
             letterSpacing: 0.2,
@@ -275,7 +275,7 @@ export default function Tab2Premium() {
       >
         <div
           style={{
-            background: "var(--white-04)",
+            background: "var(--cream-deep)",
             border: "1px solid var(--border)",
             borderRadius: 16,
             padding: "20px 16px",
@@ -299,7 +299,7 @@ export default function Tab2Premium() {
               style={{
                 fontSize: 13,
                 fontWeight: 400,
-                color: "var(--white-80)",
+                color: "var(--ink)",
               }}
             >
               trusted travelers
@@ -310,7 +310,7 @@ export default function Tab2Premium() {
             style={{
               fontSize: 12,
               fontWeight: 300,
-              color: "var(--white-50)",
+              color: "var(--ink-mid)",
             }}
           >
             Average saving{" "}

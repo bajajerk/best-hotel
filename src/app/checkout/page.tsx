@@ -234,7 +234,7 @@ export default function CheckoutPage() {
           {payTab === "emi" && (
             <div>
               <p className="vc-emi-text">
-                No-cost EMI available from <span style={{ color: "#f5f0e8" }}>₹4,635/month</span> (12 months)
+                No-cost EMI available from <span style={{ color: "var(--ink)" }}>₹4,635/month</span> (12 months)
               </p>
               <div className="vc-emi-note">
                 <p className="vc-emi-note__text">Available on HDFC, ICICI, Axis cards</p>
@@ -271,7 +271,7 @@ export default function CheckoutPage() {
         /* ── Page shell ── */
         .vc-checkout {
           min-height: 100vh;
-          background: #0B1B2B;
+          background: var(--cream);
           display: flex;
           justify-content: center;
           padding: 0 16px;
@@ -303,29 +303,29 @@ export default function CheckoutPage() {
           font-size: 10px;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: rgba(245,240,232,0.3);
+          color: var(--ink-light);
           padding-bottom: 6px;
           border-bottom: 2px solid transparent;
           transition: all 0.3s ease;
         }
         .vc-steps__label--active {
-          color: #f5f0e8;
+          color: var(--ink);
           border-bottom-color: #C9A84C;
         }
         .vc-steps__label--done {
-          color: #f5f0e8;
+          color: var(--ink);
         }
         .vc-steps__arrow {
           font-family: var(--font-mono, 'DM Mono', monospace);
           font-size: 10px;
-          color: rgba(245,240,232,0.2);
+          color: var(--ink-light);
           margin: 0 16px;
           margin-bottom: 6px;
         }
 
         /* ── Card container ── */
         .vc-card {
-          background: #132338;
+          background: var(--white);
           border: 1px solid rgba(201,168,76,0.10);
           border-radius: 12px;
           padding: 24px;
@@ -334,13 +334,13 @@ export default function CheckoutPage() {
           font-family: var(--font-display, 'Cormorant Garamond', serif);
           font-size: 20px;
           font-weight: 500;
-          color: #f5f0e8;
+          color: var(--ink);
           margin: 0 0 4px;
         }
         .vc-card__meta {
           font-family: var(--font-body, 'DM Sans', sans-serif);
           font-size: 13px;
-          color: rgba(245,240,232,0.5);
+          color: var(--ink-mid);
           margin: 0 0 20px;
         }
 
@@ -357,10 +357,10 @@ export default function CheckoutPage() {
           font-size: 13px;
         }
         .vc-card__row-label {
-          color: rgba(245,240,232,0.5);
+          color: var(--ink-mid);
         }
         .vc-card__row-value {
-          color: #f5f0e8;
+          color: var(--ink);
         }
         .vc-card__row-value--gold {
           color: #C9A84C;
@@ -379,13 +379,13 @@ export default function CheckoutPage() {
           font-family: var(--font-body, 'DM Sans', sans-serif);
           font-size: 14px;
           font-weight: 500;
-          color: #f5f0e8;
+          color: var(--ink);
         }
         .vc-card__total-value {
           font-family: var(--font-display, 'Cormorant Garamond', serif);
           font-size: 22px;
           font-weight: 600;
-          color: #f5f0e8;
+          color: var(--ink);
         }
         .vc-card__saving {
           font-family: var(--font-body, 'DM Sans', sans-serif);
@@ -404,18 +404,18 @@ export default function CheckoutPage() {
         .vc-input {
           width: 100%;
           padding: 12px 16px;
-          background: #132338;
-          border: 1px solid rgba(245,240,232,0.10);
+          background: var(--white);
+          border: 1px solid var(--cream-border);
           border-radius: 8px;
           font-family: var(--font-body, 'DM Sans', sans-serif);
           font-size: 13px;
-          color: #f5f0e8;
+          color: var(--ink);
           outline: none;
           box-sizing: border-box;
           transition: border-color 0.2s ease;
         }
         .vc-input::placeholder {
-          color: rgba(245,240,232,0.25);
+          color: var(--ink-light);
         }
         .vc-input:focus {
           border-color: #C9A84C;
@@ -424,7 +424,7 @@ export default function CheckoutPage() {
           font-family: var(--font-body, 'DM Sans', sans-serif);
           font-size: 11px;
           font-weight: 500;
-          color: rgba(245,240,232,0.4);
+          color: var(--ink-light);
           margin-bottom: 6px;
           display: block;
           letter-spacing: 0.02em;
@@ -432,14 +432,14 @@ export default function CheckoutPage() {
         .vc-hint {
           font-family: var(--font-body, 'DM Sans', sans-serif);
           font-size: 11px;
-          color: rgba(245,240,232,0.3);
+          color: var(--ink-light);
           margin-top: 8px;
         }
 
         /* ── Payment tabs ── */
         .vc-tabs {
           display: flex;
-          border-bottom: 1px solid rgba(245,240,232,0.08);
+          border-bottom: 1px solid var(--cream-border);
           margin-bottom: 20px;
         }
         .vc-tabs__btn {
@@ -450,13 +450,13 @@ export default function CheckoutPage() {
           font-family: var(--font-body, 'DM Sans', sans-serif);
           font-size: 13px;
           font-weight: 400;
-          color: rgba(245,240,232,0.4);
+          color: var(--ink-light);
           padding: 0 0 12px;
           cursor: pointer;
           transition: all 0.2s ease;
         }
         .vc-tabs__btn--active {
-          color: #f5f0e8;
+          color: var(--ink);
           font-weight: 500;
           border-bottom-color: #C9A84C;
         }
@@ -469,13 +469,13 @@ export default function CheckoutPage() {
           margin-top: 4px;
         }
         .vc-bank-btn {
-          background: rgba(245,240,232,0.04);
-          border: 1px solid rgba(245,240,232,0.10);
+          background: var(--cream-deep);
+          border: 1px solid var(--cream-border);
           border-radius: 8px;
           padding: 10px 12px;
           font-family: var(--font-body, 'DM Sans', sans-serif);
           font-size: 12px;
-          color: rgba(245,240,232,0.6);
+          color: var(--ink-mid);
           cursor: pointer;
           transition: all 0.2s ease;
           text-align: left;
@@ -490,21 +490,21 @@ export default function CheckoutPage() {
         .vc-emi-text {
           font-family: var(--font-body, 'DM Sans', sans-serif);
           font-size: 13px;
-          color: rgba(245,240,232,0.6);
+          color: var(--ink-mid);
           line-height: 1.6;
           margin: 0;
         }
         .vc-emi-note {
           margin-top: 16px;
           padding: 12px 16px;
-          background: rgba(245,240,232,0.04);
+          background: var(--cream-deep);
           border-radius: 8px;
-          border: 1px solid rgba(245,240,232,0.06);
+          border: 1px solid var(--cream-border);
         }
         .vc-emi-note__text {
           font-family: var(--font-body, 'DM Sans', sans-serif);
           font-size: 12px;
-          color: rgba(245,240,232,0.4);
+          color: var(--ink-light);
           margin: 0;
         }
 
@@ -512,7 +512,7 @@ export default function CheckoutPage() {
         .vc-cancellation {
           font-family: var(--font-body, 'DM Sans', sans-serif);
           font-size: 12px;
-          color: rgba(245,240,232,0.5);
+          color: var(--ink-mid);
           line-height: 1.6;
           margin-bottom: 16px;
           text-align: center;
@@ -522,19 +522,19 @@ export default function CheckoutPage() {
         .vc-pay-btn {
           width: 100%;
           padding: 16px 24px;
-          background: transparent;
-          border: 1px solid #C9A84C;
+          background: var(--gold);
+          border: 1px solid var(--gold);
           border-radius: 8px;
           font-family: var(--font-body, 'DM Sans', sans-serif);
           font-size: 15px;
           font-weight: 500;
-          color: #f5f0e8;
+          color: var(--ink);
           cursor: pointer;
           transition: all 0.2s ease;
           letter-spacing: 0.01em;
         }
         .vc-pay-btn:hover:not(:disabled) {
-          background: rgba(201,168,76,0.08);
+          background: var(--gold-light);
         }
         .vc-pay-btn:disabled {
           opacity: 0.6;
@@ -545,7 +545,7 @@ export default function CheckoutPage() {
         .vc-trust {
           font-family: var(--font-mono, 'DM Mono', monospace);
           font-size: 9px;
-          color: rgba(245,240,232,0.3);
+          color: var(--ink-light);
           text-align: center;
           margin-top: 14px;
           letter-spacing: 0.04em;

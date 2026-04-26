@@ -9,7 +9,7 @@ export default function WhatsAppConcierge() {
   return (
     <section
       style={{
-        background: "#0B1B2B",
+        background: "var(--cream)",
         padding: "60px 64px",
       }}
     >
@@ -45,7 +45,7 @@ export default function WhatsAppConcierge() {
               fontFamily: "var(--font-display)",
               fontSize: "38px",
               fontWeight: 300,
-              color: "var(--cream)",
+              color: "var(--ink)",
               lineHeight: 1.25,
               marginBottom: "24px",
             }}
@@ -60,7 +60,7 @@ export default function WhatsAppConcierge() {
             style={{
               fontFamily: "var(--font-body)",
               fontSize: "13px",
-              color: "rgba(253,250,245,0.55)",
+              color: "var(--ink-mid)",
               maxWidth: "420px",
               lineHeight: 1.75,
               marginBottom: "32px",
@@ -108,10 +108,10 @@ export default function WhatsAppConcierge() {
         {/* ── Right: Phone Mockup ── */}
         <div
           style={{
-            background: "#132338",
+            background: "#efeae2",
             borderRadius: "12px",
             padding: "20px",
-            border: "1px solid rgba(255,255,255,0.06)",
+            border: "1px solid var(--cream-border)",
             maxWidth: "380px",
             justifySelf: "end",
           }}
@@ -119,7 +119,7 @@ export default function WhatsAppConcierge() {
           {/* WA Header */}
           <div
             style={{
-              background: "#0e1c2e",
+              background: "#f0f2f5",
               borderRadius: "8px 8px 0 0",
               padding: "12px 16px",
               display: "flex",
@@ -153,7 +153,7 @@ export default function WhatsAppConcierge() {
                   fontFamily: "var(--font-body)",
                   fontSize: "13px",
                   fontWeight: 500,
-                  color: "var(--cream)",
+                  color: "var(--ink)",
                 }}
               >
                 Priya &middot; Voyagr Concierge
@@ -162,7 +162,7 @@ export default function WhatsAppConcierge() {
                 style={{
                   fontFamily: "var(--font-body)",
                   fontSize: "11px",
-                  color: "rgba(253,250,245,0.5)",
+                  color: "var(--ink-mid)",
                   display: "flex",
                   alignItems: "center",
                   gap: "4px",
@@ -181,8 +181,8 @@ export default function WhatsAppConcierge() {
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
               <div
                 style={{
-                  background: "#132338",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "#ffffff",
+                  border: "1px solid var(--cream-border)",
                   borderRadius: "0 8px 8px 8px",
                   padding: "10px 14px",
                   maxWidth: "280px",
@@ -192,7 +192,7 @@ export default function WhatsAppConcierge() {
                   style={{
                     fontFamily: "var(--font-body)",
                     fontSize: "12px",
-                    color: "var(--cream)",
+                    color: "var(--ink)",
                     lineHeight: 1.5,
                     margin: 0,
                   }}
@@ -204,7 +204,7 @@ export default function WhatsAppConcierge() {
                 style={{
                   fontFamily: "var(--font-mono)",
                   fontSize: "9px",
-                  color: "rgba(253,250,245,0.3)",
+                  color: "var(--ink-light)",
                   marginTop: "4px",
                 }}
               >
@@ -216,7 +216,7 @@ export default function WhatsAppConcierge() {
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
               <div
                 style={{
-                  background: "#1e3a2e",
+                  background: "#d9fdd3",
                   borderRadius: "8px 0 8px 8px",
                   padding: "10px 14px",
                   maxWidth: "280px",
@@ -226,7 +226,7 @@ export default function WhatsAppConcierge() {
                   style={{
                     fontFamily: "var(--font-body)",
                     fontSize: "12px",
-                    color: "var(--cream)",
+                    color: "var(--ink)",
                     lineHeight: 1.5,
                     margin: 0,
                   }}
@@ -239,7 +239,7 @@ export default function WhatsAppConcierge() {
                 style={{
                   fontFamily: "var(--font-mono)",
                   fontSize: "9px",
-                  color: "rgba(253,250,245,0.3)",
+                  color: "var(--ink-light)",
                   marginTop: "4px",
                 }}
               >

@@ -74,7 +74,7 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
         position: "fixed",
         inset: 0,
         zIndex: 10000,
-        background: "rgba(11,27,43,0.92)",
+        background: "rgba(26,23,16,0.55)",
         backdropFilter: "blur(4px)",
         WebkitBackdropFilter: "blur(4px)",
         display: "flex",
@@ -85,7 +85,7 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
       {/* Modal box */}
       <div
         style={{
-          background: "#132338",
+          background: "var(--white)",
           border: "1px solid rgba(201,168,76,0.15)",
           padding: "48px",
           maxWidth: "420px",
@@ -115,7 +115,7 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
             fontFamily: "var(--font-display)",
             fontSize: "30px",
             fontWeight: 300,
-            color: "#F5F1E8",
+            color: "var(--ink)",
             lineHeight: 1.25,
             margin: "0 0 16px 0",
           }}
@@ -129,7 +129,7 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
           style={{
             fontFamily: "var(--font-body)",
             fontSize: "13px",
-            color: "rgba(245,241,232,0.5)",
+            color: "var(--ink-mid)",
             lineHeight: 1.6,
             margin: "0 0 32px 0",
           }}
@@ -144,7 +144,7 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
           style={{
             width: "100%",
             background: "transparent",
-            border: "1px solid rgba(245,240,232,0.15)",
+            border: "1px solid var(--cream-border)",
             padding: "14px 16px",
             display: "flex",
             alignItems: "center",
@@ -159,7 +159,7 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
             style={{
               fontFamily: "var(--font-body)",
               fontSize: "14px",
-              color: "#F5F1E8",
+              color: "var(--ink)",
               fontWeight: 400,
             }}
           >
@@ -180,14 +180,14 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
             style={{
               flex: 1,
               height: "1px",
-              background: "rgba(245,240,232,0.1)",
+              background: "var(--cream-border)",
             }}
           />
           <span
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: "9px",
-              color: "rgba(245,241,232,0.35)",
+              color: "var(--ink-light)",
               textTransform: "lowercase",
             }}
           >
@@ -197,7 +197,7 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
             style={{
               flex: 1,
               height: "1px",
-              background: "rgba(245,240,232,0.1)",
+              background: "var(--cream-border)",
             }}
           />
         </div>
@@ -215,15 +215,15 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
             style={{
               width: "64px",
               flexShrink: 0,
-              background: "#0B1B2B",
-              border: "1px solid rgba(245,241,232,0.1)",
+              background: "var(--cream-deep)",
+              border: "1px solid var(--cream-border)",
               padding: "12px 16px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontFamily: "var(--font-body)",
               fontSize: "14px",
-              color: "#F5F1E8",
+              color: "var(--ink)",
             }}
           >
             +91
@@ -237,12 +237,12 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
             placeholder="Phone number"
             style={{
               flex: 1,
-              background: "#0B1B2B",
-              border: "1px solid rgba(245,241,232,0.1)",
+              background: "var(--cream-deep)",
+              border: "1px solid var(--cream-border)",
               padding: "12px 16px",
               fontFamily: "var(--font-body)",
               fontSize: "14px",
-              color: "#F5F1E8",
+              color: "var(--ink)",
               outline: "none",
             }}
           />
@@ -252,8 +252,8 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
         <button
           style={{
             width: "100%",
-            background: "transparent",
-            border: "1px solid #C9A84C",
+            background: "var(--gold)",
+            border: "1px solid var(--gold)",
             padding: "14px 16px",
             cursor: "pointer",
             marginBottom: "20px",
@@ -263,7 +263,7 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
             style={{
               fontFamily: "var(--font-body)",
               fontSize: "14px",
-              color: "#F5F1E8",
+              color: "var(--ink)",
               fontWeight: 500,
               letterSpacing: "0.02em",
             }}
@@ -277,7 +277,7 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "9px",
-            color: "rgba(245,241,232,0.3)",
+            color: "var(--ink-light)",
             textAlign: "center",
             letterSpacing: "0.02em",
           }}

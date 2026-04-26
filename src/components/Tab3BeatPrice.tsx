@@ -110,7 +110,7 @@ export default function Tab3BeatPrice() {
         fontSize: 15,
         fontWeight: 400,
         fontStyle: "italic",
-        color: "var(--white-50)",
+        color: "var(--ink-mid)",
       }}
     >
       beatmyrate
@@ -135,7 +135,7 @@ export default function Tab3BeatPrice() {
             fontSize: 36,
             fontWeight: 400,
             fontStyle: "italic",
-            color: "var(--white)",
+            color: "var(--ink)",
             lineHeight: 1.1,
             letterSpacing: -0.3,
           }}
@@ -146,7 +146,7 @@ export default function Tab3BeatPrice() {
           className="mt-2.5"
           style={{
             fontSize: 13,
-            color: "var(--white-30)",
+            color: "var(--ink-light)",
             fontWeight: 300,
             lineHeight: 1.5,
           }}
@@ -202,7 +202,7 @@ export default function Tab3BeatPrice() {
         </div>
         <p
           style={{
-            color: "var(--white-80)",
+            color: "var(--ink)",
             fontSize: 14,
             fontWeight: 600,
             marginBottom: 4,
@@ -210,7 +210,7 @@ export default function Tab3BeatPrice() {
         >
           drop your screenshot here
         </p>
-        <p style={{ fontSize: 12, color: "var(--white-30)", fontWeight: 300 }}>
+        <p style={{ fontSize: 12, color: "var(--ink-light)", fontWeight: 300 }}>
           MakeMyTrip, Booking, Agoda — anything
         </p>
       </div>
@@ -227,7 +227,7 @@ export default function Tab3BeatPrice() {
       {/* OR divider */}
       <div
         className="text-center my-5"
-        style={{ fontSize: 12, color: "var(--white-30)", fontWeight: 300 }}
+        style={{ fontSize: 12, color: "var(--ink-light)", fontWeight: 300 }}
       >
         — or enter manually —
       </div>
@@ -246,7 +246,7 @@ export default function Tab3BeatPrice() {
             background: "var(--bg-input)",
             border: "1px solid var(--border)",
             borderRadius: 12,
-            color: "var(--white-80)",
+            color: "var(--ink)",
             fontSize: 13,
             fontFamily: "var(--font-dm-sans)",
           }}
@@ -263,7 +263,7 @@ export default function Tab3BeatPrice() {
               background: "var(--bg-input)",
               border: "1px solid var(--border)",
               borderRadius: 12,
-              color: "var(--white-80)",
+              color: "var(--ink)",
               fontSize: 13,
               fontFamily: "var(--font-dm-sans)",
               appearance: "none",
@@ -282,7 +282,7 @@ export default function Tab3BeatPrice() {
               right: 16,
               top: "50%",
               transform: "translateY(-50%)",
-              color: "var(--white-30)",
+              color: "var(--ink-light)",
               fontSize: 10,
             }}
           >
@@ -298,7 +298,7 @@ export default function Tab3BeatPrice() {
               left: 16,
               top: "50%",
               transform: "translateY(-50%)",
-              color: "var(--white-30)",
+              color: "var(--ink-light)",
               fontSize: 13,
               fontFamily: "var(--font-dm-sans)",
             }}
@@ -318,7 +318,7 @@ export default function Tab3BeatPrice() {
               background: "var(--bg-input)",
               border: "1px solid var(--border)",
               borderRadius: 12,
-              color: "var(--white-80)",
+              color: "var(--ink)",
               fontSize: 13,
               fontFamily: "var(--font-dm-sans)",
             }}
@@ -341,7 +341,7 @@ export default function Tab3BeatPrice() {
               background: "var(--bg-input)",
               border: "1px solid var(--border)",
               borderRadius: 12,
-              color: "var(--white-80)",
+              color: "var(--ink)",
               fontSize: 12,
               fontFamily: "var(--font-dm-sans)",
               colorScheme: "dark",
@@ -362,7 +362,7 @@ export default function Tab3BeatPrice() {
               background: "var(--bg-input)",
               border: "1px solid var(--border)",
               borderRadius: 12,
-              color: "var(--white-80)",
+              color: "var(--ink)",
               fontSize: 12,
               fontFamily: "var(--font-dm-sans)",
               colorScheme: "dark",
@@ -382,7 +382,7 @@ export default function Tab3BeatPrice() {
             background: "var(--bg-input)",
             border: "1px solid var(--border)",
             borderRadius: 12,
-            color: "var(--white-80)",
+            color: "var(--ink)",
             fontSize: 13,
             fontFamily: "var(--font-dm-sans)",
           }}
@@ -395,7 +395,7 @@ export default function Tab3BeatPrice() {
           style={{
             padding: 16,
             background: "var(--gold)",
-            color: "var(--bg-black)",
+            color: "var(--ink)",
             fontFamily: "var(--font-dm-sans)",
             fontSize: 14,
             fontWeight: 500,
@@ -478,14 +478,14 @@ export default function Tab3BeatPrice() {
           <div
             style={{
               fontSize: 13,
-              color: "var(--white-80)",
+              color: "var(--ink)",
               fontWeight: 500,
               marginBottom: 8,
             }}
           >
             {form.hotelName || "Taj Lands End"}
           </div>
-          <div style={{ fontSize: 11, color: "var(--white-30)", marginBottom: 4 }}>
+          <div style={{ fontSize: 11, color: "var(--ink-light)", marginBottom: 4 }}>
             {form.bookingSite || "MakeMyTrip"}
           </div>
           <div
@@ -500,7 +500,7 @@ export default function Tab3BeatPrice() {
             <span
               style={{
                 fontSize: 11,
-                color: "var(--white-30)",
+                color: "var(--ink-light)",
                 fontStyle: "normal",
                 fontFamily: "var(--font-dm-sans)",
                 marginLeft: 4,
@@ -521,7 +521,7 @@ export default function Tab3BeatPrice() {
           fontFamily: "var(--font-instrument-serif)",
           fontSize: 22,
           fontStyle: "italic",
-          color: "var(--white)",
+          color: "var(--ink)",
         }}
       >
         scanning rates...
@@ -529,7 +529,7 @@ export default function Tab3BeatPrice() {
 
       <p
         className="text-center mb-6"
-        style={{ fontSize: 12, color: "var(--white-30)", fontWeight: 300 }}
+        style={{ fontSize: 12, color: "var(--ink-light)", fontWeight: 300 }}
       >
         checking 50+ hotel partners
       </p>
@@ -702,7 +702,7 @@ export default function Tab3BeatPrice() {
         transition={{ duration: 0.4, delay: 0.85 }}
         className="relative z-[1] mb-3.5"
         style={{
-          background: "var(--white-04)",
+          background: "var(--cream-deep)",
           border: "1px solid var(--border)",
           borderRadius: 12,
           padding: 14,
@@ -714,7 +714,7 @@ export default function Tab3BeatPrice() {
             fontSize: 15,
             fontWeight: 400,
             marginBottom: 6,
-            color: "var(--white-80)",
+            color: "var(--ink)",
           }}
         >
           Taj Lands End, Mumbai
@@ -722,7 +722,7 @@ export default function Tab3BeatPrice() {
         <div
           style={{
             fontSize: 11,
-            color: "var(--white-30)",
+            color: "var(--ink-light)",
             lineHeight: 1.7,
             fontWeight: 300,
           }}
@@ -732,7 +732,7 @@ export default function Tab3BeatPrice() {
           Mar 15 – Mar 18 &middot; 3 nights
           <br />
           Total:{" "}
-          <span style={{ color: "var(--white-80)", fontWeight: 500 }}>
+          <span style={{ color: "var(--ink)", fontWeight: 500 }}>
             &#8377;17,700
           </span>{" "}
           vs{" "}
@@ -760,7 +760,7 @@ export default function Tab3BeatPrice() {
           style={{
             padding: 16,
             background: "var(--gold)",
-            color: "var(--bg-black)",
+            color: "var(--ink)",
             fontFamily: "var(--font-dm-sans)",
             fontSize: 14,
             fontWeight: 500,
@@ -777,7 +777,7 @@ export default function Tab3BeatPrice() {
           style={{
             padding: 14,
             background: "transparent",
-            color: "var(--white-50)",
+            color: "var(--ink-mid)",
             fontFamily: "var(--font-dm-sans)",
             fontSize: 13,
             fontWeight: 400,
@@ -791,7 +791,7 @@ export default function Tab3BeatPrice() {
         {/* Trust text */}
         <p
           className="text-center mt-3"
-          style={{ fontSize: 11, color: "var(--white-30)", fontWeight: 300 }}
+          style={{ fontSize: 11, color: "var(--ink-light)", fontWeight: 300 }}
         >
           our team confirms availability and processes payment on call
         </p>
@@ -802,7 +802,7 @@ export default function Tab3BeatPrice() {
   return (
     <div
       className="h-full flex flex-col relative overflow-hidden overflow-y-auto"
-      style={{ background: "var(--bg-black)", padding: "16px 24px 32px" }}
+      style={{ background: "var(--cream)", padding: "16px 24px 32px" }}
     >
       {/* Gold corner glow */}
       <div
@@ -887,7 +887,7 @@ function ScanningStep({ text, delay }: { text: string; delay: number }) {
             style={{
               width: 12,
               height: 12,
-              border: "2px solid var(--white-08)",
+              border: "2px solid var(--cream-border)",
               borderTop: "2px solid var(--gold)",
               borderRadius: "50%",
             }}
@@ -897,7 +897,7 @@ function ScanningStep({ text, delay }: { text: string; delay: number }) {
       <span
         style={{
           fontSize: 12,
-          color: done ? "var(--white-50)" : "var(--white-30)",
+          color: done ? "var(--ink-mid)" : "var(--ink-light)",
           fontWeight: 300,
           transition: "color 0.3s ease",
         }}

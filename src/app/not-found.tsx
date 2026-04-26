@@ -4,7 +4,7 @@ export default function NotFound() {
   return (
     <div
       className="min-h-screen flex items-center justify-center"
-      style={{ background: "var(--bg-black)", color: "var(--white)" }}
+      style={{ background: "var(--cream)", color: "var(--ink)" }}
     >
       <div className="text-center px-6">
         <p
@@ -19,13 +19,13 @@ export default function NotFound() {
         >
           Page not found
         </h1>
-        <p className="text-sm mb-8" style={{ color: "var(--white-50)" }}>
+        <p className="text-sm mb-8" style={{ color: "var(--ink-mid)" }}>
           The page you are looking for does not exist or has been moved.
         </p>
         <Link
           href="/"
           className="inline-block px-6 py-3 rounded-full text-sm font-medium"
-          style={{ background: "var(--gold)", color: "#0A0A0A" }}
+          style={{ background: "var(--gold)", color: "var(--ink)" }}
         >
           Back to Home
         </Link>

@@ -254,7 +254,7 @@ export default function OccasionCarousel() {
   return (
     <section
       className="section-pad occasion-carousel-section"
-      style={{ background: "#0B1B2B" }}
+      style={{ background: "var(--cream)" }}
     >
       <div style={{ maxWidth: 1400, margin: "0 auto" }}>
         {/* Header */}
@@ -273,7 +273,7 @@ export default function OccasionCarousel() {
           </div>
           <h2
             className="type-display-2"
-            style={{ color: "#F5F0E8", marginBottom: 10 }}
+            style={{ color: "var(--ink)", marginBottom: 10 }}
           >
             By{" "}
             <em style={{ fontStyle: "italic", color: "#C9A84C" }}>
@@ -283,7 +283,7 @@ export default function OccasionCarousel() {
           <p
             className="type-body"
             style={{
-              color: "#F5F0E8",
+              color: "var(--ink-mid)",
               lineHeight: 1.7,
               maxWidth: 480,
               margin: "0 auto",

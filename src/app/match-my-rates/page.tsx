@@ -331,8 +331,8 @@ export default function MatchMyRatesPage() {
     return (
       <div className="luxe">
         <Header />
-        <main className="min-h-screen flex items-center justify-center" style={{ background: "#0c0b0a" }}>
-          <div style={{ color: "rgba(247,245,242,0.7)" }}>Loading...</div>
+        <main className="min-h-screen flex items-center justify-center" style={{ background: "var(--cream)" }}>
+          <div style={{ color: "var(--ink-mid)" }}>Loading...</div>
         </main>
         <Footer />
       </div>

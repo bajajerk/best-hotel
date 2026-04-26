@@ -2,7 +2,7 @@ export default function Loading() {
   return (
     <div
       className="min-h-screen flex items-center justify-center"
-      style={{ background: "var(--bg-black)" }}
+      style={{ background: "var(--cream)" }}
     >
       <div className="text-center">
         <div
@@ -14,7 +14,7 @@ export default function Loading() {
         />
         <p
           className="text-xs tracking-[0.2em] uppercase"
-          style={{ color: "var(--white-30)", fontFamily: "var(--font-mono)" }}
+          style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
         >
           Loading
         </p>

@@ -117,7 +117,7 @@ export default function RoomSelectLoginModal({
             position: "fixed",
             inset: 0,
             zIndex: 10000,
-            background: "rgba(11,27,43,0.92)",
+            background: "rgba(26,23,16,0.55)",
             backdropFilter: "blur(4px)",
             WebkitBackdropFilter: "blur(4px)",
             display: "flex",

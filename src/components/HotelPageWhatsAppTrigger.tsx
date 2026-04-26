@@ -38,15 +38,15 @@ export default function HotelPageWhatsAppTrigger({ hotelName }: Props) {
         style={{
           maxWidth: "520px",
           margin: "0 auto 24px",
-          background: "#0B1B2B",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: "var(--white)",
+          border: "1px solid var(--cream-border)",
           borderRadius: "12px",
           padding: "16px 20px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: "16px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+          boxShadow: "0 8px 32px rgba(26,23,16,0.15)",
         }}
       >
         <div style={{ flex: 1 }}>
@@ -54,7 +54,7 @@ export default function HotelPageWhatsAppTrigger({ hotelName }: Props) {
             style={{
               fontFamily: "var(--font-body)",
               fontSize: "13px",
-              color: "var(--cream)",
+              color: "var(--ink)",
               margin: "0 0 4px",
               fontWeight: 500,
             }}
@@ -88,7 +88,7 @@ export default function HotelPageWhatsAppTrigger({ hotelName }: Props) {
           style={{
             background: "none",
             border: "none",
-            color: "rgba(253,250,245,0.4)",
+            color: "var(--ink-light)",
             cursor: "pointer",
             padding: "4px",
             lineHeight: 1,
