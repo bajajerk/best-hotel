@@ -7,7 +7,30 @@
 }
 
 :root {
-  /* ── Voyagr Light Theme ── */
+  /* ──────────────────────────────────────────────────────────────
+     Voyagr Club — Dark Theme (redesign-v2, default)
+     Obsidian-on-gold. Source: voyagr-club-redesign.zip
+     ────────────────────────────────────────────────────────────── */
+  --color-black-rich: #0A0A0A;
+  --color-black-deeper: #050505;
+  --color-black-soft: #0B0B0B;
+  --color-gold: #D4AF37;
+  --color-gold-muted: rgba(212, 175, 55, 0.4);
+  --color-gold-soft: rgba(212, 175, 55, 0.1);
+  --color-gold-border: rgba(212, 175, 55, 0.2);
+  --color-white-soft: #F5F5F5;
+  --color-white-90: rgba(245, 245, 245, 0.9);
+  --color-white-70: rgba(245, 245, 245, 0.7);
+  --color-white-60: rgba(245, 245, 245, 0.6);
+  --color-white-50: rgba(245, 245, 245, 0.5);
+  --color-white-40: rgba(245, 245, 245, 0.4);
+  --color-white-30: rgba(245, 245, 245, 0.3);
+  --color-white-20: rgba(245, 245, 245, 0.2);
+  --color-white-10: rgba(245, 245, 245, 0.1);
+  --color-white-05: rgba(245, 245, 245, 0.05);
+  --color-hairline: rgba(255, 255, 255, 0.08);
+
+  /* ── Voyagr Light Theme — kept defined for /flights/* and out-of-scope routes ── */
   --cream: #f5f0e8;
   --cream-deep: #ede7d9;
   --cream-border: #ddd5c3;
@@ -51,32 +74,39 @@
   --text-label: 10px;
   --text-micro: 9px;
 
-  /* ── Backward compat aliases — remove after full migration ── */
-  --bg-deep: var(--cream);
-  --bg-surface: var(--white);
-  --bg-elevated: var(--cream-deep);
-  --bg-black: var(--cream);
-  --bg-card: var(--white);
-  --bg-input: var(--white);
-  --text-primary: var(--ink);
-  --text-secondary: var(--ink-mid);
-  --text-tertiary: var(--ink-light);
-  --text-ghost: var(--cream-border);
-  --accent: var(--gold);
-  --accent-soft: var(--gold-pale);
-  --accent-border: rgba(201, 168, 76, 0.3);
-  --accent-hover: var(--gold-light);
-  --border: var(--cream-border);
-  --border-hover: var(--gold);
-  --border-focus: var(--gold);
-  --white-80: var(--ink-mid);
-  --white-50: var(--ink-mid);
-  --white-30: var(--ink-light);
-  --white-15: var(--cream-border);
-  --white-08: var(--cream-deep);
-  --white-04: var(--cream);
-  --gold-soft: var(--gold-pale);
-  --gold-border: var(--accent-border);
+  /* ──────────────────────────────────────────────────────────────
+     Compat aliases — now resolve to DARK tokens (redesign-v2).
+     Every legacy var(--bg-deep), var(--text-primary), var(--accent),
+     etc. across the codebase flips to the new dark palette via
+     these single indirections. Eventually these can be removed once
+     all pages use --color-* directly.
+     ────────────────────────────────────────────────────────────── */
+  --bg-deep: var(--color-black-rich);
+  --bg-surface: var(--color-black-rich);
+  --bg-elevated: var(--color-black-soft);
+  --bg-black: var(--color-black-rich);
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --bg-input: rgba(255, 255, 255, 0.05);
+  --text-primary: var(--color-white-soft);
+  --text-secondary: var(--color-white-70);
+  --text-tertiary: var(--color-white-50);
+  --text-ghost: var(--color-white-30);
+  --accent: var(--color-gold);
+  --accent-soft: var(--color-gold-soft);
+  --accent-border: var(--color-gold-border);
+  --accent-hover: #E8C547;
+  --border: var(--color-hairline);
+  --border-hover: var(--color-gold);
+  --border-focus: var(--color-gold);
+  --white-80: var(--color-white-90);
+  --white-50: var(--color-white-50);
+  --white-30: var(--color-white-30);
+  --white-15: var(--color-white-10);
+  --white-08: var(--color-white-05);
+  --white-04: rgba(245, 245, 245, 0.03);
+  --gold-soft: var(--color-gold-soft);
+  --gold-border: var(--color-gold-border);
+  --gold-bright: var(--color-gold);
   --success-soft: rgba(74, 124, 89, 0.1);
   --green: var(--success);
   --green-soft: rgba(74, 124, 89, 0.1);
@@ -105,8 +135,8 @@ img {
 }
 
 body {
-  background: var(--cream);
-  color: var(--ink);
+  background: var(--color-black-rich);
+  color: var(--color-white-soft);
   font-family: var(--font-body);
   font-size: 14px;
   line-height: 1.6;
@@ -114,6 +144,11 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--color-gold);
+  color: var(--color-black-rich);
 }
 
 /* ── Voyagr nav — 72px desktop, 60px mobile ── */
@@ -4411,3 +4446,109 @@ body:has(.precision-theme) {
 /* Default link colour stays inherited; but ensure underline treatments don't
    blow out on dark */
 .luxe a:hover { color: #c8aa76; }
+
+/* ════════════════════════════════════════════════════════════════════
+   ░░  REDESIGN-V2  ░░  Voyagr Club Dark Theme Helpers
+   ░░  Source: voyagr-club-redesign · ported with readability fixes
+   ════════════════════════════════════════════════════════════════════ */
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.glass-panel-strong {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.luxury-text-gradient {
+  background: linear-gradient(180deg, #F5F5F5 0%, #A0A0A0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.gold-glow { box-shadow: 0 0 24px rgba(212, 175, 55, 0.22); }
+.gold-glow-strong { box-shadow: 0 0 36px rgba(212, 175, 55, 0.35), 0 8px 20px rgba(212, 175, 55, 0.18); }
+
+.eyebrow {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5em;
+  color: var(--color-gold);
+  display: inline-block;
+}
+.eyebrow-soft { color: var(--color-white-40); }
+.eyebrow-sm { font-size: 9px; letter-spacing: 0.4em; }
+
+.serif-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.gold-flare-bg { position: relative; }
+.gold-flare-bg::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: rgba(212, 175, 55, 0.05);
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hairline-top { border-top: 1px solid var(--color-hairline); }
+.hairline-bottom { border-bottom: 1px solid var(--color-hairline); }
+
+.pulse-gold-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--color-gold);
+  border-radius: 50%;
+  animation: pulseGold 2.5s ease-in-out infinite;
+}
+@keyframes pulseGold {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+  50% { opacity: 0.5; box-shadow: 0 0 0 8px rgba(212, 175, 55, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .pulse-gold-dot { animation: none; opacity: 1; }
+}
+
+@media (max-width: 767px) {
+  [style*="background-attachment: fixed"],
+  [style*="background-attachment:fixed"] {
+    background-attachment: scroll !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
