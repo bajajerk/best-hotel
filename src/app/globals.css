@@ -3988,3 +3988,311 @@ body:has(.precision-theme) {
   background: var(--white-soft) !important;
   color: var(--obsidian-pitch) !important;
 }
+
+/* ============================================================================
+   ── UNDERSTATED LUXURY DESIGN SYSTEM ──
+   Dark luxe tokens, glass panels, bento grid, capsule buttons, tracking labels.
+   Scoped to `.luxe` wrappers (and the `<body class="luxe-body">`) so this
+   coexists with the legacy cream theme used by inner editorial sections.
+   ============================================================================ */
+
+:root {
+  /* Core palette — Understated Luxury */
+  --luxe-black: #0c0b0a;          /* deep charcoal w/ warm espresso undertone */
+  --luxe-black-2: #14120f;
+  --luxe-black-3: #1c1a16;
+  --luxe-champagne: #c8aa76;      /* understated champagne gold */
+  --luxe-champagne-soft: rgba(200, 170, 118, 0.15);
+  --luxe-champagne-line: rgba(200, 170, 118, 0.28);
+  --luxe-soft-white: #f7f5f2;     /* creamy alabaster */
+  --luxe-soft-white-70: rgba(247, 245, 242, 0.7);
+  --luxe-soft-white-50: rgba(247, 245, 242, 0.5);
+  --luxe-soft-white-30: rgba(247, 245, 242, 0.3);
+  --luxe-hairline: rgba(255, 255, 255, 0.06);
+  --luxe-hairline-strong: rgba(255, 255, 255, 0.12);
+  --luxe-glass-bg: rgba(255, 255, 255, 0.03);
+  --luxe-glass-border: rgba(255, 255, 255, 0.06);
+}
+
+/* Global selection accent */
+.luxe-body ::selection,
+.luxe ::selection {
+  background: rgba(200, 170, 118, 0.3);
+  color: #ffffff;
+}
+
+/* ── Hide scrollbars utility ── */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ── .luxe wrapper — the dark luxury frame for any page ── */
+.luxe {
+  background: var(--luxe-black);
+  color: var(--luxe-soft-white);
+  font-family: var(--font-body), 'Manrope', system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.luxe h1, .luxe h2, .luxe h3, .luxe h4, .luxe h5, .luxe h6,
+.luxe .luxe-heading {
+  font-family: var(--font-display), 'Playfair Display', Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--luxe-soft-white);
+}
+.luxe a { color: inherit; }
+.luxe input::placeholder,
+.luxe textarea::placeholder { color: var(--luxe-soft-white-50); }
+
+/* Tracking-tight serif heading classes */
+.luxe-display {
+  font-family: var(--font-display), 'Playfair Display', Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+.luxe-display em,
+.luxe-heading em {
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ── Tech / mono micro-label ── */
+.luxe-tech {
+  font-family: var(--font-mono), 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--luxe-champagne);
+}
+.luxe-tech-soft { color: var(--luxe-soft-white-50); }
+
+/* ── Luxury text gradient (white → warm grey) ── */
+.luxe-text-gradient {
+  background-image: linear-gradient(135deg, #ffffff 0%, #b8b0a5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Glassmorphism panel ── */
+.luxe-glass {
+  backdrop-filter: blur(24px) saturate(120%);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
+  background: var(--luxe-glass-bg);
+  border: 1px solid var(--luxe-glass-border);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── Capsule buttons ── */
+.luxe-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #0a0a0a;
+  font-family: var(--font-body), 'Manrope', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.luxe-btn-primary:hover {
+  transform: scale(0.98);
+  box-shadow: 0 4px 14px 0 rgba(255, 255, 255, 0.15);
+}
+.luxe-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--luxe-soft-white);
+  font-family: var(--font-body), 'Manrope', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+.luxe-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+.luxe-btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 9999px;
+  background: var(--luxe-champagne);
+  color: #0a0a0a;
+  font-family: var(--font-body), 'Manrope', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+.luxe-btn-gold:hover {
+  transform: scale(0.98);
+  background: #d4b988;
+  box-shadow: 0 4px 16px 0 rgba(200, 170, 118, 0.28);
+}
+
+/* ── Bento Carousel ── */
+.bento-rail {
+  display: grid;
+  grid-template-rows: 280px 280px;
+  grid-auto-flow: column;
+  gap: 16px;
+  padding: 8px 24px 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.bento-rail::-webkit-scrollbar { display: none; }
+.bento-card {
+  position: relative;
+  border-radius: 32px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #1a1815;
+  scroll-snap-align: center;
+  cursor: pointer;
+  isolation: isolate;
+}
+.bento-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1), filter 1s ease;
+  filter: saturate(0.92) brightness(0.85);
+}
+.bento-card:hover .bento-card-img {
+  transform: scale(1.1);
+  filter: saturate(1) brightness(0.92);
+}
+.bento-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(12, 11, 10, 0.85) 0%, rgba(12, 11, 10, 0.15) 55%, transparent 80%);
+  pointer-events: none;
+}
+.bento-card-content {
+  position: absolute;
+  left: 24px;
+  bottom: 22px;
+  right: 24px;
+  z-index: 1;
+}
+.bento-card-title {
+  font-family: var(--font-display), 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 26px;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: var(--luxe-soft-white);
+  margin: 0;
+}
+.bento-card-meta {
+  font-family: var(--font-mono), 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--luxe-champagne);
+  margin-top: 8px;
+}
+
+/* ── Hairline divider ── */
+.luxe-hr {
+  border: 0;
+  border-top: 1px solid var(--luxe-hairline);
+}
+
+/* ── Inputs (luxe variant) ── */
+.luxe-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--luxe-hairline-strong);
+  border-radius: 9999px;
+  color: var(--luxe-soft-white);
+  font-family: var(--font-body), 'Manrope', system-ui, sans-serif;
+  padding: 12px 18px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.luxe-input:focus {
+  border-color: var(--luxe-champagne);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Tabs (luxe) ── */
+.luxe-tab {
+  font-family: var(--font-mono), 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--luxe-soft-white-50);
+  padding: 12px 22px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.luxe-tab:hover { color: var(--luxe-soft-white); }
+.luxe-tab[aria-selected="true"],
+.luxe-tab.is-active {
+  color: var(--luxe-champagne);
+  border-color: var(--luxe-champagne-line);
+  background: var(--luxe-champagne-soft);
+}
+
+/* ── Card surface (for content cards on dark pages) ── */
+.luxe-card {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--luxe-hairline);
+  border-radius: 20px;
+  padding: 22px;
+  transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+}
+.luxe-card:hover {
+  border-color: var(--luxe-hairline-strong);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ── Page container width ── */
+.luxe-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}

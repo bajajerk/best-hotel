@@ -102,6 +102,49 @@ export default function PaymentPage() {
         idToken
       );
       flow.setBookingId(result.id);
+
+      // Build WhatsApp message with full booking context — opens immediately
+      // so the concierge can act without the user clicking another button.
+      const ref = `VG-${String(result.id).padStart(5, "0")}`;
+      const whatsappNumber =
+        process.env.NEXT_PUBLIC_CONCIERGE_WHATSAPP || "919833534627";
+      const checkinPretty = formatShortDate(flow.checkIn);
+      const checkoutPretty = formatShortDate(flow.checkOut);
+      const nights = (() => {
+        try {
+          const d1 = new Date(flow.checkIn + "T00:00:00").getTime();
+          const d2 = new Date(flow.checkOut + "T00:00:00").getTime();
+          return Math.max(1, Math.round((d2 - d1) / 86400000));
+        } catch {
+          return 1;
+        }
+      })();
+      const guests = `${flow.adults || 2} adult${(flow.adults || 2) > 1 ? "s" : ""}${(flow.children || 0) > 0 ? ` + ${flow.children} child${flow.children === 1 ? "" : "ren"}` : ""}`;
+      const cancelLine = flow.refundable && flow.freeCancelUntil
+        ? ` (free cancellation until ${formatShortDate(flow.freeCancelUntil.slice(0, 10))})`
+        : "";
+      const message = [
+        "Hi Voyagr Concierge!",
+        "",
+        `Booking request: ${ref}`,
+        "",
+        `🏨 ${flow.hotelName || "Hotel"}${flow.hotelCity ? `, ${flow.hotelCity}` : ""}`,
+        `🛏️ ${flow.roomName || "Room"}${flow.mealBasis ? ` (${flow.mealBasis})` : ""}`,
+        `📅 ${checkinPretty} → ${checkoutPretty} (${nights} night${nights > 1 ? "s" : ""})`,
+        `👥 ${guests}`,
+        `💰 ${formatInr(flow.totalPrice)}${cancelLine}`,
+        flow.specialRequests ? `\n📝 ${flow.specialRequests}` : "",
+        "",
+        "Please confirm and send payment details. Thanks!",
+      ]
+        .filter(Boolean)
+        .join("\n");
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+      // Open WhatsApp in a new tab; navigate to confirmation in the current tab.
+      // Some browsers block window.open from non-user-gesture handlers; this is
+      // inside the click handler, so we're fine.
+      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
       router.push("/book/confirmation");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";

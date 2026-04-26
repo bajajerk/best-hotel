@@ -8,7 +8,7 @@ import { useBookingFlow } from "@/context/BookingFlowContext";
 
 const GOLD = "#C9A84C";
 const CONCIERGE_WHATSAPP =
-  process.env.NEXT_PUBLIC_CONCIERGE_WHATSAPP || "919876543210";
+  process.env.NEXT_PUBLIC_CONCIERGE_WHATSAPP || "919833534627";
 
 const inrFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
