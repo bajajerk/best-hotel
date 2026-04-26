@@ -4575,3 +4575,70 @@ body:has(.precision-theme) {
 .redesign-outline-btn:not([disabled]):active {
   transform: scale(0.98);
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Redesign-v2 Header / Mobile tab bar responsive rules
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Hover states for floating-pill nav links */
+.redesign-header-link:hover { color: var(--color-gold) !important; }
+.redesign-header-signin:hover { color: var(--color-white-soft) !important; }
+.redesign-header-join:hover {
+  background: var(--color-white-soft) !important;
+  color: var(--color-black-rich) !important;
+  transform: translateY(-1px);
+}
+.redesign-header-join:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Hide desktop nav links + Sign In below 1024px (where the pill gets cramped) */
+@media (max-width: 1023px) {
+  .redesign-header-links { display: none !important; }
+  .redesign-header-signin { display: none !important; }
+}
+
+/* Hide the "Join the Club" pill on very small screens (<480px) — hamburger covers it */
+@media (max-width: 479px) {
+  .redesign-header-join { display: none !important; }
+}
+
+/* Mobile bottom tab bar — show ONLY <640px (replaces previous .mobile-tab-bar default) */
+.redesign-mobile-tabs { display: none !important; }
+@media (max-width: 639px) {
+  .redesign-mobile-tabs { display: flex !important; }
+  /* Add bottom padding to body so content doesn't sit under the fixed tab bar */
+  body { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+}
+
+/* Reserve top space for the floating header pill on every page */
+.redesign-header { /* no-op selector — the inline style handles layout */ }
+
+/* ════════════════════════════════════════════════════════════════════
+   Redesign-v2 Footer hover + responsive rules
+   ════════════════════════════════════════════════════════════════════ */
+
+.redesign-footer-link:hover { color: var(--color-white-soft) !important; }
+.redesign-footer-meta:hover { color: var(--color-white-30) !important; }
+.redesign-footer-social:hover {
+  color: var(--color-gold) !important;
+  border-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* Stack footer columns on mobile */
+@media (max-width: 767px) {
+  .redesign-footer { padding: 80px 24px 32px !important; }
+  .redesign-footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 48px !important;
+    margin-bottom: 64px !important;
+  }
+}
+
+/* Two columns on tablets */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .redesign-footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 48px !important;
+  }
+}

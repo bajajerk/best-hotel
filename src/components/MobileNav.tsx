@@ -7,52 +7,137 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 /* ────────────────────────────────────────────────────────────
-   Voyagr Club — Premium Side-Drawer Menu (Mobile-first)
-   Slide-in from right, 85vw width, olive/cream/gold palette
-   Rendered via portal to avoid stacking-context issues
+   Voyagr Club — Right-side cabinet drawer (redesign-v2)
+   Keeps the structural skeleton from the previous MobileNav:
+   portal, ESC handler, swipe-right-to-close, focus trap, body
+   scroll lock. Re-skins the visual surface to dark/gold per
+   the voyagr-club-redesign reference.
    ──────────────────────────────────────────────────────────── */
 
-const PRIMARY_LINKS: {
+type NavItem = {
   label: string;
   href: string;
-  icon: string;
-  highlighted?: boolean;
+  icon: React.ReactNode;
   badge?: string;
   subtext?: string;
-}[] = [
-  { label: "Home", href: "/", icon: "home" },
-  { label: "Search", href: "/search", icon: "search", highlighted: true, badge: "BROWSE" },
-  {
-    label: "Preferred Rates",
-    href: "/preferred-rates",
-    icon: "star",
-    highlighted: true,
-    badge: "VOYAGR CLUB",
-  },
+};
+
+const Icons = {
+  home: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  ),
+  search: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
+  star: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  ),
+  trendingDown: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" />
+      <polyline points="16 17 22 17 22 11" />
+    </svg>
+  ),
+  luggage: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 20h0a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h0" />
+      <path d="M8 18V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v14" />
+      <path d="M10 20h4" />
+    </svg>
+  ),
+  user: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  key: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m21 2-9.6 9.6" />
+      <circle cx="7.5" cy="15.5" r="5.5" />
+      <path d="m21 2-3 3" />
+      <path d="m18 5-3 3" />
+    </svg>
+  ),
+  building: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="2" width="16" height="20" rx="2" />
+      <line x1="9" y1="6" x2="9" y2="6.01" />
+      <line x1="15" y1="6" x2="15" y2="6.01" />
+      <line x1="9" y1="10" x2="9" y2="10.01" />
+      <line x1="15" y1="10" x2="15" y2="10.01" />
+      <line x1="9" y1="14" x2="9" y2="14.01" />
+      <line x1="15" y1="14" x2="15" y2="14.01" />
+      <path d="M9 22v-4h6v4" />
+    </svg>
+  ),
+  mapPin: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 10c0 7-8 13-8 13s-8-6-8-13a8 8 0 0 1 16 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  ),
+  tag: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+      <line x1="7" y1="7" x2="7.01" y2="7" />
+    </svg>
+  ),
+  message: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  ),
+  close: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  ),
+  menu: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  ),
+};
+
+const PRIMARY_LINKS: NavItem[] = [
+  { label: "Home", href: "/", icon: Icons.home },
+  { label: "Search", href: "/search", icon: Icons.search, badge: "BROWSE" },
+  { label: "Preferred Rates", href: "/preferred-rates", icon: Icons.star, badge: "VOYAGR CLUB" },
   {
     label: "Price Match",
     href: "/match-my-rates",
-    icon: "trending_down",
+    icon: Icons.trendingDown,
     subtext: "See if we can beat your current hotel price",
   },
-  { label: "My Trips", href: "/booking-history", icon: "luggage" },
-  { label: "Profile", href: "/profile", icon: "person" },
+  { label: "My Trips", href: "/booking-history", icon: Icons.luggage },
+  { label: "Profile", href: "/profile", icon: Icons.user },
 ];
 
-const SECONDARY_LINKS = [
-  { label: "Featured Properties", href: "/featured", icon: "apartment" },
-  { label: "Explore Cities", href: "/cities", icon: "location_city" },
-  { label: "Offers", href: "/offers", icon: "local_offer" },
+const DISCOVER_LINKS: NavItem[] = [
+  { label: "Featured Properties", href: "/preferred-properties", icon: Icons.building },
+  { label: "Explore Cities", href: "/search", icon: Icons.mapPin },
+  { label: "Offers", href: "/preferred-rates", icon: Icons.tag },
 ];
 
-const BOTTOM_LINKS = [
-  { label: "Help & Support", href: "/support" },
-  { label: "Contact Us", href: "/contact" },
+const FOOTER_LINKS = [
+  { label: "Contact Us", href: "mailto:hello@voyagr.com" },
   { label: "Terms & Policies", href: "/terms" },
 ];
 
 const WHATSAPP_URL =
-  "https://wa.me/919876543210?text=Hi%20Voyagr%2C%20I%27d%20like%20to%20speak%20with%20a%20concierge";
+  "https://wa.me/919833534627?text=Hi%20Voyagr%2C%20I%27d%20like%20to%20speak%20with%20a%20concierge";
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -64,8 +149,7 @@ export default function MobileNav() {
   const drawerRef = useRef<HTMLDivElement>(null);
   const touchStartXRef = useRef<number | null>(null);
 
-  /* Swipe-right-to-close handlers on the drawer itself.
-     Only tracks rightward motion so vertical scrolling and taps still work. */
+  /* Swipe-right-to-close handlers (vertical scroll + taps still work). */
   function onTouchStart(e: React.TouchEvent) {
     touchStartXRef.current = e.touches[0].clientX;
   }
@@ -80,29 +164,12 @@ export default function MobileNav() {
     touchStartXRef.current = null;
   }
 
-  /* "See Member Rates →" CTA — auth-aware destination.
-     Logged out + on homepage → smooth-scroll to the hero search bar (it's right there).
-     Logged out elsewhere → /search.
-     Logged in → /search directly (skip the discovery step). */
-  function handleSeeMemberRates(e: React.MouseEvent) {
-    e.preventDefault();
+  function handleSignOut() {
+    signOut();
     setOpen(false);
-    if (!user && pathname === "/") {
-      // Wait for the drawer close transition before scrolling so the target is in view.
-      setTimeout(() => {
-        const target = document.getElementById("hero-search");
-        if (target) {
-          target.scrollIntoView({ behavior: "smooth", block: "center" });
-        } else {
-          router.push("/search");
-        }
-      }, 250);
-      return;
-    }
-    router.push("/search");
+    router.push("/");
   }
 
-  /* Portal requires client-side mount */
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -145,36 +212,35 @@ export default function MobileNav() {
     return pathname.startsWith(href);
   }
 
-  /* Overlay + Drawer rendered via portal to escape header stacking context */
-  const overlay = mounted
+  const drawer = mounted
     ? createPortal(
         <>
-          {/* ── Dark backdrop overlay — covers the area left of the drawer,
-                tapping it closes the drawer. Full-screen underneath so it
-                still covers the 25% gap regardless of drawer max-width cap. ── */}
+          {/* ── Backdrop ── */}
           <div
             onClick={() => setOpen(false)}
+            aria-hidden={!open}
             style={{
               position: "fixed",
               inset: 0,
               zIndex: 10000,
-              background: "rgba(0,0,0,0.4)",
+              background: "rgba(10, 10, 10, 0.78)",
+              backdropFilter: open ? "blur(6px)" : "none",
+              WebkitBackdropFilter: open ? "blur(6px)" : "none",
               opacity: open ? 1 : 0,
               pointerEvents: open ? "auto" : "none",
               transition: open
-                ? "opacity 0.28s ease-out"
+                ? "opacity 0.28s ease-out, backdrop-filter 0.28s ease-out"
                 : "opacity 0.22s ease-in",
             }}
           />
 
-          {/* ── Right-side slide-in drawer ── */}
+          {/* ── Right-side cabinet drawer ── */}
           <div
             ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-label="Navigation menu"
             tabIndex={-1}
-            className={`mobile-menu${open ? " open" : ""}`}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
@@ -183,470 +249,238 @@ export default function MobileNav() {
               position: "fixed",
               top: 0,
               right: 0,
-              width: "75%",
-              maxWidth: "300px",
+              width: "100%",
+              maxWidth: 450,
               height: "100vh",
               zIndex: 10001,
-              background: "var(--white, #fdfaf5)",
+              background: "var(--color-black-rich)",
+              borderLeft: "1px solid rgba(255, 255, 255, 0.05)",
               transform: open
                 ? `translateX(${dragOffset}px)`
                 : "translateX(100%)",
               transition: dragOffset > 0
                 ? "none"
                 : open
-                ? "transform 0.28s ease-out"
-                : "transform 0.22s ease-in",
+                  ? "transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)"
+                  : "transform 0.24s ease-in",
               pointerEvents: open ? "auto" : "none",
               display: "flex",
               flexDirection: "column",
-              overflowY: "auto",
-              WebkitOverflowScrolling: "touch",
+              overflow: "hidden",
               outline: "none",
-              boxShadow: open ? "-4px 0 24px rgba(0,0,0,0.15)" : "none",
+              boxShadow: "-20px 0 40px rgba(0, 0, 0, 0.5)",
             }}
           >
-        {/* ═══════════════════════════════════════════
-            TOP SECTION — User Area
-            ═══════════════════════════════════════════ */}
-        <div
-          style={{
-            padding: "28px 24px 20px",
-            background: "linear-gradient(180deg, var(--cream, #f5f0e8) 0%, var(--white, #fdfaf5) 100%)",
-            borderBottom: "1px solid var(--cream-border, #ddd5c3)",
-          }}
-        >
-          {/* Close button */}
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
-            <button
-              onClick={() => setOpen(false)}
-              aria-label="Close menu"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "32px",
-                height: "32px",
-                background: "none",
-                border: "1px solid var(--cream-border, #ddd5c3)",
-                borderRadius: "50%",
-                cursor: "pointer",
-                padding: 0,
-                color: "var(--ink-mid)",
-                fontSize: "16px",
-                lineHeight: 1,
-                transition: "border-color 0.2s, color 0.2s",
-              }}
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* User avatar + greeting */}
-          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            {/* ── Header bar with VOYAGR lockup + close ── */}
             <div
               style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "50%",
-                background: "var(--gold-pale, #F2EBDA)",
-                border: "2px solid var(--gold, #C9A84C)",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                fontFamily: "var(--font-display)",
-                fontWeight: 600,
-                fontSize: "16px",
-                letterSpacing: "0.04em",
-                color: "var(--gold, #C9A84C)",
+                justifyContent: "space-between",
+                padding: "32px",
+                borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
                 flexShrink: 0,
               }}
             >
-              VC
-            </div>
-            <div
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 500,
-                fontSize: "18px",
-                color: "var(--ink, #1a1710)",
-                lineHeight: 1.3,
-              }}
-            >
-              Welcome back
-            </div>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════
-            PRIMARY NAVIGATION
-            ═══════════════════════════════════════════ */}
-        <nav style={{ padding: "8px 0" }}>
-          {PRIMARY_LINKS.map((link) => {
-            const active = isActive(link.href);
-            const isHighlighted = link.highlighted;
-
-            return (
-              <Link
-                key={link.label}
-                href={link.href}
-                onClick={() => setOpen(false)}
+              <div
                 style={{
-                  display: "flex",
-                  alignItems: link.subtext ? "flex-start" : "center",
-                  gap: "14px",
-                  fontFamily: "var(--font-display)",
-                  fontSize: "20px",
-                  fontWeight: active || isHighlighted ? 500 : 400,
-                  color: active || isHighlighted
-                    ? "var(--gold, #C9A84C)"
-                    : "var(--ink, #1a1710)",
-                  textDecoration: "none",
-                  padding: isHighlighted ? "16px 24px" : "14px 24px",
-                  transition: "background 0.2s, color 0.2s",
-                  background: isHighlighted
-                    ? "linear-gradient(90deg, rgba(201, 168, 76, 0.08) 0%, transparent 100%)"
-                    : active
-                    ? "linear-gradient(90deg, var(--gold-pale, #F2EBDA) 0%, transparent 100%)"
-                    : "transparent",
-                  borderLeft: active || isHighlighted
-                    ? "3px solid var(--gold, #C9A84C)"
-                    : "3px solid transparent",
+                  display: "inline-flex",
+                  alignItems: "baseline",
+                  gap: 8,
                 }}
               >
                 <span
-                  className="material-symbols-outlined"
+                  className="luxury-text-gradient"
                   style={{
-                    fontSize: "22px",
-                    color: active || isHighlighted
-                      ? "var(--gold, #C9A84C)"
-                      : "var(--ink-light, #7a7465)",
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 600,
+                    fontSize: 22,
+                    letterSpacing: "-0.02em",
                     lineHeight: 1,
-                    fontVariationSettings: isHighlighted
-                      ? "'FILL' 1, 'wght' 400"
-                      : "'FILL' 0, 'wght' 300",
-                    marginTop: link.subtext ? "2px" : 0,
                   }}
-                  aria-hidden="true"
                 >
-                  {link.icon}
+                  VOYAGR
                 </span>
-                <span style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: 0 }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 700,
+                    fontSize: 10,
+                    letterSpacing: "0.5em",
+                    color: "var(--color-gold)",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Club
+                </span>
+              </div>
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Close menu"
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 9999,
+                  background: "transparent",
+                  border: "1px solid rgba(255, 255, 255, 0.10)",
+                  color: "var(--color-white-40)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  transition: "color 0.2s, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "var(--color-white-soft)";
+                  e.currentTarget.style.borderColor = "var(--color-gold)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "var(--color-white-40)";
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.10)";
+                }}
+              >
+                {Icons.close}
+              </button>
+            </div>
+
+            {/* ── Scrollable body ── */}
+            <div
+              className="no-scrollbar"
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                padding: "32px 36px 24px",
+              }}
+            >
+              {/* Welcome back section */}
+              <DrawerSection title={user ? "Welcome back" : "Welcome"}>
+                {PRIMARY_LINKS.map((item) => (
+                  <DrawerItem
+                    key={item.label}
+                    item={item}
+                    active={isActive(item.href)}
+                    onNavigate={() => setOpen(false)}
+                  />
+                ))}
+                {user ? (
+                  <DrawerActionRow
+                    label="Sign Out"
+                    icon={Icons.key}
+                    onClick={handleSignOut}
+                  />
+                ) : (
+                  <DrawerItem
+                    item={{ label: "Sign In", href: "/login", icon: Icons.key }}
+                    active={isActive("/login")}
+                    onNavigate={() => setOpen(false)}
+                  />
+                )}
+              </DrawerSection>
+
+              {/* Discover section */}
+              <DrawerSection title="Discover">
+                {DISCOVER_LINKS.map((item) => (
+                  <DrawerItem
+                    key={item.label}
+                    item={item}
+                    active={false}
+                    onNavigate={() => setOpen(false)}
+                  />
+                ))}
+              </DrawerSection>
+
+              {/* Help & Support section */}
+              <DrawerSection title="Help & Support">
+                {FOOTER_LINKS.map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    style={{
+                      display: "block",
+                      fontFamily: "var(--font-display)",
+                      fontStyle: "italic",
+                      fontWeight: 400,
+                      fontSize: 16,
+                      color: "var(--color-white-50)",
+                      textDecoration: "none",
+                      padding: "10px 0",
+                      transition: "color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLAnchorElement).style.color = "var(--color-white-soft)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLAnchorElement).style.color = "var(--color-white-50)";
+                    }}
+                  >
                     {link.label}
-                    {link.badge && (
-                      <span
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          fontSize: "8px",
-                          fontWeight: 600,
-                          letterSpacing: "0.14em",
-                          textTransform: "uppercase",
-                          color: "#ffffff",
-                          background: "var(--gold, #C9A84C)",
-                          padding: "3px 7px 2px",
-                          borderRadius: "3px",
-                          lineHeight: 1,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {link.badge}
-                      </span>
-                    )}
-                  </span>
-                  {link.subtext && (
-                    <span
-                      style={{
-                        fontFamily: "var(--font-body)",
-                        fontSize: "12px",
-                        fontWeight: 400,
-                        color: "var(--ink-light, #7a7465)",
-                        lineHeight: 1.4,
-                        letterSpacing: "0.01em",
-                      }}
-                    >
-                      {link.subtext}
-                    </span>
-                  )}
-                </span>
-              </Link>
-            );
-          })}
+                  </Link>
+                ))}
+              </DrawerSection>
 
-          {user ? (
-            <button
-              type="button"
-              onClick={async () => {
-                await signOut();
-                setOpen(false);
-              }}
+              {/* Concierge CTA */}
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="gold-glow"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
+                  width: "100%",
+                  marginTop: 32,
+                  padding: "20px",
+                  background: "var(--color-gold)",
+                  color: "var(--color-black-rich)",
+                  borderRadius: 16,
+                  fontFamily: "var(--font-body)",
+                  fontWeight: 700,
+                  fontSize: 10,
+                  letterSpacing: "0.4em",
+                  textTransform: "uppercase",
+                  textDecoration: "none",
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLAnchorElement).style.background = "var(--color-white-soft)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLAnchorElement).style.background = "var(--color-gold)";
+                }}
+              >
+                {Icons.message}
+                <span>Concierge Access</span>
+              </a>
+            </div>
+
+            {/* ── Footer ribbon ── */}
+            <div
               style={{
+                padding: "24px 32px",
+                borderTop: "1px solid rgba(255, 255, 255, 0.05)",
                 display: "flex",
-                alignItems: "center",
-                gap: "14px",
-                width: "100%",
-                fontFamily: "var(--font-display)",
-                fontSize: "20px",
-                fontWeight: 400,
-                color: "var(--ink, #1a1710)",
-                textAlign: "left",
-                background: "transparent",
-                border: "none",
-                borderLeft: "3px solid transparent",
-                padding: "14px 24px",
-                cursor: "pointer",
-                transition: "background 0.2s, color 0.2s",
+                justifyContent: "center",
+                flexShrink: 0,
               }}
             >
               <span
-                className="material-symbols-outlined"
                 style={{
-                  fontSize: "22px",
-                  color: "var(--ink-light, #7a7465)",
-                  lineHeight: 1,
-                  fontVariationSettings: "'FILL' 0, 'wght' 300",
+                  fontFamily: "var(--font-body)",
+                  fontWeight: 700,
+                  fontSize: 9,
+                  letterSpacing: "0.6em",
+                  textTransform: "uppercase",
+                  color: "var(--color-white-20)",
                 }}
-                aria-hidden="true"
               >
-                key
+                VOYAGR.CLUB
               </span>
-              <span style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: 0 }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  Sign Out
-                </span>
-              </span>
-            </button>
-          ) : (
-            <Link
-              href="/login"
-              onClick={() => setOpen(false)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "14px",
-                fontFamily: "var(--font-display)",
-                fontSize: "20px",
-                fontWeight: 400,
-                color: "var(--ink, #1a1710)",
-                textDecoration: "none",
-                padding: "14px 24px",
-                transition: "background 0.2s, color 0.2s",
-                background: "transparent",
-                borderLeft: "3px solid transparent",
-              }}
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{
-                  fontSize: "22px",
-                  color: "var(--ink-light, #7a7465)",
-                  lineHeight: 1,
-                  fontVariationSettings: "'FILL' 0, 'wght' 300",
-                }}
-                aria-hidden="true"
-              >
-                key
-              </span>
-              <span style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: 0 }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  Sign In
-                </span>
-              </span>
-            </Link>
-          )}
-        </nav>
-
-        {/* ═══════════════════════════════════════════
-            CONCIERGE — compact CTA
-            ═══════════════════════════════════════════ */}
-        <div
-          style={{
-            margin: "4px 16px",
-            padding: "16px 20px",
-            background: "linear-gradient(135deg, #f7f2e8 0%, var(--gold-pale, #F2EBDA) 100%)",
-            borderRadius: "12px",
-            border: "1px solid var(--gold-light, #D9BC72)",
-          }}
-        >
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              width: "100%",
-              padding: "12px 16px",
-              background: "transparent",
-              color: "var(--ink, #1a1710)",
-              border: "1.5px solid var(--gold, #C9A84C)",
-              borderRadius: "8px",
-              fontFamily: "var(--font-display)",
-              fontSize: "15px",
-              fontWeight: 500,
-              letterSpacing: "0.04em",
-              textDecoration: "none",
-              cursor: "pointer",
-              transition: "background 0.2s, color 0.2s",
-              textAlign: "center" as const,
-            }}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              style={{ flexShrink: 0, color: "#25d366" }}
-            >
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-            </svg>
-            Speak to Concierge
-          </a>
-        </div>
-
-        {/* ═══════════════════════════════════════════
-            SECONDARY SECTION — Discover
-            ═══════════════════════════════════════════ */}
-        <div style={{ padding: "16px 0 4px" }}>
-          <div
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "9px",
-              fontWeight: 500,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase" as const,
-              color: "var(--ink-light, #7a7465)",
-              padding: "0 24px 8px",
-            }}
-          >
-            Discover
+            </div>
           </div>
-          {SECONDARY_LINKS.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                fontFamily: "var(--font-body)",
-                fontSize: "14px",
-                fontWeight: 400,
-                color: "var(--ink-mid, #3d3929)",
-                textDecoration: "none",
-                padding: "11px 24px",
-                transition: "background 0.2s, color 0.2s",
-              }}
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{
-                  fontSize: "18px",
-                  color: "var(--ink-light, #7a7465)",
-                  lineHeight: 1,
-                  fontVariationSettings: "'FILL' 0, 'wght' 300",
-                }}
-                aria-hidden="true"
-              >
-                {link.icon}
-              </span>
-              {link.label}
-            </Link>
-          ))}
-        </div>
-
-        {/* ── Spacer to push bottom sections down ── */}
-        <div style={{ flex: 1, minHeight: "16px" }} />
-
-        {/* ═══════════════════════════════════════════
-            BOTTOM SECTION — Support & Legal
-            ═══════════════════════════════════════════ */}
-        <div
-          style={{
-            padding: "16px 24px 12px",
-            borderTop: "1px solid var(--cream-border, #ddd5c3)",
-          }}
-        >
-          {BOTTOM_LINKS.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              style={{
-                display: "block",
-                fontFamily: "var(--font-body)",
-                fontSize: "12px",
-                fontWeight: 400,
-                letterSpacing: "0.06em",
-                color: "var(--ink-light, #7a7465)",
-                textDecoration: "none",
-                padding: "8px 0",
-                transition: "color 0.2s",
-              }}
-            >
-              {link.label}
-            </Link>
-          ))}
-
-          {/* Branding */}
-          <div
-            style={{
-              marginTop: "20px",
-              fontFamily: "var(--font-display)",
-              fontStyle: "italic",
-              fontWeight: 600,
-              fontSize: "14px",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase" as const,
-              color: "var(--cream-border, #ddd5c3)",
-            }}
-          >
-            <span style={{ color: "var(--gold-light, #D9BC72)" }}>V</span>oyagr<span style={{ color: "#C9A84C" }}>.</span>Club
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════
-            STICKY BOTTOM CTA
-            ═══════════════════════════════════════════ */}
-        <div
-          style={{
-            position: "sticky",
-            bottom: 0,
-            padding: "12px 16px 20px",
-            background: "linear-gradient(0deg, var(--white, #fdfaf5) 70%, transparent 100%)",
-          }}
-        >
-          <Link
-            href="/search"
-            onClick={handleSeeMemberRates}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              width: "100%",
-              padding: "14px 20px",
-              background: "var(--gold, #C9A84C)",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: "10px",
-              fontFamily: "var(--font-display)",
-              fontSize: "15px",
-              fontWeight: 600,
-              letterSpacing: "0.06em",
-              textDecoration: "none",
-              cursor: "pointer",
-              transition: "background 0.2s",
-              textAlign: "center" as const,
-            }}
-          >
-            See Member Rates &rarr;
-          </Link>
-        </div>
-      </div>
         </>,
         document.body
       )
@@ -654,54 +488,223 @@ export default function MobileNav() {
 
   return (
     <>
-      {/* ── Hamburger button (stays in header flow) ── */}
+      {/* ── Hamburger trigger (rendered inline by Header) ── */}
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         style={{
-          display: "flex",
+          width: 36,
+          height: 36,
+          borderRadius: 9999,
+          background: "rgba(255, 255, 255, 0.05)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          color: "var(--color-white-soft)",
+          display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          width: "36px",
-          height: "36px",
-          background: "none",
-          border: "none",
           cursor: "pointer",
           padding: 0,
-          zIndex: 200,
-          position: "relative",
+          flexShrink: 0,
+          transition: "border-color 0.2s, background 0.2s",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = "var(--color-gold)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
         }}
       >
-        <div style={{ width: "20px", height: "14px", position: "relative" }}>
-          {[0, 6, 12].map((top, i) => (
-            <span
-              key={i}
-              style={{
-                display: "block",
-                position: "absolute",
-                left: 0,
-                right: 0,
-                height: "1.5px",
-                background: "rgba(253,250,245,0.7)",
-                borderRadius: "1px",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                top: open ? "6px" : `${top}px`,
-                transform:
-                  open && i === 0
-                    ? "rotate(45deg)"
-                    : open && i === 2
-                    ? "rotate(-45deg)"
-                    : "none",
-                opacity: open && i === 1 ? 0 : 1,
-              }}
-            />
-          ))}
-        </div>
+        {Icons.menu}
       </button>
-
-      {/* Portal-rendered overlay + drawer */}
-      {overlay}
+      {drawer}
     </>
+  );
+}
+
+/* ── Drawer composition helpers ───────────────────────────────────── */
+
+function DrawerSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section style={{ marginBottom: 40 }}>
+      <span
+        style={{
+          display: "block",
+          fontFamily: "var(--font-body)",
+          fontWeight: 700,
+          fontSize: 9,
+          letterSpacing: "0.5em",
+          textTransform: "uppercase",
+          color: "rgba(212, 175, 55, 0.6)",
+          paddingBottom: 12,
+          borderBottom: "1px solid rgba(212, 175, 55, 0.1)",
+          marginBottom: 20,
+        }}
+      >
+        {title}
+      </span>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function DrawerItem({
+  item,
+  active,
+  onNavigate,
+}: {
+  item: NavItem;
+  active: boolean;
+  onNavigate: () => void;
+}) {
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 18,
+        textDecoration: "none",
+      }}
+    >
+      <span
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 12,
+          background: "rgba(255, 255, 255, 0.04)",
+          border: "1px solid rgba(255, 255, 255, 0.05)",
+          color: active ? "var(--color-gold)" : "var(--color-white-30)",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          transition: "color 0.2s, border-color 0.2s",
+        }}
+      >
+        {item.icon}
+      </span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <span
+            className="serif-italic"
+            style={{
+              fontSize: 17,
+              color: active ? "var(--color-white-soft)" : "var(--color-white-60)",
+              transition: "color 0.2s",
+            }}
+          >
+            {item.label}
+          </span>
+          {item.badge ? (
+            <span
+              style={{
+                fontFamily: "var(--font-body)",
+                fontWeight: 700,
+                fontSize: 8,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "rgba(212, 175, 55, 0.7)",
+                background: "rgba(212, 175, 55, 0.05)",
+                border: "1px solid rgba(212, 175, 55, 0.1)",
+                borderRadius: 9999,
+                padding: "4px 10px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {item.badge}
+            </span>
+          ) : null}
+        </span>
+        {item.subtext ? (
+          <span
+            style={{
+              display: "block",
+              marginTop: 4,
+              fontFamily: "var(--font-body)",
+              fontWeight: 300,
+              fontStyle: "italic",
+              fontSize: 11,
+              color: "var(--color-white-30)",
+              lineHeight: 1.5,
+            }}
+          >
+            {item.subtext}
+          </span>
+        ) : null}
+      </span>
+    </Link>
+  );
+}
+
+function DrawerActionRow({
+  label,
+  icon,
+  onClick,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 18,
+        background: "transparent",
+        border: "none",
+        padding: 0,
+        cursor: "pointer",
+        width: "100%",
+        textAlign: "left",
+      }}
+    >
+      <span
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 12,
+          background: "rgba(255, 255, 255, 0.04)",
+          border: "1px solid rgba(255, 255, 255, 0.05)",
+          color: "var(--color-white-30)",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          transition: "color 0.2s",
+        }}
+      >
+        {icon}
+      </span>
+      <span
+        className="serif-italic"
+        style={{
+          fontSize: 17,
+          color: "var(--color-white-60)",
+          transition: "color 0.2s",
+        }}
+      >
+        {label}
+      </span>
+    </button>
   );
 }
