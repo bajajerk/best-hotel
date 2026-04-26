@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import MobileNav from "./MobileNav";
 import { useAuth } from "@/context/AuthContext";
+import type { User } from "firebase/auth";
 
 /* ────────────────────────────────────────────────────────────
    Voyagr.Club — Sticky Navigation Bar
@@ -35,15 +36,25 @@ export default function Header() {
   const pathname = usePathname();
   const navRef = useRef<HTMLElement>(null);
   const [joinHover, setJoinHover] = useState(false);
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
   }
 
-  const joinHref = user ? "/profile" : "/login";
   const showMobileSignIn = !loading && !user;
+  // While Firebase is hydrating, hold off rendering auth-dependent CTAs so the
+  // header doesn't flash "Sign In / Join the Club" for ~200ms before swapping
+  // to the account chip for an already-signed-in user.
+  const showJoinCta = !loading && !user;
+  const showAccountChip = !loading && !!user;
+
+  // Filter the centre nav based on auth state. Logged-in users don't need a
+  // "Sign In" link — they already are signed in.
+  const desktopLinks = showAccountChip
+    ? DESKTOP_LINKS.filter((l) => l.href !== "/login")
+    : DESKTOP_LINKS;
 
   // On the homepage we run in "Precision Luxury" mode — pill-shaped
   // floating nav with glass-morphism and a Gold Glow CTA. Other pages
@@ -116,7 +127,7 @@ export default function Header() {
 
           {/* ── Centre: Desktop nav links (hidden <768px) ── */}
           <div className="header-nav-center">
-            {DESKTOP_LINKS.map((link) => (
+            {desktopLinks.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
@@ -152,43 +163,49 @@ export default function Header() {
               flexShrink: 0,
             }}
           >
-            {/* "Join the Club" button — desktop only.
-                Logged out → /login (signup/OTP flow). Logged in → /profile dashboard.
+            {/* "Join the Club" button — desktop only, logged-out users.
                 Precision mode upgrades to a Gold Glow pill. */}
-            <Link
-              href={joinHref}
-              className={`header-join-btn${precisionMode ? " precision-join-btn" : ""}`}
-              onMouseEnter={() => setJoinHover(true)}
-              onMouseLeave={() => setJoinHover(false)}
-              style={
-                precisionMode
-                  ? {
-                      fontFamily: "var(--font-body)",
-                      fontWeight: 600,
-                      fontSize: "11px",
-                      textTransform: "uppercase",
-                      textDecoration: "none",
-                      whiteSpace: "nowrap",
-                    }
-                  : {
-                      background: joinHover ? GOLD : "transparent",
-                      color: joinHover ? NAVY : IVORY,
-                      border: `1px solid ${GOLD}`,
-                      fontFamily: "var(--font-body)",
-                      fontWeight: 600,
-                      fontSize: "12px",
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                      textDecoration: "none",
-                      padding: "8px 22px",
-                      borderRadius: "2px",
-                      transition: "background 0.25s, color 0.25s",
-                      whiteSpace: "nowrap",
-                    }
-              }
-            >
-              Join the Club
-            </Link>
+            {showJoinCta && (
+              <Link
+                href="/login"
+                className={`header-join-btn${precisionMode ? " precision-join-btn" : ""}`}
+                onMouseEnter={() => setJoinHover(true)}
+                onMouseLeave={() => setJoinHover(false)}
+                style={
+                  precisionMode
+                    ? {
+                        fontFamily: "var(--font-body)",
+                        fontWeight: 600,
+                        fontSize: "11px",
+                        textTransform: "uppercase",
+                        textDecoration: "none",
+                        whiteSpace: "nowrap",
+                      }
+                    : {
+                        background: joinHover ? GOLD : "transparent",
+                        color: joinHover ? NAVY : IVORY,
+                        border: `1px solid ${GOLD}`,
+                        fontFamily: "var(--font-body)",
+                        fontWeight: 600,
+                        fontSize: "12px",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        textDecoration: "none",
+                        padding: "8px 22px",
+                        borderRadius: "2px",
+                        transition: "background 0.25s, color 0.25s",
+                        whiteSpace: "nowrap",
+                      }
+                }
+              >
+                Join the Club
+              </Link>
+            )}
+
+            {/* Account chip — desktop only, logged-in users. */}
+            {showAccountChip && user && (
+              <AccountChip user={user} signOut={signOut} />
+            )}
 
             {/* Mobile-only compact Sign In — mirrors the desktop "Sign In"
                 nav link, which is hidden below 768px. */}
@@ -318,5 +335,271 @@ function MobileTabBar({ pathname }: { pathname: string }) {
         );
       })}
     </div>
+  );
+}
+
+/* ── Account chip + dropdown (desktop only, signed-in users) ─────────────
+   A small avatar circle (initials) with a chevron. Click opens a menu with
+   profile / trips / sign-out. Closes on click-outside, Esc, and route change.
+   Hidden under 768px — the side drawer (MobileNav) covers mobile. */
+
+function getInitials(user: User): string {
+  const name = (user.displayName || "").trim();
+  if (name) {
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return parts[0][0].toUpperCase();
+  }
+  const email = (user.email || "").trim();
+  if (email) return email[0].toUpperCase();
+  return "VC";
+}
+
+function AccountChip({
+  user,
+  signOut,
+}: {
+  user: User;
+  signOut: () => Promise<void>;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (!wrapRef.current) return;
+      if (!wrapRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  // Close on route change
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  async function handleSignOut() {
+    setOpen(false);
+    await signOut();
+    router.push("/");
+  }
+
+  const initials = getInitials(user);
+  const label = user.displayName || user.email || "Account";
+
+  return (
+    <div
+      ref={wrapRef}
+      className="header-account-chip-wrap"
+      style={{ position: "relative", display: "none" }}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Account menu for ${label}`}
+        className="header-account-chip"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "8px",
+          padding: "4px 10px 4px 4px",
+          background: "transparent",
+          border: "1px solid rgba(201,168,76,0.45)",
+          borderRadius: "999px",
+          cursor: "pointer",
+          color: IVORY,
+          fontFamily: "var(--font-body)",
+          fontWeight: 600,
+          fontSize: "12px",
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          transition: "border-color 0.25s, background 0.25s",
+        }}
+      >
+        <span
+          aria-hidden="true"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "30px",
+            height: "30px",
+            borderRadius: "999px",
+            background: GOLD,
+            color: NAVY,
+            fontFamily: "var(--font-display)",
+            fontWeight: 600,
+            fontSize: "13px",
+            letterSpacing: "0.04em",
+          }}
+        >
+          {initials}
+        </span>
+        <svg
+          aria-hidden="true"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{
+            transition: "transform 0.2s",
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            opacity: 0.85,
+          }}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          aria-label="Account menu"
+          style={{
+            position: "absolute",
+            top: "calc(100% + 10px)",
+            right: 0,
+            minWidth: "220px",
+            background: NAVY,
+            border: "1px solid rgba(201,168,76,0.25)",
+            borderRadius: "10px",
+            boxShadow: "0 18px 48px rgba(0,0,0,0.45)",
+            padding: "8px",
+            zIndex: 110,
+            fontFamily: "var(--font-body)",
+          }}
+        >
+          {/* Identity preview */}
+          <div
+            style={{
+              padding: "8px 12px 10px",
+              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              marginBottom: "6px",
+              color: IVORY,
+            }}
+          >
+            <div
+              style={{
+                fontSize: "13px",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {user.displayName || "Voyagr Member"}
+            </div>
+            {user.email && (
+              <div
+                style={{
+                  fontSize: "11px",
+                  opacity: 0.6,
+                  marginTop: "2px",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {user.email}
+              </div>
+            )}
+          </div>
+
+          <MenuLink href="/profile" label="My Profile" />
+          <MenuLink href="/booking-history" label="My Trips" />
+
+          <div
+            role="separator"
+            style={{
+              height: "1px",
+              background: "rgba(255,255,255,0.06)",
+              margin: "6px 4px",
+            }}
+          />
+
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleSignOut}
+            style={{
+              display: "block",
+              width: "100%",
+              textAlign: "left",
+              padding: "10px 12px",
+              background: "transparent",
+              border: "none",
+              borderRadius: "6px",
+              color: IVORY,
+              fontFamily: "var(--font-body)",
+              fontSize: "13px",
+              fontWeight: 500,
+              letterSpacing: "0.02em",
+              cursor: "pointer",
+              transition: "background 0.18s, color 0.18s",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "rgba(201,168,76,0.10)";
+              (e.currentTarget as HTMLButtonElement).style.color = GOLD;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              (e.currentTarget as HTMLButtonElement).style.color = IVORY;
+            }}
+          >
+            Sign Out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MenuLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      role="menuitem"
+      style={{
+        display: "block",
+        padding: "10px 12px",
+        borderRadius: "6px",
+        color: IVORY,
+        textDecoration: "none",
+        fontSize: "13px",
+        fontWeight: 500,
+        letterSpacing: "0.02em",
+        transition: "background 0.18s, color 0.18s",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLAnchorElement).style.background =
+          "rgba(201,168,76,0.10)";
+        (e.currentTarget as HTMLAnchorElement).style.color = GOLD;
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+        (e.currentTarget as HTMLAnchorElement).style.color = IVORY;
+      }}
+    >
+      {label}
+    </Link>
   );
 }

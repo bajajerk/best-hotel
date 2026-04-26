@@ -195,6 +195,27 @@ body {
   }
 }
 
+/* ── Desktop-only account chip (signed-in users) ──
+   Mirrors .header-join-btn breakpoints — hidden on mobile (the side drawer
+   handles signed-in state below 768px). */
+.header-account-chip-wrap {
+  display: none !important;
+}
+@media (min-width: 768px) {
+  .header-account-chip-wrap {
+    display: inline-flex !important;
+    align-items: center;
+  }
+}
+.header-account-chip:hover {
+  border-color: rgba(201, 168, 76, 0.85) !important;
+  background: rgba(201, 168, 76, 0.08) !important;
+}
+.header-account-chip:focus-visible {
+  outline: 2px solid #c9a84c;
+  outline-offset: 2px;
+}
+
 /* ── Mobile bottom tab bar — visible <640px ── */
 .mobile-tab-bar {
   display: none;
@@ -4312,6 +4333,15 @@ body:has(.precision-theme) {
 .luxe-card:hover {
   border-color: var(--luxe-hairline-strong);
   background: rgba(255, 255, 255, 0.04);
+}
+
+/* ── Top Cities tile (home page) ── */
+.top-city-tile .top-city-img {
+  transform: scale(1);
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.top-city-tile:hover .top-city-img {
+  transform: scale(1.04);
 }
 
 /* ── Page container width ── */
