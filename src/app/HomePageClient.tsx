@@ -503,6 +503,611 @@ export default function Home({
         </div>
       </motion.section>
 
+      {/* ── The Voyagr Club Difference — 6-up grid ───────────────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.6 }}
+        style={{ padding: "80px 0 64px" }}
+      >
+        <div className="luxe-container">
+          <div style={{ maxWidth: 720, marginBottom: 40 }}>
+            <div className="luxe-tech" style={{ marginBottom: 10 }}>
+              The Difference
+            </div>
+            <h2
+              className="luxe-display"
+              style={{ fontSize: "clamp(28px, 3.2vw, 44px)", marginBottom: 14 }}
+            >
+              Why members <em>stay</em> with us
+            </h2>
+            <p
+              style={{
+                color: "var(--luxe-soft-white-70)",
+                fontSize: 15,
+                lineHeight: 1.7,
+              }}
+            >
+              Six small things that quietly add up to a different way of
+              travelling — preferred access, real concierge care, and perks
+              that aren&rsquo;t advertised anywhere else.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 16,
+            }}
+          >
+            {[
+              {
+                num: "01",
+                title: "Preferred Access to Top Hotels",
+                desc: "Elevated access to a curated collection of the world's finest hotels with exclusive member privileges.",
+              },
+              {
+                num: "02",
+                title: "A Real Human Concierge",
+                desc: "Every booking handled by a real concierge on WhatsApp, available 24/7.",
+              },
+              {
+                num: "03",
+                title: "Handpicked Perks on Every Stay",
+                desc: "Room upgrades, spa credits, welcome drinks, early check-in, breakfast, lounge access, and more.",
+              },
+              {
+                num: "04",
+                title: "Verified Luxury Properties",
+                desc: "Only properties we've vetted ourselves for service, cleanliness, and guest satisfaction.",
+              },
+              {
+                num: "05",
+                title: "Flexible Support, Always",
+                desc: "24/7 concierge team for modifications, special requests, and anything that comes up.",
+              },
+              {
+                num: "06",
+                title: "Free Membership, No Lock-In",
+                desc: "No annual fees, no points programs that expire. Same privileged access from day one.",
+              },
+            ].map((d) => (
+              <div key={d.num} className="luxe-card">
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: 28,
+                    color: "var(--luxe-champagne)",
+                    opacity: 0.55,
+                    lineHeight: 1,
+                    marginBottom: 14,
+                  }}
+                >
+                  {d.num}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: 19,
+                    fontWeight: 500,
+                    color: "var(--luxe-soft-white)",
+                    lineHeight: 1.25,
+                    letterSpacing: "-0.01em",
+                    marginBottom: 10,
+                  }}
+                >
+                  {d.title}
+                </div>
+                <div
+                  style={{
+                    fontSize: 13.5,
+                    color: "var(--luxe-soft-white-70)",
+                    lineHeight: 1.65,
+                  }}
+                >
+                  {d.desc}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ── Handpicked Experiences — 3 marquee properties ────────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.6 }}
+        style={{
+          padding: "80px 0 64px",
+          borderTop: "1px solid var(--luxe-hairline)",
+        }}
+      >
+        <div className="luxe-container">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              marginBottom: 36,
+              gap: 24,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ maxWidth: 640 }}>
+              <div className="luxe-tech" style={{ marginBottom: 10 }}>
+                Handpicked Experiences
+              </div>
+              <h2
+                className="luxe-display"
+                style={{ fontSize: "clamp(28px, 3.2vw, 44px)", marginBottom: 12 }}
+              >
+                Stays we&rsquo;d <em>book ourselves</em>
+              </h2>
+              <p
+                style={{
+                  color: "var(--luxe-soft-white-70)",
+                  fontSize: 15,
+                  lineHeight: 1.7,
+                }}
+              >
+                A glimpse of properties our concierge returns to — quiet
+                corners of the world where the perks make a real difference.
+              </p>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 16,
+            }}
+          >
+            {[
+              {
+                name: "The Ritz-Carlton, Bali",
+                city: "Nusa Dua, Indonesia",
+                tagline: "Oceanfront luxury",
+                perks: "Room upgrade, late checkout, and welcome drinks for members.",
+                hue: "linear-gradient(135deg, rgba(200,170,118,0.18) 0%, rgba(20,18,15,0.6) 100%)",
+              },
+              {
+                name: "The Oberoi, Mumbai",
+                city: "Nariman Point, India",
+                tagline: "Heritage elegance",
+                perks: "Spa credit, breakfast included, and early check-in for members.",
+                hue: "linear-gradient(135deg, rgba(180,140,90,0.18) 0%, rgba(20,18,15,0.6) 100%)",
+              },
+              {
+                name: "Park Hyatt Tokyo",
+                city: "Shinjuku, Japan",
+                tagline: "Sky-high serenity",
+                perks: "Club lounge access, late checkout, and welcome amenity for members.",
+                hue: "linear-gradient(135deg, rgba(160,170,180,0.18) 0%, rgba(20,18,15,0.6) 100%)",
+              },
+            ].map((e) => (
+              <div
+                key={e.name}
+                className="luxe-card"
+                style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}
+              >
+                <div
+                  aria-hidden="true"
+                  style={{
+                    height: 180,
+                    background: e.hue,
+                    borderBottom: "1px solid var(--luxe-hairline)",
+                    position: "relative",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontFamily: "var(--font-display)",
+                      fontSize: 64,
+                      color: "var(--luxe-champagne)",
+                      opacity: 0.18,
+                      letterSpacing: "-0.04em",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    {e.name.split(" ").slice(-1)[0]}
+                  </div>
+                </div>
+                <div style={{ padding: 22, flex: 1 }}>
+                  <div className="luxe-tech" style={{ marginBottom: 8 }}>
+                    {e.tagline}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 22,
+                      fontWeight: 500,
+                      color: "var(--luxe-soft-white)",
+                      lineHeight: 1.2,
+                      letterSpacing: "-0.015em",
+                      marginBottom: 6,
+                    }}
+                  >
+                    {e.name}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "var(--luxe-soft-white-50)",
+                      letterSpacing: "0.04em",
+                      marginBottom: 14,
+                    }}
+                  >
+                    {e.city}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 13.5,
+                      color: "var(--luxe-soft-white-70)",
+                      lineHeight: 1.65,
+                    }}
+                  >
+                    {e.perks}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ── Testimonials ─────────────────────────────────────────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.6 }}
+        style={{
+          padding: "80px 0 64px",
+          borderTop: "1px solid var(--luxe-hairline)",
+        }}
+      >
+        <div className="luxe-container">
+          <div style={{ maxWidth: 640, marginBottom: 36 }}>
+            <div className="luxe-tech" style={{ marginBottom: 10 }}>
+              In Their Words
+            </div>
+            <h2
+              className="luxe-display"
+              style={{ fontSize: "clamp(28px, 3.2vw, 44px)", marginBottom: 12 }}
+            >
+              Travellers who <em>noticed the details</em>
+            </h2>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 16,
+            }}
+          >
+            {[
+              {
+                quote:
+                  "The perks and personal touch made our anniversary trip truly unforgettable. From the room upgrade to the late checkout, every detail was taken care of.",
+                name: "Priya Mehta",
+                city: "Mumbai",
+              },
+              {
+                quote:
+                  "We planned our honeymoon across three cities. The exclusive perks through Voyagr Club — spa credits, welcome drinks, early check-in — turned every stay into a celebration.",
+                name: "Arjun & Kavya",
+                city: "Bangalore",
+              },
+              {
+                quote:
+                  "What sets Voyagr apart is the human concierge. One WhatsApp message and everything was arranged — upgrades, restaurant reservations, even a surprise for my wife's birthday.",
+                name: "Rahul Sharma",
+                city: "Delhi",
+              },
+            ].map((t) => (
+              <figure
+                key={t.name}
+                className="luxe-card"
+                style={{
+                  margin: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 18,
+                }}
+              >
+                <div
+                  aria-hidden="true"
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: 56,
+                    lineHeight: 0.6,
+                    color: "var(--luxe-champagne)",
+                    opacity: 0.5,
+                    height: 26,
+                  }}
+                >
+                  &ldquo;
+                </div>
+                <blockquote
+                  style={{
+                    margin: 0,
+                    fontFamily: "var(--font-display)",
+                    fontStyle: "italic",
+                    fontSize: 17,
+                    lineHeight: 1.55,
+                    color: "var(--luxe-soft-white)",
+                    fontWeight: 400,
+                    letterSpacing: "-0.005em",
+                  }}
+                >
+                  {t.quote}
+                </blockquote>
+                <figcaption
+                  style={{
+                    marginTop: "auto",
+                    paddingTop: 12,
+                    borderTop: "1px solid var(--luxe-hairline)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "var(--luxe-soft-white)",
+                      letterSpacing: "0.01em",
+                    }}
+                  >
+                    {t.name}
+                  </div>
+                  <div className="luxe-tech luxe-tech-soft" style={{ marginTop: 4 }}>
+                    {t.city}
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ── Travel by Season — 4-up grid ─────────────────────────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.6 }}
+        style={{
+          padding: "80px 0 64px",
+          borderTop: "1px solid var(--luxe-hairline)",
+        }}
+      >
+        <div className="luxe-container">
+          <div style={{ maxWidth: 640, marginBottom: 36 }}>
+            <div className="luxe-tech" style={{ marginBottom: 10 }}>
+              Travel by Season
+            </div>
+            <h2
+              className="luxe-display"
+              style={{ fontSize: "clamp(28px, 3.2vw, 44px)", marginBottom: 12 }}
+            >
+              When to go, <em>where to go</em>
+            </h2>
+            <p
+              style={{
+                color: "var(--luxe-soft-white-70)",
+                fontSize: 15,
+                lineHeight: 1.7,
+              }}
+            >
+              A short almanac of where the weather is kind and the rooms are
+              quiet. Tell our concierge a season — we&rsquo;ll do the rest.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 16,
+            }}
+          >
+            {[
+              {
+                season: "Summer",
+                months: "Jun – Aug",
+                cities: ["Santorini", "Bali", "Cape Town"],
+                glyph: "☀",
+              },
+              {
+                season: "Autumn",
+                months: "Sep – Nov",
+                cities: ["Kyoto", "Prague", "Budapest"],
+                glyph: "⚘",
+              },
+              {
+                season: "Winter",
+                months: "Dec – Feb",
+                cities: ["Dubai", "Maldives", "Vienna"],
+                glyph: "❄",
+              },
+              {
+                season: "Spring",
+                months: "Mar – May",
+                cities: ["Tokyo", "Amsterdam", "Lisbon"],
+                glyph: "✿",
+              },
+            ].map((s) => (
+              <div key={s.season} className="luxe-card">
+                <div
+                  aria-hidden="true"
+                  style={{
+                    fontSize: 22,
+                    color: "var(--luxe-champagne)",
+                    opacity: 0.7,
+                    lineHeight: 1,
+                    marginBottom: 16,
+                  }}
+                >
+                  {s.glyph}
+                </div>
+                <div className="luxe-tech" style={{ marginBottom: 8 }}>
+                  {s.months}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: 24,
+                    fontWeight: 500,
+                    color: "var(--luxe-soft-white)",
+                    lineHeight: 1.15,
+                    letterSpacing: "-0.015em",
+                    marginBottom: 16,
+                  }}
+                >
+                  {s.season}
+                </div>
+                <ul
+                  style={{
+                    listStyle: "none",
+                    padding: 0,
+                    margin: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 6,
+                  }}
+                >
+                  {s.cities.map((c) => (
+                    <li
+                      key={c}
+                      style={{
+                        fontSize: 13.5,
+                        color: "var(--luxe-soft-white-70)",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ── About Voyagr Club — narrative + stat strip ───────────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.6 }}
+        style={{
+          padding: "80px 0 64px",
+          borderTop: "1px solid var(--luxe-hairline)",
+        }}
+      >
+        <div className="luxe-container">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: 56,
+              alignItems: "start",
+            }}
+          >
+            <div>
+              <div className="luxe-tech" style={{ marginBottom: 10 }}>
+                About Voyagr Club
+              </div>
+              <h2
+                className="luxe-display"
+                style={{ fontSize: "clamp(28px, 3.2vw, 44px)", marginBottom: 18 }}
+              >
+                Built on a <em>simple idea</em>
+              </h2>
+              <p
+                style={{
+                  color: "var(--luxe-soft-white-70)",
+                  fontSize: 15.5,
+                  lineHeight: 1.75,
+                  marginBottom: 16,
+                }}
+              >
+                Voyagr Club was built on a simple idea — luxury travel should
+                come with extraordinary experiences. We partner directly with
+                the world&rsquo;s finest hotels to offer our members preferred
+                access, exclusive perks, and a personal concierge who makes
+                every trip unforgettable.
+              </p>
+              <p
+                style={{
+                  color: "var(--luxe-soft-white-70)",
+                  fontSize: 15.5,
+                  lineHeight: 1.75,
+                }}
+              >
+                Our curated selection spans 50+ cities worldwide — from the
+                beaches of Bali to the streets of Paris — handpicked to ensure
+                quality and unforgettable experiences for every type of
+                traveller.
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 1,
+                background: "var(--luxe-hairline)",
+                border: "1px solid var(--luxe-hairline)",
+                borderRadius: 20,
+                overflow: "hidden",
+              }}
+            >
+              {[
+                { num: "50+", label: "Cities Worldwide" },
+                { num: "10,000+", label: "Hotels Listed" },
+                { num: "Free", label: "Membership" },
+                { num: "24/7", label: "WhatsApp Concierge" },
+              ].map((s) => (
+                <div
+                  key={s.label}
+                  style={{
+                    background: "var(--luxe-black)",
+                    padding: "28px 24px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 32,
+                      fontWeight: 500,
+                      color: "var(--luxe-soft-white)",
+                      letterSpacing: "-0.02em",
+                      lineHeight: 1,
+                      marginBottom: 10,
+                    }}
+                  >
+                    {s.num}
+                  </div>
+                  <div className="luxe-tech luxe-tech-soft">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
       {/* ── Trust strip ───────────────────────────────────────────────────── */}
       <motion.section
         initial={{ opacity: 0 }}
