@@ -14,6 +14,11 @@ interface RoomSelectLoginModalProps {
 
 type Mode = "choose" | "phone" | "otp";
 
+// Stable container for invisible reCAPTCHA. Always mounted (regardless of
+// `mode`) so Firebase's iframe survives the choose -> phone -> otp flow
+// without the verifier becoming detached.
+const RECAPTCHA_CONTAINER_ID = "voyagr-recaptcha-room-select";
+
 export default function RoomSelectLoginModal({
   onClose,
   onSuccess,
@@ -76,7 +81,7 @@ export default function RoomSelectLoginModal({
       return;
     }
     setSubmitting(true);
-    const { error } = await sendPhoneOtp(formatted, "room-select-send-otp-btn");
+    const { error } = await sendPhoneOtp(formatted, RECAPTCHA_CONTAINER_ID);
     setSubmitting(false);
     if (error) {
       setError(error);
@@ -138,6 +143,11 @@ export default function RoomSelectLoginModal({
             }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Invisible reCAPTCHA target — always mounted regardless of `mode`
+                so Firebase's iframe doesn't get detached when the form swaps
+                between choose / phone / otp screens. */}
+            <div id={RECAPTCHA_CONTAINER_ID} style={{ display: "none" }} aria-hidden="true" />
+
             {/* Close button */}
             <button
               aria-label="Close"

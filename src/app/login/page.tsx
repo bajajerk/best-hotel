@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
+// Stable container for invisible reCAPTCHA. Rendering this once at the top
+// of the page (instead of attaching to a button that mounts/unmounts when
+// the form swaps between phone-entry and OTP-entry states) eliminates the
+// detach-on-rerender flakiness that broke the second send-OTP attempt.
+const RECAPTCHA_CONTAINER_ID = "voyagr-recaptcha-container";
+
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp } = useAuth();
 
   const [error, setError] = useState("");
@@ -17,12 +24,16 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
 
-  // Redirect if already logged in
+  // Redirect if already logged in. This is the SINGLE source of post-login
+  // navigation for this page — individual handlers must NOT also call
+  // router.push, otherwise the two navigations race and the user can briefly
+  // bounce back to /login before onAuthStateChanged hydrates.
   useEffect(() => {
     if (!loading && user) {
-      router.replace("/");
+      const next = searchParams?.get("next");
+      router.replace(next && next.startsWith("/") ? next : "/");
     }
-  }, [loading, user, router]);
+  }, [loading, user, router, searchParams]);
 
   /* ── Phone OTP handlers ── */
 
@@ -42,7 +53,7 @@ export default function LoginPage() {
     }
 
     setSubmitting(true);
-    const { error } = await sendPhoneOtp(formatted, "send-otp-btn");
+    const { error } = await sendPhoneOtp(formatted, RECAPTCHA_CONTAINER_ID);
     if (error) {
       setError(error);
     } else {
@@ -59,20 +70,25 @@ export default function LoginPage() {
     }
     setSubmitting(true);
     const { error } = await verifyPhoneOtp(otp);
+    setSubmitting(false);
     if (error) {
       setError(error);
-      setSubmitting(false);
-    } else {
-      router.push("/");
+      return;
     }
+    // Don't navigate here — the useEffect above handles it once
+    // onAuthStateChanged fires. Two navigations racing was the silent
+    // "click verify, land back on /login" flake.
   };
 
   /* ── Google ── */
 
   const handleGoogle = async () => {
     setError("");
+    setSubmitting(true);
     const { error } = await signInWithGoogle();
+    setSubmitting(false);
     if (error) setError(error);
+    // Same here — the auth-state effect handles the redirect on success.
   };
 
   /* ── Render ── */
@@ -90,6 +106,10 @@ export default function LoginPage() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
+        {/* Invisible reCAPTCHA target — always mounted so Firebase's iframe
+            survives form-state changes (phone <-> OTP <-> change number). */}
+        <div id={RECAPTCHA_CONTAINER_ID} style={{ display: "none" }} aria-hidden="true" />
+
         {/* Logo */}
         <div style={styles.logoSection}>
           <Link href="/" style={styles.logo}>VOYAGR</Link>
