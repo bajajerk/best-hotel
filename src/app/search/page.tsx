@@ -798,7 +798,7 @@ export default function SearchPage() {
                     letterSpacing: "0.06em",
                     border: showFilters ? "1px solid var(--gold)" : "1px solid var(--cream-border)",
                     background: showFilters ? "var(--gold)" : "transparent",
-                    color: showFilters ? "var(--white)" : "var(--ink-mid)",
+                    color: showFilters ? "#1a1710" : "var(--ink-mid)",
                     cursor: "pointer",
                     fontFamily: "var(--font-body)",
                     transition: "all 0.2s",
@@ -815,7 +815,7 @@ export default function SearchPage() {
                       width: "6px",
                       height: "6px",
                       borderRadius: "50%",
-                      background: showFilters ? "var(--white)" : "var(--gold)",
+                      background: showFilters ? "#1a1710" : "var(--gold)",
                     }} />
                   )}
                 </button>
@@ -870,7 +870,7 @@ export default function SearchPage() {
                               border: "1px solid",
                               borderColor: starFilter === sf.value ? "var(--gold)" : "var(--cream-border)",
                               background: starFilter === sf.value ? "var(--gold)" : "transparent",
-                              color: starFilter === sf.value ? "var(--white)" : "var(--ink-mid)",
+                              color: starFilter === sf.value ? "#1a1710" : "var(--ink-mid)",
                               cursor: "pointer",
                               fontFamily: "var(--font-body)",
                               transition: "all 0.2s",
@@ -879,7 +879,7 @@ export default function SearchPage() {
                               gap: "4px",
                             }}
                           >
-                            {sf.value > 0 && <span style={{ color: starFilter === sf.value ? "var(--white)" : "var(--gold)", fontSize: "11px" }}>★</span>}
+                            {sf.value > 0 && <span style={{ color: starFilter === sf.value ? "#1a1710" : "var(--gold)", fontSize: "11px" }}>★</span>}
                             {sf.label}
                           </button>
                         ))}

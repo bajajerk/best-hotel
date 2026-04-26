@@ -67,7 +67,7 @@ export default function PreferredPartnersPage() {
                 gap: "12px",
                 padding: "14px 18px",
                 background: isSelected ? "var(--ink)" : "var(--white)",
-                color: isSelected ? "var(--white)" : "var(--ink)",
+                color: isSelected ? "var(--cream)" : "var(--ink)",
                 border: isSelected
                   ? "1px solid var(--ink)"
                   : "1px solid var(--cream-border)",
@@ -94,7 +94,7 @@ export default function PreferredPartnersPage() {
                   justifyContent: "center",
                   flexShrink: 0,
                   fontSize: "12px",
-                  color: "var(--white)",
+                  color: "#1a1710",
                   fontWeight: 700,
                 }}
               >
@@ -201,7 +201,7 @@ export default function PreferredPartnersPage() {
                       ? "1px solid var(--ink)"
                       : "1px solid var(--cream-border)",
                   background: filter === key ? "var(--ink)" : "var(--white)",
-                  color: filter === key ? "var(--white)" : "var(--ink)",
+                  color: filter === key ? "var(--cream)" : "var(--ink)",
                   cursor: "pointer",
                   letterSpacing: "0.06em",
                   textTransform: "uppercase",

@@ -123,7 +123,7 @@ export default function RegionFilterTabs({
               border: "1px solid",
               borderColor: isActive ? "var(--gold)" : "var(--cream-border)",
               background: isActive ? "var(--gold)" : "transparent",
-              color: isActive ? "var(--white)" : "var(--ink-mid)",
+              color: isActive ? "#1a1710" : "var(--ink-mid)",
               cursor: "pointer",
               transition: "all 0.2s ease",
               fontFamily: "var(--font-body)",
@@ -141,7 +141,7 @@ export default function RegionFilterTabs({
               <span
                 style={{
                   fontSize: "10px",
-                  color: isActive ? "var(--white)" : "var(--ink-light)",
+                  color: isActive ? "#1a1710" : "var(--ink-light)",
                   opacity: isActive ? 0.85 : 0.7,
                 }}
               >

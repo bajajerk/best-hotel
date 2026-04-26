@@ -119,7 +119,7 @@ export default function ComparePage() {
             style={{
               display: "inline-block",
               background: "var(--ink)",
-              color: "var(--white)",
+              color: "var(--cream)",
               fontSize: 11,
               fontWeight: 600,
               fontFamily: "var(--font-body)",
@@ -607,7 +607,7 @@ export default function ComparePage() {
                   style={{
                     display: "inline-block",
                     background: "var(--ink)",
-                    color: "var(--white)",
+                    color: "var(--cream)",
                     fontSize: 11,
                     fontWeight: 600,
                     fontFamily: "var(--font-body)",

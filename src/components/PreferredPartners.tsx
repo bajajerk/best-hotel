@@ -278,8 +278,8 @@ export default function PreferredPartners() {
                 border: isActive
                   ? "1.5px solid var(--gold)"
                   : "1px solid var(--cream-border)",
-                background: isActive ? "var(--gold)" : "var(--white)",
-                color: isActive ? "var(--white)" : "var(--ink-mid)",
+                background: isActive ? "var(--gold)" : "#1a1710",
+                color: isActive ? "#1a1710" : "var(--ink-mid)",
                 cursor: "pointer",
                 transition:
                   "background 0.2s, color 0.2s, border-color 0.2s",

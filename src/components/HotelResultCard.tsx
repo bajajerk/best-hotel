@@ -154,7 +154,7 @@ export default function HotelResultCard({
                   top: 12,
                   right: 12,
                   background: "var(--success)",
-                  color: "var(--white)",
+                  color: "#f5f0e8",
                   fontSize: 10,
                   fontWeight: 600,
                   letterSpacing: "0.08em",

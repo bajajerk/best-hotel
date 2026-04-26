@@ -4360,16 +4360,18 @@ body:has(.precision-theme) {
    ============================================================================ */
 
 .luxe {
-  /* Background tones */
+  /* Background tones — bumped --white/--bg-card/--cream-border opacities so
+     form fields, cards, and bordered controls are actually VISIBLE on a dark
+     luxe page (the original 0.025/0.08 values rendered as ghosts). */
   --cream: #0c0b0a;
   --cream-deep: #14120f;
-  --cream-border: rgba(255, 255, 255, 0.08);
-  --white: rgba(255, 255, 255, 0.025);
+  --cream-border: rgba(255, 255, 255, 0.18);
+  --white: rgba(255, 255, 255, 0.06);
   --bg-deep: #0c0b0a;
   --bg-surface: #14120f;
   --bg-elevated: #1c1a16;
-  --bg-card: rgba(255, 255, 255, 0.025);
-  --bg-input: rgba(255, 255, 255, 0.04);
+  --bg-card: rgba(255, 255, 255, 0.06);
+  --bg-input: rgba(255, 255, 255, 0.08);
   --bg-black: #0c0b0a;
 
   /* Ink → soft white */
@@ -4393,7 +4395,7 @@ body:has(.precision-theme) {
   --accent-hover: #d4b988;
 
   /* Borders */
-  --border: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.18);
   --border-hover: #c8aa76;
   --border-focus: #c8aa76;
 
@@ -4417,23 +4419,14 @@ body:has(.precision-theme) {
 .luxe main,
 .luxe footer { background-color: transparent; }
 
-/* Force-tone the hard-coded white card backgrounds inside .luxe pages */
-.luxe [style*="#fdfaf5"],
-.luxe [style*="#FDFAF5"],
-.luxe [style*="#f5f0e8"],
-.luxe [style*="#F5F0E8"],
-.luxe [style*="#ede7d9"],
-.luxe [style*="#EDE7D9"] {
-  background-color: rgba(255, 255, 255, 0.025) !important;
-  color: #f7f5f2 !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-/* Inputs in luxe-scoped pages */
+/* Inputs in luxe-scoped pages — give them a visible surface + border so they
+   read as actual form fields on the dark page, not ghost outlines. */
 .luxe input,
 .luxe textarea,
 .luxe select {
   color: #f7f5f2;
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 .luxe input::placeholder,
 .luxe textarea::placeholder { color: rgba(247, 245, 242, 0.45); }
