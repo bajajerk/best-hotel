@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // Pin Turbopack's workspace root to this app — without this, the multiple
+  // lockfiles in /home/mayank cause Turbopack to infer the wrong root and
+  // write build manifests to a path that ENOENTs at the end of the build.
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },

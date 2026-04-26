@@ -303,6 +303,49 @@ export async function fetchPreferredHotels(): Promise<PreferredHotel[]> {
   return json.hotels ?? [];
 }
 
+// ── City editorial guide (admin-curated) ──────────────────────────────────
+// Backed by GET /api/city-guides/{slug}. Returns a per-city editorial
+// composed of short titled sections (title + body). Endpoint may not be
+// shipped yet — we wrap in try/catch and gracefully return null on any
+// failure (404/500/network) so the city page just hides the section.
+export type CityGuideSection = {
+  title: string;
+  body: string;
+};
+
+export type CityGuide = {
+  city_slug: string;
+  // Optional global lead/standfirst that introduces the guide. Not required.
+  lead?: string | null;
+  sections: CityGuideSection[];
+};
+
+export async function fetchCityGuide(citySlug: string): Promise<CityGuide | null> {
+  try {
+    const res = await fetch(
+      resolveApiUrl(`/api/city-guides/${encodeURIComponent(citySlug)}`),
+      { cache: "no-store" }
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    // Tolerate either { sections: [...] } or { guide: { sections: [...] } }
+    const guide: CityGuide | undefined = json.guide ?? json;
+    if (!guide || !Array.isArray(guide.sections) || guide.sections.length === 0) {
+      return null;
+    }
+    return {
+      city_slug: guide.city_slug ?? citySlug,
+      lead: guide.lead ?? null,
+      sections: guide.sections
+        .filter((s: CityGuideSection) => s && s.title && s.body)
+        .slice(0, 4),
+    };
+  } catch (err) {
+    console.warn("[fetchCityGuide] failed:", err);
+    return null;
+  }
+}
+
 // In-memory cache for the client-side featured aggregator.
 // Backend has no /api/hotels/featured endpoint, so we build the response
 // from /api/curations/cities + per-city /api/curations/{slug} fan-out.

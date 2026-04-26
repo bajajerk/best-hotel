@@ -1,24 +1,45 @@
 "use client";
 
+// =============================================================================
+//  /city/[slug] — Voyagr Club city page (DARK LUXE)
+//
+//  Visual language mirrors the homepage (see HomePageClient.tsx). The whole
+//  page is rendered inside a `<div className="luxe">` wrapper, which remaps the
+//  legacy `var(--cream)` / `var(--ink)` / `var(--gold)` / `var(--white)` design
+//  tokens to the dark-luxe palette via `globals.css` (.luxe scope, ~ line 4362).
+//  This means the existing inline styles auto-translate to dark luxe — and
+//  shared components like <HotelResultCard /> render natively on dark.
+//
+//  CRITICAL: every filter & sort interaction is preserved exactly as it was.
+//  All state (priceMin/Max, filterMin/Max, minStars, sortBy, *Open) and all
+//  derivation (rankedAll → rankedFiltered → sortedRanked → hotels) lives on
+//  this single client component, so no refactor can accidentally split state.
+//  We only restyled the JSX. See the "Filter logic" comment block in CityPage().
+// =============================================================================
+
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import {
   fetchCityCurations,
   fetchBatchRates,
+  fetchCityGuide,
   defaultBookingDates,
   CuratedHotel,
 } from "@/lib/api";
-import type { BatchRatesResponse } from "@/lib/api";
+import type { BatchRatesResponse, CityGuide } from "@/lib/api";
 import { rankHotels, sortRankedHotels, type SortStrategy } from "@/lib/ranking";
 import { useBooking } from "@/context/BookingContext";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { trackCityViewed } from "@/lib/analytics";
-import Breadcrumbs from "@/components/Breadcrumbs";
 import DateBar from "@/components/DateBar";
 import GuestRoomPicker from "@/components/GuestRoomPicker";
 import HotelResultCard from "@/components/HotelResultCard";
+import { CITY_IMAGES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
+import { conciergeWhatsappLink } from "@/lib/concierge";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -26,33 +47,13 @@ import HotelResultCard from "@/components/HotelResultCard";
 type Category = "singles" | "couples" | "families";
 
 // ---------------------------------------------------------------------------
-// CSS Variables — Voyagr Light Theme
-// ---------------------------------------------------------------------------
-const cssVars: Record<string, string> = {
-  "--cream": "#f5f0e8",
-  "--cream-deep": "#ede7d9",
-  "--cream-border": "#ddd5c3",
-  "--ink": "#1a1710",
-  "--ink-mid": "#3d3929",
-  "--ink-light": "#7a7465",
-  "--gold": "#C9A84C",
-  "--gold-light": "#D9BC72",
-  "--gold-pale": "#F2EBDA",
-  "--white": "#fdfaf5",
-  "--success": "#4a7c59",
-  "--navy": "#0B1B2B",
-  "--serif": "'Cormorant Garamond', Georgia, serif",
-  "--sans": "'DM Sans', sans-serif",
-};
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 function formatCurrency(amount: number, currency?: string | null): string {
   const symbols: Record<string, string> = {
-    USD: "$", EUR: "\u20AC", GBP: "\u00A3", INR: "\u20B9",
-    JPY: "\u00A5", AUD: "A$", SGD: "S$", THB: "\u0E3F",
-    AED: "AED ", MYR: "RM ", IDR: "Rp ", KRW: "\u20A9",
+    USD: "$", EUR: "€", GBP: "£", INR: "₹",
+    JPY: "¥", AUD: "A$", SGD: "S$", THB: "฿",
+    AED: "AED ", MYR: "RM ", IDR: "Rp ", KRW: "₩",
   };
   const sym = currency ? (symbols[currency.toUpperCase()] || `${currency} `) : "$";
   const rounded = Math.round(amount);
@@ -77,30 +78,80 @@ function formatDateLabel(iso: string, fallback: string): string {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
+function safeImg(u: string | null | undefined): string {
+  if (!u || !u.trim()) return FALLBACK_CITY_IMAGE;
+  if (u.startsWith("http://")) return u.replace("http://", "https://");
+  return u;
+}
+
+const CITY_FALLBACK_GRADIENT =
+  "linear-gradient(135deg, rgba(200,170,118,0.32) 0%, rgba(20,18,15,0.92) 100%)";
+
+const MEMBER_BENEFITS = [
+  "3rd night complimentary",
+  "$100 USD hotel credit",
+  "Daily breakfast for two",
+  "4pm late checkout",
+  "Room upgrade",
+];
+
 // ---------------------------------------------------------------------------
-// Skeleton — Card shimmer
+// Skeleton — Card shimmer (dark variant)
 // ---------------------------------------------------------------------------
 function CardSkeletonMobile() {
   return (
     <div
       style={{
-        background: "var(--white)",
-        border: "1px solid var(--cream-border)",
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid var(--luxe-hairline)",
+        borderRadius: 14,
         overflow: "hidden",
       }}
     >
-      <div className="shimmer" style={{ height: 200, width: "100%" }} />
+      <div
+        style={{
+          height: 200,
+          width: "100%",
+          background:
+            "linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%)",
+          backgroundSize: "200% 100%",
+          animation: "shimmer 1.6s linear infinite",
+        }}
+      />
       <div style={{ padding: 16 }}>
-        <div className="shimmer" style={{ height: 18, width: "70%", marginBottom: 8 }} />
-        <div className="shimmer" style={{ height: 12, width: "40%", marginBottom: 16 }} />
-        <div className="shimmer" style={{ height: 28, width: "50%" }} />
+        <div
+          style={{
+            height: 18,
+            width: "70%",
+            marginBottom: 8,
+            background: "rgba(255,255,255,0.06)",
+            borderRadius: 4,
+          }}
+        />
+        <div
+          style={{
+            height: 12,
+            width: "40%",
+            marginBottom: 16,
+            background: "rgba(255,255,255,0.06)",
+            borderRadius: 4,
+          }}
+        />
+        <div
+          style={{
+            height: 28,
+            width: "50%",
+            background: "rgba(255,255,255,0.06)",
+            borderRadius: 4,
+          }}
+        />
       </div>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Search Summary Bar — tappable, shows destination + dates + guests
+// Search Summary Bar — sticky, dark luxe glass
 // ---------------------------------------------------------------------------
 function SearchSummaryBar({
   destination,
@@ -131,19 +182,26 @@ function SearchSummaryBar({
         display: "flex",
         alignItems: "center",
         gap: 12,
-        background: "var(--white)",
-        border: "1px solid var(--cream-border)",
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid var(--luxe-hairline-strong)",
         borderRadius: 14,
         padding: "10px 14px",
         cursor: "pointer",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
-        transition: "border-color 0.2s",
+        transition: "border-color 0.2s, background 0.2s",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = "var(--gold)";
+        (e.currentTarget as HTMLDivElement).style.borderColor =
+          "var(--luxe-champagne-line)";
+        (e.currentTarget as HTMLDivElement).style.background =
+          "rgba(255,255,255,0.06)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = "var(--cream-border)";
+        (e.currentTarget as HTMLDivElement).style.borderColor =
+          "var(--luxe-hairline-strong)";
+        (e.currentTarget as HTMLDivElement).style.background =
+          "rgba(255,255,255,0.04)";
       }}
     >
       <button
@@ -158,7 +216,7 @@ function SearchSummaryBar({
           borderRadius: 10,
           border: "none",
           background: "transparent",
-          color: "var(--ink)",
+          color: "var(--luxe-soft-white)",
           cursor: "pointer",
           flexShrink: 0,
         }}
@@ -173,7 +231,7 @@ function SearchSummaryBar({
           style={{
             fontSize: 14,
             fontWeight: 600,
-            color: "var(--ink)",
+            color: "var(--luxe-soft-white)",
             fontFamily: "var(--font-body)",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -185,7 +243,7 @@ function SearchSummaryBar({
         <div
           style={{
             fontSize: 12,
-            color: "var(--ink-light)",
+            color: "var(--luxe-soft-white-50)",
             fontFamily: "var(--font-body)",
             marginTop: 2,
             overflow: "hidden",
@@ -206,7 +264,7 @@ function SearchSummaryBar({
           width: 32,
           height: 32,
           borderRadius: 10,
-          color: "var(--gold)",
+          color: "var(--luxe-champagne)",
           flexShrink: 0,
         }}
       >
@@ -220,7 +278,7 @@ function SearchSummaryBar({
 }
 
 // ---------------------------------------------------------------------------
-// Search Edit Modal — bottom sheet with destination, dates, guests
+// Search Edit Modal — bottom sheet (dark luxe)
 // ---------------------------------------------------------------------------
 function SearchEditModal({
   open,
@@ -261,7 +319,9 @@ function SearchEditModal({
         style={{
           position: "fixed",
           inset: 0,
-          background: "rgba(26,23,16,0.45)",
+          background: "rgba(8,7,6,0.7)",
+          backdropFilter: "blur(6px)",
+          WebkitBackdropFilter: "blur(6px)",
           zIndex: 1200,
           display: "flex",
           alignItems: "flex-end",
@@ -276,30 +336,22 @@ function SearchEditModal({
           transition={{ type: "tween", duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
           onClick={(e) => e.stopPropagation()}
           style={{
-            background: "var(--white)",
+            background: "var(--luxe-black-2)",
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
+            border: "1px solid var(--luxe-hairline)",
+            borderBottom: "none",
             width: "100%",
             maxWidth: 560,
             maxHeight: "88vh",
             overflowY: "auto",
             padding: "20px 20px 28px",
-            boxShadow: "0 -10px 40px rgba(0,0,0,0.18)",
+            boxShadow: "0 -10px 40px rgba(0,0,0,0.5)",
+            color: "var(--luxe-soft-white)",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 500,
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                color: "var(--ink-light)",
-                fontFamily: "var(--font-body)",
-              }}
-            >
-              Edit search
-            </span>
+            <span className="luxe-tech">Edit search</span>
             <button
               onClick={onClose}
               aria-label="Close"
@@ -307,7 +359,7 @@ function SearchEditModal({
                 border: "none",
                 background: "transparent",
                 cursor: "pointer",
-                color: "var(--ink-mid)",
+                color: "var(--luxe-soft-white-70)",
                 padding: 6,
                 display: "inline-flex",
               }}
@@ -319,18 +371,7 @@ function SearchEditModal({
             </button>
           </div>
 
-          <label
-            style={{
-              display: "block",
-              fontSize: 10,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "var(--ink-light)",
-              fontFamily: "var(--font-body)",
-              fontWeight: 600,
-              marginBottom: 6,
-            }}
-          >
+          <label className="luxe-tech" style={{ display: "block", marginBottom: 6 }}>
             Destination
           </label>
           <input
@@ -340,70 +381,32 @@ function SearchEditModal({
             style={{
               width: "100%",
               padding: "12px 14px",
-              border: "1px solid var(--cream-border)",
+              border: "1px solid var(--luxe-hairline-strong)",
               borderRadius: 10,
               fontSize: 14,
               fontFamily: "var(--font-body)",
-              color: "var(--ink)",
-              background: "var(--white)",
+              color: "var(--luxe-soft-white)",
+              background: "rgba(255,255,255,0.04)",
               marginBottom: 16,
               outline: "none",
             }}
           />
 
           <div style={{ marginBottom: 12 }}>
-            <span
-              style={{
-                display: "block",
-                fontSize: 10,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "var(--ink-light)",
-                fontFamily: "var(--font-body)",
-                fontWeight: 600,
-                marginBottom: 6,
-              }}
-            >
+            <span className="luxe-tech" style={{ display: "block", marginBottom: 6 }}>
               When
             </span>
-            <DateBar variant="light" />
+            <DateBar variant="dark" />
           </div>
 
           <div style={{ marginBottom: 20 }}>
-            <span
-              style={{
-                display: "block",
-                fontSize: 10,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "var(--ink-light)",
-                fontFamily: "var(--font-body)",
-                fontWeight: 600,
-                marginBottom: 6,
-              }}
-            >
+            <span className="luxe-tech" style={{ display: "block", marginBottom: 6 }}>
               Guests
             </span>
-            <GuestRoomPicker variant="light" compact />
+            <GuestRoomPicker variant="dark" compact />
           </div>
 
-          <button
-            onClick={handleApply}
-            style={{
-              width: "100%",
-              padding: "14px 16px",
-              background: "var(--gold)",
-              color: "#1a1710",
-              border: "none",
-              borderRadius: 10,
-              fontSize: 13,
-              fontWeight: 600,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              fontFamily: "var(--font-body)",
-              cursor: "pointer",
-            }}
-          >
+          <button onClick={handleApply} className="luxe-btn-gold" style={{ width: "100%" }}>
             Apply
           </button>
         </motion.div>
@@ -413,7 +416,7 @@ function SearchEditModal({
 }
 
 // ---------------------------------------------------------------------------
-// FilterPill — reusable pill button for the filter row
+// FilterPill — dark luxe glass pill, champagne-active
 // ---------------------------------------------------------------------------
 function FilterPill({
   label,
@@ -437,10 +440,14 @@ function FilterPill({
         fontWeight: 500,
         letterSpacing: "0.04em",
         fontFamily: "var(--font-body)",
-        border: `1px solid ${active ? "var(--gold)" : "var(--cream-border)"}`,
+        border: `1px solid ${
+          active ? "var(--luxe-champagne)" : "var(--luxe-hairline-strong)"
+        }`,
         borderRadius: 999,
-        background: active ? "var(--gold-pale)" : "var(--white)",
-        color: active ? "var(--gold)" : "var(--ink-mid)",
+        background: active
+          ? "var(--luxe-champagne-soft)"
+          : "rgba(255,255,255,0.03)",
+        color: active ? "var(--luxe-champagne)" : "var(--luxe-soft-white-70)",
         cursor: "pointer",
         whiteSpace: "nowrap",
         transition: "all 0.15s",
@@ -455,7 +462,7 @@ function FilterPill({
 }
 
 // ---------------------------------------------------------------------------
-// Floating Map Button
+// Floating Map Button (dark luxe)
 // ---------------------------------------------------------------------------
 function FloatingMapButton({ destination }: { destination: string }) {
   const handleClick = () => {
@@ -473,21 +480,23 @@ function FloatingMapButton({ destination }: { destination: string }) {
         bottom: 92,
         left: "50%",
         transform: "translateX(-50%)",
-        background: "var(--ink)",
-        color: "var(--cream)",
-        border: "none",
+        background: "var(--luxe-black-2)",
+        color: "var(--luxe-soft-white)",
+        border: "1px solid var(--luxe-champagne-line)",
         borderRadius: 20,
         padding: "10px 20px",
         fontSize: 13,
         fontWeight: 600,
         letterSpacing: "0.03em",
         fontFamily: "var(--font-body)",
-        boxShadow: "0 4px 14px rgba(0,0,0,0.3)",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
         cursor: "pointer",
         zIndex: 900,
         display: "inline-flex",
         alignItems: "center",
         gap: 8,
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
       }}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -500,14 +509,15 @@ function FloatingMapButton({ destination }: { destination: string }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main Page
-// ---------------------------------------------------------------------------
+// =============================================================================
+//  Main Page
+// =============================================================================
 export default function CityPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
   const { checkIn, checkOut, totalAdults, totalChildren } = useBooking();
+
   const [curations, setCurations] = useState<Record<Category, CuratedHotel[]>>({
     singles: [],
     couples: [],
@@ -516,9 +526,15 @@ export default function CityPage() {
   const [cityName, setCityName] = useState("");
   const [cityCountry, setCityCountry] = useState("");
   const [tagline, setTagline] = useState("");
+  const [cityImage, setCityImage] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [batchRates, setBatchRates] = useState<BatchRatesResponse | null>(null);
+  const [cityGuide, setCityGuide] = useState<CityGuide | null>(null);
+
+  // ── FILTER STATE ────────────────────────────────────────────────────────
+  // DO NOT MOVE OR DUPLICATE THESE — every filter interaction depends on them
+  // living on this single component. See `rankedFiltered` derivation below.
   const [priceMin, setPriceMin] = useState(0);
   const [priceMax, setPriceMax] = useState(0);
   const [filterMin, setFilterMin] = useState(0);
@@ -549,11 +565,12 @@ export default function CityPage() {
         setCityName(data.city.city_name);
         setCityCountry(data.city.country);
         setTagline(data.city.tagline);
+        setCityImage(data.city.image_url || "");
         trackCityViewed({
           city_slug: slug,
           city_name: data.city.city_name,
           country: data.city.country,
-          continent: data.city.continent || '',
+          continent: data.city.continent || "",
         });
       })
       .catch((err) => {
@@ -561,6 +578,18 @@ export default function CityPage() {
         setFetchError(true);
       })
       .finally(() => setLoading(false));
+  }, [slug]);
+
+  // City editorial guide (admin-curated, optional). Endpoint may not exist
+  // yet — fetchCityGuide returns null on any failure so we hide the section.
+  useEffect(() => {
+    let cancelled = false;
+    fetchCityGuide(slug).then((g) => {
+      if (!cancelled) setCityGuide(g);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   // Batch-fetch live rates for all hotels on this city page. Unmatched IDs are
@@ -656,6 +685,9 @@ export default function CityPage() {
         .filter((h) => batchRates.results[String(h.hotel_id)])
     : rawAllHotels;
 
+  // ── Filter logic — DO NOT TOUCH ────────────────────────────────────────
+  // `rankedFiltered` honours minStars + filterMin/Max. `sortRankedHotels`
+  // honours `sortBy`. Both are pure derivations of the state above.
   const rankedAll = rankHotels(allHotels);
   const rankedFiltered = rankedAll.filter((r) => {
     if (minStars > 0) {
@@ -669,47 +701,180 @@ export default function CityPage() {
   const hotels = sortedRanked.map((r) => r.hotel);
 
   const displayName = cityName || slugToName(slug);
-  const isPriceFilterActive = priceMax > priceMin && (filterMin > priceMin || filterMax < priceMax);
+  const isPriceFilterActive =
+    priceMax > priceMin && (filterMin > priceMin || filterMax < priceMax);
   const isStarFilterActive = minStars > 0;
   const currency = allHotels.find((h) => h.rates_currency)?.rates_currency || null;
 
-  const currentSortLabel = citySortOptions.find((o) => o.value === sortBy)?.label || "Rating: Highest";
+  const currentSortLabel =
+    citySortOptions.find((o) => o.value === sortBy)?.label || "Rating: Highest";
+
+  // Hero image — prefer admin-curated `image_url` from the curations endpoint,
+  // fall back to legacy hardcoded CITY_IMAGES, then to the global fallback.
+  const heroImg = safeImg(cityImage || CITY_IMAGES[slug] || FALLBACK_CITY_IMAGE);
+
+  // Curated picks for the editorial carousel — top 8 by rating, deduped.
+  // Uses the same `rankedAll` so we don't double-rank.
+  const curatedPicks: CuratedHotel[] = rankedAll
+    .map((r) => r.hotel)
+    .filter((h) => h.rating_average != null)
+    .slice(0, 8);
+
+  const handleScrollToHotels = () => {
+    document.getElementById("hotels")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
 
   return (
-    <div
-      style={{
-        ...cssVars,
-        background: "var(--cream)",
-        color: "var(--ink)",
-        fontFamily: "var(--font-body)",
-        fontSize: 14,
-        lineHeight: 1.6,
-        minHeight: "100vh",
-        overflowX: "hidden",
-      } as React.CSSProperties}
-    >
+    <div className="luxe" style={{ overflowX: "hidden" }}>
       <Header />
 
-      <Breadcrumbs
-        items={[
-          { label: "Home", href: "/" },
-          { label: "Destinations" },
-          { label: displayName },
-        ]}
-      />
+      {/* ================================================================
+          1. HERO — full-bleed city image, dark gradient overlay
+          ================================================================ */}
+      <header
+        style={{
+          position: "relative",
+          minHeight: 520,
+          display: "flex",
+          alignItems: "flex-end",
+          paddingTop: 96,
+          paddingBottom: 56,
+          paddingLeft: 24,
+          paddingRight: 24,
+          overflow: "hidden",
+          background: "var(--luxe-black)",
+        }}
+      >
+        {/* Background image */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: `url(${heroImg}) center/cover no-repeat`,
+            // Slight saturation/brightness pull so the gold gradient reads.
+            filter: "saturate(0.92) brightness(0.78)",
+            zIndex: 0,
+          }}
+        />
+        {/* Gradient overlay (dark at bottom for legibility) */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(180deg, rgba(12,11,10,0.45) 0%, rgba(12,11,10,0.92) 90%)",
+            zIndex: 0,
+          }}
+        />
 
-      {/* ════════ Search summary bar ════════ */}
+        <div className="luxe-container" style={{ position: "relative", zIndex: 1, width: "100%" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="luxe-tech" style={{ marginBottom: 16 }}>
+              {(cityCountry || "Voyagr Club").toUpperCase()}
+              {cityCountry && <span style={{ margin: "0 8px", opacity: 0.5 }}>·</span>}
+              {cityCountry && <span style={{ color: "var(--luxe-soft-white-50)" }}>VOYAGR CLUB</span>}
+            </div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="luxe-display"
+              style={{
+                fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif",
+                fontSize: "clamp(48px, 7vw, 88px)",
+                fontWeight: 300,
+                fontStyle: "italic",
+                lineHeight: 1.05,
+                color: "var(--luxe-soft-white)",
+                marginBottom: 18,
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {displayName}
+            </motion.h1>
+
+            {tagline && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.25 }}
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: 16,
+                  color: "var(--luxe-soft-white-70)",
+                  fontWeight: 300,
+                  lineHeight: 1.7,
+                  maxWidth: 560,
+                  marginBottom: 24,
+                }}
+              >
+                {tagline}
+              </motion.p>
+            )}
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.32 }}
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 13,
+                color: "var(--luxe-champagne)",
+                letterSpacing: "0.06em",
+                marginBottom: 28,
+              }}
+            >
+              <span style={{ fontWeight: 600 }}>Preferred rates</span>
+              <span style={{ color: "var(--luxe-soft-white-50)", margin: "0 8px" }}>·</span>
+              <span style={{ color: "var(--luxe-soft-white-70)" }}>
+                Voyagr Club members save on every stay
+              </span>
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <button
+                onClick={handleScrollToHotels}
+                className="luxe-btn-primary"
+                aria-label="Jump to hotels"
+              >
+                See member rates ↓
+              </button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </header>
+
+      {/* ================================================================
+          2. STICKY SEARCH SUMMARY BAR
+          ================================================================ */}
       <div
         style={{
-          paddingTop: 96,
-          paddingLeft: 20,
-          paddingRight: 20,
-          background: "var(--white)",
-          borderBottom: "1px solid var(--cream-border)",
+          position: "sticky",
+          top: 60, // sit just below the global Header
+          zIndex: 60,
+          background: "rgba(12,11,10,0.85)",
+          borderBottom: "1px solid var(--luxe-hairline)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          padding: "12px 20px",
         }}
         className="md:!px-[60px]"
       >
-        <div style={{ maxWidth: 1200, margin: "0 auto", paddingBottom: 16 }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <SearchSummaryBar
             destination={displayName}
             onOpen={() => setSearchOpen(true)}
@@ -719,114 +884,337 @@ export default function CityPage() {
       </div>
 
       {/* ================================================================
-          CITY HERO — large italic serif name, tagline
+          3. EDITORIAL — "Why {city}?" — admin-curated city guide
+          Rendered only if a guide is present; otherwise gracefully hidden.
           ================================================================ */}
-      <header
-        style={{
-          paddingTop: 20,
-          paddingBottom: 0,
-          paddingLeft: 60,
-          paddingRight: 60,
-          background: "var(--white)",
-          borderBottom: "1px solid var(--cream-border)",
-        }}
-        className="!px-5 md:!px-[60px]"
-      >
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-          >
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(36px, 5vw, 56px)",
-                fontWeight: 300,
-                fontStyle: "italic",
-                lineHeight: 1.1,
-                color: "var(--ink)",
-                marginBottom: 8,
-              }}
-            >
-              {displayName}
-            </motion.h1>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-            >
-              {cityCountry && (
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: "var(--ink-light)",
-                    letterSpacing: "0.06em",
-                    marginBottom: 4,
-                  }}
-                >
-                  {cityCountry}
-                </p>
-              )}
-              {tagline && (
-                <p
-                  style={{
-                    fontSize: 15,
-                    color: "var(--ink-light)",
-                    fontWeight: 300,
-                    lineHeight: 1.7,
-                    maxWidth: 480,
-                  }}
-                >
-                  {tagline}
-                </p>
-              )}
-              <p
+      {cityGuide && cityGuide.sections.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6 }}
+          style={{
+            padding: "72px 0 56px",
+            borderBottom: "1px solid var(--luxe-hairline)",
+          }}
+        >
+          <div className="luxe-container">
+            <div style={{ maxWidth: 720, marginBottom: 36 }}>
+              <div className="luxe-tech" style={{ marginBottom: 10 }}>
+                Why {displayName}
+              </div>
+              <h2
+                className="luxe-display"
                 style={{
-                  fontSize: 13,
-                  color: "var(--ink-light)",
-                  fontWeight: 400,
-                  lineHeight: 1.6,
-                  marginTop: 8,
-                  maxWidth: 520,
+                  fontSize: "clamp(28px, 3.2vw, 44px)",
+                  marginBottom: 14,
                 }}
               >
-                <span style={{ color: "var(--gold)", fontWeight: 500 }}>Preferred rates</span>
-                {" \u00B7 Voyagr Club members save on every stay."}
-              </p>
-            </motion.div>
+                A city our concierge <em>keeps revisiting</em>
+              </h2>
+              {cityGuide.lead && (
+                <p
+                  style={{
+                    color: "var(--luxe-soft-white-70)",
+                    fontSize: 15,
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {cityGuide.lead}
+                </p>
+              )}
+            </div>
 
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
+            <div
               style={{
-                width: 40,
-                height: 1,
-                background: "var(--gold)",
-                marginTop: 24,
-                transformOrigin: "left",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 32,
               }}
-            />
-          </motion.div>
-        </div>
-      </header>
+            >
+              {cityGuide.sections.map((s, i) => (
+                <div key={i}>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 22,
+                      fontWeight: 500,
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1.25,
+                      color: "var(--luxe-soft-white)",
+                      marginBottom: 12,
+                    }}
+                  >
+                    {s.title}
+                  </div>
+                  <p
+                    style={{
+                      fontSize: 14.5,
+                      color: "var(--luxe-soft-white-70)",
+                      lineHeight: 1.75,
+                    }}
+                  >
+                    {s.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+      )}
 
       {/* ================================================================
-          HOTEL LIST
+          4. CURATED PICKS — top 8 across all categories
+          Hidden if no curated hotels are available for this city.
+          ================================================================ */}
+      {curatedPicks.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6 }}
+          style={{
+            padding: "72px 0 56px",
+            borderBottom: "1px solid var(--luxe-hairline)",
+          }}
+        >
+          <div className="luxe-container">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                gap: 24,
+                flexWrap: "wrap",
+                marginBottom: 28,
+              }}
+            >
+              <div style={{ maxWidth: 640 }}>
+                <div className="luxe-tech" style={{ marginBottom: 10 }}>
+                  Editor&rsquo;s Picks
+                </div>
+                <h2
+                  className="luxe-display"
+                  style={{
+                    fontSize: "clamp(26px, 2.8vw, 36px)",
+                    marginBottom: 8,
+                  }}
+                >
+                  Curated for <em>{displayName}</em>
+                </h2>
+                <p
+                  style={{
+                    color: "var(--luxe-soft-white-70)",
+                    fontSize: 14,
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {curatedPicks.length} editor&rsquo;s {curatedPicks.length === 1 ? "pick" : "picks"}
+                </p>
+              </div>
+              <button
+                onClick={handleScrollToHotels}
+                className="luxe-tech"
+                style={{
+                  color: "var(--luxe-champagne)",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                See All Hotels &rarr;
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: 16,
+              }}
+            >
+              {curatedPicks.map((h) => (
+                <Link
+                  key={h.hotel_id}
+                  href={`/hotel/${h.hotel_id}`}
+                  style={{
+                    display: "block",
+                    textDecoration: "none",
+                    color: "inherit",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      aspectRatio: "4 / 3",
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      border: "1px solid rgba(200,170,118,0.18)",
+                      background: CITY_FALLBACK_GRADIENT,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <Image
+                      src={safeImg(h.photo1 || h.photo2)}
+                      alt={h.hotel_name}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      style={{ objectFit: "cover" }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono, monospace)",
+                      fontSize: 10,
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      color: "var(--luxe-soft-white-50)",
+                      marginBottom: 6,
+                    }}
+                  >
+                    {displayName}
+                    {cityCountry ? ` · ${cityCountry}` : ""}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 22,
+                      fontWeight: 500,
+                      color: "var(--luxe-soft-white)",
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1.25,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {h.hotel_name}
+                  </div>
+                  {h.rating_average != null && (
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        padding: "4px 10px",
+                        background: "var(--luxe-champagne-soft)",
+                        border: "1px solid var(--luxe-champagne-line)",
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "var(--luxe-champagne)",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {h.rating_average.toFixed(1)}/10
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+      )}
+
+      {/* ================================================================
+          5. MEMBER BENEFITS CHIP STRIP
+          ================================================================ */}
+      <motion.section
+        initial={{ opacity: 0, y: 8 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.5 }}
+        style={{
+          padding: "56px 0 48px",
+          borderBottom: "1px solid var(--luxe-hairline)",
+        }}
+      >
+        <div className="luxe-container">
+          <div className="luxe-tech" style={{ marginBottom: 12 }}>
+            Member Benefits
+          </div>
+          <h3
+            className="luxe-display"
+            style={{
+              fontSize: "clamp(22px, 2.4vw, 30px)",
+              marginBottom: 22,
+              maxWidth: 640,
+            }}
+          >
+            Quietly negotiated <em>perks</em>, on every stay
+          </h3>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 10,
+              marginBottom: 14,
+            }}
+          >
+            {MEMBER_BENEFITS.map((b) => (
+              <span
+                key={b}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "10px 16px",
+                  borderRadius: 999,
+                  background: "var(--luxe-champagne-soft)",
+                  border: "1px solid var(--luxe-champagne-line)",
+                  color: "var(--luxe-champagne)",
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  letterSpacing: "0.02em",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                <span aria-hidden style={{ fontSize: 11, opacity: 0.85 }}>★</span>
+                {b}
+              </span>
+            ))}
+          </div>
+          <p
+            style={{
+              fontSize: 12,
+              color: "var(--luxe-soft-white-50)",
+              fontFamily: "var(--font-body)",
+              letterSpacing: "0.04em",
+            }}
+          >
+            Across our preferred properties · admin-curated
+          </p>
+        </div>
+      </motion.section>
+
+      {/* ================================================================
+          6. ALL HOTELS — filter pills, results grid
+          The whole filter UI sits inside this section. State preserved
+          exactly from the previous implementation; only the JSX skin was
+          re-themed to dark luxe.
           ================================================================ */}
       <section
+        id="hotels"
         style={{
-          padding: "20px 60px 120px",
-          background: "var(--cream)",
+          padding: "56px 0 120px",
         }}
-        className="!px-4 md:!px-[60px]"
       >
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <div className="luxe-container">
+          <div style={{ marginBottom: 24 }}>
+            <div className="luxe-tech" style={{ marginBottom: 10 }}>
+              All Stays
+            </div>
+            <h2
+              className="luxe-display"
+              style={{
+                fontSize: "clamp(26px, 2.8vw, 36px)",
+                marginBottom: 6,
+              }}
+            >
+              Hotels in <em>{displayName}</em>
+            </h2>
+          </div>
+
           {/* Filter pill row */}
           <div
             style={{
@@ -837,7 +1225,7 @@ export default function CityPage() {
               marginBottom: 14,
               paddingBottom: 4,
             }}
-            className="city-pill-row"
+            className="city-pill-row no-scrollbar"
           >
             <FilterPill
               label="Filter"
@@ -862,10 +1250,10 @@ export default function CityPage() {
                       top: "calc(100% + 6px)",
                       left: 0,
                       zIndex: 50,
-                      background: "var(--white)",
-                      border: "1px solid var(--cream-border)",
+                      background: "var(--luxe-black-2)",
+                      border: "1px solid var(--luxe-hairline-strong)",
                       borderRadius: 12,
-                      boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
                       minWidth: 220,
                       padding: 6,
                     }}
@@ -882,13 +1270,31 @@ export default function CityPage() {
                           padding: "9px 12px",
                           fontSize: 13,
                           fontFamily: "var(--font-body)",
-                          color: sortBy === opt.value ? "var(--ink)" : "var(--ink-mid)",
+                          color:
+                            sortBy === opt.value
+                              ? "var(--luxe-champagne)"
+                              : "var(--luxe-soft-white-70)",
                           fontWeight: sortBy === opt.value ? 500 : 400,
-                          background: sortBy === opt.value ? "var(--gold-pale)" : "transparent",
+                          background:
+                            sortBy === opt.value
+                              ? "var(--luxe-champagne-soft)"
+                              : "transparent",
                           border: "none",
                           borderRadius: 8,
                           cursor: "pointer",
                           textAlign: "left",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (sortBy !== opt.value) {
+                            (e.currentTarget as HTMLButtonElement).style.background =
+                              "rgba(200,170,118,0.08)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (sortBy !== opt.value) {
+                            (e.currentTarget as HTMLButtonElement).style.background =
+                              "transparent";
+                          }
                         }}
                       >
                         <span
@@ -896,8 +1302,14 @@ export default function CityPage() {
                             width: 8,
                             height: 8,
                             borderRadius: "50%",
-                            background: sortBy === opt.value ? "var(--gold)" : "transparent",
-                            border: sortBy === opt.value ? "none" : "1px solid var(--cream-border)",
+                            background:
+                              sortBy === opt.value
+                                ? "var(--luxe-champagne)"
+                                : "transparent",
+                            border:
+                              sortBy === opt.value
+                                ? "none"
+                                : "1px solid var(--luxe-hairline-strong)",
                             flexShrink: 0,
                           }}
                         />
@@ -931,47 +1343,44 @@ export default function CityPage() {
                       top: "calc(100% + 6px)",
                       left: 0,
                       zIndex: 50,
-                      background: "var(--white)",
-                      border: "1px solid var(--cream-border)",
+                      background: "var(--luxe-black-2)",
+                      border: "1px solid var(--luxe-hairline-strong)",
                       borderRadius: 12,
-                      boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
                       width: 300,
                       padding: 18,
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 500,
-                          letterSpacing: "0.1em",
-                          textTransform: "uppercase",
-                          color: "var(--ink-light)",
-                          fontFamily: "var(--font-body)",
-                        }}
-                      >
-                        Price range
-                      </span>
+                      <span className="luxe-tech">Price range</span>
                       {isPriceFilterActive && (
                         <button
                           onClick={() => { setFilterMin(priceMin); setFilterMax(priceMax); }}
-                          style={{ fontSize: 11, color: "var(--gold)", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-body)", fontWeight: 500 }}
+                          style={{
+                            fontSize: 11,
+                            color: "var(--luxe-champagne)",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            fontFamily: "var(--font-body)",
+                            fontWeight: 500,
+                          }}
                         >
                           Reset
                         </button>
                       )}
                     </div>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 14 }}>
-                      <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 500, color: "var(--ink)" }}>
+                      <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 500, color: "var(--luxe-soft-white)" }}>
                         {formatCurrency(filterMin, currency)}
                       </span>
-                      <span style={{ fontSize: 12, color: "var(--ink-light)" }}>—</span>
-                      <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 500, color: "var(--ink)" }}>
+                      <span style={{ fontSize: 12, color: "var(--luxe-soft-white-50)" }}>—</span>
+                      <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 500, color: "var(--luxe-soft-white)" }}>
                         {formatCurrency(filterMax, currency)}
                       </span>
                     </div>
                     <div style={{ position: "relative", height: 32, marginBottom: 4 }}>
-                      <div style={{ position: "absolute", top: 14, left: 0, right: 0, height: 4, background: "var(--cream-deep)", borderRadius: 2 }} />
+                      <div style={{ position: "absolute", top: 14, left: 0, right: 0, height: 4, background: "var(--luxe-hairline-strong)", borderRadius: 2 }} />
                       <div
                         style={{
                           position: "absolute",
@@ -979,7 +1388,7 @@ export default function CityPage() {
                           left: `${((filterMin - priceMin) / (priceMax - priceMin)) * 100}%`,
                           right: `${100 - ((filterMax - priceMin) / (priceMax - priceMin)) * 100}%`,
                           height: 4,
-                          background: "var(--gold)",
+                          background: "var(--luxe-champagne)",
                           borderRadius: 2,
                         }}
                       />
@@ -1031,8 +1440,8 @@ export default function CityPage() {
                       />
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 10, color: "var(--ink-light)" }}>{formatCurrency(priceMin, currency)}</span>
-                      <span style={{ fontSize: 10, color: "var(--ink-light)" }}>{formatCurrency(priceMax, currency)}</span>
+                      <span style={{ fontSize: 10, color: "var(--luxe-soft-white-50)" }}>{formatCurrency(priceMin, currency)}</span>
+                      <span style={{ fontSize: 10, color: "var(--luxe-soft-white-50)" }}>{formatCurrency(priceMax, currency)}</span>
                     </div>
                   </motion.div>
                 )}
@@ -1045,11 +1454,11 @@ export default function CityPage() {
             <p
               style={{
                 fontSize: 11,
-                fontFamily: "var(--font-mono)",
-                letterSpacing: "0.08em",
+                fontFamily: "var(--font-mono, monospace)",
+                letterSpacing: "0.18em",
                 textTransform: "uppercase",
-                color: "var(--ink-light)",
-                marginBottom: 16,
+                color: "var(--luxe-soft-white-50)",
+                marginBottom: 20,
               }}
             >
               {hotels.length} {hotels.length === 1 ? "hotel" : "hotels"} in {displayName}
@@ -1095,62 +1504,64 @@ export default function CityPage() {
                   >
                     {isPriceFilterActive || isStarFilterActive ? (
                       <>
-                        <p style={{ fontFamily: "var(--font-display)", fontSize: 24, fontStyle: "italic", fontWeight: 300, color: "var(--ink-mid)", marginBottom: 12 }}>
+                        <p
+                          style={{
+                            fontFamily: "var(--font-display)",
+                            fontSize: 24,
+                            fontStyle: "italic",
+                            fontWeight: 300,
+                            color: "var(--luxe-soft-white)",
+                            marginBottom: 12,
+                          }}
+                        >
                           No matches
                         </p>
-                        <p style={{ fontSize: 14, color: "var(--ink-light)", marginBottom: 20 }}>
+                        <p style={{ fontSize: 14, color: "var(--luxe-soft-white-70)", marginBottom: 20 }}>
                           Try widening your filters.
                         </p>
                         <button
                           onClick={() => { setFilterMin(priceMin); setFilterMax(priceMax); setMinStars(0); }}
-                          style={{
-                            background: "none",
-                            border: "1px solid var(--cream-border)",
-                            padding: "10px 24px",
-                            fontSize: 12,
-                            fontWeight: 500,
-                            letterSpacing: "0.1em",
-                            textTransform: "uppercase",
-                            color: "var(--ink-mid)",
-                            cursor: "pointer",
-                            fontFamily: "var(--font-body)",
-                          }}
+                          className="luxe-btn-secondary"
                         >
                           Clear filters
                         </button>
                       </>
                     ) : fetchError ? (
                       <>
-                        <p style={{ fontFamily: "var(--font-display)", fontSize: 24, fontStyle: "italic", fontWeight: 300, color: "var(--ink-mid)", marginBottom: 12 }}>
-                          Unable to load hotels
-                        </p>
-                        <p style={{ fontSize: 14, color: "var(--ink-light)", marginBottom: 20 }}>
-                          Something went wrong while loading stays for {displayName}. Please try again.
-                        </p>
-                        <button
-                          onClick={() => window.location.reload()}
+                        <p
                           style={{
-                            background: "none",
-                            border: "1px solid var(--cream-border)",
-                            padding: "10px 24px",
-                            fontSize: 12,
-                            fontWeight: 500,
-                            letterSpacing: "0.1em",
-                            textTransform: "uppercase",
-                            color: "var(--ink-mid)",
-                            cursor: "pointer",
-                            fontFamily: "var(--font-body)",
+                            fontFamily: "var(--font-display)",
+                            fontSize: 24,
+                            fontStyle: "italic",
+                            fontWeight: 300,
+                            color: "var(--luxe-soft-white)",
+                            marginBottom: 12,
                           }}
                         >
+                          Unable to load hotels
+                        </p>
+                        <p style={{ fontSize: 14, color: "var(--luxe-soft-white-70)", marginBottom: 20 }}>
+                          Something went wrong while loading stays for {displayName}. Please try again.
+                        </p>
+                        <button onClick={() => window.location.reload()} className="luxe-btn-secondary">
                           Try again
                         </button>
                       </>
                     ) : (
                       <>
-                        <p style={{ fontFamily: "var(--font-display)", fontSize: 24, fontStyle: "italic", fontWeight: 300, color: "var(--ink-mid)", marginBottom: 12 }}>
+                        <p
+                          style={{
+                            fontFamily: "var(--font-display)",
+                            fontSize: 24,
+                            fontStyle: "italic",
+                            fontWeight: 300,
+                            color: "var(--luxe-soft-white)",
+                            marginBottom: 12,
+                          }}
+                        >
                           Coming soon
                         </p>
-                        <p style={{ fontSize: 14, color: "var(--ink-light)" }}>
+                        <p style={{ fontSize: 14, color: "var(--luxe-soft-white-70)" }}>
                           We are preparing stays in {displayName}.
                         </p>
                       </>
@@ -1163,7 +1574,7 @@ export default function CityPage() {
         </div>
       </section>
 
-      {/* ════════ Filter bottom sheet ════════ */}
+      {/* ════════ Filter bottom sheet (mobile) — dark luxe ════════ */}
       <AnimatePresence>
         {filterOpen && (
           <motion.div
@@ -1175,7 +1586,9 @@ export default function CityPage() {
             style={{
               position: "fixed",
               inset: 0,
-              background: "rgba(26,23,16,0.45)",
+              background: "rgba(8,7,6,0.7)",
+              backdropFilter: "blur(6px)",
+              WebkitBackdropFilter: "blur(6px)",
               zIndex: 1100,
               display: "flex",
               alignItems: "flex-end",
@@ -1189,30 +1602,22 @@ export default function CityPage() {
               transition={{ type: "tween", duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: "var(--white)",
+                background: "var(--luxe-black-2)",
                 borderTopLeftRadius: 20,
                 borderTopRightRadius: 20,
+                border: "1px solid var(--luxe-hairline)",
+                borderBottom: "none",
                 width: "100%",
                 maxWidth: 560,
                 maxHeight: "80vh",
                 overflowY: "auto",
                 padding: "20px 20px 28px",
-                boxShadow: "0 -10px 40px rgba(0,0,0,0.18)",
+                boxShadow: "0 -10px 40px rgba(0,0,0,0.5)",
+                color: "var(--luxe-soft-white)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 500,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                    color: "var(--ink-light)",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  Filters
-                </span>
+                <span className="luxe-tech">Filters</span>
                 <button
                   onClick={() => setFilterOpen(false)}
                   aria-label="Close"
@@ -1220,7 +1625,7 @@ export default function CityPage() {
                     border: "none",
                     background: "transparent",
                     cursor: "pointer",
-                    color: "var(--ink-mid)",
+                    color: "var(--luxe-soft-white-70)",
                     padding: 6,
                     display: "inline-flex",
                   }}
@@ -1232,19 +1637,14 @@ export default function CityPage() {
                 </button>
               </div>
 
-              <div style={{ marginBottom: 20 }}>
-                <span
-                  style={{
-                    display: "block",
-                    fontSize: 11,
-                    fontWeight: 500,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "var(--ink-mid)",
-                    fontFamily: "var(--font-body)",
-                    marginBottom: 10,
-                  }}
-                >
+              <div
+                style={{
+                  marginBottom: 22,
+                  paddingBottom: 22,
+                  borderBottom: "1px solid var(--luxe-champagne-line)",
+                }}
+              >
+                <span className="luxe-tech" style={{ display: "block", marginBottom: 12 }}>
                   Star rating
                 </span>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -1257,10 +1657,20 @@ export default function CityPage() {
                         fontSize: 12,
                         fontWeight: 500,
                         fontFamily: "var(--font-body)",
-                        border: `1px solid ${minStars === stars ? "var(--gold)" : "var(--cream-border)"}`,
+                        border: `1px solid ${
+                          minStars === stars
+                            ? "var(--luxe-champagne)"
+                            : "var(--luxe-hairline-strong)"
+                        }`,
                         borderRadius: 999,
-                        background: minStars === stars ? "var(--gold-pale)" : "var(--white)",
-                        color: minStars === stars ? "var(--gold)" : "var(--ink-mid)",
+                        background:
+                          minStars === stars
+                            ? "var(--luxe-champagne-soft)"
+                            : "rgba(255,255,255,0.03)",
+                        color:
+                          minStars === stars
+                            ? "var(--luxe-champagne)"
+                            : "var(--luxe-soft-white-70)",
                         cursor: "pointer",
                       }}
                     >
@@ -1270,22 +1680,11 @@ export default function CityPage() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: 20 }}>
-                <span
-                  style={{
-                    display: "block",
-                    fontSize: 11,
-                    fontWeight: 500,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "var(--ink-light)",
-                    fontFamily: "var(--font-body)",
-                    marginBottom: 6,
-                  }}
-                >
+              <div style={{ marginBottom: 22 }}>
+                <span className="luxe-tech" style={{ display: "block", marginBottom: 6 }}>
                   Amenities · Property type
                 </span>
-                <p style={{ fontSize: 12, color: "var(--ink-light)", fontFamily: "var(--font-body)" }}>
+                <p style={{ fontSize: 12, color: "var(--luxe-soft-white-50)", fontFamily: "var(--font-body)" }}>
                   More filters coming soon.
                 </p>
               </div>
@@ -1293,39 +1692,15 @@ export default function CityPage() {
               <div style={{ display: "flex", gap: 10 }}>
                 <button
                   onClick={() => { setMinStars(0); setFilterMin(priceMin); setFilterMax(priceMax); }}
-                  style={{
-                    flex: 1,
-                    padding: "13px 16px",
-                    background: "var(--white)",
-                    color: "var(--ink-mid)",
-                    border: "1px solid var(--cream-border)",
-                    borderRadius: 10,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    fontFamily: "var(--font-body)",
-                    cursor: "pointer",
-                  }}
+                  className="luxe-btn-secondary"
+                  style={{ flex: 1 }}
                 >
                   Clear
                 </button>
                 <button
                   onClick={() => setFilterOpen(false)}
-                  style={{
-                    flex: 1,
-                    padding: "13px 16px",
-                    background: "var(--gold)",
-                    color: "#1a1710",
-                    border: "none",
-                    borderRadius: 10,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    fontFamily: "var(--font-body)",
-                    cursor: "pointer",
-                  }}
+                  className="luxe-btn-gold"
+                  style={{ flex: 1 }}
                 >
                   Show {hotels.length}
                 </button>
@@ -1346,187 +1721,100 @@ export default function CityPage() {
       <FloatingMapButton destination={displayName} />
 
       {/* ================================================================
-          CTA SECTION
+          7. CONCIERGE CTA STRIP
           ================================================================ */}
       <section
         style={{
-          padding: "80px 60px",
-          background: "var(--ink)",
-          color: "var(--cream)",
+          padding: "80px 0 96px",
+          borderTop: "1px solid var(--luxe-hairline)",
         }}
-        className="!px-6 md:!px-[60px]"
       >
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6 }}
-          style={{
-            maxWidth: 600,
-            margin: "0 auto",
-            textAlign: "center",
-          }}
-        >
-          <p
-            className="type-eyebrow"
-            style={{
-              marginBottom: 16,
-            }}
-          >
-            Ready to save?
-          </p>
+        <div className="luxe-container" style={{ textAlign: "center", maxWidth: 720 }}>
+          <div className="luxe-tech" style={{ marginBottom: 16 }}>
+            Concierge
+          </div>
           <h3
-            className="type-display-2"
+            className="luxe-display"
             style={{
-              fontStyle: "italic",
-              color: "var(--cream)",
+              fontSize: "clamp(28px, 3.4vw, 44px)",
               marginBottom: 16,
             }}
           >
-            Preferred rates for{" "}
-            <em style={{ color: "var(--gold)" }}>{displayName}</em>
+            Can&rsquo;t decide? <em>Speak to our concierge.</em>
           </h3>
           <p
             style={{
-              fontSize: 14,
-              color: "rgba(245,240,232,0.6)",
+              fontSize: 15,
+              color: "var(--luxe-soft-white-70)",
               fontWeight: 300,
               lineHeight: 1.7,
-              marginBottom: 36,
+              marginBottom: 32,
+              maxWidth: 540,
+              marginLeft: "auto",
+              marginRight: "auto",
             }}
           >
-            B2B rates. No markup. No hidden fees. Contact us and we will beat any publicly listed rate.
+            A real human on WhatsApp — available 24/7. Send the dates, the vibe,
+            the budget. We&rsquo;ll come back with three quietly-perfect options
+            for {displayName}.
           </p>
-
           <div
-            className="city-cta-buttons"
             style={{
-              display: "flex",
+              display: "inline-flex",
               flexWrap: "wrap",
               alignItems: "center",
               justifyContent: "center",
-              gap: 16,
+              gap: 14,
             }}
           >
             <a
-              href="tel:+919876543210"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                background: "var(--gold)",
-                color: "#1a1710",
-                border: "none",
-                padding: "12px 28px",
-                fontFamily: "var(--font-body)",
-                fontSize: 12,
-                fontWeight: 500,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                cursor: "pointer",
-                transition: "all 0.25s",
-                textDecoration: "none",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "var(--cream)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "var(--gold)";
-              }}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
-              </svg>
-              Call Us
-            </a>
-
-            <a
-              href="https://wa.me/919876543210"
+              href={conciergeWhatsappLink(
+                `Hi Voyagr, I'm planning a trip to ${displayName}. Could you put together some preferred-rate options?`
+              )}
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                background: "transparent",
-                color: "var(--cream)",
-                border: "1px solid rgba(245,240,232,0.3)",
-                padding: "11px 28px",
-                fontFamily: "var(--font-body)",
-                fontSize: 12,
-                fontWeight: 500,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                cursor: "pointer",
-                transition: "all 0.25s",
-                textDecoration: "none",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "var(--cream)";
-                (e.currentTarget as HTMLElement).style.color = "var(--ink)";
-                (e.currentTarget as HTMLElement).style.borderColor = "var(--cream)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "transparent";
-                (e.currentTarget as HTMLElement).style.color = "var(--cream)";
-                (e.currentTarget as HTMLElement).style.borderColor = "rgba(245,240,232,0.3)";
-              }}
+              className="luxe-btn-gold"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
               </svg>
-              WhatsApp
+              WhatsApp Concierge
             </a>
+            <Link href="/preferred-rates" className="luxe-btn-secondary">
+              Member Perks
+            </Link>
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* ================================================================
-          EXPLORE OTHER CITIES
+          8. EXPLORE OTHER DESTINATIONS — italic pills
           ================================================================ */}
       <section
         style={{
-          padding: "56px 60px",
-          background: "var(--cream)",
-          borderTop: "1px solid var(--cream-border)",
+          padding: "56px 0 72px",
+          borderTop: "1px solid var(--luxe-hairline)",
         }}
-        className="!px-6 md:!px-[60px]"
       >
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <p
-            className="type-eyebrow"
-            style={{
-              marginBottom: 8,
-            }}
-          >
+        <div className="luxe-container">
+          <div className="luxe-tech" style={{ marginBottom: 8 }}>
             Explore
-          </p>
+          </div>
           <h3
-            className="type-display-2"
+            className="luxe-display"
             style={{
               fontSize: "clamp(24px, 3vw, 36px)",
-              color: "var(--ink)",
-              marginBottom: 32,
+              color: "var(--luxe-soft-white)",
+              marginBottom: 28,
             }}
           >
-            Other <em style={{ fontStyle: "italic", color: "var(--gold)" }}>destinations</em>
+            Other <em>destinations</em>
           </h3>
           <div
             className="city-destination-pills"
             style={{
               display: "flex",
-              gap: 12,
+              gap: 10,
               flexWrap: "wrap",
             }}
           >
@@ -1545,26 +1833,33 @@ export default function CityPage() {
                     display: "inline-flex",
                     alignItems: "center",
                     padding: "10px 18px",
-                    border: "1px solid var(--cream-border)",
-                    fontSize: 13,
+                    border: "1px solid var(--luxe-hairline-strong)",
+                    fontSize: 14,
                     fontWeight: 400,
-                    color: "var(--ink-mid)",
+                    color: "var(--luxe-soft-white-70)",
                     cursor: "pointer",
                     transition: "all 0.2s",
-                    background: "var(--white)",
+                    background: "rgba(255,255,255,0.03)",
                     textDecoration: "none",
                     fontFamily: "var(--font-display)",
                     fontStyle: "italic",
+                    borderRadius: 999,
                   }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.background = "var(--ink)";
-                    (e.currentTarget as HTMLElement).style.color = "var(--cream)";
-                    (e.currentTarget as HTMLElement).style.borderColor = "var(--ink)";
+                    (e.currentTarget as HTMLElement).style.background =
+                      "var(--luxe-champagne-soft)";
+                    (e.currentTarget as HTMLElement).style.color =
+                      "var(--luxe-champagne)";
+                    (e.currentTarget as HTMLElement).style.borderColor =
+                      "var(--luxe-champagne-line)";
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.background = "var(--white)";
-                    (e.currentTarget as HTMLElement).style.color = "var(--ink-mid)";
-                    (e.currentTarget as HTMLElement).style.borderColor = "var(--cream-border)";
+                    (e.currentTarget as HTMLElement).style.background =
+                      "rgba(255,255,255,0.03)";
+                    (e.currentTarget as HTMLElement).style.color =
+                      "var(--luxe-soft-white-70)";
+                    (e.currentTarget as HTMLElement).style.borderColor =
+                      "var(--luxe-hairline-strong)";
                   }}
                 >
                   {slugToName(citySlug)}
@@ -1575,77 +1870,9 @@ export default function CityPage() {
       </section>
 
       {/* ================================================================
-          FOOTER
+          9. FOOTER — shared dark component
           ================================================================ */}
-      <footer
-        style={{
-          padding: "48px 60px",
-          background: "var(--cream-deep)",
-          borderTop: "1px solid var(--cream-border)",
-        }}
-        className="!px-6 md:!px-[60px]"
-      >
-        <div
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 16,
-          }}
-        >
-          <Link href="/" style={{ textDecoration: "none" }}>
-            <span
-              className="type-logo"
-              style={{
-                letterSpacing: "0.08em",
-                color: "var(--ink)",
-              }}
-            >
-              <span style={{ color: "var(--gold)" }}>V</span>oyagr
-            </span>
-          </Link>
-          <p
-            style={{
-              fontSize: 12,
-              color: "var(--ink-light)",
-              fontFamily: "var(--font-body)",
-            }}
-          >
-            Preferred hotel rates for everyone.
-          </p>
-          <div
-            style={{
-              display: "flex",
-              gap: 24,
-            }}
-          >
-            {["Privacy", "Terms", "Contact"].map((label) => (
-              <span
-                key={label}
-                style={{
-                  fontSize: 11,
-                  color: "var(--ink-light)",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-body)",
-                  letterSpacing: "0.06em",
-                  transition: "color 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.color = "var(--gold)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.color = "var(--ink-light)";
-                }}
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
