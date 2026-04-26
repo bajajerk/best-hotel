@@ -3,20 +3,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { fetchCuratedCities, searchHotels, CuratedCity } from "@/lib/api";
+import { fetchCuratedCities, searchHotelsByName, CuratedCity, SearchHotelHit } from "@/lib/api";
 import { SAMPLE_CITIES } from "@/lib/constants";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-interface HotelSuggestion {
-  hotel_id: number;
-  hotel_name: string;
-  city: string;
-  country: string;
-  star_rating: number | null;
-  photo1: string | null;
-}
+type HotelSuggestion = SearchHotelHit;
 
 interface DestinationSearchProps {
   /** Visual variant */
@@ -116,9 +109,13 @@ export default function DestinationSearch({
       // Async: search hotels via API
       setLoading(true);
       try {
-        const hotels = await searchHotels(q, 10);
+        const hotels = await searchHotelsByName(q, 8);
         const transitPattern = /\b(railway station|train station|bus stop|bus station|bus stand|bus terminal|metro station|airport shuttle|rail station)\b/i;
-        setHotelSuggestions((hotels || []).filter((h) => !transitPattern.test(h.hotel_name)).slice(0, 5));
+        setHotelSuggestions(
+          (hotels || [])
+            .filter((h) => !transitPattern.test(h.hotel_name))
+            .slice(0, 8)
+        );
       } catch {
         setHotelSuggestions([]);
       } finally {
@@ -135,7 +132,7 @@ export default function DestinationSearch({
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       performSearch(value);
-    }, 250);
+    }, 300);
   };
 
   const handleSelectCity = (city: CuratedCity) => {
@@ -313,7 +310,7 @@ export default function DestinationSearch({
         value={query}
         onChange={(e) => handleInputChange(e.target.value)}
         onFocus={() => {
-          if (query.trim().length >= 2 && (citySuggestions.length > 0 || hotelSuggestions.length > 0)) {
+          if (query.trim().length >= 2) {
             setIsOpen(true);
           }
         }}
@@ -332,7 +329,7 @@ export default function DestinationSearch({
 
       {/* Autocomplete dropdown */}
       <AnimatePresence>
-        {isOpen && (citySuggestions.length > 0 || hotelSuggestions.length > 0 || loading) && (
+        {isOpen && query.trim().length >= 2 && (
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
@@ -344,7 +341,7 @@ export default function DestinationSearch({
             {/* City suggestions */}
             {citySuggestions.length > 0 && (
               <>
-                <div style={styles.sectionLabel}>Destinations</div>
+                <div style={styles.sectionLabel}>Cities</div>
                 {citySuggestions.map((city, i) => (
                   <div
                     key={city.city_slug}
@@ -439,12 +436,12 @@ export default function DestinationSearch({
                           {highlightMatch(hotel.hotel_name, query)}
                         </div>
                         <div style={styles.hotelLocation}>
-                          {hotel.city}, {hotel.country}
-                          {hotel.star_rating && (
+                          {[hotel.city, hotel.country].filter(Boolean).join(", ")}
+                          {hotel.star_rating ? (
                             <span style={{ marginLeft: "6px", color: "var(--gold)", fontSize: "10px" }}>
                               {"★".repeat(hotel.star_rating)}
                             </span>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? "rgba(245,240,232,0.2)" : "var(--cream-border)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -476,6 +473,23 @@ export default function DestinationSearch({
                 Searching hotels...
               </div>
             )}
+
+            {/* Empty state */}
+            {!loading &&
+              citySuggestions.length === 0 &&
+              hotelSuggestions.length === 0 && (
+                <div
+                  style={{
+                    padding: "14px 16px",
+                    fontSize: "12px",
+                    color: isDark
+                      ? "rgba(245,240,232,0.5)"
+                      : "var(--ink-light)",
+                  }}
+                >
+                  No cities or hotels match
+                </div>
+              )}
 
             {/* Search all results footer */}
             {query.trim().length >= 2 && (

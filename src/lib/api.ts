@@ -156,6 +156,25 @@ export async function searchHotels(query: string, limit: number = 10): Promise<a
   return data.results;
 }
 
+export type SearchHotelHit = {
+  hotel_id: number;
+  hotel_name: string;
+  city?: string;
+  country?: string;
+  star_rating?: number;
+  rating_average?: number;
+  photo1?: string;
+};
+
+export async function searchHotelsByName(q: string, limit = 8): Promise<SearchHotelHit[]> {
+  if (!q || q.trim().length < 2) return [];
+  const url = `${API_BASE}/api/admin/hotels/search?q=${encodeURIComponent(q)}&limit=${limit}&source=agoda`;
+  const res = await fetch(url, { headers: { "X-Admin-Token": "admin" } });
+  if (!res.ok) return [];
+  const data = await res.json().catch(() => ({}));
+  return (data?.results || []) as SearchHotelHit[];
+}
+
 /**
  * Fetch top-rated curated hotels across multiple cities for home page sections.
  * Fetches from a diverse set of cities and returns hotels sorted by rating.
