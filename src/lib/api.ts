@@ -3,6 +3,28 @@
 // In local dev, you can hit the backend directly.
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
+/**
+ * Resolve a backend URL that works on both server and browser.
+ *
+ * On the server, `fetch("/api/...")` (relative URL with empty API_BASE) throws
+ * because Node's fetch needs an absolute URL — so server-side prefetches in
+ * `app/page.tsx` were silently failing and the home page was hydrating with
+ * an empty `initialHomeCities`, causing a brief render with no cities (or
+ * a flash of fallback content) before the client useEffect refilled it.
+ * In the browser the relative URL works fine and goes through the Next.js
+ * `/api/[...path]` proxy.
+ */
+function resolveApiUrl(path: string): string {
+  if (API_BASE) return `${API_BASE}${path}`;
+  if (typeof window === "undefined") {
+    // Server: hit the Flask backend directly so SSR has data.
+    const backend = process.env.BACKEND_URL || "http://134.122.41.91:5000";
+    return `${backend}${path}`;
+  }
+  // Browser: relative URL → goes through the same-origin proxy at /api/...
+  return path;
+}
+
 export interface CuratedCity {
   city_slug: string;
   city_name: string;
@@ -221,9 +243,12 @@ export type HomeFeaturedCity = {
 };
 
 export async function fetchHomeFeaturedCities(): Promise<HomeFeaturedCity[]> {
-  const res = await fetch(`${API_BASE}/api/curations/home-cities`, { cache: "no-store" });
+  const res = await fetch(resolveApiUrl(`/api/curations/home-cities`), { cache: "no-store" });
   if (!res.ok) throw new Error(`home-cities ${res.status}`);
   const json = await res.json();
+  // Order is determined by the backend (home_display_order ASC NULLS LAST,
+  // then city_name). Pass through unchanged — DO NOT sort here, or any
+  // tweak the admin makes to home_display_order won't be honoured.
   return json.cities ?? [];
 }
 
