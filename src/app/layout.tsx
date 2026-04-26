@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Manrope, JetBrains_Mono } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import CompareBar from "@/components/CompareBar";
@@ -12,16 +12,16 @@ import {
   websiteJsonLd,
 } from "@/lib/seo";
 
-// Understated Luxury typography — Playfair Display for headings, Manrope for body, JetBrains Mono for tech labels
-const playfair = Playfair_Display({
-  weight: ["400", "500", "600", "700"],
+// Voyagr Club typography — Cormorant Garamond for italic display, DM Sans for body, JetBrains Mono for tech labels
+const cormorant = Cormorant_Garamond({
+  weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
   style: ["normal", "italic"],
   variable: "--font-display",
   display: "swap",
 });
 
-const manrope = Manrope({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-body",
@@ -138,7 +138,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${playfair.variable} ${manrope.variable} ${jetbrainsMono.variable} antialiased luxe-body`}
+        className={`${cormorant.variable} ${dmSans.variable} ${jetbrainsMono.variable} antialiased luxe-body`}
       >
         <Providers>
         {children}
