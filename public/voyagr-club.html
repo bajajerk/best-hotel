@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voyagr Club — Luxury Redefined.</title>
+  <meta name="description" content="An invitation-only travel membership for the few who travel for the love of it." />
+
+  <!-- Fonts: editorial serif + clean sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ============================================================
+       VOYAGR CLUB — luxury travel membership landing
+       Single-file build: HTML + CSS + minimal JS
+       ============================================================ */
+
+    /* ---------- Tokens ---------- */
+    :root {
+      --bg-0: #07080c;
+      --bg-1: #0c0f17;
+      --bg-2: #131826;
+
+      --gold: #c9a14a;
+      --gold-soft: #e7c87c;
+      --gold-deep: #8b6a25;
+
+      --text: rgba(255, 255, 255, 0.92);
+      --text-2: rgba(255, 255, 255, 0.7);
+      --text-3: rgba(255, 255, 255, 0.5);
+      --text-4: rgba(255, 255, 255, 0.32);
+
+      --hairline: rgba(255, 255, 255, 0.08);
+      --hairline-strong: rgba(255, 255, 255, 0.14);
+
+      --serif: "Cormorant Garamond", "Times New Roman", serif;
+      --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+      --container: 1240px;
+      --radius-card: 24px;
+      --radius-pill: 999px;
+
+      --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* ---------- Reset ---------- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    img { display: block; max-width: 100%; }
+    button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ---------- Page base ---------- */
+    body {
+      font-family: var(--sans);
+      color: var(--text);
+      background: radial-gradient(120% 80% at 50% -10%, #16203a 0%, #0a0d18 45%, #06070b 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+      letter-spacing: 0.005em;
+    }
+
+    /* Ambient grain + glow */
+    body::before {
+      content: "";
+      position: fixed; inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(60% 40% at 80% 0%, rgba(201,161,74,0.12), transparent 60%),
+        radial-gradient(50% 35% at 0% 100%, rgba(80,120,200,0.10), transparent 60%);
+      z-index: 0;
+    }
+    body::after {
+      content: "";
+      position: fixed; inset: 0;
+      pointer-events: none;
+      opacity: 0.06;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.6'/></svg>");
+      z-index: 1;
+    }
+
+    .container {
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ---------- Typography ---------- */
+    .eyebrow {
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .display {
+      font-family: var(--serif);
+      font-weight: 400;
+      letter-spacing: -0.015em;
+      line-height: 0.96;
+      font-size: clamp(56px, 11vw, 168px);
+      margin: 0;
+    }
+    .display em {
+      font-style: italic;
+      color: var(--gold-soft);
+      background: linear-gradient(180deg, #f4d98a 0%, #c9a14a 60%, #8b6a25 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .h2 {
+      font-family: var(--serif);
+      font-weight: 400;
+      letter-spacing: -0.015em;
+      line-height: 1.02;
+      font-size: clamp(40px, 5.6vw, 84px);
+      margin: 0;
+    }
+    .h3 {
+      font-family: var(--serif);
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      font-size: clamp(22px, 2.4vw, 32px);
+      line-height: 1.1;
+      margin: 0;
+    }
+    .lede {
+      font-size: clamp(15px, 1.2vw, 17px);
+      line-height: 1.6;
+      color: var(--text-2);
+      font-weight: 300;
+      max-width: 52ch;
+    }
+    .micro {
+      font-size: 11px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+
+    /* ============================================================
+       GLASSMORPHISM SYSTEM
+       ============================================================ */
+    .glass {
+      position: relative;
+      background: rgba(255, 255, 255, 0.05);
+      -webkit-backdrop-filter: blur(30px) saturate(160%);
+      backdrop-filter: blur(30px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.08) inset,
+        0 30px 80px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(255, 255, 255, 0.02);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+    }
+    /* sheen */
+    .glass::before {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0) 35%),
+        linear-gradient(120deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0) 70%, rgba(201,161,74,0.06) 100%);
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+    /* subtle shimmer on hover */
+    .glass--hover { transition: transform .6s var(--ease-soft), box-shadow .6s var(--ease-soft); }
+    .glass--hover::after {
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.10) 50%, transparent 65%);
+      transform: translateX(-120%);
+      transition: transform 1.1s var(--ease-soft);
+      pointer-events: none;
+    }
+    .glass--hover:hover::after { transform: translateX(120%); }
+    .glass--hover:hover {
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.12) inset,
+        0 40px 120px rgba(0, 0, 0, 0.55),
+        0 0 60px rgba(201,161,74,0.08);
+    }
+
+    /* ============================================================
+       BUTTONS
+       ============================================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 24px;
+      border-radius: var(--radius-pill);
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      transition:
+        transform .35s var(--ease-soft),
+        box-shadow .35s var(--ease-soft),
+        background .35s var(--ease-soft),
+        color .35s var(--ease-soft);
+      will-change: transform;
+    }
+    .btn--primary {
+      background: #ffffff;
+      color: #0a0d18;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.1) inset,
+        0 12px 32px rgba(255,255,255,0.12);
+    }
+    .btn--primary:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.2) inset,
+        0 18px 50px rgba(255,255,255,0.18),
+        0 0 60px rgba(201,161,74,0.25);
+    }
+    .btn--ghost {
+      background: rgba(255,255,255,0.05);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text);
+    }
+    .btn--ghost:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 0 50px rgba(201,161,74,0.18);
+    }
+    .btn--gold {
+      background: linear-gradient(180deg, #e7c87c 0%, #c9a14a 60%, #a07c2c 100%);
+      color: #0a0d18;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.18) inset,
+        0 14px 40px rgba(201,161,74,0.35);
+    }
+    .btn--gold:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.3) inset,
+        0 18px 60px rgba(201,161,74,0.55);
+    }
+    .btn .arrow { transition: transform .35s var(--ease-soft); }
+    .btn:hover .arrow { transform: translateX(4px); }
+
+    /* ============================================================
+       NAVBAR
+       ============================================================ */
+    .nav-wrap {
+      position: fixed;
+      top: 18px;
+      left: 0; right: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+      transition: top .4s var(--ease-soft);
+    }
+    .nav {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+      padding: 12px 14px 12px 24px;
+      width: min(96%, 1180px);
+      border-radius: var(--radius-pill);
+      transition: background .4s var(--ease-soft), border-color .4s var(--ease-soft), box-shadow .4s var(--ease-soft);
+    }
+    .nav--scrolled {
+      background: rgba(8,10,16,0.6);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.06) inset,
+        0 20px 60px rgba(0,0,0,0.55);
+    }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .brand-mark {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 30%, #f4d98a, #c9a14a 60%, #6e521b 100%);
+      box-shadow: 0 0 24px rgba(201,161,74,0.45), inset 0 0 6px rgba(0,0,0,0.4);
+    }
+    .nav-links {
+      display: none;
+      gap: 28px;
+      font-size: 13px;
+      color: var(--text-2);
+      letter-spacing: 0.04em;
+    }
+    .nav-links a { transition: color .3s var(--ease-soft); }
+    .nav-links a:hover { color: #fff; }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .icon-btn {
+      width: 44px; height: 44px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: background .3s var(--ease-soft), border-color .3s var(--ease-soft);
+    }
+    .icon-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); }
+    .icon-btn svg { width: 16px; height: 16px; stroke: #fff; }
+
+    @media (min-width: 900px) {
+      .nav-links { display: flex; }
+    }
+
+    /* ============================================================
+       HERO
+       ============================================================ */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      padding: 140px 0 80px;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      z-index: -2;
+      background-image: url("https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=2400&q=80");
+      background-size: cover;
+      background-position: center;
+      transform: scale(1.05);
+      filter: blur(2px) saturate(115%);
+      will-change: transform;
+    }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(180deg, rgba(6,7,11,0.55) 0%, rgba(6,7,11,0.35) 35%, rgba(6,7,11,0.85) 80%, #06070b 100%),
+        radial-gradient(60% 60% at 50% 30%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%);
+    }
+    .hero-inner {
+      position: relative;
+      width: 100%;
+      display: grid;
+      gap: 36px;
+    }
+    .hero-meta {
+      display: flex; align-items: center; gap: 16px;
+      color: var(--text-3);
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+    }
+    .hero-meta .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 12px rgba(201,161,74,0.8);
+    }
+    .hero-headline {
+      max-width: 14ch;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+      align-items: end;
+    }
+    @media (min-width: 900px) {
+      .hero-grid {
+        grid-template-columns: 1.4fr 1fr;
+        gap: 80px;
+      }
+    }
+    .hero-cta-row {
+      display: flex; flex-wrap: wrap; gap: 14px;
+      margin-top: 8px;
+    }
+    .hero-side {
+      display: grid;
+      gap: 24px;
+      justify-items: start;
+    }
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px 40px;
+      width: 100%;
+      padding-top: 28px;
+      border-top: 1px solid var(--hairline);
+    }
+    .stat-num {
+      font-family: var(--serif);
+      font-size: clamp(34px, 4vw, 48px);
+      line-height: 1;
+      color: #fff;
+    }
+    .stat-num span { color: var(--gold); }
+    .stat-label {
+      margin-top: 10px;
+      font-size: 11px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+
+    /* scroll cue */
+    .scroll-cue {
+      position: absolute;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      font-size: 10px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .scroll-cue .line {
+      width: 1px; height: 38px;
+      background: linear-gradient(180deg, transparent, var(--gold) 50%, transparent);
+      animation: scrollPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%, 100% { transform: scaleY(0.3); transform-origin: top; opacity: .4; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+
+    /* ============================================================
+       PORTAL / PRICING SECTION
+       ============================================================ */
+    .portal {
+      position: relative;
+      padding: clamp(80px, 12vw, 160px) 0;
+    }
+    .portal-bg {
+      position: absolute; inset: 0;
+      z-index: 0;
+      background-image: url("https://images.unsplash.com/photo-1551918120-9739cb430c6d?auto=format&fit=crop&w=2400&q=80");
+      background-size: cover;
+      background-position: center;
+      filter: blur(3px) saturate(110%) brightness(0.55);
+      opacity: 0.7;
+    }
+    .portal-bg::after {
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, #06070b 0%, transparent 25%, transparent 75%, #06070b 100%);
+    }
+    .portal-inner {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 56px;
+      align-items: center;
+    }
+    @media (min-width: 980px) {
+      .portal-inner {
+        grid-template-columns: 1fr 1fr;
+        gap: 80px;
+      }
+    }
+
+    .portal-copy { display: grid; gap: 24px; }
+    .portal-copy .h2 { max-width: 14ch; }
+    .portal-copy .lede { max-width: 44ch; }
+
+    .portal-card {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 28px;
+      display: grid;
+      gap: 22px;
+    }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      background: rgba(255,255,255,0.04);
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--hairline);
+      width: fit-content;
+    }
+    .tab {
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      color: var(--text-3);
+      transition: color .3s var(--ease-soft), background .3s var(--ease-soft);
+    }
+    .tab:hover { color: var(--text); }
+    .tab--active {
+      color: #0a0d18;
+      background: linear-gradient(180deg, #e7c87c, #c9a14a);
+      box-shadow: 0 8px 22px rgba(201,161,74,0.4);
+    }
+    .portal-card .h3 { font-family: var(--serif); font-weight: 500; }
+
+    .portal-rates {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .rate {
+      padding: 16px 18px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--hairline);
+    }
+    .rate-from { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--text-4); }
+    .rate-strike { font-size: 13px; color: var(--text-3); text-decoration: line-through; margin-top: 6px; }
+    .rate-now { font-family: var(--serif); font-size: 28px; line-height: 1; margin-top: 4px; color: #fff; }
+    .rate-tag { margin-top: 8px; font-size: 11px; color: var(--gold); letter-spacing: 0.06em; }
+
+    .members-row {
+      display: flex; align-items: center; gap: 14px;
+      padding-top: 4px;
+    }
+    .avatar-stack { display: flex; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 2px solid #0a0d18;
+      background-size: cover;
+      background-position: center;
+      margin-left: -10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .avatar:first-child { margin-left: 0; }
+    .members-text { font-size: 13px; color: var(--text-2); }
+    .members-text b { color: #fff; font-weight: 500; }
+    .members-pulse {
+      display: inline-block;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #6ee27a;
+      box-shadow: 0 0 0 0 rgba(110,226,122,0.6);
+      animation: pulse 2s infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(110,226,122,0.6); }
+      70% { box-shadow: 0 0 0 10px rgba(110,226,122,0); }
+      100% { box-shadow: 0 0 0 0 rgba(110,226,122,0); }
+    }
+
+    .portal-cta {
+      width: 100%; justify-content: center;
+    }
+
+    /* ============================================================
+       DESTINATIONS — bento + horizontal carousel
+       ============================================================ */
+    .destinations {
+      padding: clamp(80px, 12vw, 140px) 0 clamp(60px, 8vw, 100px);
+      position: relative;
+    }
+    .dest-head {
+      display: flex; align-items: end; justify-content: space-between;
+      gap: 24px; margin-bottom: 56px; flex-wrap: wrap;
+    }
+    .dest-head-left { display: grid; gap: 16px; max-width: 640px; }
+    .carousel-controls { display: flex; gap: 10px; }
+
+    /* Bento — featured row above carousel */
+    .bento {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-auto-rows: 360px;
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    @media (min-width: 760px) {
+      .bento {
+        grid-template-columns: 2fr 1fr 1fr;
+        grid-auto-rows: 420px;
+      }
+      .bento-1 { grid-row: span 2; }
+      .bento { grid-auto-rows: 220px; }
+    }
+
+    .card {
+      position: relative;
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      border: 1px solid var(--hairline);
+      isolation: isolate;
+      transition: transform .6s var(--ease-soft), box-shadow .6s var(--ease-soft);
+    }
+    .card:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 30px 90px rgba(0,0,0,0.55), 0 0 60px rgba(201,161,74,0.12);
+    }
+    .card .img {
+      position: absolute; inset: 0;
+      background-size: cover;
+      background-position: center;
+      transition: transform 1.2s var(--ease-soft), filter .6s var(--ease-soft);
+    }
+    .card:hover .img { transform: scale(1.08); }
+    .card .grad {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.8) 100%),
+        linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 30%);
+    }
+    .card .content {
+      position: absolute;
+      left: 24px; right: 24px; bottom: 22px;
+      display: grid;
+      gap: 6px;
+      color: #fff;
+    }
+    .card .country {
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .card .city {
+      font-family: var(--serif);
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      font-size: clamp(28px, 3vw, 44px);
+      line-height: 1;
+    }
+    .card .meta {
+      margin-top: 10px;
+      display: flex; align-items: center; gap: 14px;
+      font-size: 12px; color: var(--text-2);
+    }
+    .card .index {
+      position: absolute; top: 18px; right: 20px;
+      font-family: var(--serif);
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.08em;
+    }
+    .card .pin {
+      position: absolute; top: 18px; left: 20px;
+      padding: 6px 10px;
+      font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: #fff;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    /* Carousel */
+    .carousel {
+      position: relative;
+      margin: 0 -24px;
+      padding: 8px 24px 32px;
+    }
+    .carousel-track {
+      display: flex;
+      gap: 18px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-left: 24px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      cursor: grab;
+      padding: 8px 0 8px 0;
+      padding-right: 25vw;
+    }
+    .carousel-track::-webkit-scrollbar { display: none; }
+    .carousel-track.dragging { cursor: grabbing; scroll-snap-type: none; }
+    .carousel-card {
+      flex: 0 0 clamp(260px, 36vw, 420px);
+      height: 480px;
+      scroll-snap-align: start;
+    }
+
+    /* ============================================================
+       MEMBERSHIP / FOOTER CTA
+       ============================================================ */
+    .membership {
+      padding: clamp(80px, 12vw, 140px) 0;
+      position: relative;
+    }
+    .membership-card {
+      padding: clamp(40px, 6vw, 84px);
+      text-align: center;
+      display: grid;
+      gap: 24px;
+      justify-items: center;
+      max-width: 900px;
+      margin: 0 auto;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(201,161,74,0.12), transparent 60%),
+        rgba(255,255,255,0.04);
+    }
+    .membership-card .h2 { max-width: 16ch; }
+    .membership-card .lede { text-align: center; }
+
+    /* footer */
+    .footer {
+      padding: 80px 0 48px;
+      border-top: 1px solid var(--hairline);
+      margin-top: 60px;
+    }
+    .footer-inner {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 36px;
+      align-items: start;
+    }
+    @media (min-width: 800px) {
+      .footer-inner { grid-template-columns: 1.4fr 1fr 1fr 1fr; }
+    }
+    .footer h5 {
+      font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--text-3); margin: 0 0 18px;
+    }
+    .footer ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+    .footer ul a { color: var(--text-2); font-size: 14px; transition: color .3s var(--ease-soft); }
+    .footer ul a:hover { color: #fff; }
+    .footer-base {
+      margin-top: 60px; padding-top: 24px;
+      border-top: 1px solid var(--hairline);
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+      font-size: 12px; color: var(--text-3);
+    }
+
+    /* ============================================================
+       SCROLL REVEAL
+       ============================================================ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 1s var(--ease-soft), transform 1s var(--ease-soft);
+      will-change: opacity, transform;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal[data-delay="1"] { transition-delay: .08s; }
+    .reveal[data-delay="2"] { transition-delay: .16s; }
+    .reveal[data-delay="3"] { transition-delay: .24s; }
+    .reveal[data-delay="4"] { transition-delay: .32s; }
+
+    /* ============================================================
+       MOBILE MENU
+       ============================================================ */
+    .menu {
+      position: fixed; inset: 0;
+      background: rgba(6,7,11,0.85);
+      backdrop-filter: blur(40px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 60;
+      opacity: 0; pointer-events: none;
+      transition: opacity .4s var(--ease-soft);
+    }
+    .menu.open { opacity: 1; pointer-events: auto; }
+    .menu-inner {
+      display: grid; gap: 28px;
+      text-align: center;
+      font-family: var(--serif);
+      font-size: clamp(36px, 6vw, 64px);
+      line-height: 1.1;
+    }
+    .menu-inner a {
+      transition: color .3s var(--ease-soft), letter-spacing .3s var(--ease-soft);
+    }
+    .menu-inner a:hover { color: var(--gold); letter-spacing: 0.02em; }
+    .menu-close {
+      position: absolute; top: 24px; right: 24px;
+    }
+
+    /* tiny utilities */
+    .row { display: inline-flex; align-items: center; gap: 10px; }
+    .sep {
+      width: 4px; height: 4px; border-radius: 50%;
+      background: var(--text-4);
+    }
+    .gold { color: var(--gold); }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       FLOATING NAVBAR
+       ============================================================ -->
+  <div class="nav-wrap" id="navWrap">
+    <nav class="nav glass" aria-label="Primary">
+      <a href="#" class="brand" aria-label="Voyagr Club home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Voyagr Club</span>
+      </a>
+
+      <div class="nav-links" role="navigation">
+        <a href="#destinations">Destinations</a>
+        <a href="#portal">Membership</a>
+        <a href="#concierge">Concierge</a>
+        <a href="#journal">Journal</a>
+      </div>
+
+      <div class="nav-actions">
+        <button class="icon-btn" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        </button>
+        <button class="icon-btn" aria-label="Open menu" id="menuToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round"><path d="M4 8h16"></path><path d="M4 16h12"></path></svg>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Mobile / overlay menu -->
+  <div class="menu" id="menu" role="dialog" aria-hidden="true">
+    <button class="icon-btn menu-close" id="menuClose" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12"></path><path d="M18 6 6 18"></path></svg>
+    </button>
+    <div class="menu-inner">
+      <a href="#destinations">Destinations</a>
+      <a href="#portal">Membership</a>
+      <a href="#concierge">Concierge</a>
+      <a href="#journal">Journal</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       HERO
+       ============================================================ -->
+  <header class="hero" id="hero">
+    <div class="hero-bg" id="heroBg" aria-hidden="true"></div>
+    <div class="hero-overlay" aria-hidden="true"></div>
+
+    <div class="container hero-inner">
+      <div class="hero-meta reveal">
+        <span class="dot" aria-hidden="true"></span>
+        <span>By Invitation — Est. MMXIX</span>
+        <span class="sep"></span>
+        <span>Members in 64 cities</span>
+      </div>
+
+      <div class="hero-grid">
+        <div>
+          <h1 class="display hero-headline reveal" data-delay="1">
+            Luxury<br/><em>Redefined.</em>
+          </h1>
+
+          <p class="lede reveal" data-delay="2" style="margin-top: 28px;">
+            An invitation-only travel society for the few who travel for the love of it. Suites, villas, and private estates — at rates the public will never see — handled by a concierge that anticipates your next thought.
+          </p>
+
+          <div class="hero-cta-row reveal" data-delay="3">
+            <a href="#portal" class="btn btn--primary">
+              Join the Club
+              <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 5 7 7-7 7"></path></svg>
+            </a>
+            <a href="#destinations" class="btn btn--ghost">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+              Start Searching
+            </a>
+          </div>
+        </div>
+
+        <aside class="hero-side reveal" data-delay="4">
+          <div class="hero-stats">
+            <div>
+              <div class="stat-num">62<span>%</span></div>
+              <div class="stat-label">Avg. member savings</div>
+            </div>
+            <div>
+              <div class="stat-num">2,400<span>+</span></div>
+              <div class="stat-label">Curated properties</div>
+            </div>
+            <div>
+              <div class="stat-num">24<span>/7</span></div>
+              <div class="stat-label">Private concierge</div>
+            </div>
+            <div>
+              <div class="stat-num">1,248</div>
+              <div class="stat-label">Active members</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <div class="scroll-cue" aria-hidden="true">
+      <span>Scroll</span>
+      <span class="line"></span>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       PORTAL / PRICING
+       ============================================================ -->
+  <section class="portal" id="portal">
+    <div class="portal-bg" aria-hidden="true"></div>
+
+    <div class="container portal-inner">
+      <div class="portal-copy reveal">
+        <span class="eyebrow">Member Portal</span>
+        <h2 class="h2">The pricing<br/>the public<br/>will never see.</h2>
+        <p class="lede">
+          Direct relationships with 2,400+ properties across the world's most discerning addresses. Members access negotiated rates, suite upgrades, late check-out, and rooms that never appear on any aggregator.
+        </p>
+        <div class="row" style="margin-top: 8px; color: var(--text-3); font-size: 13px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4Z"></path></svg>
+          Best Rate Guaranteed — or your difference refunded 2×.
+        </div>
+      </div>
+
+      <div class="portal-card glass glass--hover reveal" data-delay="2">
+        <div class="row" style="justify-content: space-between;">
+          <div class="tabs" role="tablist">
+            <button class="tab tab--active" role="tab" aria-selected="true" data-tab="rates">Preferred Rates</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="match">Price Match</button>
+          </div>
+          <span class="micro">M-Tier · Active</span>
+        </div>
+
+        <div>
+          <h3 class="h3">Exclusive Insider Pricing</h3>
+          <p style="color: var(--text-2); font-size: 14px; margin: 8px 0 0; line-height: 1.55;">
+            Live, member-only inventory across 2,400+ properties. Verified two minutes ago.
+          </p>
+        </div>
+
+        <div class="portal-rates" id="ratesPanel">
+          <div class="rate">
+            <div class="rate-from">Aman Tokyo · Suite</div>
+            <div class="rate-strike">$2,180</div>
+            <div class="rate-now">$1,140</div>
+            <div class="rate-tag">— 47% · upgrade</div>
+          </div>
+          <div class="rate">
+            <div class="rate-from">Le Bristol · Paris</div>
+            <div class="rate-strike">$1,690</div>
+            <div class="rate-now">$910</div>
+            <div class="rate-tag">— 46% · breakfast</div>
+          </div>
+        </div>
+
+        <div class="members-row">
+          <div class="avatar-stack" aria-hidden="true">
+            <span class="avatar" style="background-image:url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80')"></span>
+            <span class="avatar" style="background-image:url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&q=80')"></span>
+            <span class="avatar" style="background-image:url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80')"></span>
+            <span class="avatar" style="background-image:url('https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&w=80&q=80')"></span>
+            <span class="avatar" style="background-image:url('https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=80&q=80')"></span>
+          </div>
+          <div class="members-text">
+            <span class="members-pulse" aria-hidden="true"></span>
+            <b>1,248 members</b> active in the portal now
+          </div>
+        </div>
+
+        <a href="#" class="btn btn--gold portal-cta">
+          Enter Portal
+          <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 5 7 7-7 7"></path></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DESTINATIONS
+       ============================================================ -->
+  <section class="destinations" id="destinations">
+    <div class="container">
+      <div class="dest-head">
+        <div class="dest-head-left reveal">
+          <span class="eyebrow">The Atlas</span>
+          <h2 class="h2">Where the<br/>members are<br/>going next.</h2>
+          <p class="lede">A handpicked rotation of the season's most considered cities and quiet retreats — curated by our travel directors, never by an algorithm.</p>
+        </div>
+
+        <div class="carousel-controls reveal" data-delay="1">
+          <button class="icon-btn" id="carPrev" aria-label="Previous destination">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+          </button>
+          <button class="icon-btn" id="carNext" aria-label="Next destination">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bento grid (featured) -->
+      <div class="bento">
+        <article class="card bento-1 reveal">
+          <div class="img" style="background-image:url('https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=1800&q=80')"></div>
+          <div class="grad"></div>
+          <span class="pin">Featured · Spring</span>
+          <span class="index">01</span>
+          <div class="content">
+            <span class="country">Japan</span>
+            <span class="city">Tokyo</span>
+            <div class="meta">
+              <span>From $1,140 / nt</span>
+              <span class="sep"></span>
+              <span>Aman · Park Hyatt · Hoshinoya</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card reveal" data-delay="1">
+          <div class="img" style="background-image:url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1400&q=80')"></div>
+          <div class="grad"></div>
+          <span class="index">02</span>
+          <div class="content">
+            <span class="country">France</span>
+            <span class="city">Paris</span>
+          </div>
+        </article>
+
+        <article class="card reveal" data-delay="2">
+          <div class="img" style="background-image:url('https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1400&q=80')"></div>
+          <div class="grad"></div>
+          <span class="index">03</span>
+          <div class="content">
+            <span class="country">United Kingdom</span>
+            <span class="city">London</span>
+          </div>
+        </article>
+      </div>
+
+      <!-- Horizontal carousel -->
+      <div class="carousel reveal" data-delay="2">
+        <div class="carousel-track" id="carouselTrack" tabindex="0" aria-label="Destinations carousel">
+
+          <article class="card carousel-card">
+            <div class="img" style="background-image:url('https://images.unsplash.com/photo-1538970272646-f61fabb3a8a2?auto=format&fit=crop&w=1400&q=80')"></div>
+            <div class="grad"></div>
+            <span class="pin">New</span>
+            <span class="index">04</span>
+            <div class="content">
+              <span class="country">Italy</span>
+              <span class="city">Amalfi</span>
+              <div class="meta"><span>From $920 / nt</span></div>
+            </div>
+          </article>
+
+          <article class="card carousel-card">
+            <div class="img" style="background-image:url('https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1400&q=80')"></div>
+            <div class="grad"></div>
+            <span class="index">05</span>
+            <div class="content">
+              <span class="country">UAE</span>
+              <span class="city">Dubai</span>
+              <div class="meta"><span>From $780 / nt</span></div>
+            </div>
+          </article>
+
+          <article class="card carousel-card">
+            <div class="img" style="background-image:url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1400&q=80')"></div>
+            <div class="grad"></div>
+            <span class="index">06</span>
+            <div class="content">
+              <span class="country">Switzerland</span>
+              <span class="city">St. Moritz</span>
+              <div class="meta"><span>From $1,260 / nt</span></div>
+            </div>
+          </article>
+
+          <article class="card carousel-card">
+            <div class="img" style="background-image:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1400&q=80')"></div>
+            <div class="grad"></div>
+            <span class="index">07</span>
+            <div class="content">
+              <span class="country">Maldives</span>
+              <span class="city">Malé Atoll</span>
+              <div class="meta"><span>From $1,540 / nt</span></div>
+            </div>
+          </article>
+
+          <article class="card carousel-card">
+            <div class="img" style="background-image:url('https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1400&q=80')"></div>
+            <div class="grad"></div>
+            <span class="index">08</span>
+            <div class="content">
+              <span class="country">Iceland</span>
+              <span class="city">Reykjavík</span>
+              <div class="meta"><span>From $620 / nt</span></div>
+            </div>
+          </article>
+
+          <article class="card carousel-card">
+            <div class="img" style="background-image:url('https://images.unsplash.com/photo-1493514789931-586cb221d7a7?auto=format&fit=crop&w=1400&q=80')"></div>
+            <div class="grad"></div>
+            <span class="pin">Concierge pick</span>
+            <span class="index">09</span>
+            <div class="content">
+              <span class="country">Morocco</span>
+              <span class="city">Marrakech</span>
+              <div class="meta"><span>From $540 / nt</span></div>
+            </div>
+          </article>
+
+          <article class="card carousel-card">
+            <div class="img" style="background-image:url('https://images.unsplash.com/photo-1518544866330-95a2bec01dc3?auto=format&fit=crop&w=1400&q=80')"></div>
+            <div class="grad"></div>
+            <span class="index">10</span>
+            <div class="content">
+              <span class="country">Greece</span>
+              <span class="city">Santorini</span>
+              <div class="meta"><span>From $880 / nt</span></div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       MEMBERSHIP CTA
+       ============================================================ -->
+  <section class="membership" id="concierge">
+    <div class="container">
+      <div class="membership-card glass glass--hover reveal">
+        <span class="eyebrow">Membership</span>
+        <h2 class="h2">Travel as it was<br/>always meant to feel.</h2>
+        <p class="lede" style="max-width: 56ch;">
+          Voyagr Club is by application only. A travel director is assigned within 48 hours, and your first stay is curated to your taste — quietly, without ever asking for your loyalty.
+        </p>
+        <div class="hero-cta-row" style="justify-content: center;">
+          <a href="#" class="btn btn--gold">
+            Request an Invitation
+            <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 5 7 7-7 7"></path></svg>
+          </a>
+          <a href="#" class="btn btn--ghost">View Member Charter</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer" id="contact">
+    <div class="container">
+      <div class="footer-inner">
+        <div>
+          <div class="brand" style="margin-bottom: 18px;">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span>Voyagr Club</span>
+          </div>
+          <p style="color: var(--text-3); font-size: 14px; max-width: 36ch; line-height: 1.6;">
+            A private travel society. Headquartered in Zürich, Singapore, and New York.
+          </p>
+        </div>
+
+        <div>
+          <h5>Members</h5>
+          <ul>
+            <li><a href="#">Sign in</a></li>
+            <li><a href="#">Apply</a></li>
+            <li><a href="#">Concierge</a></li>
+            <li><a href="#">Member Charter</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>Travel</h5>
+          <ul>
+            <li><a href="#">Destinations</a></li>
+            <li><a href="#">Hotels & Suites</a></li>
+            <li><a href="#">Private Estates</a></li>
+            <li><a href="#">Yachts & Jets</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>Society</h5>
+          <ul>
+            <li><a href="#">Journal</a></li>
+            <li><a href="#">Press</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-base">
+        <span>© <span id="year"></span> Voyagr Club. All rights reserved.</span>
+        <span>Privacy · Terms · Cookies</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       JS — interactions
+       ============================================================ -->
+  <script>
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    /* ----- Sticky nav: shade on scroll ----- */
+    const navWrap = document.getElementById('navWrap');
+    const nav = navWrap.querySelector('.nav');
+    const onScroll = () => {
+      if (window.scrollY > 24) nav.classList.add('nav--scrolled');
+      else nav.classList.remove('nav--scrolled');
+    };
+    document.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    /* ----- Subtle parallax on hero bg ----- */
+    const heroBg = document.getElementById('heroBg');
+    let ticking = false;
+    const onParallax = () => {
+      if (!heroBg) return;
+      const y = Math.min(window.scrollY, 800);
+      heroBg.style.transform = `scale(1.05) translate3d(0, ${y * 0.18}px, 0)`;
+      ticking = false;
+    };
+    document.addEventListener('scroll', () => {
+      if (!ticking) { requestAnimationFrame(onParallax); ticking = true; }
+    }, { passive: true });
+
+    /* ----- Reveal on scroll ----- */
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    /* ----- Tabs (Preferred Rates / Price Match) ----- */
+    const tabs = document.querySelectorAll('.tab');
+    const ratesPanel = document.getElementById('ratesPanel');
+    const ratePresets = {
+      rates: [
+        { from: 'Aman Tokyo · Suite', strike: '$2,180', now: '$1,140', tag: '— 47% · upgrade' },
+        { from: 'Le Bristol · Paris', strike: '$1,690', now: '$910', tag: '— 46% · breakfast' },
+      ],
+      match: [
+        { from: 'Cap Ferrat · Villa', strike: '$3,420', now: '$2,860', tag: 'matched + 5%' },
+        { from: 'Soneva Jani · Pool', strike: '$2,150', now: '$1,790', tag: 'matched + 5%' },
+      ],
+    };
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => { t.classList.remove('tab--active'); t.setAttribute('aria-selected', 'false'); });
+        tab.classList.add('tab--active');
+        tab.setAttribute('aria-selected', 'true');
+        const set = ratePresets[tab.dataset.tab] || ratePresets.rates;
+        ratesPanel.innerHTML = set.map(r => `
+          <div class="rate">
+            <div class="rate-from">${r.from}</div>
+            <div class="rate-strike">${r.strike}</div>
+            <div class="rate-now">${r.now}</div>
+            <div class="rate-tag">${r.tag}</div>
+          </div>
+        `).join('');
+      });
+    });
+
+    /* ----- Mobile / overlay menu ----- */
+    const menu = document.getElementById('menu');
+    document.getElementById('menuToggle').addEventListener('click', () => {
+      menu.classList.add('open');
+      menu.setAttribute('aria-hidden', 'false');
+    });
+    document.getElementById('menuClose').addEventListener('click', () => {
+      menu.classList.remove('open');
+      menu.setAttribute('aria-hidden', 'true');
+    });
+    menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+      menu.classList.remove('open');
+      menu.setAttribute('aria-hidden', 'true');
+    }));
+
+    /* ----- Carousel: drag, snap, controls, gentle auto-scroll ----- */
+    const track = document.getElementById('carouselTrack');
+    const next = document.getElementById('carNext');
+    const prev = document.getElementById('carPrev');
+    const cardWidth = () => {
+      const c = track.querySelector('.carousel-card');
+      if (!c) return 380;
+      const style = getComputedStyle(track);
+      const gap = parseInt(style.columnGap || style.gap || '18', 10);
+      return c.getBoundingClientRect().width + gap;
+    };
+    next.addEventListener('click', () => track.scrollBy({ left: cardWidth(), behavior: 'smooth' }));
+    prev.addEventListener('click', () => track.scrollBy({ left: -cardWidth(), behavior: 'smooth' }));
+
+    // Drag to scroll (mouse)
+    let isDown = false, startX = 0, startScroll = 0;
+    track.addEventListener('mousedown', (e) => {
+      isDown = true; track.classList.add('dragging');
+      startX = e.pageX - track.offsetLeft;
+      startScroll = track.scrollLeft;
+    });
+    ['mouseleave', 'mouseup'].forEach(ev => track.addEventListener(ev, () => {
+      isDown = false; track.classList.remove('dragging');
+    }));
+    track.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - track.offsetLeft;
+      track.scrollLeft = startScroll - (x - startX);
+    });
+
+    // Auto-scroll (slow, pauses on hover/touch/focus)
+    let autoTimer = null;
+    let userActive = false;
+    const startAuto = () => {
+      stopAuto();
+      autoTimer = setInterval(() => {
+        if (userActive) return;
+        const max = track.scrollWidth - track.clientWidth - 4;
+        if (track.scrollLeft >= max) track.scrollTo({ left: 0, behavior: 'smooth' });
+        else track.scrollBy({ left: cardWidth() * 0.6, behavior: 'smooth' });
+      }, 4500);
+    };
+    const stopAuto = () => { if (autoTimer) clearInterval(autoTimer); autoTimer = null; };
+    ['mouseenter', 'touchstart', 'focusin'].forEach(ev =>
+      track.addEventListener(ev, () => { userActive = true; }, { passive: true })
+    );
+    ['mouseleave', 'touchend', 'focusout'].forEach(ev =>
+      track.addEventListener(ev, () => { userActive = false; }, { passive: true })
+    );
+    // Only autoplay when reduced-motion is not requested and section is visible
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const dest = document.getElementById('destinations');
+      const ioDest = new IntersectionObserver(([e]) => {
+        if (e.isIntersecting) startAuto(); else stopAuto();
+      }, { threshold: 0.2 });
+      ioDest.observe(dest);
+    }
+  </script>
+</body>
+</html>
