@@ -97,12 +97,26 @@ export default function Home({
   initialCities,
   initialFeatured,
 }: HomePageClientProps) {
-  const { checkIn, checkOut, setCheckIn, setCheckOut, formatDate } = useBooking();
+  const {
+    checkIn,
+    checkOut,
+    setCheckIn,
+    setCheckOut,
+    formatDate,
+    totalAdults,
+    totalChildren,
+    rooms,
+  } = useBooking();
   const { user } = useAuth();
   const router = useRouter();
 
   const [cities, setCities] = useState<CuratedCity[]>(initialCities);
   const [featured, setFeatured] = useState<FeaturedResponse | null>(initialFeatured);
+  // Local hero search state — fed by DestinationSearch via onValueChange/onSelect.
+  // Without this, the parent had no way to know what the user typed, so the
+  // Search button always navigated to /search with no params.
+  const [heroDestination, setHeroDestination] = useState("");
+  const [heroDestError, setHeroDestError] = useState(false);
 
   useEffect(() => {
     if (initialCities.length === 0) {
@@ -127,6 +141,30 @@ export default function Home({
   }, [initialCities.length, initialFeatured]);
 
   const bentoItems = useMemo(() => buildBentoItems(cities, featured), [cities, featured]);
+
+  function handleHeroSearch() {
+    const q = heroDestination.trim();
+    if (!q) {
+      // Visible nudge instead of silent failure
+      setHeroDestError(true);
+      // Clear the highlight after a few seconds so it doesn't get stuck
+      setTimeout(() => setHeroDestError(false), 2500);
+      // Focus the destination input so the user can type
+      const input = document.querySelector<HTMLInputElement>(
+        '#hero-search input[role="combobox"]'
+      );
+      input?.focus();
+      return;
+    }
+    const params = new URLSearchParams();
+    params.set("q", q);
+    if (checkIn) params.set("checkin", checkIn);
+    if (checkOut) params.set("checkout", checkOut);
+    if (totalAdults > 0) params.set("adults", String(totalAdults));
+    params.set("children", String(totalChildren));
+    params.set("rooms", String(rooms.length || 1));
+    router.push(`/search?${params.toString()}`);
+  }
 
   function handleSeeMemberRates(e: React.MouseEvent) {
     e.preventDefault();
@@ -210,13 +248,32 @@ export default function Home({
               alignItems: "center",
               gap: 0,
               marginBottom: 20,
+              outline: heroDestError ? "1px solid var(--luxe-champagne)" : "none",
+              boxShadow: heroDestError
+                ? "0 0 0 3px rgba(201,168,76,0.25)"
+                : undefined,
+              transition: "outline 0.2s, box-shadow 0.2s",
             }}
           >
             <div style={{ padding: "10px 18px" }}>
               <div className="luxe-tech" style={{ marginBottom: 4 }}>
                 Destination
               </div>
-              <DestinationSearch variant="dark" placeholder="City or hotel" />
+              <DestinationSearch
+                variant="dark"
+                placeholder="City or hotel"
+                onValueChange={(v) => {
+                  setHeroDestination(v);
+                  if (v.trim()) setHeroDestError(false);
+                }}
+                onSelect={(_type, _value, label) => {
+                  // User picked a suggestion — keep the human-readable label as
+                  // the query so the search page surfaces matching results.
+                  const filled = label ?? _value;
+                  setHeroDestination(filled);
+                  setHeroDestError(false);
+                }}
+              />
             </div>
             <label
               style={{
@@ -286,7 +343,7 @@ export default function Home({
               />
             </label>
             <button
-              onClick={() => router.push("/search")}
+              onClick={handleHeroSearch}
               className="luxe-btn-primary"
               style={{ margin: 4, padding: "12px 22px" }}
               aria-label="Search"
