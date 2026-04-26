@@ -10,6 +10,7 @@ import {
   fetchFeaturedAll,
   fetchHomeFeaturedCities,
   fetchHomeFeaturedHotels,
+  fetchPreferredHotels,
   CuratedCity,
   CuratedHotel,
 } from "@/lib/api";
@@ -17,6 +18,7 @@ import type {
   FeaturedResponse,
   HomeFeaturedCity,
   HomeFeaturedHotel,
+  PreferredHotel,
 } from "@/lib/api";
 import { SAMPLE_CITIES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import Header from "@/components/Header";
@@ -31,7 +33,41 @@ export interface HomePageClientProps {
   initialFeatured: FeaturedResponse | null;
   initialHomeCities: HomeFeaturedCity[];
   initialEditorsPicks: HomeFeaturedHotel[];
+  initialPreferredHotels: PreferredHotel[];
 }
+
+// Legacy hardcoded "Handpicked Experiences" tiles. Used as a fallback when the
+// admin hasn't curated any preferred hotels yet (or the backend is down) so the
+// section still feels populated rather than empty.
+const FALLBACK_PREFERRED_HOTELS: Array<{
+  name: string;
+  city: string;
+  tagline: string;
+  perks: string;
+  hue: string;
+}> = [
+  {
+    name: "The Ritz-Carlton, Bali",
+    city: "Nusa Dua, Indonesia",
+    tagline: "Oceanfront luxury",
+    perks: "Room upgrade, late checkout, and welcome drinks for members.",
+    hue: "linear-gradient(135deg, rgba(200,170,118,0.18) 0%, rgba(20,18,15,0.6) 100%)",
+  },
+  {
+    name: "The Oberoi, Mumbai",
+    city: "Nariman Point, India",
+    tagline: "Heritage elegance",
+    perks: "Spa credit, breakfast included, and early check-in for members.",
+    hue: "linear-gradient(135deg, rgba(180,140,90,0.18) 0%, rgba(20,18,15,0.6) 100%)",
+  },
+  {
+    name: "Park Hyatt Tokyo",
+    city: "Shinjuku, Japan",
+    tagline: "Sky-high serenity",
+    perks: "Club lounge access, late checkout, and welcome amenity for members.",
+    hue: "linear-gradient(135deg, rgba(160,170,180,0.18) 0%, rgba(20,18,15,0.6) 100%)",
+  },
+];
 
 const HERO_BG =
   "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=2400&q=85&auto=format&fit=crop";
@@ -51,6 +87,7 @@ export default function Home({
   initialFeatured,
   initialHomeCities,
   initialEditorsPicks,
+  initialPreferredHotels,
 }: HomePageClientProps) {
   const {
     checkIn,
@@ -77,6 +114,11 @@ export default function Home({
   // hydrated client-side if SSR was empty (matches the cities pattern).
   const [curatedEditorsPicks, setCuratedEditorsPicks] =
     useState<HomeFeaturedHotel[]>(initialEditorsPicks);
+  // Admin-curated `preferred_hotels` rows (with member benefits). SSR-prefetched
+  // in `page.tsx`, hydrated client-side if SSR was empty.
+  const [preferredHotels, setPreferredHotels] = useState<PreferredHotel[]>(
+    initialPreferredHotels
+  );
   // Local hero search state — fed by DestinationSearch via onValueChange/onSelect.
   // Without this, the parent had no way to know what the user typed, so the
   // Search button always navigated to /search with no params.
@@ -113,11 +155,17 @@ export default function Home({
         .then(setCuratedEditorsPicks)
         .catch(() => {});
     }
+    if (initialPreferredHotels.length === 0) {
+      fetchPreferredHotels()
+        .then(setPreferredHotels)
+        .catch(() => {});
+    }
   }, [
     initialCities.length,
     initialFeatured,
     initialHomeCities.length,
     initialEditorsPicks.length,
+    initialPreferredHotels.length,
   ]);
 
   // Editor's Picks — admin-curated home_featured_hotels (is_active=TRUE,
@@ -943,7 +991,13 @@ export default function Home({
         </div>
       </motion.section>
 
-      {/* ── Handpicked Experiences — 3 marquee properties ────────────────── */}
+      {/* ── Preferred Hotels — admin-curated stays with member benefits ─── */}
+      {/* Sourced from GET /api/curations/preferred-hotels (admin-curated,
+          active=TRUE, ordered, capped 50). Each tile shows hotel image + city
+          eyebrow + optional Playfair italic tagline + name + country, with a
+          champagne-tinted chip strip at the bottom listing the negotiated
+          perks for that property. Falls back to the legacy 3 hardcoded tiles
+          when the curation list is empty so the section is never blank. */}
       <motion.section
         initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -967,7 +1021,7 @@ export default function Home({
           >
             <div style={{ maxWidth: 640 }}>
               <div className="luxe-tech" style={{ marginBottom: 10 }}>
-                Handpicked Experiences
+                Preferred Hotels
               </div>
               <h2
                 className="luxe-display"
@@ -982,115 +1036,273 @@ export default function Home({
                   lineHeight: 1.7,
                 }}
               >
-                A glimpse of properties our concierge returns to — quiet
-                corners of the world where the perks make a real difference.
+                Quietly negotiated perks at properties our concierge revisits
+                &mdash; for members, on every stay.
               </p>
             </div>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: 16,
-            }}
-          >
-            {[
-              {
-                name: "The Ritz-Carlton, Bali",
-                city: "Nusa Dua, Indonesia",
-                tagline: "Oceanfront luxury",
-                perks: "Room upgrade, late checkout, and welcome drinks for members.",
-                hue: "linear-gradient(135deg, rgba(200,170,118,0.18) 0%, rgba(20,18,15,0.6) 100%)",
-              },
-              {
-                name: "The Oberoi, Mumbai",
-                city: "Nariman Point, India",
-                tagline: "Heritage elegance",
-                perks: "Spa credit, breakfast included, and early check-in for members.",
-                hue: "linear-gradient(135deg, rgba(180,140,90,0.18) 0%, rgba(20,18,15,0.6) 100%)",
-              },
-              {
-                name: "Park Hyatt Tokyo",
-                city: "Shinjuku, Japan",
-                tagline: "Sky-high serenity",
-                perks: "Club lounge access, late checkout, and welcome amenity for members.",
-                hue: "linear-gradient(135deg, rgba(160,170,180,0.18) 0%, rgba(20,18,15,0.6) 100%)",
-              },
-            ].map((e) => (
-              <div
-                key={e.name}
-                className="luxe-card"
-                style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}
-              >
-                <div
-                  aria-hidden="true"
+          {preferredHotels.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: 18,
+              }}
+            >
+              {preferredHotels.map((h) => (
+                <Link
+                  key={h.id}
+                  href={`/hotel/${h.hotel_id}`}
+                  className="preferred-tile"
                   style={{
-                    height: 180,
-                    background: e.hue,
-                    borderBottom: "1px solid var(--luxe-hairline)",
-                    position: "relative",
+                    display: "flex",
+                    flexDirection: "column",
+                    textDecoration: "none",
+                    color: "inherit",
+                    borderRadius: 14,
+                    overflow: "hidden",
+                    border: "1px solid var(--luxe-hairline)",
+                    background: "var(--luxe-card-bg, rgba(20,18,15,0.4))",
+                    transition:
+                      "transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease",
                   }}
                 >
                   <div
                     style={{
-                      position: "absolute",
-                      inset: 0,
+                      position: "relative",
+                      width: "100%",
+                      aspectRatio: "4 / 3",
+                      overflow: "hidden",
+                      background: CITY_FALLBACK_GRADIENT,
+                    }}
+                  >
+                    <Image
+                      src={safeImg(h.image_url)}
+                      alt={h.name}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="preferred-tile-img"
+                      style={{
+                        objectFit: "cover",
+                        transition: "transform 360ms ease",
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      padding: 20,
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontFamily: "var(--font-display)",
-                      fontSize: 64,
-                      color: "var(--luxe-champagne)",
-                      opacity: 0.18,
-                      letterSpacing: "-0.04em",
-                      fontStyle: "italic",
+                      flexDirection: "column",
+                      flex: 1,
+                      gap: 10,
                     }}
                   >
-                    {e.name.split(" ").slice(-1)[0]}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          width: 5,
+                          height: 5,
+                          borderRadius: "50%",
+                          background: "var(--luxe-champagne)",
+                          display: "inline-block",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontFamily: "var(--font-mono, monospace)",
+                          fontSize: 10,
+                          letterSpacing: "0.18em",
+                          textTransform: "uppercase",
+                          color: "var(--luxe-soft-white-50)",
+                        }}
+                      >
+                        {h.city_name}
+                      </span>
+                    </div>
+                    {h.tagline ? (
+                      <div
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontStyle: "italic",
+                          fontSize: 14,
+                          color: "var(--luxe-champagne)",
+                          letterSpacing: "-0.005em",
+                          opacity: 0.92,
+                        }}
+                      >
+                        {h.tagline}
+                      </div>
+                    ) : null}
+                    <div
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontSize: 22,
+                        fontWeight: 500,
+                        color: "var(--luxe-soft-white)",
+                        lineHeight: 1.22,
+                        letterSpacing: "-0.015em",
+                      }}
+                    >
+                      {h.name}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "var(--luxe-soft-white-50)",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
+                      {h.country}
+                    </div>
+                    {h.benefits && h.benefits.length > 0 ? (
+                      <div
+                        style={{
+                          marginTop: "auto",
+                          paddingTop: 14,
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 6,
+                        }}
+                      >
+                        {h.benefits.slice(0, 5).map((b, i) => (
+                          <span
+                            key={`${h.id}-b-${i}`}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              padding: "5px 10px",
+                              borderRadius: 999,
+                              fontSize: 11.5,
+                              lineHeight: 1.2,
+                              color: "var(--luxe-champagne)",
+                              background: "rgba(200,170,118,0.10)",
+                              border: "1px solid rgba(200,170,118,0.28)",
+                              letterSpacing: "0.005em",
+                            }}
+                          >
+                            <span
+                              aria-hidden="true"
+                              style={{ fontSize: 10, lineHeight: 1 }}
+                            >
+                              ★
+                            </span>
+                            {b}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 16,
+              }}
+            >
+              {FALLBACK_PREFERRED_HOTELS.map((e) => (
+                <div
+                  key={e.name}
+                  className="luxe-card"
+                  style={{
+                    padding: 0,
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      height: 180,
+                      background: e.hue,
+                      borderBottom: "1px solid var(--luxe-hairline)",
+                      position: "relative",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: "var(--font-display)",
+                        fontSize: 64,
+                        color: "var(--luxe-champagne)",
+                        opacity: 0.18,
+                        letterSpacing: "-0.04em",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      {e.name.split(" ").slice(-1)[0]}
+                    </div>
+                  </div>
+                  <div style={{ padding: 22, flex: 1 }}>
+                    <div className="luxe-tech" style={{ marginBottom: 8 }}>
+                      {e.tagline}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontSize: 22,
+                        fontWeight: 500,
+                        color: "var(--luxe-soft-white)",
+                        lineHeight: 1.2,
+                        letterSpacing: "-0.015em",
+                        marginBottom: 6,
+                      }}
+                    >
+                      {e.name}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "var(--luxe-soft-white-50)",
+                        letterSpacing: "0.04em",
+                        marginBottom: 14,
+                      }}
+                    >
+                      {e.city}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 13.5,
+                        color: "var(--luxe-soft-white-70)",
+                        lineHeight: 1.65,
+                      }}
+                    >
+                      {e.perks}
+                    </div>
                   </div>
                 </div>
-                <div style={{ padding: 22, flex: 1 }}>
-                  <div className="luxe-tech" style={{ marginBottom: 8 }}>
-                    {e.tagline}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: 22,
-                      fontWeight: 500,
-                      color: "var(--luxe-soft-white)",
-                      lineHeight: 1.2,
-                      letterSpacing: "-0.015em",
-                      marginBottom: 6,
-                    }}
-                  >
-                    {e.name}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: "var(--luxe-soft-white-50)",
-                      letterSpacing: "0.04em",
-                      marginBottom: 14,
-                    }}
-                  >
-                    {e.city}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 13.5,
-                      color: "var(--luxe-soft-white-70)",
-                      lineHeight: 1.65,
-                    }}
-                  >
-                    {e.perks}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        <style jsx>{`
+          .preferred-tile:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+            border-color: rgba(200, 170, 118, 0.35);
+          }
+          .preferred-tile:hover :global(.preferred-tile-img) {
+            transform: scale(1.04);
+          }
+        `}</style>
       </motion.section>
 
       {/* ── Testimonials ─────────────────────────────────────────────────── */}

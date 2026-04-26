@@ -276,6 +276,33 @@ export async function fetchHomeFeaturedHotels(): Promise<HomeFeaturedHotel[]> {
   return json.hotels ?? [];
 }
 
+// ── Preferred Hotels (admin-curated, with member benefits) ────────────────
+// Admin-curated `preferred_hotels` rows (active=TRUE), ordered by
+// `display_order ASC`, capped at 50. Backed by GET /api/curations/preferred-hotels.
+// `image_url` is resolved server-side: custom_image_url if set, else hotel's
+// default photo. `benefits` is a 0-5 length list of strings (chips in the UI).
+// `tagline` is optional editorial copy (e.g. "Sofitel · Accor luxury").
+export type PreferredHotel = {
+  id: number;
+  hotel_id: number;
+  name: string;
+  city_slug: string | null;
+  city_name: string;
+  country: string;
+  rating_average: number | null;
+  image_url: string;
+  tagline: string | null;
+  benefits: string[];
+  display_order: number;
+};
+
+export async function fetchPreferredHotels(): Promise<PreferredHotel[]> {
+  const res = await fetch(resolveApiUrl(`/api/curations/preferred-hotels`), { cache: "no-store" });
+  if (!res.ok) throw new Error(`preferred-hotels ${res.status}`);
+  const json = await res.json();
+  return json.hotels ?? [];
+}
+
 // In-memory cache for the client-side featured aggregator.
 // Backend has no /api/hotels/featured endpoint, so we build the response
 // from /api/curations/cities + per-city /api/curations/{slug} fan-out.
