@@ -41,7 +41,7 @@ export default function PreferredPropertiesPage() {
   }, []);
 
   return (
-    <>
+    <div className="luxe">
       <Header />
       <main
         style={{
@@ -213,6 +213,6 @@ export default function PreferredPropertiesPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

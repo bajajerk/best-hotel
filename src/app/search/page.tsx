@@ -474,7 +474,7 @@ export default function SearchPage() {
   const totalResults = regionFilteredCities.length + filteredHotels.length;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
+    <div className="luxe" style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
       <Header />
 
       {/* ── Unified search card + destination pills (single section, no dark hero) ── */}

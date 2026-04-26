@@ -329,18 +329,18 @@ export default function MatchMyRatesPage() {
 
   if (authLoading) {
     return (
-      <>
+      <div className="luxe">
         <Header />
-        <main className="min-h-screen flex items-center justify-center bg-[#FAFAF8]">
-          <div className="text-[#8B7355]">Loading...</div>
+        <main className="min-h-screen flex items-center justify-center" style={{ background: "#0c0b0a" }}>
+          <div style={{ color: "rgba(247,245,242,0.7)" }}>Loading...</div>
         </main>
         <Footer />
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="luxe">
       <Header />
       <main
         style={{
@@ -573,7 +573,7 @@ export default function MatchMyRatesPage() {
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
-    </>
+    </div>
   );
 }
 

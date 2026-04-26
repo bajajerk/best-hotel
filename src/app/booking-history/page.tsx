@@ -228,7 +228,7 @@ export default function BookingHistoryPage() {
   }, []);
 
   return (
-    <>
+    <div className="luxe">
       <Header />
       <main
         style={{
@@ -328,6 +328,6 @@ export default function BookingHistoryPage() {
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

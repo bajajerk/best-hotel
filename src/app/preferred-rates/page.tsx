@@ -40,7 +40,7 @@ export default function PreferredRatesPage() {
   }, []);
 
   return (
-    <>
+    <div className="luxe">
       <Header />
       <main
         style={{
@@ -196,6 +196,6 @@ export default function PreferredRatesPage() {
         <PreferredPartners />
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

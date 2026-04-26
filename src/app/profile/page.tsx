@@ -156,14 +156,14 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <>
+      <div className="luxe">
         <Header />
         <main style={s.main}>
           <div style={s.container}>
             <div style={s.spinner} />
           </div>
         </main>
-      </>
+      </div>
     );
   }
 
@@ -192,7 +192,7 @@ export default function ProfilePage() {
   const t = tierConfig[tier] || tierConfig.basic;
 
   return (
-    <>
+    <div className="luxe">
       <Header />
       <main style={s.main}>
         <div style={s.container}>
@@ -511,7 +511,7 @@ export default function ProfilePage() {
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
 

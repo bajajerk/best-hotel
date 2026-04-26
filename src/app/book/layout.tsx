@@ -184,7 +184,7 @@ function BookHeader() {
 
 export default function BookLayout({ children }: { children: ReactNode }) {
   return (
-    <div style={{ minHeight: "100vh", background: "var(--cream)" }}>
+    <div className="luxe" style={{ minHeight: "100vh", background: "var(--cream)" }}>
       <BookHeader />
 
       <StepIndicator />

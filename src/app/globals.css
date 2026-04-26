@@ -4296,3 +4296,94 @@ body:has(.precision-theme) {
   margin: 0 auto;
   padding: 0 24px;
 }
+
+/* ============================================================================
+   ── .luxe scope override: remap legacy cream-theme tokens to dark luxe ──
+   Pages opt-in by wrapping their root element with className="luxe". All
+   inline styles that reference var(--cream)/var(--ink)/var(--gold) etc. then
+   automatically pick up the dark Understated Luxury values without any
+   per-page edits.
+   ============================================================================ */
+
+.luxe {
+  /* Background tones */
+  --cream: #0c0b0a;
+  --cream-deep: #14120f;
+  --cream-border: rgba(255, 255, 255, 0.08);
+  --white: rgba(255, 255, 255, 0.025);
+  --bg-deep: #0c0b0a;
+  --bg-surface: #14120f;
+  --bg-elevated: #1c1a16;
+  --bg-card: rgba(255, 255, 255, 0.025);
+  --bg-input: rgba(255, 255, 255, 0.04);
+  --bg-black: #0c0b0a;
+
+  /* Ink → soft white */
+  --ink: #f7f5f2;
+  --ink-mid: rgba(247, 245, 242, 0.7);
+  --ink-light: rgba(247, 245, 242, 0.5);
+  --text-primary: #f7f5f2;
+  --text-secondary: rgba(247, 245, 242, 0.7);
+  --text-tertiary: rgba(247, 245, 242, 0.5);
+  --text-ghost: rgba(247, 245, 242, 0.25);
+
+  /* Gold → champagne */
+  --gold: #c8aa76;
+  --gold-light: #d4b988;
+  --gold-pale: rgba(200, 170, 118, 0.15);
+  --gold-soft: rgba(200, 170, 118, 0.15);
+  --gold-border: rgba(200, 170, 118, 0.28);
+  --accent: #c8aa76;
+  --accent-soft: rgba(200, 170, 118, 0.15);
+  --accent-border: rgba(200, 170, 118, 0.28);
+  --accent-hover: #d4b988;
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: #c8aa76;
+  --border-focus: #c8aa76;
+
+  /* White-alpha aliases */
+  --white-80: rgba(247, 245, 242, 0.8);
+  --white-50: rgba(247, 245, 242, 0.5);
+  --white-30: rgba(247, 245, 242, 0.3);
+  --white-15: rgba(255, 255, 255, 0.15);
+  --white-08: rgba(255, 255, 255, 0.08);
+  --white-04: rgba(255, 255, 255, 0.04);
+
+  background: #0c0b0a;
+  color: #f7f5f2;
+}
+
+/* Make sure any nested element with explicit cream background reads from the
+   remapped token (covers cases where authors used `background:#fdfaf5` literal
+   — keep ones that use var() automatic). */
+.luxe section,
+.luxe header,
+.luxe main,
+.luxe footer { background-color: transparent; }
+
+/* Force-tone the hard-coded white card backgrounds inside .luxe pages */
+.luxe [style*="#fdfaf5"],
+.luxe [style*="#FDFAF5"],
+.luxe [style*="#f5f0e8"],
+.luxe [style*="#F5F0E8"],
+.luxe [style*="#ede7d9"],
+.luxe [style*="#EDE7D9"] {
+  background-color: rgba(255, 255, 255, 0.025) !important;
+  color: #f7f5f2 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Inputs in luxe-scoped pages */
+.luxe input,
+.luxe textarea,
+.luxe select {
+  color: #f7f5f2;
+}
+.luxe input::placeholder,
+.luxe textarea::placeholder { color: rgba(247, 245, 242, 0.45); }
+
+/* Default link colour stays inherited; but ensure underline treatments don't
+   blow out on dark */
+.luxe a:hover { color: #c8aa76; }
