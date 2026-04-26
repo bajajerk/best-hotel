@@ -238,7 +238,7 @@ export default function Home({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="luxe-glass"
+            className={`luxe-glass${heroDestError ? " hero-search--flash" : ""}`}
             style={{
               borderRadius: 9999,
               padding: 6,
@@ -248,11 +248,8 @@ export default function Home({
               alignItems: "center",
               gap: 0,
               marginBottom: 20,
-              outline: heroDestError ? "1px solid var(--luxe-champagne)" : "none",
-              boxShadow: heroDestError
-                ? "0 0 0 3px rgba(201,168,76,0.25)"
-                : undefined,
-              transition: "outline 0.2s, box-shadow 0.2s",
+              position: "relative",
+              pointerEvents: "auto",
             }}
           >
             <div style={{ padding: "10px 18px" }}>

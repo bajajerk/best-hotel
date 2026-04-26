@@ -4104,6 +4104,16 @@ body:has(.precision-theme) {
     inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
+/* Hero search empty-destination flash — outline-only, never blocks pointer events */
+.hero-search--flash {
+  outline: 1px solid var(--luxe-champagne);
+  outline-offset: 1px;
+  box-shadow:
+    0 0 0 3px rgba(201, 168, 76, 0.25),
+    0 8px 32px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
 /* ── Capsule buttons ── */
 .luxe-btn-primary {
   display: inline-flex;
