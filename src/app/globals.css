@@ -4135,6 +4135,26 @@ body:has(.precision-theme) {
     inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
+/* Defense-in-depth: hero search inputs MUST always be clickable + transparent.
+   Future .luxe input { ... } rules cannot accidentally re-break the search bar
+   (which has happened twice already — once via inline style.transition vs.
+   framer-motion, once via the .luxe input { background-color: ... } rule that
+   visually hid the absolute-positioned date inputs). */
+#hero-search,
+#hero-search * {
+  pointer-events: auto !important;
+}
+#hero-search input {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+#hero-search input[type="date"] {
+  /* Date inputs sit absolute over the visible label content. Force them to be
+     the topmost click target so the native picker fires reliably. */
+  z-index: 2;
+}
+
 /* ── Capsule buttons ── */
 .luxe-btn-primary {
   display: inline-flex;
