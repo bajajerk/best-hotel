@@ -2,9 +2,14 @@ import {
   fetchCuratedCities,
   fetchFeaturedAll,
   fetchHomeFeaturedCities,
+  fetchHomeFeaturedHotels,
   CuratedCity,
 } from "@/lib/api";
-import type { FeaturedResponse, HomeFeaturedCity } from "@/lib/api";
+import type {
+  FeaturedResponse,
+  HomeFeaturedCity,
+  HomeFeaturedHotel,
+} from "@/lib/api";
 import { SAMPLE_CITIES } from "@/lib/constants";
 import { SITE_NAME, SITE_URL, DEFAULT_DESCRIPTION } from "@/lib/seo";
 import Home from "./HomePageClient";
@@ -20,13 +25,14 @@ async function getHomeData(): Promise<{
   cities: CuratedCity[];
   featured: FeaturedResponse | null;
   homeCities: HomeFeaturedCity[];
+  editorsPicks: HomeFeaturedHotel[];
 }> {
   const timeout = (ms: number) =>
     new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error("timeout")), ms)
     );
 
-  const [cities, featured, homeCities] = await Promise.all([
+  const [cities, featured, homeCities, editorsPicks] = await Promise.all([
     Promise.race([fetchCuratedCities(), timeout(8000)]).catch(() =>
       SAMPLE_CITIES.map((c, i) => ({
         ...c,
@@ -39,9 +45,12 @@ async function getHomeData(): Promise<{
     Promise.race([fetchHomeFeaturedCities(), timeout(8000)]).catch(
       () => [] as HomeFeaturedCity[]
     ),
+    Promise.race([fetchHomeFeaturedHotels(), timeout(8000)]).catch(
+      () => [] as HomeFeaturedHotel[]
+    ),
   ]);
 
-  return { cities, featured, homeCities };
+  return { cities, featured, homeCities, editorsPicks };
 }
 
 // ---------------------------------------------------------------------------
@@ -49,7 +58,7 @@ async function getHomeData(): Promise<{
 // ---------------------------------------------------------------------------
 
 export default async function HomePage() {
-  const { cities, featured, homeCities } = await getHomeData();
+  const { cities, featured, homeCities, editorsPicks } = await getHomeData();
 
   // Flatten featured hotels for SEO content
   const allFeaturedHotels = featured
@@ -73,6 +82,7 @@ export default async function HomePage() {
         initialCities={cities}
         initialFeatured={featured}
         initialHomeCities={homeCities}
+        initialEditorsPicks={editorsPicks}
       />
 
       {/*

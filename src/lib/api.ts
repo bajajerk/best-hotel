@@ -252,6 +252,30 @@ export async function fetchHomeFeaturedCities(): Promise<HomeFeaturedCity[]> {
   return json.cities ?? [];
 }
 
+// ── Home page featured hotels ─────────────────────────────────────────────
+// Admin-curated `home_featured_hotels` rows (is_active=TRUE), ordered by
+// `display_order ASC`, capped at 12. Backed by GET /api/curations/home-hotels.
+// `image_url` is resolved server-side: custom_image_url if set, else hotel's
+// default photo. Frontend just renders what it gets.
+export type HomeFeaturedHotel = {
+  id: number;
+  hotel_id: number;
+  name: string;
+  city_slug: string;
+  city_name: string;
+  country: string;
+  rating_average: number | null;
+  image_url: string;
+  display_order: number;
+};
+
+export async function fetchHomeFeaturedHotels(): Promise<HomeFeaturedHotel[]> {
+  const res = await fetch(resolveApiUrl(`/api/curations/home-hotels`), { cache: "no-store" });
+  if (!res.ok) throw new Error(`home-hotels ${res.status}`);
+  const json = await res.json();
+  return json.hotels ?? [];
+}
+
 // In-memory cache for the client-side featured aggregator.
 // Backend has no /api/hotels/featured endpoint, so we build the response
 // from /api/curations/cities + per-city /api/curations/{slug} fan-out.

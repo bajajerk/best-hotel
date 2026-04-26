@@ -9,10 +9,15 @@ import {
   fetchCuratedCities,
   fetchFeaturedAll,
   fetchHomeFeaturedCities,
+  fetchHomeFeaturedHotels,
   CuratedCity,
   CuratedHotel,
 } from "@/lib/api";
-import type { FeaturedResponse, HomeFeaturedCity } from "@/lib/api";
+import type {
+  FeaturedResponse,
+  HomeFeaturedCity,
+  HomeFeaturedHotel,
+} from "@/lib/api";
 import { SAMPLE_CITIES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -25,6 +30,7 @@ export interface HomePageClientProps {
   initialCities: CuratedCity[];
   initialFeatured: FeaturedResponse | null;
   initialHomeCities: HomeFeaturedCity[];
+  initialEditorsPicks: HomeFeaturedHotel[];
 }
 
 const HERO_BG =
@@ -44,6 +50,7 @@ export default function Home({
   initialCities,
   initialFeatured,
   initialHomeCities,
+  initialEditorsPicks,
 }: HomePageClientProps) {
   const {
     checkIn,
@@ -66,6 +73,10 @@ export default function Home({
   );
   const [homeCities, setHomeCities] =
     useState<HomeFeaturedCity[]>(initialHomeCities);
+  // Admin-curated `home_featured_hotels` rows. SSR-prefetched in `page.tsx`,
+  // hydrated client-side if SSR was empty (matches the cities pattern).
+  const [curatedEditorsPicks, setCuratedEditorsPicks] =
+    useState<HomeFeaturedHotel[]>(initialEditorsPicks);
   // Local hero search state — fed by DestinationSearch via onValueChange/onSelect.
   // Without this, the parent had no way to know what the user typed, so the
   // Search button always navigated to /search with no params.
@@ -97,12 +108,27 @@ export default function Home({
         .then(setHomeCities)
         .catch(() => {});
     }
-  }, [initialCities.length, initialFeatured, initialHomeCities.length]);
+    if (initialEditorsPicks.length === 0) {
+      fetchHomeFeaturedHotels()
+        .then(setCuratedEditorsPicks)
+        .catch(() => {});
+    }
+  }, [
+    initialCities.length,
+    initialFeatured,
+    initialHomeCities.length,
+    initialEditorsPicks.length,
+  ]);
 
-  // Editor's Picks — collapse the previous 4 buckets (top-rated / best-value /
-  // solo / family) into a single row of the highest-rated 8 hotels across all
-  // featured cities. Reuses the cached `fetchFeaturedAll` aggregation.
-  const editorsPicks: CuratedHotel[] = (featured?.topRated ?? []).slice(0, 8);
+  // Editor's Picks — admin-curated home_featured_hotels (is_active=TRUE,
+  // ordered by display_order ASC, capped at 12 server-side). If the admin
+  // hasn't curated anything yet (or the backend is down), fall back to the
+  // legacy top-rated bucket so the section is still useful during transition.
+  const fallbackEditorsPicks: CuratedHotel[] = (featured?.topRated ?? []).slice(
+    0,
+    8
+  );
+  const useCurated = curatedEditorsPicks.length > 0;
 
   function handleHeroSearch() {
     const q = heroDestination.trim();
@@ -538,7 +564,7 @@ export default function Home({
             </Link>
           </div>
 
-          {editorsPicks.length > 0 ? (
+          {useCurated ? (
             <div
               style={{
                 display: "grid",
@@ -546,7 +572,83 @@ export default function Home({
                 gap: 16,
               }}
             >
-              {editorsPicks.map((h) => (
+              {curatedEditorsPicks.map((h) => (
+                <Link
+                  key={h.id}
+                  href={`/hotel/${h.hotel_id}`}
+                  style={{
+                    display: "block",
+                    textDecoration: "none",
+                    color: "inherit",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      aspectRatio: "4 / 3",
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      border: "1px solid rgba(200,170,118,0.18)",
+                      background: CITY_FALLBACK_GRADIENT,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <Image
+                      src={safeImg(h.image_url)}
+                      alt={h.name}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      style={{ objectFit: "cover" }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono, monospace)",
+                      fontSize: 10,
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      color: "var(--luxe-soft-white-50)",
+                      marginBottom: 4,
+                    }}
+                  >
+                    {h.city_name} &middot; {h.country}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 17,
+                      fontWeight: 500,
+                      color: "var(--luxe-soft-white)",
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1.25,
+                      marginBottom: 4,
+                    }}
+                  >
+                    {h.name}
+                  </div>
+                  {h.rating_average != null ? (
+                    <div
+                      style={{
+                        fontSize: 12.5,
+                        color: "var(--luxe-soft-white-70)",
+                      }}
+                    >
+                      {h.rating_average.toFixed(1)}/10
+                    </div>
+                  ) : null}
+                </Link>
+              ))}
+            </div>
+          ) : fallbackEditorsPicks.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: 16,
+              }}
+            >
+              {fallbackEditorsPicks.map((h) => (
                 <Link
                   key={h.hotel_id}
                   href={`/hotel/${h.hotel_id}`}
