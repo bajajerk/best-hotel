@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
-import RangeCalendar from "@/components/RangeCalendar";
 import { AIRPORTS } from "@/lib/airports";
 
 const POPULAR_INDIA = [
