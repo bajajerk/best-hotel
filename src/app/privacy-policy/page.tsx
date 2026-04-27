@@ -3,52 +3,87 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
+const TEXT_PRIMARY = "#f7f5f2";
+const TEXT_MUTED = "rgba(247, 245, 242, 0.65)";
+const GOLD = "#c8aa76";
+
 export default function PrivacyPolicyPage() {
   return (
-    <>
+    <div className="luxe">
       <Header />
       <main
         style={{
           minHeight: "100vh",
-          paddingTop: "100px",
-          paddingBottom: "80px",
-          background: "var(--cream)",
+          paddingTop: "140px",
+          paddingBottom: "120px",
         }}
       >
-        <div style={{ maxWidth: "900px", margin: "0 auto", padding: "0 24px" }}>
+        <div style={{ maxWidth: "880px", margin: "0 auto", padding: "0 24px" }}>
+          <div
+            style={{
+              fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.32em",
+              textTransform: "uppercase",
+              color: GOLD,
+              marginBottom: 18,
+            }}
+          >
+            Last updated · April 12, 2026
+          </div>
           <h1
-            className="type-display-3"
-            style={{ color: "var(--ink)", marginBottom: "16px" }}
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(36px, 4.5vw, 56px)",
+              fontWeight: 500,
+              color: TEXT_PRIMARY,
+              letterSpacing: "-0.025em",
+              lineHeight: 1.05,
+              margin: "0 0 56px",
+            }}
           >
             Privacy Policy
           </h1>
-          <p
-            className="type-body-lg"
-            style={{ color: "var(--ink-light)", marginBottom: "40px" }}
-          >
-            Last updated: April 12, 2026
-          </p>
 
           {sections.map((s, i) => (
-            <div key={i} style={{ marginBottom: "32px" }}>
+            <section
+              key={i}
+              style={{
+                marginBottom: 36,
+                paddingBottom: 28,
+                borderBottom: i === sections.length - 1 ? "none" : "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
               <h2
-                className="type-display-5"
-                style={{ color: "var(--ink)", marginBottom: "12px" }}
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: 24,
+                  fontWeight: 500,
+                  color: TEXT_PRIMARY,
+                  letterSpacing: "-0.012em",
+                  lineHeight: 1.2,
+                  margin: "0 0 12px",
+                }}
               >
                 {s.title}
               </h2>
               <div
-                className="type-body"
-                style={{ color: "var(--ink-mid)", lineHeight: 1.7 }}
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: 15,
+                  color: TEXT_MUTED,
+                  lineHeight: 1.75,
+                }}
               >
                 {s.content}
               </div>
-            </div>
+            </section>
           ))}
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
 
