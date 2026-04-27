@@ -1154,7 +1154,27 @@ export default function HotelPage() {
     );
   }
 
-  /* ── Not found ── */
+  /* ── Still loading data via the rates fallback? Keep skeleton up. ──
+     The detail fetch (`/api/hotels/<id>`) often 404s for the slug-shortid
+     URL format and flips `loading=false` immediately. The slower rates
+     fetch is the one that actually populates `hotel` via fallback. Only
+     declare "not found" once the rates flow has truly resolved (loaded,
+     errored, or marked no_match) without giving us a hotel. */
+  const ratesResolved =
+    !ratesLoading && (rates !== null || noMatch || ratesError !== null);
+  if (!hotel && !ratesResolved) {
+    return (
+      <div
+        className="luxe min-h-screen flex items-center justify-center"
+        style={{ background: "var(--luxe-black)" }}
+      >
+        <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 80, width: 240, borderRadius: 8 }} />
+        <span className="sr-only">Loading hotel…</span>
+      </div>
+    );
+  }
+
+  /* ── Not found ── (rates flow finished without a hotel) */
   if (!hotel) {
     return (
       <div
