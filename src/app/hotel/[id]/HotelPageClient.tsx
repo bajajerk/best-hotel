@@ -1,10 +1,36 @@
 "use client";
 
+// =============================================================================
+//  /hotel/[id] — Voyagr Club hotel detail page (DARK LUXE EDITORIAL)
+//
+//  Visual language mirrors HomePageClient.tsx and CityPageClient.tsx — full-
+//  bleed cinematic hero, champagne mono-caps eyebrow, italic Playfair display
+//  headline, editorial overview, bento gallery, member-benefit chip strip,
+//  rate cards as the climax, location, reviews and a closing concierge CTA.
+//
+//  EVERYTHING in the booking flow is preserved verbatim:
+//    – fetch /api/hotels/<id>
+//    – fetch /api/hotels/<id>/rates via fetchHotelRates()
+//    – proceedToBooking() pushes /book/review with the exact same querystring
+//    – RoomSelectLoginModal gate before booking
+//    – UnlockRateModal for "Unlock Preferred Rate"
+//    – Saved-hotels heart + login-after-save flow
+//    – Lightbox gallery, photo categories, scroll-spy tab observer
+//    – HotelPageWhatsAppTrigger (40s delay)
+//    – Sticky bottom bar with Select Room CTA
+//
+//  The whole page renders inside a <div className="luxe">, so legacy inline
+//  vars (var(--cream), var(--ink), var(--gold), var(--white)) auto-remap to
+//  the dark luxe palette via globals.css. We additionally lean on the new
+//  --luxe-* tokens (champagne / soft-white / hairline) for editorial chrome.
+// =============================================================================
+
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import UnlockRateModal from "@/components/UnlockRateModal";
 import RoomSelectLoginModal from "@/components/RoomSelectLoginModal";
 import HotelPageWhatsAppTrigger from "@/components/HotelPageWhatsAppTrigger";
@@ -12,6 +38,7 @@ import { trackHotelViewed, trackHotelGalleryOpened, trackHotelTabClicked } from 
 import { useBooking } from "@/context/BookingContext";
 import { useAuth } from "@/context/AuthContext";
 import { fetchHotelRates, type RatePlan, type RatesResponse } from "@/lib/api";
+import { conciergeWhatsappLink } from "@/lib/concierge";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -68,7 +95,7 @@ interface HotelDetail {
 /* ────────────────────────── Helpers ────────────────────────── */
 
 const FALLBACK_IMG =
-  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=70";
+  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600&q=70";
 
 function safePhotoUrl(raw: string): string {
   if (raw.startsWith("http://")) return raw.replace("http://", "https://");
@@ -94,11 +121,21 @@ function formatFreeCancelDate(raw?: string): string {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-/* ── Urgency / Social Proof generators (deterministic per hotel_id) ── */
-
-function getMemberCount(hotelId: number) {
-  return 12400 + (hotelId % 3000);
+function formatDateLabel(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
+
+/* Member benefits — same vocabulary as HomePageClient + CityPageClient */
+const MEMBER_BENEFITS: { label: string; icon: string }[] = [
+  { label: "Preferred member rate", icon: "★" },
+  { label: "Daily breakfast for two", icon: "★" },
+  { label: "Room upgrade (subject to availability)", icon: "★" },
+  { label: "4pm late checkout", icon: "★" },
+  { label: "Concierge confirmation in 15 min", icon: "★" },
+];
 
 /* ────────────────────────── Filters ────────────────────────── */
 
@@ -116,7 +153,7 @@ function mealBasisMatchesFilter(mealBasis: string, filter: MealPlanFilter): bool
 
 /* ────────────────────────── Tabs ────────────────────────── */
 
-const TABS = ["Rooms", "Overview", "Gallery", "Reviews"] as const;
+const TABS = ["Rates", "The Stay", "Gallery", "Reviews"] as const;
 type TabName = (typeof TABS)[number];
 
 /* ────────────────────────── Lightbox ────────────────────────── */
@@ -155,13 +192,13 @@ function Lightbox({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
       className="fixed inset-0 z-[10002] flex items-center justify-center"
-      style={{ background: "rgba(26,23,16,0.96)", backdropFilter: "blur(32px)" }}
+      style={{ background: "rgba(8,7,6,0.97)", backdropFilter: "blur(32px)" }}
       onClick={onClose}
     >
       <button
         onClick={onClose}
         className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center text-xl"
-        style={{ color: "var(--cream)", background: "none", border: "none", cursor: "pointer" }}
+        style={{ color: "var(--luxe-soft-white)", background: "none", border: "none", cursor: "pointer" }}
         aria-label="Close"
       >
         &times;
@@ -170,7 +207,7 @@ function Lightbox({
         <button
           onClick={(e) => { e.stopPropagation(); onPrev(); }}
           className="absolute left-4 md:left-8 w-12 h-12 flex items-center justify-center text-2xl"
-          style={{ color: "var(--cream)", background: "none", border: "none", cursor: "pointer" }}
+          style={{ color: "var(--luxe-soft-white)", background: "none", border: "none", cursor: "pointer" }}
           aria-label="Previous"
         >
           &#8249;
@@ -178,12 +215,12 @@ function Lightbox({
       )}
       <motion.img
         key={index}
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
         src={safePhotoUrl(photos[index])}
         alt=""
-        className="max-h-[85vh] max-w-[90vw] object-contain"
+        className="max-h-[85vh] max-w-[92vw] object-contain"
         onClick={(e) => e.stopPropagation()}
         onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
       />
@@ -191,23 +228,23 @@ function Lightbox({
         <button
           onClick={(e) => { e.stopPropagation(); onNext(); }}
           className="absolute right-4 md:right-8 w-12 h-12 flex items-center justify-center text-2xl"
-          style={{ color: "var(--cream)", background: "none", border: "none", cursor: "pointer" }}
+          style={{ color: "var(--luxe-soft-white)", background: "none", border: "none", cursor: "pointer" }}
           aria-label="Next"
         >
           &#8250;
         </button>
       )}
       <span
-        className="absolute bottom-6 text-xs tracking-[0.2em]"
-        style={{ color: "var(--cream-border)", fontFamily: "var(--font-mono)" }}
+        className="absolute bottom-6 text-xs tracking-[0.32em]"
+        style={{ color: "var(--luxe-champagne)", fontFamily: "var(--font-mono)", fontWeight: 600 }}
       >
-        {index + 1} / {photos.length}
+        {String(index + 1).padStart(2, "0")} &nbsp;/&nbsp; {String(photos.length).padStart(2, "0")}
       </span>
     </motion.div>
   );
 }
 
-/* ────────────────────────── Filter Bar ────────────────────────── */
+/* ────────────────────────── Filter Pill ────────────────────────── */
 
 function FilterPillShell({
   active,
@@ -228,16 +265,19 @@ function FilterPillShell({
         display: "inline-flex",
         alignItems: "center",
         gap: 6,
-        padding: "8px 14px",
-        fontSize: "12px",
+        padding: "9px 16px",
+        fontSize: 12,
         fontWeight: 500,
-        letterSpacing: "0.02em",
-        background: "var(--white)",
-        border: active ? "1px solid var(--gold)" : "1px solid var(--cream-border)",
-        color: active ? "var(--gold)" : "var(--ink-mid)",
+        letterSpacing: "0.04em",
+        background: active ? "var(--luxe-champagne-soft)" : "rgba(255,255,255,0.04)",
+        border: active
+          ? "1px solid var(--luxe-champagne-line)"
+          : "1px solid var(--luxe-hairline-strong)",
+        color: active ? "var(--luxe-champagne)" : "var(--luxe-soft-white-70)",
+        borderRadius: 999,
         cursor: "pointer",
         fontFamily: "var(--font-body)",
-        transition: "border-color 0.15s, color 0.15s",
+        transition: "border-color 0.15s, color 0.15s, background 0.15s",
         whiteSpace: "nowrap",
       }}
     >
@@ -266,11 +306,7 @@ function RateFilterBar({
   };
 
   return (
-    <div
-      className="flex flex-wrap gap-2 mb-6"
-      style={{ alignItems: "center" }}
-    >
-      {/* Free Cancellation toggle pill */}
+    <div className="flex flex-wrap gap-2 mb-6" style={{ alignItems: "center" }}>
       <FilterPillShell active={freeCancellation} onClick={onToggleFreeCancellation}>
         <span
           style={{
@@ -279,13 +315,14 @@ function RateFilterBar({
             justifyContent: "center",
             width: 14,
             height: 14,
-            border: freeCancellation ? "1.5px solid var(--gold)" : "1.5px solid var(--cream-border)",
-            background: freeCancellation ? "var(--gold)" : "transparent",
+            borderRadius: 3,
+            border: freeCancellation ? "1.5px solid var(--luxe-champagne)" : "1.5px solid var(--luxe-hairline-strong)",
+            background: freeCancellation ? "var(--luxe-champagne)" : "transparent",
             transition: "all 0.15s",
           }}
         >
           {freeCancellation && (
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#0c0b0a" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           )}
@@ -293,7 +330,6 @@ function RateFilterBar({
         Free Cancellation
       </FilterPillShell>
 
-      {/* Meal Plan dropdown */}
       <div style={{ position: "relative" }}>
         <FilterPillShell active={mealPlan !== "all"} as="label">
           <span style={{ pointerEvents: "none" }}>{mealLabel[mealPlan]}</span>
@@ -308,7 +344,7 @@ function RateFilterBar({
               inset: 0,
               opacity: 0,
               cursor: "pointer",
-              fontSize: "12px",
+              fontSize: 12,
               width: "100%",
               height: "100%",
             }}
@@ -354,43 +390,81 @@ function RateCard({
   const nightsSafe = Math.max(nights, 1);
   const perNight = plan.total_price / nightsSafe;
   const cancelDate = formatFreeCancelDate(plan.free_cancel_until);
+  const showSavings = savingsPct != null && savingsPct > 0 && mrpRate != null && mrpRate > plan.total_price;
 
   return (
     <motion.div
       layout
       ref={cardRef}
       onClick={onSelect}
-      className={isHighlighted ? "room-card-highlight-pulse" : undefined}
+      className={isHighlighted ? "rate-card-highlight-pulse" : undefined}
       style={{
-        background: "var(--white)",
-        border: isSelected ? "2px solid #d4a24c" : "1px solid var(--cream-border)",
-        padding: isSelected ? "19px" : "20px",
+        position: "relative",
+        background: isSelected ? "rgba(200,170,118,0.08)" : "rgba(255,255,255,0.04)",
+        border: isSelected
+          ? "1px solid var(--luxe-champagne)"
+          : "1px solid var(--luxe-hairline-strong)",
+        borderRadius: 14,
+        padding: "22px 24px",
         cursor: "pointer",
-        transition: "border-color 0.25s, box-shadow 0.25s",
-        boxShadow: isSelected ? "0 0 0 3px rgba(212,162,76,0.15)" : "none",
+        transition: "border-color 0.25s, background 0.25s, box-shadow 0.25s",
+        boxShadow: isSelected ? "0 0 0 1px rgba(200,170,118,0.25), 0 8px 32px rgba(0,0,0,0.3)" : "none",
       }}
       transition={{ duration: 0.2 }}
     >
-      {/* Header: room name + selected check */}
-      <div className="flex items-start justify-between gap-3 mb-2">
+      {/* Member-rate ribbon */}
+      {showSavings && (
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: 16,
+            right: 18,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "5px 11px",
+            background: "var(--luxe-champagne-soft)",
+            border: "1px solid var(--luxe-champagne-line)",
+            borderRadius: 999,
+            fontSize: 10.5,
+            fontWeight: 600,
+            color: "var(--luxe-champagne)",
+            letterSpacing: "0.06em",
+            fontFamily: "var(--font-body)",
+            textTransform: "uppercase" as const,
+          }}
+        >
+          <span style={{ fontSize: 9 }}>★</span>
+          Member rate · {savingsPct}% off
+        </div>
+      )}
+
+      {/* Header: room name */}
+      <div className="flex items-start justify-between gap-3 mb-2" style={{ paddingRight: showSavings ? 140 : 36 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <h4
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "18px",
+              fontSize: 20,
               fontWeight: 500,
-              color: "var(--ink)",
-              lineHeight: 1.25,
+              fontStyle: "italic",
+              color: "var(--luxe-soft-white)",
+              lineHeight: 1.2,
+              letterSpacing: "-0.01em",
             }}
           >
             {plan.room_name}
           </h4>
           <p
             style={{
-              fontSize: "12px",
-              color: "var(--ink-light)",
-              marginTop: 4,
-              fontFamily: "var(--font-body)",
+              fontSize: 11,
+              fontFamily: "var(--font-mono)",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase" as const,
+              color: "var(--luxe-soft-white-50)",
+              marginTop: 6,
+              fontWeight: 600,
             }}
           >
             {plan.meal_basis || "Room Only"}
@@ -402,14 +476,17 @@ function RateCard({
               width: 22,
               height: 22,
               borderRadius: "50%",
-              background: "var(--gold)",
+              background: "var(--luxe-champagne)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
+              position: "absolute",
+              top: 22,
+              right: 22,
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0c0b0a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </span>
@@ -419,12 +496,13 @@ function RateCard({
       {/* Cancellation line */}
       <div
         style={{
-          fontSize: "12px",
+          fontSize: 12.5,
           fontFamily: "var(--font-body)",
-          marginTop: 8,
-          marginBottom: 14,
-          color: plan.refundable ? "var(--success)" : "var(--ink-light)",
+          marginTop: 14,
+          marginBottom: 18,
+          color: plan.refundable ? "var(--luxe-champagne)" : "var(--luxe-soft-white-50)",
           fontWeight: plan.refundable ? 500 : 400,
+          letterSpacing: "0.01em",
         }}
       >
         {plan.refundable
@@ -435,15 +513,16 @@ function RateCard({
       </div>
 
       {/* Rate block + CTA */}
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between flex-wrap gap-3">
         <div>
           {mrpRate && mrpRate > plan.total_price && (
             <div
               style={{
-                fontSize: "11px",
-                color: "var(--ink-light)",
+                fontSize: 11,
+                color: "var(--luxe-soft-white-50)",
                 textDecoration: "line-through",
                 fontFamily: "var(--font-mono)",
+                letterSpacing: "0.04em",
               }}
             >
               {formatPrice(mrpRate, mrpCurrency || plan.currency)}
@@ -451,66 +530,41 @@ function RateCard({
           )}
           <div
             style={{
-              fontSize: "22px",
+              fontSize: 28,
               fontWeight: 500,
-              color: "var(--gold)",
+              color: "var(--luxe-champagne)",
               fontFamily: "var(--font-display)",
-              lineHeight: 1.2,
-              marginTop: 1,
+              lineHeight: 1.1,
+              marginTop: 2,
+              letterSpacing: "-0.015em",
             }}
           >
             {formatPrice(plan.total_price, plan.currency)}
             {nightsSafe > 1 && (
-              <span style={{ fontSize: "12px", fontWeight: 400, color: "var(--ink-light)", marginLeft: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 400, color: "var(--luxe-soft-white-50)", marginLeft: 8, fontStyle: "italic", fontFamily: "var(--font-display)" }}>
                 total
               </span>
             )}
           </div>
           <div
             style={{
-              fontSize: "12px",
-              color: "var(--ink-light)",
-              marginTop: 2,
+              fontSize: 12,
+              color: "var(--luxe-soft-white-50)",
+              marginTop: 4,
               fontFamily: "var(--font-body)",
             }}
           >
             {formatPrice(perNight, plan.currency)}/night
-            {nightsSafe > 1 && <> &middot; {nightsSafe} nights</>}
+            {nightsSafe > 1 && <> · {nightsSafe} nights</>}
           </div>
-          {savingsPct != null && savingsPct > 0 && mrpRate != null && mrpRate > plan.total_price ? (
-            <div
-              style={{
-                display: "inline-block",
-                marginTop: 6,
-                fontSize: "11px",
-                color: "var(--success)",
-                fontWeight: 600,
-                padding: "2px 6px",
-                background: "rgba(34,139,34,0.08)",
-              }}
-            >
-              -{savingsPct}% vs. public rates
-            </div>
-          ) : null}
         </div>
 
         <button
           onClick={(e) => { e.stopPropagation(); onProceed(); }}
-          style={{
-            padding: "10px 22px",
-            fontSize: "12px",
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase" as const,
-            background: "var(--gold)",
-            color: "#1a1710",
-            border: "none",
-            cursor: "pointer",
-            transition: "all 0.2s",
-            fontFamily: "var(--font-body)",
-          }}
+          className="luxe-btn-gold"
+          style={{ padding: "12px 24px", fontSize: 11 }}
         >
-          Select
+          Select &rarr;
         </button>
       </div>
     </motion.div>
@@ -523,78 +577,114 @@ function RateCardSkeleton() {
   return (
     <div
       style={{
-        background: "var(--white)",
-        border: "1px solid var(--cream-border)",
-        padding: 20,
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid var(--luxe-hairline)",
+        borderRadius: 14,
+        padding: "22px 24px",
       }}
     >
-      <div className="luxe-skeleton luxe-skeleton--cream" style={{ height: 18, width: "55%", marginBottom: 10 }} />
-      <div className="luxe-skeleton luxe-skeleton--cream" style={{ height: 12, width: "35%", marginBottom: 18 }} />
-      <div className="luxe-skeleton luxe-skeleton--cream" style={{ height: 14, width: "40%", marginBottom: 16 }} />
+      <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 18, width: "55%", marginBottom: 10, borderRadius: 4 }} />
+      <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 10, width: "30%", marginBottom: 18, borderRadius: 3 }} />
+      <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 12, width: "40%", marginBottom: 16, borderRadius: 3 }} />
       <div className="flex items-end justify-between">
         <div>
-          <div className="luxe-skeleton luxe-skeleton--cream" style={{ height: 24, width: 120, marginBottom: 8 }} />
-          <div className="luxe-skeleton luxe-skeleton--cream" style={{ height: 12, width: 90 }} />
+          <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 28, width: 140, marginBottom: 8, borderRadius: 4 }} />
+          <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 12, width: 100, borderRadius: 3 }} />
         </div>
-        <div className="luxe-skeleton luxe-skeleton--cream" style={{ height: 36, width: 90 }} />
+        <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 40, width: 110, borderRadius: 999 }} />
       </div>
     </div>
   );
 }
 
-/* ────────────────────────── Trust Signals Bar ────────────────────────── */
+/* ────────────────────────── Trust Strip (champagne) ────────────────────────── */
 
-function TrustSignals({ hotelId, rating, reviewCount }: { hotelId: number; rating: number; reviewCount: number }) {
-  const memberCount = getMemberCount(hotelId);
-
+function TrustStrip() {
+  const items = [
+    "Free cancellation",
+    "No payment now",
+    "Concierge confirmation in 15 min",
+    "Member rates · live pricing",
+  ];
   return (
     <div
-      className="flex flex-wrap gap-4 items-center"
+      className="flex flex-wrap items-center justify-center"
       style={{
-        padding: "14px 20px",
-        background: "var(--white)",
-        border: "1px solid var(--cream-border)",
-        fontSize: "12px",
+        gap: "10px 22px",
         fontFamily: "var(--font-body)",
-        color: "var(--ink-mid)",
+        fontSize: 12.5,
+        color: "var(--luxe-champagne)",
+        letterSpacing: "0.04em",
       }}
     >
-      {/* Rating */}
-      {rating > 0 && (
-        <div className="flex items-center gap-1.5">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)" stroke="none">
-            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z" />
-          </svg>
-          <span style={{ fontWeight: 600, color: "var(--ink)" }}>{rating.toFixed(1)}</span>
-          {reviewCount > 0 && (
-            <span style={{ color: "var(--ink-light)" }}>({reviewCount.toLocaleString()} reviews)</span>
+      {items.map((item, i) => (
+        <span key={item} style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+          <span aria-hidden style={{ fontSize: 10, opacity: 0.85 }}>★</span>
+          <span style={{ color: "var(--luxe-soft-white-70)" }}>{item}</span>
+          {i < items.length - 1 && (
+            <span aria-hidden style={{ color: "var(--luxe-hairline-strong)", marginLeft: 22, opacity: 0.6 }}>·</span>
           )}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/* ────────────────────────── Section Eyebrow + Heading ────────────────────────── */
+
+function SectionHead({
+  eyebrow,
+  title,
+  italicWord,
+  trailingTitle,
+  description,
+  rightSlot,
+}: {
+  eyebrow: string;
+  title: string;
+  italicWord?: string;
+  trailingTitle?: string;
+  description?: string;
+  rightSlot?: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "space-between",
+        gap: 24,
+        flexWrap: "wrap",
+        marginBottom: 28,
+      }}
+    >
+      <div style={{ maxWidth: 720 }}>
+        <div className="luxe-tech" style={{ marginBottom: 10 }}>
+          {eyebrow}
         </div>
-      )}
-
-      <span style={{ color: "var(--cream-border)" }}>|</span>
-
-      {/* Member count */}
-      <div className="flex items-center gap-1.5">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-        <span>{memberCount.toLocaleString()}+ members trust Voyagr</span>
+        <h2
+          className="luxe-display"
+          style={{
+            fontSize: "clamp(26px, 3vw, 38px)",
+            marginBottom: description ? 10 : 0,
+          }}
+        >
+          {title}
+          {italicWord && (
+            <>
+              {" "}
+              <em>{italicWord}</em>
+            </>
+          )}
+          {trailingTitle && <> {trailingTitle}</>}
+        </h2>
+        {description && (
+          <p style={{ color: "var(--luxe-soft-white-70)", fontSize: 14.5, lineHeight: 1.7 }}>
+            {description}
+          </p>
+        )}
       </div>
-
-      <span style={{ color: "var(--cream-border)" }}>|</span>
-
-      {/* Verified rates */}
-      <div className="flex items-center gap-1.5">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          <polyline points="9 12 11 14 15 10" />
-        </svg>
-        <span>Verified preferred rates</span>
-      </div>
+      {rightSlot}
     </div>
   );
 }
@@ -625,7 +715,7 @@ export default function HotelPage() {
   const [activeGalleryCategory, setActiveGalleryCategory] = useState<GalleryCategory | null>(null);
 
   /* Tabs */
-  const [activeTab, setActiveTab] = useState<TabName>("Rooms");
+  const [activeTab, setActiveTab] = useState<TabName>("Rates");
 
   /* Rate plan selection */
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -661,8 +751,8 @@ export default function HotelPage() {
   const isSaved = hotel ? savedHotelIds.includes(String(hotel.hotel_id)) : false;
 
   /* Section refs for scroll-based tabs */
-  const roomsRef = useRef<HTMLDivElement>(null);
-  const overviewRef = useRef<HTMLDivElement>(null);
+  const ratesRef = useRef<HTMLDivElement>(null);
+  const stayRef = useRef<HTMLDivElement>(null);
   const galleryRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
 
@@ -903,7 +993,7 @@ export default function HotelPage() {
       setTimeout(() => setHighlightedOptionId(null), 2400);
     } else {
       setTimeout(() => {
-        document.getElementById("rooms")?.scrollIntoView({ behavior: "smooth" });
+        document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" });
       }, 80);
     }
     setPendingOptionId(null);
@@ -921,10 +1011,10 @@ export default function HotelPage() {
       trackHotelTabClicked({ hotel_id: hotel.hotel_id, hotel_name: hotel.hotel_name, tab_name: tab });
     }
     const refMap: Record<TabName, React.RefObject<HTMLDivElement | null>> = {
-      Rooms: roomsRef,
-      Overview: overviewRef,
-      Gallery: galleryRef,
-      Reviews: reviewsRef,
+      "Rates": ratesRef,
+      "The Stay": stayRef,
+      "Gallery": galleryRef,
+      "Reviews": reviewsRef,
     };
     const ref = refMap[tab];
     if (ref?.current) {
@@ -934,11 +1024,11 @@ export default function HotelPage() {
 
   /* ── Scroll-based active tab detection ── */
   useEffect(() => {
-    const sections = [
-      { ref: roomsRef, tab: "Rooms" as TabName },
-      { ref: overviewRef, tab: "Overview" as TabName },
-      { ref: galleryRef, tab: "Gallery" as TabName },
-      { ref: reviewsRef, tab: "Reviews" as TabName },
+    const sections: { ref: React.RefObject<HTMLDivElement | null>; tab: TabName }[] = [
+      { ref: ratesRef, tab: "Rates" },
+      { ref: stayRef, tab: "The Stay" },
+      { ref: galleryRef, tab: "Gallery" },
+      { ref: reviewsRef, tab: "Reviews" },
     ];
 
     const observer = new IntersectionObserver(
@@ -950,7 +1040,7 @@ export default function HotelPage() {
           }
         }
       },
-      { rootMargin: "-120px 0px -60% 0px", threshold: 0.1 }
+      { rootMargin: "-140px 0px -60% 0px", threshold: 0.1 }
     );
 
     sections.forEach((s) => {
@@ -960,65 +1050,28 @@ export default function HotelPage() {
     return () => observer.disconnect();
   }, [hotel]);
 
-  /* ── Loading ── full-page luxe skeleton (hero + chrome shimmer) */
+  /* ── Loading ── full-page luxe skeleton (dark) */
   if (loading) {
     return (
-      <div style={{ background: "var(--cream)", minHeight: "100vh" }}>
+      <div className="luxe min-h-screen" style={{ background: "var(--luxe-black)" }}>
         <Header />
         <div
           aria-busy="true"
           style={{
             maxWidth: 1280,
             margin: "0 auto",
-            padding: "88px 24px 120px",
+            padding: "120px 24px 120px",
           }}
         >
-          {/* Breadcrumb */}
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              alignItems: "center",
-              marginBottom: 20,
-            }}
-          >
-            <span
-              className="luxe-skeleton luxe-skeleton--cream"
-              style={{ display: "inline-block", height: 10, width: 60, borderRadius: 2 }}
-            />
-            <span
-              className="luxe-skeleton luxe-skeleton--cream"
-              style={{ display: "inline-block", height: 10, width: 90, borderRadius: 2 }}
-            />
-            <span
-              className="luxe-skeleton luxe-skeleton--cream"
-              style={{ display: "inline-block", height: 10, width: 140, borderRadius: 2 }}
-            />
-          </div>
+          <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 14, width: 120, marginBottom: 16, borderRadius: 3 }} />
+          <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 56, width: "62%", marginBottom: 12, borderRadius: 6 }} />
+          <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 14, width: "30%", marginBottom: 36, borderRadius: 3 }} />
+          <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 460, width: "100%", borderRadius: 14, marginBottom: 36 }} />
 
-          {/* Hero image */}
-          <div
-            className="luxe-skeleton luxe-skeleton--cream"
-            style={{ height: 460, width: "100%", borderRadius: 0, marginBottom: 28 }}
-          />
-
-          {/* Title + meta */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 36 }}>
-            <span
-              className="luxe-skeleton luxe-skeleton--cream"
-              style={{ display: "block", height: 28, width: "55%", borderRadius: 4 }}
-            />
-            <span
-              className="luxe-skeleton luxe-skeleton--cream"
-              style={{ display: "block", height: 14, width: "32%", borderRadius: 3 }}
-            />
-          </div>
-
-          {/* Body grid: rates list + sticky card */}
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(0, 1fr) 360px",
+              gridTemplateColumns: "minmax(0, 1fr) 380px",
               gap: 36,
             }}
           >
@@ -1026,14 +1079,9 @@ export default function HotelPage() {
               <RateCardSkeleton />
               <RateCardSkeleton />
               <RateCardSkeleton />
-              <RateCardSkeleton />
             </div>
-            <div
-              className="luxe-skeleton luxe-skeleton--cream"
-              style={{ height: 320, width: "100%", borderRadius: 0 }}
-            />
+            <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 380, width: "100%", borderRadius: 14 }} />
           </div>
-
           <span className="sr-only">Loading hotel…</span>
         </div>
       </div>
@@ -1044,8 +1092,8 @@ export default function HotelPage() {
   if (!hotel) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--cream)" }}
+        className="luxe min-h-screen flex items-center justify-center"
+        style={{ background: "var(--luxe-black)" }}
       >
         <div className="text-center max-w-md px-6">
           <div
@@ -1053,20 +1101,17 @@ export default function HotelPage() {
             style={{
               fontFamily: "var(--font-display)",
               fontStyle: "italic",
-              color: "var(--cream-border)",
+              color: "var(--luxe-champagne)",
+              opacity: 0.4,
             }}
           >
             404
           </div>
-          <p className="text-lg mb-2" style={{ color: "var(--ink)" }}>Hotel not found</p>
-          <p className="text-sm mb-8" style={{ color: "var(--ink-light)" }}>
+          <p className="text-lg mb-2" style={{ color: "var(--luxe-soft-white)" }}>Hotel not found</p>
+          <p className="text-sm mb-8" style={{ color: "var(--luxe-soft-white-50)" }}>
             This property may have been removed or the link is invalid.
           </p>
-          <Link
-            href="/"
-            className="inline-block px-6 py-3 text-xs font-medium uppercase tracking-[0.1em] transition-opacity hover:opacity-80"
-            style={{ background: "var(--gold)", color: "var(--ink)" }}
-          >
+          <Link href="/" className="luxe-btn-gold">
             Back to search
           </Link>
         </div>
@@ -1076,8 +1121,8 @@ export default function HotelPage() {
 
   const address = [hotel.addressline1, hotel.city, hotel.country].filter(Boolean).join(", ");
   const datesSelected = !!(booking.checkIn && booking.checkOut);
-  // Real savings only — no synthetic fallback. Badge hidden when null/0.
   const heroSavePercent = savingsPct != null && savingsPct > 0 ? savingsPct : null;
+  const heroImage = photos.length > 0 ? safePhotoUrl(photos[0]) : FALLBACK_IMG;
 
   /* Sidebar derived values */
   const sidebarNightly = selectedPlan ? selectedPlan.total_price / Math.max(nights, 1) : 0;
@@ -1085,8 +1130,25 @@ export default function HotelPage() {
   const sidebarMarket = selectedPlan && mrpRate && mrpRate > selectedPlan.total_price ? mrpRate : 0;
   const sidebarSaving = sidebarMarket - sidebarTotal;
 
+  /* Lowest from-rate for sticky bottom bar */
+  const lowestFromRate = rates && rates.rates.length > 0
+    ? Math.min(...rates.rates.map((r) => r.total_price / Math.max(nights, 1)))
+    : null;
+
+  /* Editorial overview parts */
+  const overviewPlain = hotel.overview ? hotel.overview.replace(/<[^>]*>/g, "").trim() : "";
+  const sentenceMatches = overviewPlain.match(/[^.!?]+[.!?]+(\s|$)/g);
+  const sentences = sentenceMatches ? sentenceMatches.map((s) => s.trim()) : [overviewPlain];
+  const overviewHasMore = sentences.length > 3;
+  const overviewLeadFirst = sentences[0] || "";
+  const overviewLeadRest = sentences.slice(1, 3).join(" ");
+  const overviewExtra = sentences.slice(3).join(" ");
+
+  /* Bento gallery slots (first 5) */
+  const bentoPhotos = photos.slice(0, 5);
+
   return (
-    <div className="luxe min-h-screen" style={{ background: "var(--cream)", color: "var(--ink)" }}>
+    <div className="luxe min-h-screen" style={{ background: "var(--luxe-black)", color: "var(--luxe-soft-white)", overflowX: "hidden" }}>
       {/* ═══════════════════ Lightbox ═══════════════════ */}
       <AnimatePresence>
         {lightboxOpen && lightboxPhotos.length > 0 && (
@@ -1102,185 +1164,96 @@ export default function HotelPage() {
 
       <Header />
 
-      {/* ═══════════════════ Full-Width Hero Image ═══════════════════ */}
-      <section className="relative w-full" style={{ height: "clamp(320px, 50vh, 520px)", marginTop: 60 }}>
-        {photos.length > 0 ? (
-          <img
-            src={safePhotoUrl(photos[0])}
-            alt={hotel.hotel_name}
-            className="w-full h-full object-cover"
-            style={{ filter: "brightness(0.75) saturate(0.9)", cursor: "pointer" }}
-            onClick={() => openLightbox(0)}
-            onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-          />
-        ) : (
-          <div className="w-full h-full" style={{ background: "var(--cream-deep)" }} />
-        )}
-
-        {/* Dark gradient overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none"
+      {/* ═══════════════════ 1. HERO ═══════════════════ */}
+      <header
+        style={{
+          position: "relative",
+          minHeight: "min(720px, 92vh)",
+          display: "flex",
+          alignItems: "flex-end",
+          paddingTop: 96,
+          paddingBottom: 56,
+          paddingLeft: 24,
+          paddingRight: 24,
+          overflow: "hidden",
+          background: "var(--luxe-black)",
+        }}
+      >
+        {/* Background image — clickable to open gallery */}
+        <button
+          onClick={() => openLightbox(0)}
+          aria-label="Open gallery"
           style={{
-            background: "linear-gradient(to top, rgba(26,23,16,0.8) 0%, rgba(26,23,16,0.2) 50%, transparent 100%)",
+            position: "absolute",
+            inset: 0,
+            background: `url(${heroImage}) center/cover no-repeat`,
+            filter: "saturate(0.92) brightness(0.7)",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            zIndex: 0,
+          }}
+        />
+        {/* Gradient overlay */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(180deg, rgba(12,11,10,0.55) 0%, rgba(12,11,10,0.25) 32%, rgba(12,11,10,0.85) 88%, rgba(12,11,10,0.96) 100%)",
+            zIndex: 0,
+            pointerEvents: "none",
           }}
         />
 
-        {/* Hotel name + badge overlay */}
-        <div
-          className="absolute bottom-0 left-0 right-0 flex items-end justify-between px-6 pb-8 md:px-12 lg:px-16"
-          style={{ color: "var(--cream)", zIndex: 5 }}
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            {starDisplay && (
-              <div
-                style={{
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  letterSpacing: "0.12em",
-                  color: "var(--gold)",
-                  marginBottom: 8,
-                }}
-              >
-                {starDisplay} {hotel.city}{hotel.country ? `, ${hotel.country}` : ""}
-              </div>
-            )}
-            <h1
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(28px, 4vw, 48px)",
-                fontWeight: 300,
-                fontStyle: "italic",
-                lineHeight: 1.1,
-                color: "var(--cream)",
-              }}
-            >
-              {hotel.hotel_name}
-            </h1>
-          </motion.div>
-
-          {/* Save up to badge — only when real savings available, else show "Preferred Rate" */}
-          {heroSavePercent != null ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="shrink-0 text-center hidden sm:block"
-              style={{
-                background: "var(--gold)",
-                color: "#1a1710",
-                padding: "12px 24px",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 600,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Save up to
-              </div>
-              <div
-                style={{
-                  fontSize: "26px",
-                  fontWeight: 500,
-                  fontFamily: "var(--font-display)",
-                  lineHeight: 1.2,
-                }}
-              >
-                {heroSavePercent}%
-              </div>
-              <div style={{ fontSize: "10px", opacity: 0.7 }}>vs. public rates</div>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="shrink-0 text-center hidden sm:block"
-              style={{
-                background: "var(--gold)",
-                color: "#1a1710",
-                padding: "16px 24px",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  fontFamily: "var(--font-display)",
-                }}
-              >
-                Preferred Rate
-              </div>
-              <div style={{ fontSize: "10px", opacity: 0.7, marginTop: 2 }}>Member exclusive</div>
-            </motion.div>
-          )}
-        </div>
-
-        {/* Save / Heart button */}
+        {/* Save / Heart button (top-left) */}
         <button
           onClick={handleHeartClick}
           aria-label={isSaved ? "Remove from saved hotels" : "Save this hotel"}
           aria-pressed={isSaved}
-          className="absolute top-4 left-4 md:top-6 md:left-6 flex items-center justify-center z-10"
+          className="absolute top-20 left-4 md:top-24 md:left-8 flex items-center justify-center"
           style={{
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             borderRadius: "50%",
-            background: "rgba(26,23,16,0.55)",
-            backdropFilter: "blur(8px)",
-            WebkitBackdropFilter: "blur(8px)",
-            border: "none",
+            background: "rgba(12,11,10,0.55)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid var(--luxe-hairline-strong)",
             cursor: "pointer",
             transition: "transform 0.15s ease, background 0.15s ease",
-            color: isSaved ? "var(--gold)" : "var(--cream)",
+            color: isSaved ? "var(--luxe-champagne)" : "var(--luxe-soft-white)",
+            zIndex: 5,
           }}
-          onMouseDown={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.92)";
-          }}
-          onMouseUp={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-          }}
+          onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.92)"; }}
+          onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill={isSaved ? "currentColor" : "none"}
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
         </button>
 
-        {/* Photo counter */}
+        {/* Photo counter (top-right) */}
         {photos.length > 1 && (
           <button
             onClick={() => openLightbox(0)}
-            className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-1.5 px-3 py-1.5 z-10"
+            className="absolute top-20 right-4 md:top-24 md:right-8 flex items-center gap-2 px-4 py-2"
             style={{
-              background: "rgba(26,23,16,0.6)",
-              backdropFilter: "blur(8px)",
-              color: "var(--cream)",
-              fontSize: "11px",
-              letterSpacing: "0.06em",
+              background: "rgba(12,11,10,0.6)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              color: "var(--luxe-soft-white)",
+              fontSize: 11,
+              letterSpacing: "0.18em",
               fontFamily: "var(--font-mono)",
-              border: "none",
+              border: "1px solid var(--luxe-hairline-strong)",
+              borderRadius: 999,
               cursor: "pointer",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              zIndex: 5,
             }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -1288,1114 +1261,1460 @@ export default function HotelPage() {
               <circle cx="8.5" cy="8.5" r="1.5" />
               <path d="M21 15l-5-5L5 21" />
             </svg>
-            {photos.length} photos
+            View all · {photos.length}
           </button>
         )}
-      </section>
 
-      {/* ═══════════════════ Trust Signals ═══════════════════ */}
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
-        <TrustSignals hotelId={hotel.hotel_id} rating={hotel.rating_average} reviewCount={hotel.number_of_reviews} />
-      </div>
+        {/* Hero content */}
+        <div className="luxe-container" style={{ position: "relative", zIndex: 1, width: "100%" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <div className="luxe-tech" style={{ marginBottom: 16 }}>
+              {hotel.city.toUpperCase()}
+              {hotel.country && (
+                <>
+                  <span style={{ margin: "0 8px", opacity: 0.5 }}>·</span>
+                  <span style={{ color: "var(--luxe-soft-white-50)" }}>
+                    {hotel.country.toUpperCase()}
+                  </span>
+                </>
+              )}
+            </div>
 
-      {/* ═══════════════════ Tab Bar (Sticky) ═══════════════════ */}
-      <div
-        className="tab-navigation flex gap-0 sticky top-[60px] overflow-x-auto"
-        style={{
-          background: "#ffffff",
-          borderBottom: "1px solid rgba(0,0,0,0.08)",
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-          marginTop: 16,
-          zIndex: 50,
-        }}
-      >
-        <div className="flex gap-0 md:gap-2 mx-auto max-w-[1200px] w-full px-6 md:px-12 lg:px-16">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => handleTabClick(tab)}
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="luxe-display"
               style={{
-                padding: "14px 20px",
-                color: activeTab === tab ? "var(--ink)" : "var(--ink-light)",
-                cursor: "pointer",
-                background: "transparent",
-                border: "none",
-                borderBottom: activeTab === tab ? "2px solid var(--ink)" : "2px solid transparent",
-                transition: "all 0.2s",
-                whiteSpace: "nowrap",
-                fontSize: "13px",
-                fontWeight: 500,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase" as const,
-                fontFamily: "var(--font-body)",
+                fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif",
+                fontSize: "clamp(40px, 6.4vw, 84px)",
+                fontWeight: 300,
+                fontStyle: "italic",
+                lineHeight: 1.04,
+                color: "var(--luxe-soft-white)",
+                marginBottom: 22,
+                letterSpacing: "-0.02em",
+                maxWidth: 1100,
               }}
             >
-              {tab}
-            </button>
-          ))}
+              {hotel.hotel_name}
+            </motion.h1>
+
+            {/* Star + chain pills */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.28 }}
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 24,
+              }}
+            >
+              {starDisplay && (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 14px",
+                    borderRadius: 999,
+                    background: "var(--luxe-champagne-soft)",
+                    border: "1px solid var(--luxe-champagne-line)",
+                    color: "var(--luxe-champagne)",
+                    fontSize: 12,
+                    letterSpacing: "0.16em",
+                    fontWeight: 600,
+                  }}
+                >
+                  {starDisplay}
+                </span>
+              )}
+              {hotel.rating_average > 0 && (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 14px",
+                    borderRadius: 999,
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid var(--luxe-hairline-strong)",
+                    color: "var(--luxe-soft-white)",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  <span style={{ color: "var(--luxe-champagne)" }}>{hotel.rating_average.toFixed(1)}</span>
+                  <span style={{ color: "var(--luxe-soft-white-50)" }}>/ 10</span>
+                  {hotel.number_of_reviews > 0 && (
+                    <span style={{ color: "var(--luxe-soft-white-50)" }}>· {hotel.number_of_reviews.toLocaleString()} reviews</span>
+                  )}
+                </span>
+              )}
+              {hotel.chain_name && (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "6px 14px",
+                    borderRadius: 999,
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid var(--luxe-hairline-strong)",
+                    color: "var(--luxe-soft-white-70)",
+                    fontSize: 12,
+                    letterSpacing: "0.04em",
+                    fontFamily: "var(--font-body)",
+                  }}
+                >
+                  {hotel.chain_name}
+                </span>
+              )}
+            </motion.div>
+
+            {/* Champagne lead */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.36 }}
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 13,
+                color: "var(--luxe-champagne)",
+                letterSpacing: "0.06em",
+                marginBottom: 30,
+              }}
+            >
+              <span style={{ fontWeight: 600 }}>Preferred rate</span>
+              <span style={{ color: "var(--luxe-soft-white-50)", margin: "0 8px" }}>·</span>
+              <span style={{ color: "var(--luxe-soft-white-70)" }}>
+                {heroSavePercent != null
+                  ? `Voyagr Club members save up to ${heroSavePercent}% vs. public rates`
+                  : "Voyagr Club members save on every stay"}
+              </span>
+            </motion.p>
+
+            {/* Scroll CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.44 }}
+              style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}
+            >
+              <button
+                onClick={() => document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" })}
+                className="luxe-btn-primary"
+                aria-label="See member rates"
+              >
+                See member rates ↓
+              </button>
+              <a
+                href={conciergeWhatsappLink(`Hi, I'm interested in ${hotel.hotel_name} in ${hotel.city}`)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="luxe-btn-secondary"
+              >
+                Ask Concierge
+              </a>
+            </motion.div>
+          </motion.div>
+        </div>
+      </header>
+
+      {/* ═══════════════════ 2. CHAMPAGNE TRUST STRIP ═══════════════════ */}
+      <section
+        style={{
+          padding: "20px 24px",
+          borderTop: "1px solid var(--luxe-hairline)",
+          borderBottom: "1px solid var(--luxe-hairline)",
+          background: "rgba(255,255,255,0.015)",
+        }}
+      >
+        <div className="luxe-container">
+          <TrustStrip />
+        </div>
+      </section>
+
+      {/* ═══════════════════ 3. STICKY TAB BAR ═══════════════════ */}
+      <div
+        className="overflow-x-auto"
+        style={{
+          position: "sticky",
+          top: 60,
+          zIndex: 40,
+          background: "rgba(12,11,10,0.86)",
+          borderBottom: "1px solid var(--luxe-hairline)",
+          backdropFilter: "blur(14px)",
+          WebkitBackdropFilter: "blur(14px)",
+          padding: "12px 24px",
+        }}
+      >
+        <div
+          className="luxe-container"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 14,
+            flexWrap: "wrap",
+            padding: 0,
+          }}
+        >
+          <div style={{ display: "flex", gap: 6, flexWrap: "nowrap", overflowX: "auto" }}>
+            {TABS.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleTabClick(tab)}
+                className={activeTab === tab ? "luxe-tab is-active" : "luxe-tab"}
+                style={{ flexShrink: 0 }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {datesSelected && (
+            <div
+              style={{
+                marginLeft: "auto",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontFamily: "var(--font-body)",
+                fontSize: 12,
+                color: "var(--luxe-soft-white-70)",
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--luxe-champagne)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <span>
+                {formatDateLabel(booking.checkIn)} – {formatDateLabel(booking.checkOut)} · {booking.guestSummary}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ═══════════════════ Two-Column Layout ═══════════════════ */}
-      <div
-        className="flex flex-col lg:grid mx-auto"
+      {/* ═══════════════════ 4. EDITORIAL OVERVIEW ═══════════════════ */}
+      <section
+        ref={stayRef}
+        id="the-stay"
         style={{
-          maxWidth: 1200,
-          gridTemplateColumns: "1fr 380px",
-          gap: 0,
-          padding: "0 24px",
+          padding: "80px 24px 48px",
+          scrollMarginTop: 140,
         }}
       >
-        {/* ─── Left: Scrollable Content ─── */}
-        <div style={{ padding: "32px 0 120px 0" }} className="lg:pr-10">
-
-          {/* ══════ ROOMS SECTION ══════ */}
-          <div id="rooms" ref={roomsRef} style={{ scrollMarginTop: "120px" }}>
-            {/* Stay summary header */}
-            <div
-              className="flex items-center flex-wrap gap-2 mb-6"
-              style={{
-                fontSize: "13px",
-                color: "var(--ink-light)",
-                fontFamily: "var(--font-body)",
-              }}
-            >
-              <span style={{ fontWeight: 500, color: "var(--ink)" }}>
-                {booking.nights > 0 ? `${booking.nights} night${booking.nights > 1 ? "s" : ""}` : "1 night"}
-              </span>
-              {booking.checkIn && booking.checkOut && (
-                <>
-                  <span>&middot;</span>
-                  <span>{booking.formatDate(booking.checkIn)} &ndash; {booking.formatDate(booking.checkOut)}</span>
-                </>
-              )}
-              <span>&middot;</span>
-              <span>{booking.guestSummary}</span>
+        <div className="luxe-container" style={{ padding: 0 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1fr)",
+              gap: 36,
+            }}
+          >
+            <div style={{ maxWidth: 760 }}>
+              <div className="luxe-tech" style={{ marginBottom: 12 }}>
+                The Stay
+              </div>
+              <h2
+                className="luxe-display"
+                style={{
+                  fontSize: "clamp(32px, 4vw, 52px)",
+                  marginBottom: 24,
+                }}
+              >
+                A property our concierge <em>keeps revisiting</em>
+              </h2>
             </div>
 
-            {/* Preferred rates callout */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 14,
-                padding: "12px 16px",
-                background: "var(--gold-pale)",
-                border: "1px solid var(--gold-light)",
-                marginBottom: 24,
-                fontFamily: "var(--font-body)",
-                color: "var(--ink-mid)",
-                flexWrap: "wrap",
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-              <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-                <span
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "var(--ink)",
-                    letterSpacing: "0.01em",
-                  }}
-                >
-                  Preferred rates &middot; Voyagr Club
-                </span>
-                {!datesSelected ? (
-                  <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>
-                    Pick your dates to see live, member-only rates.
-                  </span>
-                ) : !user ? (
-                  <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>
-                    <button
-                      onClick={() => {
-                        setPendingOptionId(null);
-                        setLoginIntent("room-select");
-                        setLoginModalOpen(true);
-                      }}
+            {overviewPlain ? (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1.6fr) minmax(0, 1fr)",
+                  gap: 48,
+                }}
+                className="hotel-overview-grid"
+              >
+                {/* Lead column — big italic first sentence */}
+                <div>
+                  <p
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "clamp(22px, 2.4vw, 30px)",
+                      fontWeight: 300,
+                      fontStyle: "italic",
+                      color: "var(--luxe-soft-white)",
+                      lineHeight: 1.4,
+                      letterSpacing: "-0.01em",
+                      marginBottom: 24,
+                      borderLeft: "1px solid var(--luxe-champagne-line)",
+                      paddingLeft: 24,
+                    }}
+                  >
+                    {overviewLeadFirst || hotel.hotel_name}
+                  </p>
+                  {overviewLeadRest && (
+                    <p
                       style={{
+                        fontSize: 15,
+                        color: "var(--luxe-soft-white-70)",
+                        lineHeight: 1.85,
+                        paddingLeft: 25,
+                        marginBottom: 14,
+                      }}
+                    >
+                      {overviewLeadRest}
+                    </p>
+                  )}
+                  {overviewExpanded && overviewExtra && (
+                    <p
+                      style={{
+                        fontSize: 15,
+                        color: "var(--luxe-soft-white-70)",
+                        lineHeight: 1.85,
+                        paddingLeft: 25,
+                        marginBottom: 14,
+                      }}
+                    >
+                      {overviewExtra}
+                    </p>
+                  )}
+                  {overviewHasMore && (
+                    <button
+                      onClick={() => setOverviewExpanded((v) => !v)}
+                      style={{
+                        marginLeft: 25,
                         background: "none",
                         border: "none",
                         padding: 0,
-                        color: "var(--gold)",
-                        textDecoration: "underline",
-                        fontFamily: "var(--font-body)",
-                        fontSize: "12px",
+                        color: "var(--luxe-champagne)",
+                        fontWeight: 600,
                         cursor: "pointer",
+                        fontFamily: "var(--font-body)",
+                        fontSize: 13,
+                        letterSpacing: "0.04em",
                       }}
                     >
-                      Sign in
+                      {overviewExpanded ? "Read less" : "Read more →"}
                     </button>
-                    {" to unlock the lowest available rate."}
-                  </span>
-                ) : null}
-              </div>
-            </div>
-
-            {/* ══════ RATES BODY ══════ */}
-            {!datesSelected ? (
-              /* No dates prompt */
-              <div
-                style={{
-                  background: "var(--white)",
-                  border: "1px solid var(--cream-border)",
-                  padding: "40px 24px",
-                  textAlign: "center",
-                  fontSize: "14px",
-                  color: "var(--ink-mid)",
-                  fontFamily: "var(--font-body)",
-                  marginBottom: 24,
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "18px",
-                    fontStyle: "italic",
-                    color: "var(--ink)",
-                    marginBottom: 8,
-                  }}
-                >
-                  Select your dates to see rates
+                  )}
                 </div>
-                <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>
-                  Choose a check-in and check-out date above to unlock live pricing.
-                </p>
-              </div>
-            ) : noMatch ? (
-              /* No TripJack mapping — concierge quote */
-              <div
-                style={{
-                  background: "var(--white)",
-                  border: "1px solid var(--cream-border)",
-                  padding: "32px 24px",
-                  marginBottom: 24,
-                }}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div style={{ width: 4, height: 24, background: "var(--gold)", flexShrink: 0 }} />
-                  <h3
+
+                {/* Stay facts — luxe glass card list */}
+                <div>
+                  <div
+                    className="luxe-card"
                     style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "20px",
-                      fontWeight: 500,
-                      color: "var(--ink)",
+                      padding: 24,
+                      borderRadius: 14,
                     }}
                   >
-                    Rates on request
-                  </h3>
+                    <div className="luxe-tech" style={{ marginBottom: 16 }}>
+                      The Particulars
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                      {hotel.checkin && (
+                        <FactRow label="Check-in" value={hotel.checkin} />
+                      )}
+                      {hotel.checkout && (
+                        <FactRow label="Check-out" value={hotel.checkout} />
+                      )}
+                      {hotel.numberrooms && (
+                        <FactRow label="Rooms & Suites" value={String(hotel.numberrooms)} />
+                      )}
+                      {hotel.yearrenovated && (
+                        <FactRow label="Last Renovated" value={String(hotel.yearrenovated)} />
+                      )}
+                      {hotel.yearopened && (
+                        <FactRow label="Year Opened" value={String(hotel.yearopened)} />
+                      )}
+                      {hotel.accommodation_type && (
+                        <FactRow label="Type" value={hotel.accommodation_type} />
+                      )}
+                      {hotel.brand_name && !hotel.chain_name && (
+                        <FactRow label="Brand" value={hotel.brand_name} />
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <p
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--ink-mid)",
-                    lineHeight: 1.7,
-                    marginBottom: 20,
-                    maxWidth: 560,
-                  }}
-                >
-                  Our concierge will source the best possible rate for this hotel and get back to you on WhatsApp within 15 minutes.
-                </p>
-                <button
-                  onClick={() => setUnlockModalOpen(true)}
-                  style={{
-                    padding: "12px 28px",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    background: "var(--gold)",
-                    color: "#1a1710",
-                    border: "none",
-                    cursor: "pointer",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  Contact concierge
-                </button>
               </div>
-            ) : ratesError ? (
-              /* Error state */
-              <div
-                style={{
-                  background: "var(--white)",
-                  border: "1px solid var(--cream-border)",
-                  padding: "24px",
-                  textAlign: "center",
-                  marginBottom: 24,
-                }}
-              >
-                <p style={{ fontSize: "14px", color: "var(--ink)", marginBottom: 12 }}>
-                  Rates unavailable right now
-                </p>
-                <p style={{ fontSize: "12px", color: "var(--ink-light)", marginBottom: 16 }}>
-                  {ratesError}
-                </p>
-                <button
-                  onClick={() => setRatesRefreshKey((k) => k + 1)}
-                  style={{
-                    padding: "10px 20px",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    background: "var(--gold)",
-                    color: "#1a1710",
-                    border: "none",
-                    cursor: "pointer",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  Retry
-                </button>
-              </div>
-            ) : ratesLoading ? (
-              /* Skeletons */
-              <div className="flex flex-col gap-4 mb-6">
-                <RateCardSkeleton />
-                <RateCardSkeleton />
-                <RateCardSkeleton />
-                <RateCardSkeleton />
-              </div>
-            ) : rates && rates.rates.length === 0 ? (
-              /* Empty rates */
-              <div
-                style={{
-                  background: "var(--white)",
-                  border: "1px solid var(--cream-border)",
-                  padding: "24px",
-                  textAlign: "center",
-                  fontSize: "13px",
-                  color: "var(--ink-light)",
-                  fontFamily: "var(--font-body)",
-                  marginBottom: 24,
-                }}
-              >
-                No rates for these dates — try different dates.
-              </div>
-            ) : rates ? (
-              <>
-                {/* ── Rate filter bar ── */}
-                <RateFilterBar
-                  freeCancellation={filterFreeCancellation}
-                  onToggleFreeCancellation={() => setFilterFreeCancellation((v) => !v)}
-                  mealPlan={filterMealPlan}
-                  onChangeMealPlan={setFilterMealPlan}
-                />
+            ) : (
+              <p style={{ color: "var(--luxe-soft-white-70)", fontSize: 14 }}>
+                Editorial coming soon for this property.
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
 
-                {filteredRates.length === 0 ? (
+      {/* ═══════════════════ 5. BENTO GALLERY ═══════════════════ */}
+      <section
+        ref={galleryRef}
+        id="gallery"
+        style={{
+          padding: "48px 24px 80px",
+          borderTop: "1px solid var(--luxe-hairline)",
+          scrollMarginTop: 140,
+        }}
+      >
+        <div className="luxe-container" style={{ padding: 0 }}>
+          <SectionHead
+            eyebrow="In Frame"
+            title="The"
+            italicWord="property"
+            description={
+              hasCategorisedPhotos
+                ? `${photos.length} photographs across ${availableCategories.length} categories. Click any image to enter the gallery.`
+                : photos.length > 0
+                  ? `${photos.length} photographs. Click any image to enter the gallery.`
+                  : "Photographs coming soon."
+            }
+            rightSlot={
+              photos.length > 0 ? (
+                <button
+                  onClick={() => openLightbox(0)}
+                  className="luxe-tech"
+                  style={{
+                    color: "var(--luxe-champagne)",
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  View All &rarr;
+                </button>
+              ) : null
+            }
+          />
+
+          {/* Category chips (if categorised photos available) */}
+          {hasCategorisedPhotos && photosByCategory && (
+            <div
+              className="flex gap-2 mb-6 no-scrollbar"
+              style={{
+                overflowX: "auto",
+                paddingBottom: 4,
+              }}
+            >
+              {availableCategories.map((cat) => {
+                const isActive = activeGalleryCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveGalleryCategory((prev) => (prev === cat ? null : cat))}
+                    className={isActive ? "luxe-tab is-active" : "luxe-tab"}
+                    style={{ flexShrink: 0 }}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Bento layout — only when not actively filtering by category */}
+          {!activeGalleryCategory && bentoPhotos.length >= 5 ? (
+            <div
+              className="hotel-bento"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gridTemplateRows: "260px 260px",
+                gap: 12,
+                borderRadius: 14,
+                overflow: "hidden",
+              }}
+            >
+              {/* Big left photo (2x2) */}
+              <button
+                onClick={() => openLightbox(0)}
+                className="bento-tile"
+                style={{
+                  gridColumn: "1 / 3",
+                  gridRow: "1 / 3",
+                }}
+              >
+                <img
+                  src={safePhotoUrl(bentoPhotos[0])}
+                  alt={`${hotel.hotel_name} 1`}
+                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+                />
+                <div className="bento-tile-overlay" />
+              </button>
+              {/* Top-right two */}
+              <button onClick={() => openLightbox(1)} className="bento-tile">
+                <img
+                  src={safePhotoUrl(bentoPhotos[1])}
+                  alt={`${hotel.hotel_name} 2`}
+                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+                />
+                <div className="bento-tile-overlay" />
+              </button>
+              <button onClick={() => openLightbox(2)} className="bento-tile">
+                <img
+                  src={safePhotoUrl(bentoPhotos[2])}
+                  alt={`${hotel.hotel_name} 3`}
+                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+                />
+                <div className="bento-tile-overlay" />
+              </button>
+              {/* Bottom-right two */}
+              <button onClick={() => openLightbox(3)} className="bento-tile">
+                <img
+                  src={safePhotoUrl(bentoPhotos[3])}
+                  alt={`${hotel.hotel_name} 4`}
+                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+                />
+                <div className="bento-tile-overlay" />
+              </button>
+              <button
+                onClick={() => openLightbox(4)}
+                className="bento-tile"
+                style={{ position: "relative" }}
+              >
+                <img
+                  src={safePhotoUrl(bentoPhotos[4])}
+                  alt={`${hotel.hotel_name} 5`}
+                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+                />
+                <div className="bento-tile-overlay" />
+                {photos.length > 5 && (
                   <div
                     style={{
-                      background: "var(--white)",
-                      border: "1px solid var(--cream-border)",
-                      padding: "24px",
-                      textAlign: "center",
-                      fontSize: "13px",
-                      color: "var(--ink-light)",
-                      fontFamily: "var(--font-body)",
-                      marginBottom: 24,
+                      position: "absolute",
+                      inset: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(12,11,10,0.55)",
+                      color: "var(--luxe-soft-white)",
+                      fontFamily: "var(--font-display)",
+                      fontStyle: "italic",
+                      fontSize: 22,
+                      letterSpacing: "-0.01em",
+                      pointerEvents: "none",
                     }}
                   >
-                    No rates match the current filters. Try clearing a filter to see more options.
-                  </div>
-                ) : (
-                  <div className="mb-10">
-                    <div className="flex items-center gap-3 mb-5">
-                      <div
-                        style={{
-                          width: 4,
-                          height: 24,
-                          background: "var(--gold)",
-                          flexShrink: 0,
-                        }}
-                      />
-                      <h3
-                        style={{
-                          fontFamily: "var(--font-display)",
-                          fontSize: "20px",
-                          fontWeight: 500,
-                          color: "var(--ink)",
-                        }}
-                      >
-                        Available Rates
-                      </h3>
-                      <span
-                        style={{
-                          fontSize: "10px",
-                          fontWeight: 600,
-                          letterSpacing: "0.1em",
-                          textTransform: "uppercase",
-                          color: "var(--gold)",
-                          background: "var(--gold-pale)",
-                          padding: "3px 8px",
-                        }}
-                      >
-                        Live pricing
-                      </span>
-                    </div>
-                    <p
-                      style={{
-                        fontSize: "13px",
-                        color: "var(--ink-light)",
-                        marginBottom: 16,
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {filteredRates.length} option{filteredRates.length !== 1 ? "s" : ""} for your stay
-                      {rates.nights > 0 ? ` (${rates.nights} night${rates.nights > 1 ? "s" : ""})` : ""}.
-                    </p>
-
-                    <div className="flex flex-col gap-4">
-                      {filteredRates.map((plan) => (
-                        <RateCard
-                          key={plan.option_id}
-                          plan={plan}
-                          nights={rates.nights || nights}
-                          mrpRate={mrpRate}
-                          mrpCurrency={mrpCurrency}
-                          savingsPct={savingsPct}
-                          isSelected={selectedOptionId === plan.option_id}
-                          isHighlighted={highlightedOptionId === plan.option_id}
-                          cardRef={(el) => { rateCardRefs.current[plan.option_id] = el; }}
-                          onSelect={() =>
-                            setSelectedOptionId(selectedOptionId === plan.option_id ? null : plan.option_id)
-                          }
-                          onProceed={() => handlePlanSelectCTA(plan)}
-                        />
-                      ))}
-                    </div>
+                    + {photos.length - 5} more
                   </div>
                 )}
-              </>
-            ) : null}
-          </div>
-
-          {/* ══════ OVERVIEW SECTION ══════ */}
-          <div ref={overviewRef} style={{ scrollMarginTop: "120px", paddingTop: 32 }}>
-            <div className="flex items-center gap-3 mb-5">
-              <div style={{ width: 4, height: 24, background: "var(--ink)", flexShrink: 0 }} />
-              <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 500, color: "var(--ink)" }}>
-                Overview
-              </h3>
+              </button>
             </div>
-
-            {hotel.overview && (() => {
-              const plain = hotel.overview.replace(/<[^>]*>/g, "").trim();
-              const sentenceMatches = plain.match(/[^.!?]+[.!?]+(\s|$)/g);
-              const sentences = sentenceMatches ? sentenceMatches.map((s) => s.trim()) : [plain];
-              const hasMore = sentences.length > 3;
-              const shown = overviewExpanded || !hasMore
-                ? plain
-                : sentences.slice(0, 3).join(" ");
-              return (
-                <p style={{ fontSize: "14px", color: "var(--ink-mid)", lineHeight: 1.8, marginBottom: 24 }}>
-                  {shown}
-                  {hasMore && (
-                    <>
-                      {" "}
-                      <button
-                        onClick={() => setOverviewExpanded((v) => !v)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          padding: 0,
-                          color: "var(--gold)",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          fontFamily: "var(--font-body)",
-                          fontSize: "14px",
-                        }}
-                      >
-                        {overviewExpanded ? "Read less" : "Read more →"}
-                      </button>
-                    </>
-                  )}
-                </p>
-              );
-            })()}
-
+          ) : (
+            /* Fallback grid (mobile, < 5 photos, or category filter active) */
             <div
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                gap: 16,
-                marginBottom: 24,
+                gap: 10,
               }}
             >
-              {hotel.checkin && (
-                <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Check-in</div>
-                  <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.checkin}</div>
-                </div>
-              )}
-              {hotel.checkout && (
-                <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Check-out</div>
-                  <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.checkout}</div>
-                </div>
-              )}
-              {hotel.numberrooms && (
-                <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Total Rooms</div>
-                  <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.numberrooms}</div>
-                </div>
-              )}
-              {hotel.yearrenovated && (
-                <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Last Renovated</div>
-                  <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.yearrenovated}</div>
-                </div>
-              )}
-              {hotel.accommodation_type && (
-                <div style={{ background: "var(--white)", padding: "14px 16px", border: "1px solid var(--cream-border)" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-light)", marginBottom: 4 }}>Type</div>
-                  <div style={{ fontSize: "14px", color: "var(--ink)", fontWeight: 500 }}>{hotel.accommodation_type}</div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* ══════ GALLERY SECTION ══════ */}
-          <div ref={galleryRef} style={{ scrollMarginTop: "120px", paddingTop: 32 }}>
-            <div className="flex items-center justify-between gap-3 mb-5">
-              <div className="flex items-center gap-3">
-                <div style={{ width: 4, height: 24, background: "var(--ink)", flexShrink: 0 }} />
-                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 500, color: "var(--ink)" }}>
-                  Gallery
-                </h3>
-              </div>
-              {photos.length > 0 && (
+              {visibleGalleryPhotos.map((photo, i) => (
                 <button
-                  onClick={() => openLightbox(0)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    color: "var(--gold)",
-                    fontWeight: 600,
-                    fontSize: "13px",
-                    cursor: "pointer",
-                    fontFamily: "var(--font-body)",
+                  key={`${photo}-${i}`}
+                  onClick={() => {
+                    const idx = photos.indexOf(photo);
+                    openLightbox(idx >= 0 ? idx : 0);
                   }}
+                  className="bento-tile"
+                  style={{ aspectRatio: "4/3", borderRadius: 14 }}
                 >
-                  View All →
+                  <img
+                    src={safePhotoUrl(photo)}
+                    alt={`${hotel.hotel_name} ${i + 1}`}
+                    onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+                  />
+                  <div className="bento-tile-overlay" />
                 </button>
-              )}
-            </div>
-
-            {photos.length > 0 ? (
-              <>
-                {hasCategorisedPhotos && photosByCategory && (
-                  <div
-                    className="flex gap-3 mb-5"
-                    style={{
-                      overflowX: "auto",
-                      scrollbarWidth: "none",
-                      msOverflowStyle: "none",
-                      paddingBottom: 4,
-                    }}
-                  >
-                    {availableCategories.map((cat) => {
-                      const catPhotos = (photosByCategory[cat] as string[]) || [];
-                      const thumb = catPhotos[0];
-                      const isActive = activeGalleryCategory === cat;
-                      return (
-                        <button
-                          key={cat}
-                          onClick={() =>
-                            setActiveGalleryCategory((prev) => (prev === cat ? null : cat))
-                          }
-                          style={{
-                            flexShrink: 0,
-                            width: 120,
-                            background: "transparent",
-                            border: "none",
-                            padding: 0,
-                            cursor: "pointer",
-                            fontFamily: "var(--font-body)",
-                            textAlign: "center",
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: "100%",
-                              aspectRatio: "4/3",
-                              overflow: "hidden",
-                              background: "var(--cream-deep)",
-                              border: isActive ? "2px solid var(--gold)" : "2px solid transparent",
-                              transition: "border-color 0.2s",
-                            }}
-                          >
-                            {thumb ? (
-                              <img
-                                src={safePhotoUrl(thumb)}
-                                alt={cat}
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                              />
-                            ) : null}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: "12px",
-                              color: isActive ? "var(--ink)" : "var(--ink-light)",
-                              fontWeight: isActive ? 600 : 500,
-                              marginTop: 6,
-                              letterSpacing: "0.02em",
-                            }}
-                          >
-                            {cat}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                    gap: 8,
-                  }}
-                >
-                  {visibleGalleryPhotos.map((photo, i) => (
-                    <div
-                      key={`${photo}-${i}`}
-                      onClick={() => {
-                        const idx = photos.indexOf(photo);
-                        openLightbox(idx >= 0 ? idx : 0);
-                      }}
-                      style={{
-                        cursor: "pointer",
-                        aspectRatio: "4/3",
-                        overflow: "hidden",
-                        background: "var(--cream-deep)",
-                      }}
-                    >
-                      <img
-                        src={safePhotoUrl(photo)}
-                        alt={`${hotel.hotel_name} photo ${i + 1}`}
-                        style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s" }}
-                        onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                        onMouseEnter={(e) => { (e.target as HTMLImageElement).style.transform = "scale(1.05)"; }}
-                        onMouseLeave={(e) => { (e.target as HTMLImageElement).style.transform = "scale(1)"; }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>No photos available for this property.</p>
-            )}
-          </div>
-
-          {/* ══════ LOCATION SECTION ══════ */}
-          {(address || (hotel.latitude != null && hotel.longitude != null)) && (() => {
-            const mapsQuery = encodeURIComponent(address || `${hotel.latitude},${hotel.longitude}`);
-            const mapsHref = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
-            return (
-              <div style={{ scrollMarginTop: "120px", paddingTop: 32 }}>
-                <div
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                    color: "var(--gold)",
-                    fontFamily: "var(--font-body)",
-                    marginBottom: 10,
-                  }}
-                >
-                  Location
-                </div>
-                {address && (
-                  <p
-                    style={{
-                      fontSize: "14px",
-                      color: "var(--ink-mid)",
-                      lineHeight: 1.6,
-                      marginBottom: 12,
-                    }}
-                  >
-                    {address}
-                  </p>
-                )}
-                <a
-                  href={mapsHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "inline-block",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "var(--gold)",
-                    textDecoration: "none",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  View on Google Maps →
-                </a>
-              </div>
-            );
-          })()}
-
-          {/* ══════ WHAT'S NEARBY SECTION ══════ */}
-          {hotel.nearby && hotel.nearby.length > 0 && (
-            <div style={{ scrollMarginTop: "120px", paddingTop: 32 }}>
-              <div className="flex items-center gap-3 mb-5">
-                <div style={{ width: 4, height: 24, background: "var(--ink)", flexShrink: 0 }} />
-                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 500, color: "var(--ink)" }}>
-                  What&apos;s nearby
-                </h3>
-              </div>
-              <div style={{ background: "var(--white)", border: "1px solid var(--cream-border)" }}>
-                {hotel.nearby.slice(0, 5).map((item, i, arr) => (
-                  <div
-                    key={`${item.name}-${i}`}
-                    className="flex items-center justify-between"
-                    style={{
-                      padding: "14px 16px",
-                      borderBottom: i < arr.length - 1 ? "1px solid var(--cream-border)" : "none",
-                      fontSize: "14px",
-                      fontFamily: "var(--font-body)",
-                    }}
-                  >
-                    <span style={{ color: "var(--ink)" }}>{item.name}</span>
-                    <span
-                      style={{
-                        color: "var(--ink-light)",
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "13px",
-                      }}
-                    >
-                      {item.distance_km.toFixed(1)} km
-                    </span>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           )}
-
-          {/* ══════ REVIEWS SECTION ══════ */}
-          <div ref={reviewsRef} style={{ scrollMarginTop: "120px", paddingTop: 32 }}>
-            <div className="flex items-center gap-3 mb-5">
-              <div style={{ width: 4, height: 24, background: "var(--ink)", flexShrink: 0 }} />
-              <h3 style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: 500, color: "var(--ink)" }}>
-                Reviews
-              </h3>
-            </div>
-
-            {hotel.rating_average > 0 ? (
-              <>
-                <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-                  <div
-                    style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: "50%",
-                      background: "var(--gold-pale)",
-                      border: "2px solid var(--gold)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontFamily: "var(--font-display)",
-                      fontSize: "24px",
-                      fontWeight: 500,
-                      color: "var(--ink)",
-                    }}
-                  >
-                    {hotel.rating_average.toFixed(1)}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "16px", fontWeight: 500, color: "var(--ink)" }}>
-                      {hotel.rating_average >= 9 ? "Exceptional" : hotel.rating_average >= 8 ? "Excellent" : hotel.rating_average >= 7 ? "Very Good" : "Good"}
-                    </div>
-                    <div style={{ fontSize: "13px", color: "var(--ink-light)" }}>
-                      Based on {hotel.number_of_reviews.toLocaleString()} verified reviews
-                    </div>
-                  </div>
-                </div>
-
-                {(hotel.rating_value != null || hotel.rating_service != null || hotel.rating_location != null) && (() => {
-                  const subScores: { label: string; value: number | null | undefined }[] = [
-                    { label: "Value", value: hotel.rating_value },
-                    { label: "Service", value: hotel.rating_service },
-                    { label: "Location", value: hotel.rating_location },
-                  ].filter((s) => s.value != null) as { label: string; value: number }[];
-                  if (subScores.length === 0) return null;
-                  return (
-                    <div
-                      className="flex items-stretch"
-                      style={{
-                        background: "var(--white)",
-                        border: "1px solid var(--cream-border)",
-                        marginBottom: 20,
-                      }}
-                    >
-                      {subScores.map((s, i) => (
-                        <div
-                          key={s.label}
-                          className="flex-1 text-center"
-                          style={{
-                            padding: "14px 12px",
-                            borderLeft: i === 0 ? "none" : "1px solid var(--cream-border)",
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontFamily: "var(--font-display)",
-                              fontSize: "20px",
-                              fontWeight: 500,
-                              color: "var(--ink)",
-                              lineHeight: 1.2,
-                            }}
-                          >
-                            {(s.value as number).toFixed(1)}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: "10px",
-                              fontWeight: 600,
-                              letterSpacing: "0.1em",
-                              textTransform: "uppercase",
-                              color: "var(--ink-light)",
-                              marginTop: 4,
-                              fontFamily: "var(--font-body)",
-                            }}
-                          >
-                            {s.label}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </>
-            ) : (
-              <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>
-                No reviews available yet for this property.
-              </p>
-            )}
-          </div>
         </div>
+      </section>
 
-        {/* ─── Right: Sticky Booking Sidebar ─── */}
-        <div className="hidden lg:block" style={{ paddingTop: 32 }}>
-          <div
-            className="sticky"
+      {/* ═══════════════════ 6. MEMBER BENEFITS CHIP STRIP ═══════════════════ */}
+      <section
+        style={{
+          padding: "48px 24px 56px",
+          borderTop: "1px solid var(--luxe-hairline)",
+        }}
+      >
+        <div className="luxe-container" style={{ padding: 0 }}>
+          <div className="luxe-tech" style={{ marginBottom: 12 }}>
+            Member Benefits
+          </div>
+          <h3
+            className="luxe-display"
             style={{
-              top: 120,
-              background: "var(--white)",
-              border: "1px solid var(--cream-border)",
-              padding: 0,
-              overflow: "hidden",
+              fontSize: "clamp(22px, 2.4vw, 30px)",
+              marginBottom: 22,
+              maxWidth: 720,
             }}
           >
-            {/* Sidebar header */}
-            <div
-              style={{
-                background: "var(--ink)",
-                color: "var(--cream)",
-                padding: "20px 24px",
-              }}
-            >
-              <p
+            Quietly negotiated <em>perks</em>, on every stay
+          </h3>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 10,
+              marginBottom: 14,
+            }}
+          >
+            {MEMBER_BENEFITS.map((b) => (
+              <span
+                key={b.label}
                 style={{
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: "var(--gold)",
-                  marginBottom: 6,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "10px 16px",
+                  borderRadius: 999,
+                  background: "var(--luxe-champagne-soft)",
+                  border: "1px solid var(--luxe-champagne-line)",
+                  color: "var(--luxe-champagne)",
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  letterSpacing: "0.01em",
+                  fontFamily: "var(--font-body)",
                 }}
               >
-                Your selection
-              </p>
-              <h3
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "20px",
-                  fontWeight: 400,
-                  fontStyle: "italic",
-                  lineHeight: 1.2,
-                }}
-              >
-                {hotel.hotel_name}
-              </h3>
-            </div>
+                <span aria-hidden style={{ fontSize: 11, opacity: 0.85 }}>{b.icon}</span>
+                {b.label}
+              </span>
+            ))}
+          </div>
+          <p
+            style={{
+              fontSize: 12,
+              color: "var(--luxe-soft-white-50)",
+              fontFamily: "var(--font-body)",
+              letterSpacing: "0.04em",
+            }}
+          >
+            Subject to availability · admin-curated for preferred properties
+          </p>
+        </div>
+      </section>
 
-            <div style={{ padding: "24px" }}>
-              {!selectedPlan ? (
-                /* Empty state */
-                <div className="text-center" style={{ padding: "20px 0" }}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--cream-border)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 auto 12px" }}>
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    <polyline points="9 22 9 12 15 12 15 22" />
-                  </svg>
-                  <p style={{ fontSize: "13px", color: "var(--ink-light)" }}>
-                    {datesSelected ? "Select a room to unlock your rate" : "Select dates to see live rates"}
+      {/* ═══════════════════ 7. RATES (CLIMAX) — two-column with sticky sidebar ═══════════════════ */}
+      <section
+        ref={ratesRef}
+        id="rates"
+        style={{
+          padding: "72px 24px 96px",
+          borderTop: "1px solid var(--luxe-hairline)",
+          scrollMarginTop: 140,
+          background: "linear-gradient(180deg, rgba(200,170,118,0.03) 0%, transparent 60%)",
+        }}
+      >
+        <div className="luxe-container" style={{ padding: 0 }}>
+          <SectionHead
+            eyebrow="Live Member Rates"
+            title="Your"
+            italicWord="preferred"
+            trailingTitle="rate"
+            description={
+              datesSelected
+                ? "Negotiated directly with the hotel. No payment now — concierge confirms within 15 minutes."
+                : "Choose your dates to unlock live, member-only pricing."
+            }
+          />
+
+          <div
+            className="hotel-rates-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1fr) 380px",
+              gap: 36,
+            }}
+          >
+            {/* ─── Left: Rate cards ─── */}
+            <div>
+              {!datesSelected ? (
+                <div
+                  className="luxe-card"
+                  style={{
+                    padding: "48px 32px",
+                    textAlign: "center",
+                    borderRadius: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 24,
+                      fontStyle: "italic",
+                      color: "var(--luxe-soft-white)",
+                      marginBottom: 10,
+                    }}
+                  >
+                    Select your dates to see rates
+                  </div>
+                  <p style={{ fontSize: 13.5, color: "var(--luxe-soft-white-70)", maxWidth: 480, margin: "0 auto 22px", lineHeight: 1.7 }}>
+                    Choose check-in and check-out from the search bar above to unlock live member-only pricing for {hotel.hotel_name}.
                   </p>
                 </div>
-              ) : (
-                /* Plan selected */
-                <motion.div
-                  key={selectedPlan.option_id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
+              ) : noMatch ? (
+                <div
+                  className="luxe-card"
+                  style={{
+                    padding: "32px 28px",
+                    borderRadius: 14,
+                  }}
                 >
-                  {/* Selected room name + meal basis */}
-                  <p
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: 500,
-                      color: "var(--ink)",
-                      marginBottom: 4,
-                      fontFamily: "var(--font-display)",
-                    }}
-                  >
-                    {selectedPlan.room_name}
-                  </p>
-                  <p
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                      color: "var(--gold)",
-                      marginBottom: 16,
-                      fontFamily: "var(--font-body)",
-                    }}
-                  >
-                    {selectedPlan.meal_basis || "Room Only"}
-                  </p>
-
-                  {/* Nightly */}
-                  <div className="flex items-baseline justify-between mb-2">
-                    <span style={{ fontSize: "13px", color: "var(--ink-mid)" }}>Voyagr rate</span>
-                    <span
-                      style={{
-                        fontSize: "20px",
-                        fontWeight: 500,
-                        fontFamily: "var(--font-display)",
-                        color: "var(--ink)",
-                      }}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div style={{ width: 4, height: 26, background: "var(--luxe-champagne)", flexShrink: 0 }} />
+                    <h3
+                      className="luxe-display"
+                      style={{ fontSize: 22, marginBottom: 0 }}
                     >
-                      {formatPrice(sidebarNightly, selectedPlan.currency)}
-                    </span>
+                      Rates <em>on request</em>
+                    </h3>
                   </div>
+                  <p style={{ fontSize: 14, color: "var(--luxe-soft-white-70)", lineHeight: 1.75, marginBottom: 22, maxWidth: 600 }}>
+                    Our concierge will source the best possible rate for {hotel.hotel_name} and reach you on WhatsApp within 15 minutes.
+                  </p>
+                  <button
+                    onClick={() => setUnlockModalOpen(true)}
+                    className="luxe-btn-gold"
+                  >
+                    Contact concierge
+                  </button>
+                </div>
+              ) : ratesError ? (
+                <div className="luxe-card" style={{ padding: 28, textAlign: "center", borderRadius: 14 }}>
+                  <p style={{ fontSize: 15, color: "var(--luxe-soft-white)", marginBottom: 8, fontFamily: "var(--font-display)", fontStyle: "italic" }}>
+                    Rates unavailable right now
+                  </p>
+                  <p style={{ fontSize: 12, color: "var(--luxe-soft-white-50)", marginBottom: 18 }}>
+                    {ratesError}
+                  </p>
+                  <button
+                    onClick={() => setRatesRefreshKey((k) => k + 1)}
+                    className="luxe-btn-secondary"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : ratesLoading ? (
+                <div className="flex flex-col gap-4">
+                  <RateCardSkeleton />
+                  <RateCardSkeleton />
+                  <RateCardSkeleton />
+                </div>
+              ) : rates && rates.rates.length === 0 ? (
+                <div
+                  className="luxe-card"
+                  style={{ padding: 28, textAlign: "center", borderRadius: 14, color: "var(--luxe-soft-white-70)", fontFamily: "var(--font-body)" }}
+                >
+                  No rates for these dates — try different dates.
+                </div>
+              ) : rates ? (
+                <>
+                  <RateFilterBar
+                    freeCancellation={filterFreeCancellation}
+                    onToggleFreeCancellation={() => setFilterFreeCancellation((v) => !v)}
+                    mealPlan={filterMealPlan}
+                    onChangeMealPlan={setFilterMealPlan}
+                  />
 
-                  {/* Market rate */}
-                  {sidebarMarket > 0 && (
-                    <div className="flex items-baseline justify-between mb-2">
-                      <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>Public rate</span>
-                      <span
+                  {filteredRates.length === 0 ? (
+                    <div
+                      className="luxe-card"
+                      style={{ padding: 28, textAlign: "center", borderRadius: 14, color: "var(--luxe-soft-white-70)", fontFamily: "var(--font-body)" }}
+                    >
+                      No rates match the current filters. Try clearing a filter to see more options.
+                    </div>
+                  ) : (
+                    <>
+                      <p
                         style={{
-                          fontSize: "13px",
-                          color: "var(--ink-light)",
-                          textDecoration: "line-through",
+                          fontSize: 11,
+                          fontFamily: "var(--font-mono)",
+                          letterSpacing: "0.18em",
+                          textTransform: "uppercase",
+                          color: "var(--luxe-soft-white-50)",
+                          marginBottom: 14,
+                        }}
+                      >
+                        {filteredRates.length} option{filteredRates.length !== 1 ? "s" : ""}
+                        {rates.nights > 0 ? ` · ${rates.nights} night${rates.nights > 1 ? "s" : ""}` : ""}
+                      </p>
+                      <div className="flex flex-col gap-3">
+                        {filteredRates.map((plan) => (
+                          <RateCard
+                            key={plan.option_id}
+                            plan={plan}
+                            nights={rates.nights || nights}
+                            mrpRate={mrpRate}
+                            mrpCurrency={mrpCurrency}
+                            savingsPct={savingsPct}
+                            isSelected={selectedOptionId === plan.option_id}
+                            isHighlighted={highlightedOptionId === plan.option_id}
+                            cardRef={(el) => { rateCardRefs.current[plan.option_id] = el; }}
+                            onSelect={() =>
+                              setSelectedOptionId(selectedOptionId === plan.option_id ? null : plan.option_id)
+                            }
+                            onProceed={() => handlePlanSelectCTA(plan)}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : null}
+            </div>
+
+            {/* ─── Right: Sticky Booking Sidebar ─── */}
+            <aside className="hidden lg:block">
+              <div
+                className="hotel-booking-sidebar"
+                style={{
+                  position: "sticky",
+                  top: 140,
+                  background: "rgba(20,18,15,0.6)",
+                  border: "1px solid var(--luxe-hairline-strong)",
+                  backdropFilter: "blur(16px)",
+                  WebkitBackdropFilter: "blur(16px)",
+                  borderRadius: 14,
+                  overflow: "hidden",
+                }}
+              >
+                {/* Header */}
+                <div
+                  style={{
+                    padding: "20px 24px",
+                    borderBottom: "1px solid var(--luxe-hairline)",
+                  }}
+                >
+                  <div className="luxe-tech" style={{ marginBottom: 8 }}>
+                    Your Selection
+                  </div>
+                  <h3
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 20,
+                      fontWeight: 500,
+                      fontStyle: "italic",
+                      lineHeight: 1.2,
+                      color: "var(--luxe-soft-white)",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {hotel.hotel_name}
+                  </h3>
+                </div>
+
+                <div style={{ padding: "22px 24px" }}>
+                  {!selectedPlan ? (
+                    <div className="text-center" style={{ padding: "12px 0 8px" }}>
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--luxe-champagne)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 auto 12px", opacity: 0.7 }}>
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                      </svg>
+                      <p style={{ fontSize: 13, color: "var(--luxe-soft-white-70)", lineHeight: 1.6 }}>
+                        {datesSelected ? "Select a room to unlock your rate" : "Select dates to see live rates"}
+                      </p>
+                    </div>
+                  ) : (
+                    <motion.div
+                      key={selectedPlan.option_id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <p
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontSize: 16,
+                          fontWeight: 500,
+                          fontStyle: "italic",
+                          color: "var(--luxe-soft-white)",
+                          marginBottom: 6,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {selectedPlan.room_name}
+                      </p>
+                      <p
+                        style={{
+                          fontSize: 10.5,
+                          fontWeight: 600,
+                          letterSpacing: "0.18em",
+                          textTransform: "uppercase",
+                          color: "var(--luxe-champagne)",
+                          marginBottom: 18,
                           fontFamily: "var(--font-mono)",
                         }}
                       >
-                        {formatPrice(sidebarMarket, mrpCurrency || selectedPlan.currency)}
-                      </span>
-                    </div>
+                        {selectedPlan.meal_basis || "Room Only"}
+                      </p>
+
+                      <div className="flex items-baseline justify-between mb-2">
+                        <span style={{ fontSize: 13, color: "var(--luxe-soft-white-70)" }}>Voyagr rate</span>
+                        <span
+                          style={{
+                            fontSize: 22,
+                            fontWeight: 500,
+                            fontFamily: "var(--font-display)",
+                            color: "var(--luxe-champagne)",
+                            letterSpacing: "-0.01em",
+                          }}
+                        >
+                          {formatPrice(sidebarNightly, selectedPlan.currency)}
+                        </span>
+                      </div>
+
+                      {sidebarMarket > 0 && (
+                        <div className="flex items-baseline justify-between mb-2">
+                          <span style={{ fontSize: 12, color: "var(--luxe-soft-white-50)" }}>Public rate</span>
+                          <span
+                            style={{
+                              fontSize: 13,
+                              color: "var(--luxe-soft-white-50)",
+                              textDecoration: "line-through",
+                              fontFamily: "var(--font-mono)",
+                            }}
+                          >
+                            {formatPrice(sidebarMarket, mrpCurrency || selectedPlan.currency)}
+                          </span>
+                        </div>
+                      )}
+
+                      <div
+                        className="flex items-baseline justify-between mb-4"
+                        style={{
+                          paddingBottom: 16,
+                          borderBottom: "1px solid var(--luxe-hairline)",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 12,
+                            color: selectedPlan.refundable ? "var(--luxe-champagne)" : "var(--luxe-soft-white-50)",
+                            fontWeight: selectedPlan.refundable ? 600 : 500,
+                          }}
+                        >
+                          {selectedPlan.refundable ? "✓ Free cancellation" : "Non-refundable"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-baseline justify-between mb-2">
+                        <span style={{ fontSize: 13, color: "var(--luxe-soft-white-70)" }}>
+                          {nights} night{nights > 1 ? "s" : ""} × {formatPrice(sidebarNightly, selectedPlan.currency)}
+                        </span>
+                        <span style={{ fontSize: 13, color: "var(--luxe-soft-white-70)", fontFamily: "var(--font-mono)" }}>
+                          {formatPrice(sidebarTotal, selectedPlan.currency)}
+                        </span>
+                      </div>
+
+                      <div
+                        className="flex items-baseline justify-between"
+                        style={{
+                          paddingTop: 14,
+                          borderTop: "1px solid var(--luxe-hairline)",
+                          marginTop: 8,
+                        }}
+                      >
+                        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--luxe-soft-white)", letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: "var(--font-body)" }}>
+                          Total
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 26,
+                            fontWeight: 500,
+                            fontFamily: "var(--font-display)",
+                            color: "var(--luxe-champagne)",
+                            letterSpacing: "-0.015em",
+                          }}
+                        >
+                          {formatPrice(sidebarTotal, selectedPlan.currency)}
+                        </span>
+                      </div>
+
+                      {sidebarSaving > 0 && (
+                        <p
+                          className="text-right"
+                          style={{
+                            fontSize: 12,
+                            color: "var(--luxe-champagne)",
+                            fontWeight: 500,
+                            marginTop: 6,
+                            fontFamily: "var(--font-body)",
+                          }}
+                        >
+                          You save {formatPrice(sidebarSaving, mrpCurrency || selectedPlan.currency)}
+                        </p>
+                      )}
+                    </motion.div>
                   )}
 
-                  {/* Cancellation */}
-                  <div
-                    className="flex items-baseline justify-between mb-4"
+                  <button
+                    disabled={!selectedPlan}
+                    onClick={() => {
+                      if (selectedPlan) setUnlockModalOpen(true);
+                    }}
+                    className={selectedPlan ? "unlock-rate-btn-pulse" : ""}
                     style={{
-                      paddingBottom: 16,
-                      borderBottom: "1px solid var(--cream-border)",
+                      width: "100%",
+                      marginTop: 22,
+                      padding: "14px 0",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      borderRadius: 999,
+                      background: selectedPlan ? "var(--luxe-champagne)" : "rgba(255,255,255,0.05)",
+                      color: selectedPlan ? "#0c0b0a" : "var(--luxe-soft-white-50)",
+                      border: selectedPlan ? "none" : "1px solid var(--luxe-hairline-strong)",
+                      cursor: selectedPlan ? "pointer" : "not-allowed",
+                      transition: "all 0.3s",
+                      fontFamily: "var(--font-body)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
                     }}
                   >
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        color: selectedPlan.refundable ? "var(--success)" : "var(--ink-light)",
-                        fontWeight: selectedPlan.refundable ? 600 : 500,
-                      }}
-                    >
-                      {selectedPlan.refundable ? "Free cancellation" : "Non-refundable"}
-                    </span>
-                  </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    {selectedPlan ? "Unlock Preferred Rate" : "Select a Room"}
+                  </button>
 
-                  {/* Nights x rate breakdown */}
-                  <div className="flex items-baseline justify-between mb-2">
-                    <span style={{ fontSize: "13px", color: "var(--ink-mid)" }}>
-                      {nights} night{nights > 1 ? "s" : ""} &times; {formatPrice(sidebarNightly, selectedPlan.currency)}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "13px",
-                        color: "var(--ink-mid)",
-                        fontFamily: "var(--font-mono)",
-                      }}
-                    >
-                      {formatPrice(sidebarTotal, selectedPlan.currency)}
-                    </span>
-                  </div>
-
-                  {/* Total */}
-                  <div
-                    className="flex items-baseline justify-between"
+                  <p
+                    className="text-center"
                     style={{
-                      paddingTop: 12,
-                      borderTop: "1px solid var(--cream-border)",
-                      marginTop: 8,
+                      fontSize: 11,
+                      color: "var(--luxe-soft-white-50)",
+                      marginTop: 12,
+                      lineHeight: 1.6,
+                      letterSpacing: "0.02em",
                     }}
                   >
-                    <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--ink)" }}>
-                      Total
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "24px",
-                        fontWeight: 500,
-                        fontFamily: "var(--font-display)",
-                        color: "var(--ink)",
-                      }}
-                    >
-                      {formatPrice(sidebarTotal, selectedPlan.currency)}
-                    </span>
-                  </div>
-
-                  {/* Total saving */}
-                  {sidebarSaving > 0 && (
-                    <p
-                      className="text-right"
-                      style={{
-                        fontSize: "12px",
-                        color: "var(--success)",
-                        fontWeight: 500,
-                        marginTop: 4,
-                      }}
-                    >
-                      Total saving: {formatPrice(sidebarSaving, mrpCurrency || selectedPlan.currency)}
-                    </p>
-                  )}
-                </motion.div>
-              )}
-
-              {/* Unlock Preferred Rate button */}
-              <button
-                disabled={!selectedPlan}
-                onClick={() => {
-                  if (selectedPlan) {
-                    setUnlockModalOpen(true);
-                  }
-                }}
-                className={selectedPlan ? "unlock-rate-btn-pulse" : ""}
-                style={{
-                  width: "100%",
-                  marginTop: 24,
-                  padding: "14px 0",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  background: selectedPlan ? "var(--gold)" : "var(--cream-border)",
-                  color: selectedPlan ? "var(--ink)" : "var(--ink-light)",
-                  border: "none",
-                  cursor: selectedPlan ? "pointer" : "not-allowed",
-                  transition: "all 0.3s",
-                  fontFamily: "var(--font-body)",
-                  opacity: selectedPlan ? 1 : 0.6,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                {selectedPlan ? "Unlock Preferred Rate" : "Select a Room"}
-              </button>
-
-              {/* Trust note */}
-              <p
-                className="text-center"
-                style={{
-                  fontSize: "11px",
-                  color: "var(--ink-light)",
-                  marginTop: 12,
-                  lineHeight: 1.5,
-                }}
-              >
-                No payment required &middot; Our concierge will confirm your rate on WhatsApp within 15 mins
-              </p>
-            </div>
+                    No payment required &middot; Concierge confirms on WhatsApp in 15 min
+                  </p>
+                </div>
+              </div>
+            </aside>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ═══════════════════ Sticky Bottom Bar (Mobile + Desktop) ═══════════════════ */}
+      {/* ═══════════════════ 8. LOCATION ═══════════════════ */}
+      {(address || (hotel.latitude != null && hotel.longitude != null)) && (() => {
+        const mapsQuery = encodeURIComponent(address || `${hotel.latitude},${hotel.longitude}`);
+        const mapsHref = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
+        const embedSrc =
+          hotel.latitude != null && hotel.longitude != null
+            ? `https://www.google.com/maps?q=${hotel.latitude},${hotel.longitude}&z=14&output=embed`
+            : `https://www.google.com/maps?q=${mapsQuery}&z=14&output=embed`;
+        return (
+          <section
+            style={{
+              padding: "72px 24px 56px",
+              borderTop: "1px solid var(--luxe-hairline)",
+            }}
+          >
+            <div className="luxe-container" style={{ padding: 0 }}>
+              <SectionHead
+                eyebrow="The Setting"
+                title="Where you'll"
+                italicWord="be"
+                description={address || undefined}
+                rightSlot={
+                  <a
+                    href={mapsHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="luxe-tech"
+                    style={{
+                      color: "var(--luxe-champagne)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Open in Maps &rarr;
+                  </a>
+                }
+              />
+
+              <div
+                className="hotel-location-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: hotel.nearby && hotel.nearby.length > 0 ? "minmax(0, 1.6fr) minmax(0, 1fr)" : "minmax(0, 1fr)",
+                  gap: 24,
+                }}
+              >
+                <div
+                  style={{
+                    height: 380,
+                    borderRadius: 14,
+                    overflow: "hidden",
+                    border: "1px solid var(--luxe-hairline-strong)",
+                    background: "var(--luxe-black-2)",
+                  }}
+                >
+                  <iframe
+                    title={`${hotel.hotel_name} location`}
+                    src={embedSrc}
+                    width="100%"
+                    height="100%"
+                    style={{
+                      border: 0,
+                      display: "block",
+                      filter: "saturate(0.7) brightness(0.9) contrast(0.95)",
+                    }}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+
+                {hotel.nearby && hotel.nearby.length > 0 && (
+                  <div className="luxe-card" style={{ padding: 24, borderRadius: 14 }}>
+                    <div className="luxe-tech" style={{ marginBottom: 14 }}>
+                      What&rsquo;s nearby
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                      {hotel.nearby.slice(0, 6).map((item, i, arr) => (
+                        <div
+                          key={`${item.name}-${i}`}
+                          className="flex items-center justify-between"
+                          style={{
+                            padding: "12px 0",
+                            borderBottom: i < arr.length - 1 ? "1px solid var(--luxe-hairline)" : "none",
+                            fontSize: 14,
+                            fontFamily: "var(--font-body)",
+                          }}
+                        >
+                          <span style={{ color: "var(--luxe-soft-white)" }}>{item.name}</span>
+                          <span
+                            style={{
+                              color: "var(--luxe-champagne)",
+                              fontFamily: "var(--font-mono)",
+                              fontSize: 12,
+                              letterSpacing: "0.04em",
+                            }}
+                          >
+                            {item.distance_km.toFixed(1)} km
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        );
+      })()}
+
+      {/* ═══════════════════ 9. REVIEWS ═══════════════════ */}
+      <section
+        ref={reviewsRef}
+        id="reviews"
+        style={{
+          padding: "72px 24px 80px",
+          borderTop: "1px solid var(--luxe-hairline)",
+          scrollMarginTop: 140,
+        }}
+      >
+        <div className="luxe-container" style={{ padding: 0 }}>
+          {hotel.rating_average > 0 ? (
+            <>
+              <SectionHead
+                eyebrow="Guest Verdict"
+                title="What guests"
+                italicWord="say"
+                description={`Based on ${hotel.number_of_reviews.toLocaleString()} verified reviews — aggregated from across the web.`}
+              />
+
+              <div
+                className="hotel-reviews-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 2fr)",
+                  gap: 32,
+                  alignItems: "stretch",
+                }}
+              >
+                {/* Score panel */}
+                <div
+                  className="luxe-card"
+                  style={{
+                    padding: 28,
+                    borderRadius: 14,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 64,
+                      fontWeight: 400,
+                      fontStyle: "italic",
+                      color: "var(--luxe-champagne)",
+                      lineHeight: 1,
+                      marginBottom: 6,
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    {hotel.rating_average.toFixed(1)}
+                    <span style={{ fontSize: 22, color: "var(--luxe-soft-white-50)", fontStyle: "italic", marginLeft: 4 }}>
+                      / 10
+                    </span>
+                  </div>
+                  <div
+                    className="luxe-tech"
+                    style={{ marginBottom: 8 }}
+                  >
+                    {hotel.rating_average >= 9 ? "Exceptional" : hotel.rating_average >= 8 ? "Excellent" : hotel.rating_average >= 7 ? "Very Good" : "Good"}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: "var(--luxe-soft-white-50)", marginTop: 4 }}>
+                    {hotel.number_of_reviews.toLocaleString()} verified reviews
+                  </div>
+                </div>
+
+                {/* Sub-scores or quote */}
+                <div
+                  className="luxe-card"
+                  style={{
+                    padding: 28,
+                    borderRadius: 14,
+                  }}
+                >
+                  {(hotel.rating_value != null || hotel.rating_service != null || hotel.rating_location != null) ? (() => {
+                    const subScores: { label: string; value: number | null | undefined }[] = [
+                      { label: "Value", value: hotel.rating_value },
+                      { label: "Service", value: hotel.rating_service },
+                      { label: "Location", value: hotel.rating_location },
+                    ].filter((s) => s.value != null) as { label: string; value: number }[];
+                    if (subScores.length === 0) return null;
+                    return (
+                      <>
+                        <div className="luxe-tech" style={{ marginBottom: 18 }}>
+                          By the dimension
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                          {subScores.map((s) => {
+                            const pct = Math.max(0, Math.min(100, ((s.value as number) / 10) * 100));
+                            return (
+                              <div key={s.label}>
+                                <div className="flex items-baseline justify-between mb-2">
+                                  <span style={{ fontSize: 13, color: "var(--luxe-soft-white)", fontWeight: 500 }}>
+                                    {s.label}
+                                  </span>
+                                  <span style={{ fontSize: 14, color: "var(--luxe-champagne)", fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "-0.01em" }}>
+                                    {(s.value as number).toFixed(1)}
+                                  </span>
+                                </div>
+                                <div
+                                  style={{
+                                    height: 3,
+                                    background: "var(--luxe-hairline-strong)",
+                                    borderRadius: 2,
+                                    overflow: "hidden",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      width: `${pct}%`,
+                                      height: "100%",
+                                      background: "var(--luxe-champagne)",
+                                      transition: "width 0.6s ease",
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    );
+                  })() : (
+                    <>
+                      <div
+                        aria-hidden
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontStyle: "italic",
+                          fontSize: 56,
+                          color: "var(--luxe-champagne)",
+                          opacity: 0.4,
+                          lineHeight: 0.5,
+                          marginBottom: 12,
+                        }}
+                      >
+                        &ldquo;
+                      </div>
+                      <p
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontStyle: "italic",
+                          fontSize: 22,
+                          fontWeight: 300,
+                          color: "var(--luxe-soft-white)",
+                          lineHeight: 1.5,
+                          letterSpacing: "-0.005em",
+                          marginBottom: 14,
+                        }}
+                      >
+                        {hotel.rating_average >= 9
+                          ? "An impeccable property — service, setting, and the smallest details all considered."
+                          : hotel.rating_average >= 8
+                            ? "Well-loved by our members — a stay that delivers on every promise."
+                            : "A solid choice in the city, with thoughtful service and genuine character."}
+                      </p>
+                      <div
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontSize: 11,
+                          letterSpacing: "0.18em",
+                          textTransform: "uppercase",
+                          color: "var(--luxe-soft-white-50)",
+                        }}
+                      >
+                        — Voyagr Concierge
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <SectionHead
+              eyebrow="Guest Verdict"
+              title="Reviews"
+              italicWord="coming soon"
+              description="No reviews available yet for this property — our concierge can share first-hand notes on request."
+            />
+          )}
+        </div>
+      </section>
+
+      {/* ═══════════════════ 10. CLOSING CONCIERGE CTA ═══════════════════ */}
+      <section
+        style={{
+          padding: "80px 24px 100px",
+          borderTop: "1px solid var(--luxe-hairline)",
+        }}
+      >
+        <div className="luxe-container" style={{ textAlign: "center", maxWidth: 720, padding: 0 }}>
+          <div className="luxe-tech" style={{ marginBottom: 12 }}>
+            One Message Away
+          </div>
+          <h2
+            className="luxe-display"
+            style={{ fontSize: "clamp(28px, 3.4vw, 44px)", marginBottom: 14 }}
+          >
+            Let our concierge confirm{" "}
+            <em style={{ color: "var(--luxe-champagne)" }}>{hotel.hotel_name}</em>
+          </h2>
+          <p
+            style={{
+              color: "var(--luxe-soft-white-70)",
+              fontSize: 15,
+              lineHeight: 1.7,
+              maxWidth: 560,
+              margin: "0 auto 28px",
+            }}
+          >
+            We&rsquo;ll source the best preferred rate, secure your member benefits, and confirm everything within 15 minutes &mdash; all over WhatsApp.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <a
+              href={conciergeWhatsappLink(`Hi, I'd like to book ${hotel.hotel_name} in ${hotel.city}`)}
+              className="luxe-btn-gold"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Chat on WhatsApp
+            </a>
+            <button
+              onClick={() => document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" })}
+              className="luxe-btn-secondary"
+            >
+              See Member Rates
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+
+      {/* ═══════════════════ Sticky Bottom Bar — preserved ═══════════════════ */}
       <div
         className="fixed bottom-0 left-0 right-0 z-50"
         style={{
-          background: "rgba(26,23,16,0.97)",
-          backdropFilter: "blur(16px)",
-          borderTop: "1px solid rgba(201,168,76,0.2)",
+          background: "rgba(8,7,6,0.94)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+          borderTop: "1px solid var(--luxe-champagne-line)",
           padding: "0 24px",
         }}
       >
         <div
           className="flex items-center justify-between mx-auto gap-4"
           style={{
-            maxWidth: 1200,
-            height: 64,
+            maxWidth: 1280,
+            height: 68,
           }}
         >
-          {/* Left: Hotel name + selected price */}
           <div className="flex-1 min-w-0">
             <p
               className="truncate"
               style={{
-                fontSize: "14px",
+                fontSize: 13.5,
                 fontWeight: 500,
-                color: "var(--cream)",
+                fontStyle: "italic",
+                color: "var(--luxe-soft-white)",
                 fontFamily: "var(--font-display)",
                 lineHeight: 1.2,
+                letterSpacing: "-0.005em",
               }}
             >
               {hotel.hotel_name}
             </p>
             {selectedPlan ? (
-              <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
+              <p style={{ fontSize: 11.5, color: "var(--luxe-champagne)", marginTop: 3, letterSpacing: "0.04em" }}>
                 {selectedPlan.meal_basis || "Room Only"} &middot; Total {formatPrice(sidebarTotal, selectedPlan.currency)} ({nights} night{nights > 1 ? "s" : ""})
               </p>
-            ) : rates && rates.rates.length > 0 ? (
-              <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
-                From {formatPrice(Math.min(...rates.rates.map((r) => r.total_price / Math.max(nights, 1))), rates.rates[0].currency)}/night
+            ) : lowestFromRate != null && rates ? (
+              <p style={{ fontSize: 11.5, color: "var(--luxe-champagne)", marginTop: 3, letterSpacing: "0.04em" }}>
+                From {formatPrice(lowestFromRate, rates.rates[0].currency)}/night
               </p>
             ) : datesSelected ? (
               <div style={{ marginTop: 6 }}>
                 <span
                   className="luxe-skeleton luxe-skeleton--dark"
-                  aria-hidden="true"
-                  style={{
-                    display: "inline-block",
-                    height: 12,
-                    width: 140,
-                    borderRadius: 3,
-                  }}
+                  aria-hidden
+                  style={{ display: "inline-block", height: 11, width: 140, borderRadius: 3 }}
                 />
                 <span className="sr-only">Loading rates…</span>
               </div>
             ) : (
-              <p style={{ fontSize: "12px", color: "var(--gold)", marginTop: 2 }}>
+              <p style={{ fontSize: 11.5, color: "var(--luxe-soft-white-50)", marginTop: 3 }}>
                 Select dates to see rates
               </p>
             )}
           </div>
 
-          {/* Select Room CTA — scrolls to Rooms (gated on login) */}
           <button
             onClick={() => {
               if (!user) {
@@ -2403,27 +2722,12 @@ export default function HotelPage() {
                 setLoginModalOpen(true);
                 return;
               }
-              document.getElementById("rooms")?.scrollIntoView({ behavior: "smooth" });
+              document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" });
             }}
-            style={{
-              padding: "10px 24px",
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              background: "var(--gold)",
-              color: "#1a1710",
-              border: "none",
-              cursor: "pointer",
-              fontFamily: "var(--font-body)",
-              whiteSpace: "nowrap",
-              transition: "all 0.3s",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
+            className="luxe-btn-gold"
+            style={{ padding: "10px 22px", fontSize: 11, whiteSpace: "nowrap" }}
           >
-            Select Room →
+            Select Room &rarr;
           </button>
         </div>
       </div>
@@ -2494,15 +2798,127 @@ export default function HotelPage() {
       {hotel && <HotelPageWhatsAppTrigger hotelName={hotel.hotel_name} />}
 
       <style jsx global>{`
-        @keyframes roomCardHighlightPulse {
-          0% { box-shadow: 0 0 0 0 rgba(212,162,76,0.45); }
-          60% { box-shadow: 0 0 0 12px rgba(212,162,76,0); }
-          100% { box-shadow: 0 0 0 0 rgba(212,162,76,0); }
+        /* Bento gallery tile — magazine grid */
+        .bento-tile {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          border-radius: 14px;
+          overflow: hidden;
+          border: 1px solid var(--luxe-hairline);
+          background: var(--luxe-black-2);
+          cursor: pointer;
+          padding: 0;
+          transition: border-color 0.3s ease, transform 0.3s ease;
+          isolation: isolate;
         }
-        .room-card-highlight-pulse {
-          animation: roomCardHighlightPulse 1.2s ease-out 2;
+        .bento-tile:hover {
+          border-color: var(--luxe-champagne-line);
+        }
+        .bento-tile img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease;
+          filter: saturate(0.92) brightness(0.86);
+        }
+        .bento-tile:hover img {
+          transform: scale(1.06);
+          filter: saturate(1) brightness(0.95);
+        }
+        .bento-tile-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(12,11,10,0.45) 0%, rgba(12,11,10,0.05) 50%, transparent 100%);
+          pointer-events: none;
+        }
+
+        /* Rate card highlight pulse */
+        @keyframes rateCardHighlightPulse {
+          0% { box-shadow: 0 0 0 0 rgba(200,170,118,0.5); }
+          60% { box-shadow: 0 0 0 14px rgba(200,170,118,0); }
+          100% { box-shadow: 0 0 0 0 rgba(200,170,118,0); }
+        }
+        .rate-card-highlight-pulse {
+          animation: rateCardHighlightPulse 1.4s ease-out 2;
+        }
+
+        /* Unlock-rate gold pulse */
+        @keyframes unlockRatePulse {
+          0% { box-shadow: 0 0 0 0 rgba(200,170,118,0.45); }
+          70% { box-shadow: 0 0 0 12px rgba(200,170,118,0); }
+          100% { box-shadow: 0 0 0 0 rgba(200,170,118,0); }
+        }
+        .unlock-rate-btn-pulse {
+          animation: unlockRatePulse 2.4s ease-out infinite;
+        }
+
+        /* No scrollbar utility */
+        .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        /* Responsive — collapse multi-column grids on narrow screens */
+        @media (max-width: 960px) {
+          .hotel-overview-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 28px !important; }
+          .hotel-rates-grid { grid-template-columns: minmax(0, 1fr) !important; }
+          .hotel-location-grid { grid-template-columns: minmax(0, 1fr) !important; }
+          .hotel-reviews-grid { grid-template-columns: minmax(0, 1fr) !important; }
+        }
+        @media (max-width: 760px) {
+          .hotel-bento {
+            grid-template-columns: repeat(2, 1fr) !important;
+            grid-template-rows: 200px 200px 200px !important;
+          }
+          .hotel-bento .bento-tile:nth-child(1) {
+            grid-column: 1 / 3 !important;
+            grid-row: 1 / 2 !important;
+          }
+          .hotel-bento .bento-tile:nth-child(n+2) {
+            grid-column: auto !important;
+            grid-row: auto !important;
+          }
         }
       `}</style>
+    </div>
+  );
+}
+
+/* ────────────────────────── FactRow (small helper) ────────────────────────── */
+
+function FactRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      className="flex items-baseline justify-between gap-3"
+      style={{
+        paddingBottom: 12,
+        borderBottom: "1px solid var(--luxe-hairline)",
+      }}
+    >
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          color: "var(--luxe-soft-white-50)",
+          fontFamily: "var(--font-mono)",
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          fontSize: 14,
+          color: "var(--luxe-soft-white)",
+          fontFamily: "var(--font-body)",
+          fontWeight: 500,
+          textAlign: "right",
+        }}
+      >
+        {value}
+      </span>
     </div>
   );
 }
