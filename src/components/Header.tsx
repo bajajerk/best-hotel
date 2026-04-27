@@ -56,10 +56,12 @@ export default function Header() {
     ? DESKTOP_LINKS.filter((l) => l.href !== "/login")
     : DESKTOP_LINKS;
 
-  // On the homepage we run in "Precision Luxury" mode — pill-shaped
-  // floating nav with glass-morphism and a Gold Glow CTA. Other pages
-  // retain the classic navy bar so we don't recolour the whole site.
-  const precisionMode = pathname === "/";
+  // Precision Luxury mode — pill-shaped floating nav with glass-morphism
+  // and a Gold Glow CTA. Now that the whole site is dark luxe (home, city,
+  // hotel, /book/*, /preferred-*, /about, etc.), precision mode is the
+  // single brand-coherent header treatment across every route. The classic
+  // navy bar fallback is retained as a code path but is no longer used.
+  const precisionMode = true;
 
   // Shrinking Monolith: structured full-width bar → centered floating
   // pill after the first 48px of scroll.
