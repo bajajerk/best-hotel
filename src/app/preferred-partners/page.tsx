@@ -10,6 +10,14 @@ import {
   type PreferredPartner,
 } from "@/lib/preferredPartners";
 
+const TEXT_PRIMARY = "#f7f5f2";
+const TEXT_MUTED = "rgba(247, 245, 242, 0.65)";
+const GOLD = "#c8aa76";
+const SURFACE = "rgba(255,255,255,0.04)";
+const SURFACE_BORDER = "rgba(255,255,255,0.08)";
+const ACTIVE_BG = "rgba(200,170,118,0.12)";
+const ACTIVE_BORDER = "rgba(200,170,118,0.55)";
+
 type FilterType = "all" | "alliance" | "brand";
 
 export default function PreferredPartnersPage() {
@@ -36,14 +44,15 @@ export default function PreferredPartnersPage() {
   };
 
   const renderGroup = (title: string, partners: PreferredPartner[]) => (
-    <div style={{ marginBottom: "48px" }}>
+    <div style={{ marginBottom: 56 }}>
       <h2
-        className="type-heading-2"
         style={{
-          color: "var(--ink)",
-          marginBottom: "20px",
-          textTransform: "uppercase",
-          letterSpacing: "0.04em",
+          fontFamily: "var(--font-display)",
+          fontSize: 28,
+          fontWeight: 500,
+          color: TEXT_PRIMARY,
+          letterSpacing: "-0.015em",
+          margin: "0 0 20px",
         }}
       >
         {title}
@@ -52,7 +61,7 @@ export default function PreferredPartnersPage() {
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-          gap: "12px",
+          gap: 12,
         }}
       >
         {partners.map((partner) => {
@@ -64,41 +73,37 @@ export default function PreferredPartnersPage() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                gap: 12,
                 padding: "14px 18px",
-                background: isSelected ? "var(--ink)" : "var(--white)",
-                color: isSelected ? "var(--cream)" : "var(--ink)",
-                border: isSelected
-                  ? "1px solid var(--ink)"
-                  : "1px solid var(--cream-border)",
-                borderRadius: "8px",
+                background: isSelected ? ACTIVE_BG : SURFACE,
+                color: TEXT_PRIMARY,
+                border: `1px solid ${isSelected ? ACTIVE_BORDER : SURFACE_BORDER}`,
+                borderRadius: 12,
                 cursor: "pointer",
                 textAlign: "left",
-                transition: "all 0.15s ease",
-                fontFamily: "inherit",
-                fontSize: "14px",
+                transition: "all 0.18s ease",
+                fontFamily: "var(--font-body)",
+                fontSize: 14,
                 lineHeight: 1.4,
               }}
             >
               <span
                 style={{
-                  width: "20px",
-                  height: "20px",
-                  borderRadius: "4px",
-                  border: isSelected
-                    ? "2px solid var(--gold)"
-                    : "2px solid var(--ink-light)",
-                  background: isSelected ? "var(--gold)" : "transparent",
+                  width: 20,
+                  height: 20,
+                  borderRadius: 4,
+                  border: `2px solid ${isSelected ? GOLD : "rgba(255,255,255,0.25)"}`,
+                  background: isSelected ? GOLD : "transparent",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
-                  fontSize: "12px",
-                  color: "#1a1710",
+                  fontSize: 12,
+                  color: "#0a0a0a",
                   fontWeight: 700,
                 }}
               >
-                {isSelected ? "\u2713" : ""}
+                {isSelected ? "✓" : ""}
               </span>
               <span style={{ fontWeight: 500 }}>{partner.name}</span>
             </button>
@@ -109,59 +114,76 @@ export default function PreferredPartnersPage() {
   );
 
   return (
-    <>
+    <div className="luxe">
       <Header />
       <main
         style={{
           minHeight: "100vh",
-          paddingTop: "100px",
-          paddingBottom: "80px",
-          background: "var(--cream)",
+          paddingTop: "140px",
+          paddingBottom: "120px",
         }}
       >
         {/* Intro */}
         <section
           style={{
-            maxWidth: "900px",
+            maxWidth: "920px",
             margin: "0 auto",
-            padding: "0 24px 48px",
+            padding: "0 24px 56px",
             textAlign: "center",
           }}
         >
-          <h1
-            className="type-display-3"
+          <div
             style={{
-              color: "var(--ink)",
-              marginBottom: "24px",
+              fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.4em",
               textTransform: "uppercase",
-              letterSpacing: "0.04em",
+              color: GOLD,
+              marginBottom: 18,
             }}
           >
-            Preferred Partners
+            Our network
+          </div>
+          <h1
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(40px, 5vw, 64px)",
+              fontWeight: 500,
+              color: TEXT_PRIMARY,
+              letterSpacing: "-0.025em",
+              lineHeight: 1.05,
+              margin: "0 0 24px",
+            }}
+          >
+            <em style={{ fontWeight: 400 }}>Preferred</em> Partners
           </h1>
           <p
-            className="type-body-lg"
             style={{
-              color: "var(--ink-light)",
-              maxWidth: "640px",
-              margin: "0 auto 16px",
-              lineHeight: 1.7,
+              fontFamily: "var(--font-body)",
+              fontSize: 17,
+              fontWeight: 300,
+              color: TEXT_MUTED,
+              lineHeight: 1.75,
+              maxWidth: 640,
+              margin: "0 auto 18px",
             }}
           >
-            Our network spans the world&apos;s most respected hotel alliances,
+            Our network spans the world&rsquo;s most respected hotel alliances,
             preferred-access programs, and luxury brand families. Select the
-            partners you&apos;re interested in to personalise your experience.
+            partners you&rsquo;re interested in to personalise your experience.
           </p>
           <p
-            className="type-label"
             style={{
-              color: "var(--ink-mid)",
-              letterSpacing: "0.06em",
+              fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.32em",
               textTransform: "uppercase",
+              color: GOLD,
             }}
           >
-            {PREFERRED_PARTNERS.length} partners across {alliances.length}{" "}
-            alliances &amp; {brands.length} brands
+            {PREFERRED_PARTNERS.length} partners · {alliances.length} alliances · {brands.length} brands
           </p>
         </section>
 
@@ -176,10 +198,10 @@ export default function PreferredPartnersPage() {
           <div
             style={{
               display: "flex",
-              gap: "8px",
+              gap: 8,
               justifyContent: "center",
               flexWrap: "wrap",
-              marginBottom: "8px",
+              marginBottom: 8,
             }}
           >
             {(
@@ -188,40 +210,43 @@ export default function PreferredPartnersPage() {
                 { key: "alliance", label: "Alliances & Programs" },
                 { key: "brand", label: "Brands & Groups" },
               ] as const
-            ).map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setFilter(key)}
-                className="type-label"
-                style={{
-                  padding: "10px 24px",
-                  borderRadius: "6px",
-                  border:
-                    filter === key
-                      ? "1px solid var(--ink)"
-                      : "1px solid var(--cream-border)",
-                  background: filter === key ? "var(--ink)" : "var(--white)",
-                  color: filter === key ? "var(--cream)" : "var(--ink)",
-                  cursor: "pointer",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  transition: "all 0.15s ease",
-                  fontFamily: "inherit",
-                }}
-              >
-                {label}
-              </button>
-            ))}
+            ).map(({ key, label }) => {
+              const active = filter === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setFilter(key)}
+                  style={{
+                    padding: "10px 22px",
+                    borderRadius: 9999,
+                    border: `1px solid ${active ? GOLD : SURFACE_BORDER}`,
+                    background: active ? GOLD : "transparent",
+                    color: active ? "#0a0a0a" : TEXT_PRIMARY,
+                    cursor: "pointer",
+                    fontFamily: "var(--font-body)",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    transition: "all 0.18s ease",
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
 
           {selected.size > 0 && (
             <p
-              className="type-body"
               style={{
+                fontFamily: "var(--font-body)",
                 textAlign: "center",
-                color: "var(--gold)",
-                marginTop: "12px",
+                color: GOLD,
+                marginTop: 14,
                 fontWeight: 600,
+                fontSize: 14,
+                letterSpacing: "0.04em",
               }}
             >
               {selected.size} partner{selected.size !== 1 ? "s" : ""} selected
@@ -244,6 +269,6 @@ export default function PreferredPartnersPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

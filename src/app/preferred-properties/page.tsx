@@ -7,6 +7,12 @@ import Footer from "@/components/Footer";
 import { trackCtaClicked } from "@/lib/analytics";
 import posthog from "posthog-js";
 
+const TEXT_PRIMARY = "#f7f5f2";
+const TEXT_MUTED = "rgba(247, 245, 242, 0.65)";
+const GOLD = "#c8aa76";
+const SURFACE = "rgba(255,255,255,0.04)";
+const SURFACE_BORDER = "rgba(255,255,255,0.08)";
+
 const benefitBadges = [
   {
     emoji: "🍳",
@@ -46,39 +52,54 @@ export default function PreferredPropertiesPage() {
       <main
         style={{
           minHeight: "100vh",
-          paddingTop: "100px",
-          paddingBottom: "80px",
-          background: "var(--cream)",
+          paddingTop: "140px",
+          paddingBottom: "120px",
         }}
       >
         {/* Intro section */}
         <section
           style={{
-            maxWidth: "900px",
+            maxWidth: "920px",
             margin: "0 auto",
-            padding: "0 24px 64px",
+            padding: "0 24px 80px",
             textAlign: "center",
           }}
         >
-          <h1
-            className="type-display-3"
+          <div
             style={{
-              color: "var(--ink)",
-              marginBottom: "24px",
+              fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.4em",
               textTransform: "uppercase",
-              letterSpacing: "0.04em",
+              color: GOLD,
+              marginBottom: 18,
             }}
           >
-            Preferred Properties
+            Direct hotel partnerships
+          </div>
+          <h1
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(40px, 5vw, 64px)",
+              fontWeight: 500,
+              color: TEXT_PRIMARY,
+              letterSpacing: "-0.025em",
+              lineHeight: 1.05,
+              margin: "0 0 24px",
+            }}
+          >
+            <em style={{ fontWeight: 400 }}>Preferred</em> Properties
           </h1>
           <p
-            className="type-body-lg"
             style={{
-              color: "var(--ink-light)",
-              marginBottom: "16px",
-              maxWidth: "640px",
-              margin: "0 auto 16px",
-              lineHeight: 1.7,
+              fontFamily: "var(--font-body)",
+              fontSize: 17,
+              fontWeight: 300,
+              color: TEXT_MUTED,
+              lineHeight: 1.75,
+              maxWidth: 640,
+              margin: "0 auto 18px",
             }}
           >
             A Preferred property is one we know by name — and that knows yours.
@@ -87,69 +108,53 @@ export default function PreferredPropertiesPage() {
             your name and membership on file before you reach the counter.
           </p>
           <p
-            className="type-body-lg"
             style={{
-              color: "var(--ink-light)",
-              marginBottom: "16px",
-              maxWidth: "640px",
-              margin: "0 auto 16px",
-              lineHeight: 1.7,
+              fontFamily: "var(--font-body)",
+              fontSize: 17,
+              fontWeight: 300,
+              color: TEXT_MUTED,
+              lineHeight: 1.75,
+              maxWidth: 640,
+              margin: "0 auto 28px",
             }}
           >
             At every Preferred property, Voyagr Club members receive perks that
             standard inventory cannot match — breakfast, upgrades, late checkout,
-            and a personal welcome from the General Manager. These aren&apos;t
-            loyalty-program promises. They&apos;re written into our supplier
+            and a personal welcome from the General Manager. These aren&rsquo;t
+            loyalty-program promises. They&rsquo;re written into our supplier
             agreement.
           </p>
           <p
-            className="type-label"
             style={{
-              color: "var(--ink-mid)",
-              letterSpacing: "0.06em",
+              fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.32em",
               textTransform: "uppercase",
-              marginBottom: "48px",
-              maxWidth: "640px",
-              margin: "0 auto 48px",
+              color: GOLD,
+              marginBottom: 48,
             }}
           >
-            50+ properties across 20 destinations
+            50+ properties · 20 destinations
           </p>
 
           <div
             style={{
               display: "flex",
-              gap: "16px",
+              gap: 14,
               justifyContent: "center",
               flexWrap: "wrap",
             }}
           >
             <Link
               href="/search"
-              className="type-label"
-              style={{
-                display: "inline-block",
-                padding: "14px 36px",
-                background: "var(--gold)",
-                color: "#1a1710",
-                borderRadius: "6px",
-                textDecoration: "none",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                transition: "opacity 0.2s",
-              }}
+              className="luxe-btn-gold"
               onClick={() =>
                 trackCtaClicked({
                   cta_name: "browse_preferred",
                   cta_location: "preferred_properties_hero",
                   destination_url: "/search",
                 })
-              }
-              onMouseEnter={(e) =>
-                ((e.currentTarget as HTMLElement).style.opacity = "0.85")
-              }
-              onMouseLeave={(e) =>
-                ((e.currentTarget as HTMLElement).style.opacity = "1")
               }
             >
               Browse Preferred Properties
@@ -160,17 +165,20 @@ export default function PreferredPropertiesPage() {
         {/* Benefit badges grid */}
         <section
           style={{
-            maxWidth: "900px",
+            maxWidth: "920px",
             margin: "0 auto",
             padding: "0 24px",
           }}
         >
           <h2
-            className="type-heading-2"
             style={{
-              color: "var(--ink)",
+              fontFamily: "var(--font-display)",
+              fontSize: 32,
+              fontWeight: 500,
+              color: TEXT_PRIMARY,
+              letterSpacing: "-0.015em",
               textAlign: "center",
-              marginBottom: "32px",
+              margin: "0 0 32px",
             }}
           >
             Every Preferred stay includes
@@ -179,31 +187,40 @@ export default function PreferredPropertiesPage() {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: "24px",
+              gap: 20,
             }}
           >
             {benefitBadges.map((badge) => (
               <div
                 key={badge.title}
                 style={{
-                  background: "var(--white)",
-                  border: "1px solid var(--cream-border)",
-                  borderRadius: "8px",
+                  background: SURFACE,
+                  border: `1px solid ${SURFACE_BORDER}`,
+                  borderRadius: 16,
                   padding: "32px 28px",
                 }}
               >
-                <div style={{ fontSize: "32px", marginBottom: "16px" }}>
-                  {badge.emoji}
-                </div>
+                <div style={{ fontSize: 32, marginBottom: 16 }}>{badge.emoji}</div>
                 <h3
-                  className="type-heading-3"
-                  style={{ color: "var(--ink)", marginBottom: "8px" }}
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: 20,
+                    fontWeight: 500,
+                    color: TEXT_PRIMARY,
+                    letterSpacing: "-0.01em",
+                    margin: "0 0 8px",
+                  }}
                 >
                   {badge.title}
                 </h3>
                 <p
-                  className="type-body"
-                  style={{ color: "var(--ink-light)", lineHeight: 1.6 }}
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: 14,
+                    color: TEXT_MUTED,
+                    lineHeight: 1.7,
+                    margin: 0,
+                  }}
                 >
                   {badge.description}
                 </p>

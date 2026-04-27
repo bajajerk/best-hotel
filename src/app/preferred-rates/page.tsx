@@ -7,6 +7,12 @@ import Footer from "@/components/Footer";
 import { trackPreferredRatesViewed, trackCtaClicked } from "@/lib/analytics";
 import PreferredPartners from "@/components/PreferredPartners";
 
+const TEXT_PRIMARY = "#f7f5f2";
+const TEXT_MUTED = "rgba(247, 245, 242, 0.65)";
+const GOLD = "#c8aa76";
+const SURFACE = "rgba(255,255,255,0.04)";
+const SURFACE_BORDER = "rgba(255,255,255,0.08)";
+
 const perks = [
   {
     emoji: "🍳",
@@ -45,103 +51,84 @@ export default function PreferredRatesPage() {
       <main
         style={{
           minHeight: "100vh",
-          paddingTop: "100px",
-          paddingBottom: "80px",
-          background: "var(--cream)",
+          paddingTop: "140px",
+          paddingBottom: "120px",
         }}
       >
         {/* Hero section */}
         <section
           style={{
-            maxWidth: "900px",
+            maxWidth: "920px",
             margin: "0 auto",
-            padding: "0 24px 64px",
+            padding: "0 24px 80px",
             textAlign: "center",
           }}
         >
-          <h1
-            className="type-display-3"
+          <div
             style={{
-              color: "var(--ink)",
-              marginBottom: "24px",
+              fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.4em",
               textTransform: "uppercase",
-              letterSpacing: "0.04em",
+              color: GOLD,
+              marginBottom: 18,
             }}
           >
-            Voyagr Preferred Rates
+            Members-only access
+          </div>
+          <h1
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(40px, 5vw, 64px)",
+              fontWeight: 500,
+              color: TEXT_PRIMARY,
+              letterSpacing: "-0.025em",
+              lineHeight: 1.05,
+              margin: "0 0 24px",
+            }}
+          >
+            Voyagr <em style={{ fontWeight: 400 }}>Preferred</em> Rates
           </h1>
           <p
-            className="type-body-lg"
             style={{
-              color: "var(--ink-light)",
-              marginBottom: "48px",
-              maxWidth: "620px",
-              margin: "0 auto 48px",
+              fontFamily: "var(--font-body)",
+              fontSize: 18,
+              fontWeight: 300,
+              color: TEXT_MUTED,
               lineHeight: 1.7,
+              maxWidth: 620,
+              margin: "0 auto 48px",
             }}
           >
             Rates that exist outside the public market. Our concierge team holds
             negotiated contracts with 400+ luxury properties. Members get rates
-            that simply aren&apos;t listed anywhere else — plus perks that
+            that simply aren&rsquo;t listed anywhere else — plus perks that
             elevate every stay.
           </p>
 
           <div
             style={{
               display: "flex",
-              gap: "16px",
+              gap: 14,
               justifyContent: "center",
               flexWrap: "wrap",
             }}
           >
             <Link
               href="/search"
-              className="type-label"
-              style={{
-                display: "inline-block",
-                padding: "14px 36px",
-                background: "var(--gold)",
-                color: "#1a1710",
-                borderRadius: "6px",
-                textDecoration: "none",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                transition: "opacity 0.2s",
-              }}
-              onClick={() => trackCtaClicked({ cta_name: 'enquire_now', cta_location: 'preferred_rates_hero', destination_url: '/search' })}
-              onMouseEnter={(e) =>
-                ((e.currentTarget as HTMLElement).style.opacity = "0.85")
-              }
-              onMouseLeave={(e) =>
-                ((e.currentTarget as HTMLElement).style.opacity = "1")
+              className="luxe-btn-gold"
+              onClick={() =>
+                trackCtaClicked({
+                  cta_name: "enquire_now",
+                  cta_location: "preferred_rates_hero",
+                  destination_url: "/search",
+                })
               }
             >
               Enquire Now
             </Link>
-            <Link
-              href="/search"
-              className="type-label"
-              style={{
-                display: "inline-block",
-                padding: "14px 36px",
-                border: "1px solid var(--ink)",
-                color: "var(--ink)",
-                borderRadius: "6px",
-                textDecoration: "none",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                background: "transparent",
-                transition: "background 0.2s, color 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "var(--ink)";
-                (e.currentTarget as HTMLElement).style.color = "var(--white)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "transparent";
-                (e.currentTarget as HTMLElement).style.color = "var(--ink)";
-              }}
-            >
+            <Link href="/search" className="luxe-btn-secondary">
               Browse Hotels
             </Link>
           </div>
@@ -150,7 +137,7 @@ export default function PreferredRatesPage() {
         {/* Perks grid */}
         <section
           style={{
-            maxWidth: "900px",
+            maxWidth: "920px",
             margin: "0 auto",
             padding: "0 24px",
           }}
@@ -159,31 +146,40 @@ export default function PreferredRatesPage() {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-              gap: "24px",
+              gap: 20,
             }}
           >
             {perks.map((perk) => (
               <div
                 key={perk.title}
                 style={{
-                  background: "var(--white)",
-                  border: "1px solid var(--cream-border)",
-                  borderRadius: "8px",
+                  background: SURFACE,
+                  border: `1px solid ${SURFACE_BORDER}`,
+                  borderRadius: 16,
                   padding: "32px 28px",
                 }}
               >
-                <div style={{ fontSize: "32px", marginBottom: "16px" }}>
-                  {perk.emoji}
-                </div>
+                <div style={{ fontSize: 32, marginBottom: 16 }}>{perk.emoji}</div>
                 <h3
-                  className="type-heading-3"
-                  style={{ color: "var(--ink)", marginBottom: "8px" }}
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: 22,
+                    fontWeight: 500,
+                    color: TEXT_PRIMARY,
+                    letterSpacing: "-0.01em",
+                    margin: "0 0 8px",
+                  }}
                 >
                   {perk.title}
                 </h3>
                 <p
-                  className="type-body"
-                  style={{ color: "var(--ink-light)", lineHeight: 1.6 }}
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: 14,
+                    color: TEXT_MUTED,
+                    lineHeight: 1.7,
+                    margin: 0,
+                  }}
                 >
                   {perk.description}
                 </p>
