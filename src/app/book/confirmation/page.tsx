@@ -6,7 +6,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useBookingFlow } from "@/context/BookingFlowContext";
 
-const GOLD = "#C9A84C";
+const GOLD = "#c8aa76";
+const SURFACE = "rgba(255,255,255,0.04)";
+const SURFACE_BORDER = "rgba(255,255,255,0.08)";
+const TEXT_PRIMARY = "#f7f5f2";
+const TEXT_MUTED = "rgba(247, 245, 242, 0.65)";
+const TEXT_SOFT = "rgba(247, 245, 242, 0.45)";
+const SUCCESS = "#86c79b";
+
 const CONCIERGE_WHATSAPP =
   process.env.NEXT_PUBLIC_CONCIERGE_WHATSAPP || "919833534627";
 
@@ -95,38 +102,41 @@ export default function ConfirmationPage() {
       {/* Headline */}
       <h1
         style={{
-          fontFamily: "var(--serif)",
+          fontFamily: "var(--font-display)",
           fontSize: "var(--text-display-3)",
-          fontWeight: 600,
-          color: "var(--ink)",
+          fontWeight: 500,
+          color: TEXT_PRIMARY,
           textAlign: "center",
           margin: "20px 0 6px",
-          letterSpacing: "-0.01em",
+          letterSpacing: "-0.02em",
+          lineHeight: 1.1,
         }}
       >
-        Booking request submitted ✓
+        Booking request submitted
       </h1>
       <p
         style={{
-          fontFamily: "var(--sans)",
-          fontSize: "var(--text-body)",
-          color: "var(--ink-light)",
+          fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace",
+          fontSize: 11,
+          color: GOLD,
+          letterSpacing: "0.32em",
+          textTransform: "uppercase",
           textAlign: "center",
-          margin: "0 0 8px",
+          margin: "0 0 10px",
+          fontWeight: 700,
         }}
       >
-        Reference{" "}
-        <span style={{ fontWeight: 700, color: "var(--ink)" }}>{reference}</span>
+        Reference {reference}
       </p>
       <p
         style={{
-          fontFamily: "var(--sans)",
+          fontFamily: "var(--font-body)",
           fontSize: "var(--text-body-sm)",
-          color: "var(--ink-light)",
+          color: TEXT_MUTED,
           textAlign: "center",
-          margin: "0 auto 24px",
+          margin: "0 auto 28px",
           maxWidth: 460,
-          lineHeight: 1.5,
+          lineHeight: 1.6,
         }}
       >
         Our concierge will WhatsApp you within 15 minutes to confirm rate and
@@ -136,10 +146,10 @@ export default function ConfirmationPage() {
       {/* Summary card */}
       <div
         style={{
-          background: "var(--white)",
+          background: SURFACE,
           borderRadius: 16,
-          border: "1px solid var(--cream-border)",
-          padding: "20px 20px",
+          border: `1px solid ${SURFACE_BORDER}`,
+          padding: "20px 22px",
           marginBottom: 16,
         }}
       >
@@ -152,7 +162,7 @@ export default function ConfirmationPage() {
               borderRadius: 12,
               overflow: "hidden",
               flexShrink: 0,
-              background: "var(--cream-deep)",
+              background: "rgba(255,255,255,0.06)",
             }}
           >
             {flow.hotelPhoto && (
@@ -169,20 +179,21 @@ export default function ConfirmationPage() {
           <div style={{ minWidth: 0, flex: 1 }}>
             <div
               style={{
-                fontFamily: "var(--serif)",
+                fontFamily: "var(--font-display)",
                 fontSize: "var(--text-heading-3)",
-                fontWeight: 600,
-                color: "var(--ink)",
+                fontWeight: 500,
+                color: TEXT_PRIMARY,
                 lineHeight: 1.2,
+                letterSpacing: "-0.01em",
               }}
             >
               {flow.hotelName}
             </div>
             <div
               style={{
-                fontFamily: "var(--sans)",
+                fontFamily: "var(--font-body)",
                 fontSize: "var(--text-body-sm)",
-                color: "var(--ink-light)",
+                color: TEXT_MUTED,
                 marginTop: 4,
               }}
             >
@@ -205,25 +216,27 @@ export default function ConfirmationPage() {
             alignItems: "baseline",
             marginTop: 14,
             paddingTop: 14,
-            borderTop: "1px solid var(--cream-border)",
+            borderTop: `1px solid ${SURFACE_BORDER}`,
           }}
         >
           <span
             style={{
-              fontFamily: "var(--sans)",
+              fontFamily: "var(--font-body)",
               fontSize: "var(--text-body)",
               fontWeight: 600,
-              color: "var(--ink)",
+              color: TEXT_PRIMARY,
+              letterSpacing: "0.02em",
             }}
           >
             Total
           </span>
           <span
             style={{
-              fontFamily: "var(--serif)",
+              fontFamily: "var(--font-display)",
               fontSize: "var(--text-heading-2)",
-              fontWeight: 600,
-              color: "var(--ink)",
+              fontWeight: 500,
+              color: GOLD,
+              letterSpacing: "-0.01em",
             }}
           >
             {formatInr(flow.totalPrice)}
@@ -232,9 +245,9 @@ export default function ConfirmationPage() {
         {flow.refundable && flow.freeCancelUntil && (
           <div
             style={{
-              fontFamily: "var(--sans)",
+              fontFamily: "var(--font-body)",
               fontSize: "var(--text-caption)",
-              color: "var(--success)",
+              color: SUCCESS,
               fontWeight: 500,
               textAlign: "right",
               marginTop: 4,
@@ -256,19 +269,21 @@ export default function ConfirmationPage() {
           justifyContent: "center",
           gap: 10,
           width: "100%",
-          fontFamily: "var(--sans)",
-          fontSize: "var(--text-body)",
+          fontFamily: "var(--font-body)",
+          fontSize: 11,
           fontWeight: 600,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
           padding: "16px 24px",
-          borderRadius: 12,
+          borderRadius: 9999,
           background: "#25D366",
-          color: "#fff",
+          color: "#0a0a0a",
           textDecoration: "none",
           marginBottom: 12,
-          boxShadow: "0 2px 12px rgba(37,211,102,0.18)",
+          boxShadow: "0 4px 16px rgba(37,211,102,0.22)",
         }}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
         </svg>
         Confirm on WhatsApp
@@ -278,40 +293,22 @@ export default function ConfirmationPage() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <Link
           href="/profile"
+          className="luxe-btn-secondary"
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             padding: "12px 16px",
-            borderRadius: 12,
-            background: "var(--white)",
-            border: "1px solid var(--cream-border)",
-            fontFamily: "var(--sans)",
-            fontSize: "var(--text-body-sm)",
-            fontWeight: 600,
-            color: "var(--ink)",
-            textDecoration: "none",
-            textAlign: "center",
+            fontSize: 10,
+            letterSpacing: "0.18em",
           }}
         >
           View My Bookings
         </Link>
         <Link
           href="/"
+          className="luxe-btn-secondary"
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             padding: "12px 16px",
-            borderRadius: 12,
-            background: "var(--white)",
-            border: "1px solid var(--cream-border)",
-            fontFamily: "var(--sans)",
-            fontSize: "var(--text-body-sm)",
-            fontWeight: 600,
-            color: "var(--ink)",
-            textDecoration: "none",
-            textAlign: "center",
+            fontSize: 10,
+            letterSpacing: "0.18em",
           }}
         >
           Browse more hotels
@@ -322,10 +319,10 @@ export default function ConfirmationPage() {
       <div
         style={{
           textAlign: "center",
-          fontFamily: "var(--sans)",
+          fontFamily: "var(--font-body)",
           fontSize: "var(--text-caption)",
-          color: "var(--ink-light)",
-          marginTop: 24,
+          color: TEXT_SOFT,
+          marginTop: 28,
           lineHeight: 1.6,
         }}
       >
@@ -346,17 +343,17 @@ function SummaryRow({ label, value, mono = false }: { label: string; value: stri
         alignItems: "baseline",
         gap: 16,
         padding: "6px 0",
-        fontFamily: "var(--sans)",
+        fontFamily: "var(--font-body)",
         fontSize: "var(--text-body-sm)",
       }}
     >
-      <span style={{ color: "var(--ink-light)", flexShrink: 0 }}>{label}</span>
+      <span style={{ color: TEXT_SOFT, flexShrink: 0 }}>{label}</span>
       <span
         style={{
-          color: "var(--ink)",
+          color: TEXT_PRIMARY,
           fontWeight: 500,
           textAlign: "right",
-          fontFamily: mono ? "var(--mono, ui-monospace)" : undefined,
+          fontFamily: mono ? "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace" : undefined,
           minWidth: 0,
         }}
       >

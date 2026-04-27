@@ -6,7 +6,12 @@ import Image from "next/image";
 import { useBookingFlow } from "@/context/BookingFlowContext";
 import { fetchHotelDetail } from "@/lib/api";
 
-const GOLD = "#C9A84C";
+const GOLD = "#c8aa76";
+const SURFACE = "rgba(255,255,255,0.04)";
+const SURFACE_BORDER = "rgba(255,255,255,0.08)";
+const TEXT_PRIMARY = "#f7f5f2";
+const TEXT_MUTED = "rgba(247, 245, 242, 0.65)";
+const TEXT_SOFT = "rgba(247, 245, 242, 0.45)";
 
 const inrFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -180,7 +185,7 @@ export default function ReviewBookingPage() {
               borderRadius: 12,
               overflow: "hidden",
               flexShrink: 0,
-              background: "var(--cream-deep)",
+              background: "rgba(255,255,255,0.06)",
             }}
           >
             {hotelPhoto ? (
@@ -197,20 +202,21 @@ export default function ReviewBookingPage() {
           <div style={{ minWidth: 0, flex: 1 }}>
             <div
               style={{
-                fontFamily: "var(--serif)",
+                fontFamily: "var(--font-display)",
                 fontSize: "var(--text-heading-3)",
-                fontWeight: 600,
-                color: "var(--ink)",
+                fontWeight: 500,
+                color: TEXT_PRIMARY,
                 lineHeight: 1.2,
+                letterSpacing: "-0.01em",
               }}
             >
               {hotelName || "Loading…"}
             </div>
             <div
               style={{
-                fontFamily: "var(--sans)",
+                fontFamily: "var(--font-body)",
                 fontSize: "var(--text-body-sm)",
-                color: "var(--ink-light)",
+                color: TEXT_MUTED,
                 marginTop: 4,
               }}
             >
@@ -234,24 +240,25 @@ export default function ReviewBookingPage() {
       <Card>
         <h3
           style={{
-            fontFamily: "var(--sans)",
-            fontSize: "var(--text-body-sm)",
-            fontWeight: 600,
-            color: "var(--ink-light)",
-            letterSpacing: "0.06em",
+            fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace",
+            fontSize: 10,
+            fontWeight: 700,
+            color: GOLD,
+            letterSpacing: "0.32em",
             textTransform: "uppercase",
-            margin: "0 0 8px",
+            margin: "0 0 10px",
           }}
         >
           Room
         </h3>
         <div
           style={{
-            fontFamily: "var(--serif)",
+            fontFamily: "var(--font-display)",
             fontSize: "var(--text-heading-3)",
-            fontWeight: 600,
-            color: "var(--ink)",
+            fontWeight: 500,
+            color: TEXT_PRIMARY,
             lineHeight: 1.2,
+            letterSpacing: "-0.01em",
           }}
         >
           {roomName}
@@ -270,11 +277,11 @@ export default function ReviewBookingPage() {
             style={{
               marginTop: 14,
               paddingTop: 14,
-              borderTop: "1px dashed var(--cream-border)",
-              fontFamily: "var(--sans)",
+              borderTop: "1px dashed rgba(255,255,255,0.10)",
+              fontFamily: "var(--font-body)",
               fontSize: "var(--text-body-sm)",
-              color: "var(--success)",
-              fontWeight: 600,
+              color: "#86c79b",
+              fontWeight: 500,
               display: "flex",
               alignItems: "center",
               gap: 6,
@@ -290,10 +297,10 @@ export default function ReviewBookingPage() {
             style={{
               marginTop: 14,
               paddingTop: 14,
-              borderTop: "1px dashed var(--cream-border)",
-              fontFamily: "var(--sans)",
+              borderTop: "1px dashed rgba(255,255,255,0.10)",
+              fontFamily: "var(--font-body)",
               fontSize: "var(--text-body-sm)",
-              color: "var(--ink-light)",
+              color: TEXT_SOFT,
               fontWeight: 500,
             }}
           >
@@ -308,31 +315,31 @@ export default function ReviewBookingPage() {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            fontFamily: "var(--sans)",
+            fontFamily: "var(--font-body)",
             fontSize: "var(--text-body)",
-            color: "var(--ink-mid)",
+            color: TEXT_MUTED,
             marginBottom: 10,
           }}
         >
           <span>
             Subtotal · {nights} night{nights !== 1 ? "s" : ""}
           </span>
-          <span style={{ color: "var(--ink)", fontWeight: 500 }}>{formatInr(totalPrice)}</span>
+          <span style={{ color: TEXT_PRIMARY, fontWeight: 500 }}>{formatInr(totalPrice)}</span>
         </div>
 
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
-            fontFamily: "var(--sans)",
+            fontFamily: "var(--font-body)",
             fontSize: "var(--text-body)",
-            color: "var(--ink-mid)",
+            color: TEXT_MUTED,
             paddingBottom: 14,
-            borderBottom: "1px solid var(--cream-border)",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
           }}
         >
           <span>Taxes &amp; fees</span>
-          <span style={{ color: "var(--ink-mid)" }}>Included</span>
+          <span style={{ color: TEXT_MUTED }}>Included</span>
         </div>
 
         <div
@@ -345,20 +352,22 @@ export default function ReviewBookingPage() {
         >
           <span
             style={{
-              fontFamily: "var(--sans)",
+              fontFamily: "var(--font-body)",
               fontSize: "var(--text-body)",
               fontWeight: 600,
-              color: "var(--ink)",
+              color: TEXT_PRIMARY,
+              letterSpacing: "0.02em",
             }}
           >
             Total
           </span>
           <span
             style={{
-              fontFamily: "var(--serif)",
+              fontFamily: "var(--font-display)",
               fontSize: "var(--text-heading-2)",
-              fontWeight: 600,
-              color: "var(--ink)",
+              fontWeight: 500,
+              color: GOLD,
+              letterSpacing: "-0.01em",
             }}
           >
             {formatInr(totalPrice)}
@@ -370,9 +379,9 @@ export default function ReviewBookingPage() {
       <div
         style={{
           textAlign: "center",
-          fontFamily: "var(--sans)",
+          fontFamily: "var(--font-body)",
           fontSize: "var(--text-body-sm)",
-          color: "var(--ink-light)",
+          color: TEXT_SOFT,
           margin: "12px 0 24px",
           lineHeight: 1.6,
         }}
@@ -387,8 +396,10 @@ export default function ReviewBookingPage() {
           bottom: 0,
           left: 0,
           right: 0,
-          background: "var(--white)",
-          borderTop: "1px solid var(--cream-border)",
+          background: "rgba(12, 11, 10, 0.92)",
+          backdropFilter: "blur(18px) saturate(120%)",
+          WebkitBackdropFilter: "blur(18px) saturate(120%)",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
           padding: "14px 16px",
           zIndex: 110,
         }}
@@ -396,24 +407,10 @@ export default function ReviewBookingPage() {
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <button
             onClick={handleContinue}
-            style={{
-              width: "100%",
-              fontFamily: "var(--sans)",
-              fontSize: "var(--text-body)",
-              fontWeight: 600,
-              padding: "16px 24px",
-              borderRadius: 12,
-              border: "none",
-              background: GOLD,
-              color: "var(--ink)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-            }}
+            className="luxe-btn-gold"
+            style={{ width: "100%", padding: "16px 24px" }}
           >
-            Continue to guest details →
+            Continue to guest details
           </button>
         </div>
       </div>
@@ -425,10 +422,10 @@ function Card({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
-        background: "var(--white)",
+        background: SURFACE,
         borderRadius: 16,
-        border: "1px solid var(--cream-border)",
-        padding: "18px 20px",
+        border: `1px solid ${SURFACE_BORDER}`,
+        padding: "20px 22px",
         marginBottom: 16,
       }}
     >
@@ -445,12 +442,13 @@ function Pill({ children }: { children: React.ReactNode }) {
         alignItems: "center",
         padding: "6px 12px",
         borderRadius: 999,
-        background: "var(--cream-deep)",
-        border: "1px solid var(--cream-border)",
-        fontFamily: "var(--sans)",
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.10)",
+        fontFamily: "var(--font-body)",
         fontSize: "var(--text-caption)",
         fontWeight: 500,
-        color: "var(--ink)",
+        color: TEXT_PRIMARY,
+        letterSpacing: "0.02em",
       }}
     >
       {children}

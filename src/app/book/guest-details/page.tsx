@@ -5,7 +5,16 @@ import { useRouter } from "next/navigation";
 import { useBookingFlow } from "@/context/BookingFlowContext";
 import { useAuth } from "@/context/AuthContext";
 
-const GOLD = "#C9A84C";
+const GOLD = "#c8aa76";
+const SURFACE = "rgba(255,255,255,0.04)";
+const SURFACE_BORDER = "rgba(255,255,255,0.08)";
+const INPUT_BG = "rgba(255,255,255,0.03)";
+const INPUT_BORDER = "rgba(255,255,255,0.14)";
+const ERROR = "#e08585";
+const TEXT_PRIMARY = "#f7f5f2";
+const TEXT_MUTED = "rgba(247, 245, 242, 0.65)";
+const TEXT_SOFT = "rgba(247, 245, 242, 0.45)";
+
 const HOLD_SECONDS = 300;
 const SPECIAL_REQUESTS_MAX = 500;
 
@@ -129,42 +138,53 @@ export default function GuestDetailsPage() {
     width: "100%",
     padding: "12px 14px",
     borderRadius: 10,
-    border: `1px solid ${hasError ? "var(--error)" : "var(--cream-border)"}`,
-    background: "var(--white)",
-    fontFamily: "var(--sans)",
+    border: `1px solid ${hasError ? ERROR : INPUT_BORDER}`,
+    background: INPUT_BG,
+    fontFamily: "var(--font-body)",
     fontSize: "var(--text-body)",
-    color: "var(--ink)",
+    color: TEXT_PRIMARY,
     outline: "none",
     boxSizing: "border-box" as const,
   });
 
   const labelStyle = {
-    fontFamily: "var(--sans)",
-    fontSize: "var(--text-body-sm)",
-    fontWeight: 500 as const,
-    color: "var(--ink-mid)",
-    marginBottom: 6,
+    fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace",
+    fontSize: 10,
+    fontWeight: 700,
+    color: GOLD,
+    letterSpacing: "0.32em",
+    textTransform: "uppercase" as const,
+    marginBottom: 8,
     display: "block" as const,
   };
 
   const errorTextStyle = {
-    fontFamily: "var(--sans)",
+    fontFamily: "var(--font-body)",
     fontSize: "var(--text-caption)",
-    color: "var(--error)",
+    color: ERROR,
     marginTop: 4,
     display: "block" as const,
   };
 
   const sectionTitle = useMemo(
     () => ({
-      fontFamily: "var(--serif)",
+      fontFamily: "var(--font-display)",
       fontSize: "var(--text-heading-3)",
-      fontWeight: 600,
-      color: "var(--ink)",
+      fontWeight: 500,
+      color: TEXT_PRIMARY,
+      letterSpacing: "-0.01em",
       margin: 0,
     }),
     []
   );
+
+  const cardStyle = {
+    background: SURFACE,
+    borderRadius: 16,
+    border: `1px solid ${SURFACE_BORDER}`,
+    padding: "20px 22px",
+    marginBottom: 16,
+  };
 
   return (
     <div>
@@ -181,35 +201,29 @@ export default function GuestDetailsPage() {
             gap: 8,
             padding: "8px 16px",
             borderRadius: 999,
-            background: "rgba(201,168,76,0.10)",
-            border: `1px solid ${GOLD}`,
-            fontFamily: "var(--sans)",
-            fontSize: "var(--text-body-sm)",
+            background: "rgba(200,170,118,0.10)",
+            border: `1px solid rgba(200,170,118,0.45)`,
+            fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace",
+            fontSize: 11,
             fontWeight: 600,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
             color: GOLD,
           }}
         >
           <span aria-hidden>⏱</span>
-          <span>Rate held for {formatTimer(seconds)}</span>
+          <span>Rate held · {formatTimer(seconds)}</span>
         </div>
       </div>
 
       {/* Primary guest card */}
-      <div
-        style={{
-          background: "var(--white)",
-          borderRadius: 16,
-          border: "1px solid var(--cream-border)",
-          padding: "20px 20px",
-          marginBottom: 16,
-        }}
-      >
+      <div style={cardStyle}>
         <h3 style={sectionTitle}>Primary guest</h3>
         <div
           style={{
-            fontFamily: "var(--sans)",
+            fontFamily: "var(--font-body)",
             fontSize: "var(--text-body-sm)",
-            color: "var(--ink-light)",
+            color: TEXT_MUTED,
             marginTop: 4,
             marginBottom: 14,
           }}
@@ -270,21 +284,13 @@ export default function GuestDetailsPage() {
       </div>
 
       {/* Special requests */}
-      <div
-        style={{
-          background: "var(--white)",
-          borderRadius: 16,
-          border: "1px solid var(--cream-border)",
-          padding: "20px 20px",
-          marginBottom: 16,
-        }}
-      >
+      <div style={cardStyle}>
         <h3 style={sectionTitle}>Special requests / preferences</h3>
         <div
           style={{
-            fontFamily: "var(--sans)",
+            fontFamily: "var(--font-body)",
             fontSize: "var(--text-body-sm)",
-            color: "var(--ink-light)",
+            color: TEXT_MUTED,
             marginTop: 4,
             marginBottom: 14,
           }}
@@ -300,15 +306,15 @@ export default function GuestDetailsPage() {
           style={{
             ...inputStyle(false),
             resize: "vertical" as const,
-            fontFamily: "var(--sans)",
+            fontFamily: "var(--font-body)",
             lineHeight: 1.5,
           }}
         />
         <div
           style={{
-            fontFamily: "var(--sans)",
+            fontFamily: "var(--font-body)",
             fontSize: "var(--text-caption)",
-            color: "var(--ink-light)",
+            color: TEXT_SOFT,
             textAlign: "right",
             marginTop: 6,
           }}
@@ -318,15 +324,7 @@ export default function GuestDetailsPage() {
       </div>
 
       {/* GST Details — collapsed optional section */}
-      <div
-        style={{
-          background: "var(--white)",
-          borderRadius: 16,
-          border: "1px solid var(--cream-border)",
-          padding: "18px 20px",
-          marginBottom: 16,
-        }}
-      >
+      <div style={cardStyle}>
         <div
           style={{
             display: "flex",
@@ -339,9 +337,9 @@ export default function GuestDetailsPage() {
             <h3 style={sectionTitle}>GST Details</h3>
             <div
               style={{
-                fontFamily: "var(--sans)",
+                fontFamily: "var(--font-body)",
                 fontSize: "var(--text-body-sm)",
-                color: "var(--ink-light)",
+                color: TEXT_MUTED,
                 marginTop: 4,
               }}
             >
@@ -355,12 +353,13 @@ export default function GuestDetailsPage() {
               background: "none",
               border: "none",
               padding: 0,
-              fontFamily: "var(--sans)",
+              fontFamily: "var(--font-body)",
               fontSize: "var(--text-body-sm)",
               fontWeight: 600,
               color: GOLD,
               cursor: "pointer",
               whiteSpace: "nowrap",
+              letterSpacing: "0.04em",
             }}
             aria-expanded={gstOpen}
           >
@@ -384,20 +383,13 @@ export default function GuestDetailsPage() {
       </div>
 
       {/* Identity Verification (PAN) */}
-      <div
-        style={{
-          background: "var(--white)",
-          borderRadius: 16,
-          border: "1px solid var(--cream-border)",
-          padding: "18px 20px",
-        }}
-      >
+      <div style={cardStyle}>
         <h3 style={sectionTitle}>Identity Verification</h3>
         <div
           style={{
-            fontFamily: "var(--sans)",
+            fontFamily: "var(--font-body)",
             fontSize: "var(--text-body-sm)",
-            color: "var(--ink-light)",
+            color: TEXT_MUTED,
             marginTop: 4,
             marginBottom: 14,
           }}
@@ -427,8 +419,10 @@ export default function GuestDetailsPage() {
           bottom: 0,
           left: 0,
           right: 0,
-          background: "var(--white)",
-          borderTop: "1px solid var(--cream-border)",
+          background: "rgba(12, 11, 10, 0.92)",
+          backdropFilter: "blur(18px) saturate(120%)",
+          WebkitBackdropFilter: "blur(18px) saturate(120%)",
+          borderTop: `1px solid ${SURFACE_BORDER}`,
           padding: "14px 16px",
           zIndex: 110,
         }}
@@ -437,25 +431,15 @@ export default function GuestDetailsPage() {
           <button
             onClick={handleContinue}
             disabled={expired}
+            className="luxe-btn-gold"
             style={{
               width: "100%",
-              fontFamily: "var(--sans)",
-              fontSize: "var(--text-body)",
-              fontWeight: 600,
               padding: "16px 24px",
-              borderRadius: 12,
-              border: "none",
-              background: GOLD,
-              color: "var(--ink)",
               cursor: expired ? "not-allowed" : "pointer",
-              opacity: expired ? 0.5 : 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
+              opacity: expired ? 0.45 : 1,
             }}
           >
-            Continue to payment →
+            Continue to payment
           </button>
         </div>
       </div>
@@ -469,7 +453,7 @@ export default function GuestDetailsPage() {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(26,23,16,0.6)",
+            background: "rgba(0,0,0,0.78)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -479,10 +463,11 @@ export default function GuestDetailsPage() {
         >
           <div
             style={{
-              background: "var(--white)",
+              background: "#16140f",
+              border: `1px solid ${SURFACE_BORDER}`,
               borderRadius: 16,
-              padding: "28px 24px",
-              maxWidth: 360,
+              padding: "32px 28px",
+              maxWidth: 380,
               width: "100%",
               textAlign: "center",
             }}
@@ -490,42 +475,33 @@ export default function GuestDetailsPage() {
             <h2
               id="rate-expired-title"
               style={{
-                fontFamily: "var(--serif)",
+                fontFamily: "var(--font-display)",
                 fontSize: "var(--text-heading-2)",
-                fontWeight: 600,
-                color: "var(--ink)",
+                fontWeight: 500,
+                color: TEXT_PRIMARY,
                 margin: "0 0 8px",
+                letterSpacing: "-0.01em",
               }}
             >
               Your rate has been released.
             </h2>
             <p
               style={{
-                fontFamily: "var(--sans)",
+                fontFamily: "var(--font-body)",
                 fontSize: "var(--text-body-sm)",
-                color: "var(--ink-light)",
-                margin: "0 0 20px",
-                lineHeight: 1.5,
+                color: TEXT_MUTED,
+                margin: "0 0 24px",
+                lineHeight: 1.6,
               }}
             >
               The 5-minute hold has expired. Search again to see live availability.
             </p>
             <button
               onClick={handleSearchAgain}
-              style={{
-                width: "100%",
-                fontFamily: "var(--sans)",
-                fontSize: "var(--text-body)",
-                fontWeight: 600,
-                padding: "14px 24px",
-                borderRadius: 12,
-                border: "none",
-                background: GOLD,
-                color: "var(--ink)",
-                cursor: "pointer",
-              }}
+              className="luxe-btn-gold"
+              style={{ width: "100%", padding: "14px 24px" }}
             >
-              Search Again →
+              Search Again
             </button>
           </div>
         </div>

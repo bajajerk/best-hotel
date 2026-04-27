@@ -2,7 +2,13 @@
 
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import Link from "next/link";
+import Header from "@/components/Header";
+
+/* ──────────────────────────────────────────────────────────────────────────
+   /book/* shared shell — the global <Header /> (same as homepage) sits at
+   top, then a slim dark-luxe step indicator strip beneath it.
+   No more "BookHeader" — the user wanted ONE header sitewide.
+   ────────────────────────────────────────────────────────────────────────── */
 
 const STEPS = [
   { key: "review", label: "Review", path: "/book/review" },
@@ -10,6 +16,10 @@ const STEPS = [
   { key: "payment", label: "Payment", path: "/book/payment" },
   { key: "confirmation", label: "Confirmation", path: "/book/confirmation" },
 ];
+
+const CHAMPAGNE = "#c8aa76";
+const SOFT_WHITE_45 = "rgba(247, 245, 242, 0.45)";
+const SOFT_WHITE_85 = "rgba(247, 245, 242, 0.85)";
 
 function StepIndicator() {
   const pathname = usePathname();
@@ -23,64 +33,92 @@ function StepIndicator() {
   }, -1);
 
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 0,
-      padding: "24px 16px 0",
-      maxWidth: 720,
-      margin: "0 auto",
-    }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 0,
+        padding: "20px 16px 16px",
+        maxWidth: 720,
+        margin: "0 auto",
+      }}
+    >
       {STEPS.map((step, i) => {
         const isActive = i === currentIdx;
         const isDone = i < currentIdx;
+        const dotBg = isActive
+          ? CHAMPAGNE
+          : isDone
+          ? "rgba(200, 170, 118, 0.85)"
+          : "rgba(255,255,255,0.06)";
+        const dotColor = isActive || isDone ? "#0a0a0a" : SOFT_WHITE_45;
+        const dotBorder = isActive
+          ? "1px solid rgba(200,170,118,0.9)"
+          : isDone
+          ? "1px solid rgba(200,170,118,0.6)"
+          : "1px solid rgba(255,255,255,0.10)";
+
         return (
-          <div key={step.key} style={{ display: "flex", alignItems: "center", flex: i < STEPS.length - 1 ? 1 : undefined }}>
+          <div
+            key={step.key}
+            style={{ display: "flex", alignItems: "center", flex: i < STEPS.length - 1 ? 1 : undefined }}
+          >
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 60 }}>
-              <div style={{
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 13,
-                fontWeight: 600,
-                fontFamily: "var(--sans)",
-                background: isActive || isDone ? "var(--gold)" : "var(--cream-deep)",
-                color: isActive ? "var(--ink)" : isDone ? "var(--white)" : "var(--ink-light)",
-                border: isActive ? "2px solid var(--gold)" : "none",
-                boxShadow: isActive ? "0 0 0 4px rgba(201,168,76,0.18)" : "none",
-                transition: "all 0.3s ease",
-              }}>
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background: dotBg,
+                  color: dotColor,
+                  border: dotBorder,
+                  boxShadow: isActive ? "0 0 0 4px rgba(200,170,118,0.16)" : "none",
+                  transition: "all 0.3s ease",
+                }}
+              >
                 {isDone ? (
-                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>check</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                 ) : (
                   i + 1
                 )}
               </div>
-              <span style={{
-                fontSize: "var(--text-caption)",
-                fontFamily: "var(--sans)",
-                color: isActive ? "var(--ink)" : "var(--ink-light)",
-                fontWeight: isActive ? 600 : 400,
-                marginTop: 6,
-                whiteSpace: "nowrap",
-              }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: 10,
+                  fontWeight: isActive ? 600 : 400,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: isActive ? CHAMPAGNE : SOFT_WHITE_85,
+                  marginTop: 8,
+                  whiteSpace: "nowrap",
+                  opacity: isActive || isDone ? 1 : 0.55,
+                }}
+              >
                 {step.label}
               </span>
             </div>
             {i < STEPS.length - 1 && (
-              <div style={{
-                flex: 1,
-                height: 2,
-                background: isDone ? "var(--gold)" : "var(--cream-border)",
-                marginBottom: 20,
-                marginLeft: 4,
-                marginRight: 4,
-                transition: "background 0.3s ease",
-              }} />
+              <div
+                style={{
+                  flex: 1,
+                  height: 1,
+                  background: isDone ? "rgba(200,170,118,0.55)" : "rgba(255,255,255,0.08)",
+                  marginBottom: 24,
+                  marginLeft: 6,
+                  marginRight: 6,
+                  transition: "background 0.3s ease",
+                }}
+              />
             )}
           </div>
         );
@@ -89,107 +127,25 @@ function StepIndicator() {
   );
 }
 
-function BookHeader() {
-  const pathname = usePathname();
-
-  let centerTitle: string | null = null;
-  if (pathname.includes("review")) centerTitle = "Review your booking";
-  else if (pathname.includes("guest-details")) centerTitle = "Who's checking in?";
-  else if (pathname.includes("payment")) centerTitle = "Payment";
-
-  if (centerTitle) {
-    return (
-      <header style={{
-        background: "var(--ink)",
-        borderBottom: "1px solid var(--ink)",
-        padding: "16px 24px",
-        display: "grid",
-        gridTemplateColumns: "1fr auto 1fr",
-        alignItems: "center",
-      }}>
-        <Link href="/" style={{
-          fontFamily: "var(--serif)",
-          fontSize: 22,
-          fontWeight: 600,
-          color: "var(--cream)",
-          textDecoration: "none",
-          letterSpacing: "-0.02em",
-          justifySelf: "start",
-        }}>
-          Voyagr
-        </Link>
-        <h1 style={{
-          fontFamily: "var(--serif)",
-          fontSize: 22,
-          fontWeight: 500,
-          color: "var(--cream)",
-          margin: 0,
-          textAlign: "center",
-          letterSpacing: "-0.01em",
-          whiteSpace: "nowrap",
-        }}>
-          {centerTitle}
-        </h1>
-        <Link href="/" style={{
-          fontFamily: "var(--sans)",
-          fontSize: "var(--text-body-sm)",
-          color: "var(--cream)",
-          textDecoration: "none",
-          display: "flex",
-          alignItems: "center",
-          gap: 4,
-          justifySelf: "end",
-        }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
-          Cancel
-        </Link>
-      </header>
-    );
-  }
-
-  return (
-    <header style={{
-      background: "var(--white)",
-      borderBottom: "1px solid var(--cream-border)",
-      padding: "14px 24px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-    }}>
-      <Link href="/" style={{
-        fontFamily: "var(--serif)",
-        fontSize: 22,
-        fontWeight: 600,
-        color: "var(--ink)",
-        textDecoration: "none",
-        letterSpacing: "-0.02em",
-      }}>
-        Voyagr
-      </Link>
-      <Link href="/" style={{
-        fontFamily: "var(--sans)",
-        fontSize: "var(--text-body-sm)",
-        color: "var(--ink-light)",
-        textDecoration: "none",
-        display: "flex",
-        alignItems: "center",
-        gap: 4,
-      }}>
-        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
-        Cancel
-      </Link>
-    </header>
-  );
-}
-
 export default function BookLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="luxe" style={{ minHeight: "100vh", background: "var(--cream)" }}>
-      <BookHeader />
+    <div className="luxe" style={{ minHeight: "100vh" }}>
+      <Header />
 
-      <StepIndicator />
+      {/* Spacer — Header is fixed-position, push content below the bar. */}
+      <div style={{ height: 72 }} />
 
-      <main style={{ maxWidth: 800, margin: "0 auto", padding: "24px 16px 140px" }}>
+      {/* Slim step indicator strip — sits BELOW the global header */}
+      <div
+        style={{
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(0,0,0,0.18)",
+        }}
+      >
+        <StepIndicator />
+      </div>
+
+      <main style={{ maxWidth: 880, margin: "0 auto", padding: "32px 16px 140px" }}>
         {children}
       </main>
     </div>
