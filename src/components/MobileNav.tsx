@@ -40,15 +40,14 @@ const PRIMARY_LINKS: {
 ];
 
 const SECONDARY_LINKS = [
-  { label: "Featured Properties", href: "/featured", icon: "apartment" },
-  { label: "Explore Cities", href: "/cities", icon: "location_city" },
-  { label: "Offers", href: "/offers", icon: "local_offer" },
+  { label: "Preferred Properties", href: "/preferred-properties", icon: "apartment" },
+  { label: "Preferred Rates", href: "/preferred-rates", icon: "local_offer" },
 ];
 
 const BOTTOM_LINKS = [
-  { label: "Help & Support", href: "/support" },
-  { label: "Contact Us", href: "/contact" },
-  { label: "Terms & Policies", href: "/terms" },
+  { label: "About", href: "/about" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Terms of Service", href: "/terms" },
 ];
 
 const WHATSAPP_URL =
