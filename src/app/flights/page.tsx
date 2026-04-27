@@ -44,6 +44,46 @@ const POPULAR_INTL = [
   { code: "LHR", city: "London" },
 ];
 
+// ── Pax stepper ───────────────────────────────────────────────────────────────
+
+function PaxStepper({
+  label, hint, value, min, max, onChange, disabledHint,
+}: {
+  label: string;
+  hint: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (n: number) => void;
+  disabledHint?: string;
+}) {
+  const dec = () => value > min && onChange(value - 1);
+  const inc = () => value < max && onChange(value + 1);
+  return (
+    <div className="pax-stepper-row">
+      <div>
+        <div className="pax-stepper-label">{label}</div>
+        <div className="pax-stepper-hint">{disabledHint ?? hint}</div>
+      </div>
+      <div className="pax-stepper-ctrl" onClick={(e) => e.stopPropagation()}>
+        <button
+          className="pax-btn"
+          onClick={dec}
+          disabled={value <= min}
+          aria-label={`Decrease ${label}`}
+        >−</button>
+        <span className="pax-num">{value}</span>
+        <button
+          className="pax-btn"
+          onClick={inc}
+          disabled={value >= max}
+          aria-label={`Increase ${label}`}
+        >+</button>
+      </div>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function FlightsPage() {
@@ -55,6 +95,9 @@ export default function FlightsPage() {
   const [date, setDate]           = useState("");
   const [returnDate, setReturnDate] = useState("");
   const [adults, setAdults]       = useState(1);
+  const [children, setChildren]   = useState(0);
+  const [infants, setInfants]     = useState(0);
+  const [paxOpen, setPaxOpen]     = useState(false);
   const [cabin, setCabin]         = useState("ECONOMY");
   const [activeField, setActiveField] = useState<"from" | "to" | null>(null);
   const [query, setQuery]         = useState("");
@@ -94,10 +137,23 @@ export default function FlightsPage() {
       from: from.code, to: to.code,
       fromCity: from.city, toCity: to.city,
       date, adults: String(adults), cabin, tripType,
+      ...(children > 0 ? { children: String(children) } : {}),
+      ...(infants > 0 ? { infants: String(infants) } : {}),
       ...(tripType === "R" && returnDate ? { returnDate } : {}),
     });
     router.push(`/flights/results?${p}`);
   }
+
+  // Infants ≤ adults (lap-held). Children + adults ≤ 9 total seats.
+  const maxInfants = adults;
+  const totalSeated = adults + children;
+  const paxLabel = (() => {
+    const parts: string[] = [];
+    parts.push(adults === 1 ? "1 Adult" : `${adults} Adults`);
+    if (children > 0) parts.push(children === 1 ? "1 Child" : `${children} Children`);
+    if (infants > 0) parts.push(infants === 1 ? "1 Infant" : `${infants} Infants`);
+    return parts.join(", ");
+  })();
 
   function fmtDate(d: string) {
     if (!d) return "";
@@ -213,29 +269,76 @@ export default function FlightsPage() {
           </div>
 
           {/* Travellers */}
-          <div className="field border-top travellers-field">
-            <div>
-              <div className="fl">Travellers</div>
+          <div
+            className={`field border-top travellers-field${paxOpen ? " focus" : ""}`}
+            onClick={() => setPaxOpen((v) => !v)}
+            style={{ cursor: "pointer", position: "relative" }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="fl">Travellers & Cabin</div>
               <div className="fv">
-                {adults === 1 ? "1 Adult" : `${adults} Adults`} · {cabinLabel[cabin] ?? cabin}
+                {paxLabel} · {cabinLabel[cabin] ?? cabin}
               </div>
             </div>
-            <div className="pax-ctrl">
-              <button className="pax-btn" onClick={() => setAdults(Math.max(1, adults - 1))}>−</button>
-              <span className="pax-num">{adults}</span>
-              <button className="pax-btn" onClick={() => setAdults(Math.min(9, adults + 1))}>+</button>
-              <select
-                value={cabin}
-                onChange={e => setCabin(e.target.value)}
-                className="cabin-select"
-              >
-                <option value="ECONOMY">Economy</option>
-                <option value="PREMIUM_ECONOMY">Prem. Economy</option>
-                <option value="BUSINESS">Business</option>
-                <option value="FIRST">First</option>
-              </select>
+            <div style={{ color: "rgba(201,168,76,0.7)", fontSize: 14, paddingLeft: 8 }}>
+              {paxOpen ? "▴" : "▾"}
             </div>
           </div>
+
+          {paxOpen && (
+            <div className="pax-pop" onClick={(e) => e.stopPropagation()}>
+              <PaxStepper
+                label="Adults"
+                hint="12+ years"
+                value={adults}
+                min={1}
+                max={9 - children}
+                onChange={(v) => {
+                  setAdults(v);
+                  if (infants > v) setInfants(v);
+                }}
+              />
+              <PaxStepper
+                label="Children"
+                hint="2 – 12 years"
+                value={children}
+                min={0}
+                max={Math.max(0, 9 - adults)}
+                onChange={setChildren}
+              />
+              <PaxStepper
+                label="Infants"
+                hint="Under 2 yrs · on lap"
+                value={infants}
+                min={0}
+                max={maxInfants}
+                onChange={setInfants}
+                disabledHint={infants >= maxInfants ? "Max 1 infant per adult" : undefined}
+              />
+
+              <div className="pax-cabin-row">
+                <div className="pax-cabin-label">Cabin class</div>
+                <select
+                  value={cabin}
+                  onChange={(e) => setCabin(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="cabin-select-full"
+                >
+                  <option value="ECONOMY">Economy</option>
+                  <option value="PREMIUM_ECONOMY">Premium Economy</option>
+                  <option value="BUSINESS">Business</option>
+                  <option value="FIRST">First Class</option>
+                </select>
+              </div>
+
+              <div className="pax-pop-foot">
+                <span className="pax-foot-meta">{totalSeated} seated · {infants} on lap</span>
+                <button className="pax-done" onClick={(e) => { e.stopPropagation(); setPaxOpen(false); }}>
+                  Done
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Popular destinations */}
@@ -333,11 +436,27 @@ export default function FlightsPage() {
 
         /* ── Travellers ── */
         .travellers-field { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-        .pax-ctrl { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-        .pax-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #C9A84C; background: transparent; color: #C9A84C; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; transition: background 0.2s; }
-        .pax-btn:hover { background: rgba(201,168,76,0.12); }
-        .pax-num { color: #fdfaf5; font-size: 15px; font-weight: 600; min-width: 16px; text-align: center; font-family: var(--font-mono); }
-        .cabin-select { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 4px; color: rgba(253,250,245,0.7); font-family: var(--font-body); font-size: 11px; padding: 4px 6px; outline: none; cursor: pointer; color-scheme: dark; }
+
+        /* Travellers popover */
+        .pax-pop { background: #0d1e2e; border-top: 1px solid rgba(201,168,76,0.14); padding: 14px 16px 12px; }
+        .pax-stepper-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .pax-stepper-row:last-of-type { border-bottom: none; }
+        .pax-stepper-label { font-size: 14px; font-weight: 600; color: #fdfaf5; font-family: var(--font-body); }
+        .pax-stepper-hint { font-size: 11px; color: rgba(253,250,245,0.42); font-family: var(--font-body); margin-top: 2px; }
+        .pax-stepper-ctrl { display: flex; align-items: center; gap: 12px; }
+        .pax-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #C9A84C; background: transparent; color: #C9A84C; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; transition: background 0.2s, opacity 0.2s; }
+        .pax-btn:hover:not(:disabled) { background: rgba(201,168,76,0.12); }
+        .pax-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .pax-num { color: #fdfaf5; font-size: 15px; font-weight: 600; min-width: 18px; text-align: center; font-family: var(--font-mono); }
+
+        .pax-cabin-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 14px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .pax-cabin-label { font-size: 12px; font-weight: 600; color: rgba(253,250,245,0.65); font-family: var(--font-body); letter-spacing: 0.04em; text-transform: uppercase; }
+        .cabin-select-full { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: #fdfaf5; font-family: var(--font-body); font-size: 13px; padding: 8px 10px; outline: none; cursor: pointer; color-scheme: dark; min-width: 140px; }
+
+        .pax-pop-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .pax-foot-meta { font-size: 11px; color: rgba(253,250,245,0.4); font-family: var(--font-body); }
+        .pax-done { background: #C9A84C; color: #0B1B2B; padding: 7px 18px; border-radius: 6px; border: none; font-family: var(--font-body); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: opacity 0.2s; }
+        .pax-done:hover { opacity: 0.88; }
 
         /* ── Popular ── */
         .pop-section { padding: 20px 16px 8px; }

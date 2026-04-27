@@ -473,6 +473,8 @@ export interface FlightFare {
   totalFare: number;
   baseFare: number;
   taxes: number;
+  childFare?: number;
+  infantFare?: number;
   cabinBaggage?: string;
   checkinBaggage?: string;
   mealIncluded?: boolean;
@@ -523,12 +525,16 @@ function parseTripJackFlights(data: any): FlightSearchResult {
 
       const fares: FlightFare[] = (option.totalPriceList ?? []).map((f: any) => {
         const adult = f.fd?.ADULT ?? {};
+        const child = f.fd?.CHILD ?? {};
+        const infant = f.fd?.INFANT ?? {};
         return {
           id: f.id ?? '',
           fareIdentifier: f.fareIdentifier ?? '',
           totalFare: adult.fC?.TF ?? 0,
           baseFare: adult.fC?.BF ?? 0,
           taxes: adult.fC?.TAF ?? 0,
+          childFare: child.fC?.TF ?? 0,
+          infantFare: infant.fC?.TF ?? 0,
           cabinBaggage: adult.bI?.cB ?? '',
           checkinBaggage: adult.bI?.iB ?? '',
           mealIncluded: !!adult.mI,
@@ -741,11 +747,13 @@ export async function searchFlights(params: {
   to: string;
   date: string;
   adults?: number;
+  children?: number;
+  infants?: number;
   cabinClass?: string;
   tripType?: string;
   token?: string | null;
 }): Promise<FlightSearchResult> {
-  const { from, to, date, adults = 1, cabinClass = 'ECONOMY', tripType = 'O', token } = params;
+  const { from, to, date, adults = 1, children = 0, infants = 0, cabinClass = 'ECONOMY', tripType = 'O', token } = params;
 
   const res = await fetch(`${API_BASE}/api/flights/search`, {
     method: 'POST',
@@ -757,7 +765,7 @@ export async function searchFlights(params: {
       searchQuery: {
         tripType,
         cabinClass,
-        paxInfo: { ADULT: String(adults), CHILD: '0', INFANT: '0' },
+        paxInfo: { ADULT: String(adults), CHILD: String(children), INFANT: String(infants) },
         routeInfos: [{ fromCityOrAirport: { code: from }, toCityOrAirport: { code: to }, travelDate: date }],
       },
     }),

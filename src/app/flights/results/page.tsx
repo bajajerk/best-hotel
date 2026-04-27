@@ -37,6 +37,14 @@ function stopCount(f: ParsedFlight) {
   return f.segments.length - 1;
 }
 
+function paxSummary(adults: number, children: number, infants: number) {
+  const parts: string[] = [];
+  parts.push(adults === 1 ? "1 Adult" : `${adults} Adults`);
+  if (children > 0) parts.push(children === 1 ? "1 Child" : `${children} Children`);
+  if (infants > 0) parts.push(infants === 1 ? "1 Infant" : `${infants} Infants`);
+  return parts.join(", ");
+}
+
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
 function Skeleton() {
@@ -58,6 +66,18 @@ function Skeleton() {
   );
 }
 
+function totalForPax(flight: ParsedFlight, adults: number, children: number, infants: number) {
+  const f = flight.cheapestFare;
+  if (!f) return 0;
+  const adult = f.totalFare * adults;
+  // Backend often returns 0 for child/infant when search had none — fall back
+  // to ~75%/10% of adult fare so the line item still reads sensibly. These
+  // are display estimates; the booking flow re-prices via /flights/review.
+  const child = (f.childFare && f.childFare > 0 ? f.childFare : f.totalFare * 0.75) * children;
+  const infant = (f.infantFare && f.infantFare > 0 ? f.infantFare : f.totalFare * 0.1) * infants;
+  return Math.round(adult + child + infant);
+}
+
 // ── Flight card ───────────────────────────────────────────────────────────────
 
 interface CardProps {
@@ -65,12 +85,17 @@ interface CardProps {
   badge: "cheap" | "best" | null;
   selected: boolean;
   onSelect: () => void;
+  adults: number;
+  children: number;
+  infants: number;
 }
 
-function FlightCard({ flight, badge, selected, onSelect }: CardProps) {
+function FlightCard({ flight, badge, selected, onSelect, adults, children, infants }: CardProps) {
   const seg   = flight.segments[0];
   const last  = flight.segments[flight.segments.length - 1];
   const price = flight.cheapestFare?.totalFare ?? 0;
+  const total = totalForPax(flight, adults, children, infants);
+  const totalPax = adults + children + infants;
   const stops = stopCount(flight);
   const dur   = fmtDuration(totalDuration(flight));
 
@@ -113,7 +138,14 @@ function FlightCard({ flight, badge, selected, onSelect }: CardProps) {
       <div className="fc-bottom">
         <div className="fc-class">Economy · {seg.airline.name}</div>
         <div className="fc-price-wrap">
-          <div className="fc-price">{fmtPrice(price)}<small>/person</small></div>
+          <div className="fc-price-col">
+            <div className="fc-price">{fmtPrice(price)}<small>/adult</small></div>
+            {totalPax > 1 && (
+              <div className="fc-total">
+                Total {fmtPrice(total)} <span className="fc-total-pax">· {totalPax} travellers</span>
+              </div>
+            )}
+          </div>
           <div className={`fc-select${selected ? " sel-state" : ""}`}
             onClick={e => { e.stopPropagation(); onSelect(); }}>
             {selected ? "Selected ✓" : "Select →"}
@@ -126,16 +158,18 @@ function FlightCard({ flight, badge, selected, onSelect }: CardProps) {
 
 // ── Sort ──────────────────────────────────────────────────────────────────────
 
-type SortKey = "cheapest" | "stops" | "depart" | "price_desc";
+type SortKey = "price" | "stops" | "depart" | "duration";
+type SortDir = "asc" | "desc";
 
-function sorted(flights: ParsedFlight[], key: SortKey) {
+function sorted(flights: ParsedFlight[], key: SortKey, dir: SortDir) {
   const arr = [...flights];
+  const sign = dir === "asc" ? 1 : -1;
   switch (key) {
-    case "cheapest":   return arr.sort((a, b) => (a.cheapestFare?.totalFare ?? 0) - (b.cheapestFare?.totalFare ?? 0));
-    case "stops":      return arr.sort((a, b) => stopCount(a) - stopCount(b));
-    case "depart":     return arr.sort((a, b) => (a.segments[0]?.departureTime ?? "").localeCompare(b.segments[0]?.departureTime ?? ""));
-    case "price_desc": return arr.sort((a, b) => (b.cheapestFare?.totalFare ?? 0) - (a.cheapestFare?.totalFare ?? 0));
-    default:           return arr;
+    case "price":    return arr.sort((a, b) => sign * ((a.cheapestFare?.totalFare ?? 0) - (b.cheapestFare?.totalFare ?? 0)));
+    case "stops":    return arr.sort((a, b) => sign * (stopCount(a) - stopCount(b)));
+    case "depart":   return arr.sort((a, b) => sign * (a.segments[0]?.departureTime ?? "").localeCompare(b.segments[0]?.departureTime ?? ""));
+    case "duration": return arr.sort((a, b) => sign * (totalDuration(a) - totalDuration(b)));
+    default:         return arr;
   }
 }
 
@@ -152,23 +186,26 @@ function ResultsContent() {
   const toCity   = searchParams.get("toCity") ?? to;
   const date     = searchParams.get("date") ?? "";
   const adults   = Number(searchParams.get("adults") ?? "1");
+  const children = Number(searchParams.get("children") ?? "0");
+  const infants  = Number(searchParams.get("infants") ?? "0");
   const cabin    = searchParams.get("cabin") ?? "ECONOMY";
   const tripType = searchParams.get("tripType") ?? "O";
 
   const [flights,     setFlights]     = useState<ParsedFlight[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState<string | null>(null);
-  const [sortKey,     setSortKey]     = useState<SortKey>("cheapest");
+  const [sortKey,     setSortKey]     = useState<SortKey>("price");
+  const [sortDir,     setSortDir]     = useState<SortDir>("asc");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
-  useEffect(() => { load(); }, [from, to, date]);
+  useEffect(() => { load(); }, [from, to, date, adults, children, infants]);
 
   async function load() {
     setLoading(true);
     setError(null);
     try {
       const token  = await getIdToken();
-      const result = await searchFlights({ from, to, date, adults, cabinClass: cabin, tripType, token });
+      const result = await searchFlights({ from, to, date, adults, children, infants, cabinClass: cabin, tripType, token });
       setFlights(result.flights);
     } catch (e: unknown) {
       setFlights([]);
@@ -178,7 +215,16 @@ function ResultsContent() {
     }
   }
 
-  const display = sorted(flights, sortKey);
+  function pickSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  }
+
+  const display = sorted(flights, sortKey, sortDir);
   const cheapestPrice = display[0]?.cheapestFare?.totalFare ?? 0;
   const selectedFlight = flights.find(f => f.key === selectedKey) ?? null;
 
@@ -202,6 +248,8 @@ function ResultsContent() {
       flightKey: selectedFlight.key,
       priceIds: selectedFlight.fares.map(f => f.id).join(","),
       from, to, fromCity, toCity, date, adults: String(adults), cabin,
+      ...(children > 0 ? { children: String(children) } : {}),
+      ...(infants > 0 ? { infants: String(infants) } : {}),
     });
     router.push(`/flights/fare-select?${p}`);
   }
@@ -218,7 +266,7 @@ function ResultsContent() {
             {fromCity} ({from}) → {toCity} ({to})
           </div>
           <div className="rb-meta">
-            {fmtDate(date)} · {adults === 1 ? "1 Adult" : `${adults} Adults`} · Economy
+            {fmtDate(date)} · {paxSummary(adults, children, infants)} · Economy
             <Link href="/flights" className="rb-edit"> ✎ Edit</Link>
           </div>
         </div>
@@ -226,19 +274,24 @@ function ResultsContent() {
         {/* Filter row */}
         <div className="filter-row">
           {([
-            { key: "cheapest",   label: "Cheapest ↓" },
-            { key: "stops",      label: "Stops ↕" },
-            { key: "depart",     label: "Depart ↕" },
-            { key: "price_desc", label: "Price ↕" },
-          ] as { key: SortKey; label: string }[]).map(opt => (
-            <div
-              key={opt.key}
-              className={`fp${sortKey === opt.key ? " a" : ""}`}
-              onClick={() => setSortKey(opt.key)}
-            >
-              {opt.label}
-            </div>
-          ))}
+            { key: "price",    label: "Price" },
+            { key: "stops",    label: "Stops" },
+            { key: "depart",   label: "Depart" },
+            { key: "duration", label: "Duration" },
+          ] as { key: SortKey; label: string }[]).map(opt => {
+            const active = sortKey === opt.key;
+            return (
+              <div
+                key={opt.key}
+                className={`fp${active ? " a" : ""}`}
+                onClick={() => pickSort(opt.key)}
+                title={active ? "Click to reverse direction" : undefined}
+              >
+                {opt.label}
+                <span className="fp-arrow">{active ? (sortDir === "asc" ? "↓" : "↑") : "↕"}</span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Count */}
@@ -275,6 +328,9 @@ function ResultsContent() {
                 badge={badge(f, i)}
                 selected={selectedKey === f.key}
                 onSelect={() => setSelectedKey(selectedKey === f.key ? null : f.key)}
+                adults={adults}
+                children={children}
+                infants={infants}
               />
             ))
           }
@@ -289,7 +345,10 @@ function ResultsContent() {
           {selectedFlight ? (
             <>
               <div className="sticky-lbl">{selectedFlight.segments[0].airline.name} · {fmtTime(selectedFlight.segments[0].departureTime)} → {fmtTime(selectedFlight.segments[selectedFlight.segments.length - 1].arrivalTime)}</div>
-              <div className="sticky-total">{fmtPrice(selectedFlight.cheapestFare?.totalFare ?? 0)}</div>
+              <div className="sticky-total">
+                {fmtPrice(totalForPax(selectedFlight, adults, children, infants))}
+                <span className="sticky-total-meta"> total · {adults + children + infants} pax</span>
+              </div>
             </>
           ) : (
             <div className="sticky-lbl">Select a flight above</div>
@@ -318,8 +377,10 @@ function ResultsContent() {
         /* ── Filter ── */
         .filter-row { display: flex; background: #fff; padding: 0 8px; border-bottom: 1px solid #ece6dc; overflow-x: auto; scrollbar-width: none; position: sticky; top: 72px; z-index: 40; }
         .filter-row::-webkit-scrollbar { display: none; }
-        .fp { padding: 13px 14px; font-size: 12px; font-weight: 400; color: #7a7465; cursor: pointer; white-space: nowrap; border-bottom: 2.5px solid transparent; transition: all 0.2s; font-family: var(--font-body); letter-spacing: 0.02em; }
+        .fp { padding: 13px 14px; font-size: 12px; font-weight: 400; color: #7a7465; cursor: pointer; white-space: nowrap; border-bottom: 2.5px solid transparent; transition: all 0.2s; font-family: var(--font-body); letter-spacing: 0.02em; user-select: none; display: inline-flex; align-items: center; gap: 5px; }
         .fp.a { color: #1a1710; font-weight: 700; border-bottom-color: #C9A84C; }
+        .fp-arrow { font-size: 10px; color: #7a7465; }
+        .fp.a .fp-arrow { color: #C9A84C; font-weight: 700; }
 
         /* ── Count ── */
         .res-count { font-size: 11px; color: #7a7465; padding: 10px 16px 4px; font-family: var(--font-body); letter-spacing: 0.04em; }
@@ -359,9 +420,12 @@ function ResultsContent() {
 
         .fc-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
         .fc-class { font-size: 11px; color: #7a7465; font-family: var(--font-body); }
-        .fc-price-wrap { display: flex; align-items: center; gap: 12px; }
+        .fc-price-wrap { display: flex; align-items: flex-end; gap: 12px; }
+        .fc-price-col { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
         .fc-price { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: #1a1710; }
         .fc-price small { font-size: 11px; font-weight: 400; color: #7a7465; font-family: var(--font-body); }
+        .fc-total { font-size: 11px; color: #4a4538; font-family: var(--font-body); font-weight: 600; }
+        .fc-total-pax { color: #7a7465; font-weight: 400; }
         .fc-select { font-size: 12px; font-weight: 700; color: #C9A84C; font-family: var(--font-body); letter-spacing: 0.04em; cursor: pointer; transition: all 0.2s; padding: 4px 0; }
         .fc-select.sel-state { background: #C9A84C; color: #0B1B2B; padding: 5px 12px; border-radius: 4px; }
 
@@ -370,6 +434,7 @@ function ResultsContent() {
         .sticky-l { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
         .sticky-lbl { font-size: 12px; color: #7a7465; font-family: var(--font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .sticky-total { font-size: 19px; font-weight: 700; color: #1a1710; font-family: var(--font-mono); }
+        .sticky-total-meta { font-size: 10px; font-weight: 400; color: #7a7465; font-family: var(--font-body); margin-left: 4px; letter-spacing: 0.04em; }
         .sticky-btn { background: #C9A84C; color: #0B1B2B; padding: 12px 28px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border: none; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; flex-shrink: 0; }
         .sticky-btn.dim { background: #e0d8c8; color: #aaa; cursor: not-allowed; }
         @media (max-width: 380px) {
