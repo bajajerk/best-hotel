@@ -121,11 +121,11 @@ export default function ResultsPage() {
             ...data.curations.singles,
             ...data.curations.families,
           ];
-          // Deduplicate by tj_hotel_id (TEXT, post Phase 1 migration)
+          // Deduplicate by master_id (UUID, post Phase D migration)
           const seen = new Set<string>();
           const unique = allHotels.filter((h) => {
-            if (seen.has(h.tj_hotel_id)) return false;
-            seen.add(h.tj_hotel_id);
+            if (seen.has(h.master_id)) return false;
+            seen.add(h.master_id);
             return true;
           });
           setHotels(unique);
@@ -171,8 +171,8 @@ export default function ResultsPage() {
 
           const seen = new Set<string>();
           const unique = allHotels.filter((h) => {
-            if (seen.has(h.tj_hotel_id)) return false;
-            seen.add(h.tj_hotel_id);
+            if (seen.has(h.master_id)) return false;
+            seen.add(h.master_id);
             return true;
           });
           setHotels(unique);
@@ -204,8 +204,8 @@ export default function ResultsPage() {
 
           const seen = new Set<string>();
           const unique = allHotels.filter((h) => {
-            if (seen.has(h.tj_hotel_id)) return false;
-            seen.add(h.tj_hotel_id);
+            if (seen.has(h.master_id)) return false;
+            seen.add(h.master_id);
             return true;
           });
           setHotels(unique);
@@ -998,7 +998,9 @@ export default function ResultsPage() {
                 >
                   <SearchMapView
                     hotels={filteredAndRanked.map((r) => ({
-                      hotel_id: r.hotel.tj_hotel_id,
+                      master_id: r.hotel.master_id,
+                      slug: r.hotel.slug,
+                      short_id: r.hotel.short_id,
                       hotel_name: r.hotel.hotel_name,
                       city: r.hotel.city_name,
                       country: r.hotel.country,
@@ -1024,7 +1026,7 @@ export default function ResultsPage() {
                 >
                   {visibleHotels.map((ranked, index) => (
                     <ResultCard
-                      key={ranked.hotel.tj_hotel_id}
+                      key={ranked.hotel.master_id}
                       ranked={ranked}
                       index={index}
                     />

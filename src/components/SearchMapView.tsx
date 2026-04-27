@@ -4,17 +4,18 @@ import { useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { hotelUrl } from "@/lib/urls";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 interface MapHotel {
-  // string | number to bridge two callsites:
-  // - results page passes a TripJack TEXT id (post Phase 1 migration)
-  // - search page still passes a numeric Agoda id (search endpoint not yet
-  //   migrated; see Phase 1 caveats). Either is valid for the /hotel/[id]
-  //   route — the rates endpoint resolves both.
-  hotel_id: string | number;
+  /** Hotel master UUID. */
+  master_id: string;
+  /** SEO slug — used for the canonical pretty URL. */
+  slug?: string | null;
+  /** 8-hex short id — used for the canonical pretty URL. */
+  short_id?: string | null;
   hotel_name: string;
   city: string;
   country: string;
@@ -220,7 +221,7 @@ export default function SearchMapView({ hotels }: SearchMapViewProps) {
               </svg>
               ${hotel.city}, ${hotel.country}
             </div>
-            <a href="/hotel/${hotel.hotel_id}"
+            <a href="${hotelUrl(hotel)}"
               style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: #C9A84C; text-decoration: none; letter-spacing: 0.06em; padding: 6px 14px; border: 1px solid #C9A84C; transition: all 0.2s;">
               View details &rarr;
             </a>
@@ -320,8 +321,8 @@ export default function SearchMapView({ hotels }: SearchMapViewProps) {
         >
           {mappableHotels.map((hotel) => (
             <Link
-              key={hotel.hotel_id}
-              href={`/hotel/${hotel.hotel_id}`}
+              key={hotel.master_id}
+              href={hotelUrl(hotel)}
               style={{
                 textDecoration: "none",
                 display: "block",

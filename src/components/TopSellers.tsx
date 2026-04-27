@@ -4,13 +4,19 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import type { CuratedHotel } from "@/lib/api";
 import { computeTopSellerScores } from "@/lib/ranking";
+import { hotelUrl } from "@/lib/urls";
 import Carousel from "./Carousel";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 export interface TopSellerHotel {
-  hotelId: string;
+  /** Hotel master UUID. */
+  masterId: string;
+  /** 8-hex short id (for pretty URLs). */
+  shortId: string;
+  /** SEO slug. */
+  slug: string;
   name: string;
   city: string;
   citySlug: string;
@@ -32,7 +38,9 @@ export function computeTopSellers(hotels: CuratedHotel[], limit = 8): TopSellerH
   const scored = computeTopSellerScores(hotels, limit);
 
   return scored.map((item, idx) => ({
-    hotelId: item.hotel.tj_hotel_id,
+    masterId: item.hotel.master_id,
+    shortId: item.hotel.short_id,
+    slug: item.hotel.slug,
     name: item.hotel.hotel_name,
     city: `${item.hotel.city_name}, ${item.hotel.country}`,
     citySlug: item.hotel.city_slug,
@@ -103,7 +111,10 @@ function TopSellerCard({ hotel }: { hotel: TopSellerHotel }) {
   const medal = MEDAL_COLORS[hotel.rank];
 
   return (
-    <Link href={`/hotel/${hotel.hotelId}`} style={{ textDecoration: "none", display: "block" }}>
+    <Link
+      href={hotelUrl({ master_id: hotel.masterId, short_id: hotel.shortId, slug: hotel.slug })}
+      style={{ textDecoration: "none", display: "block" }}
+    >
       <div
         className="card-hover"
         style={{

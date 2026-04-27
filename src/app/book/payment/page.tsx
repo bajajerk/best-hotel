@@ -50,7 +50,7 @@ export default function PaymentPage() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!flow.tjHotelId || !flow.optionId) {
+    if (!flow.hotelMasterId || !flow.optionId) {
       router.replace("/");
     }
     // eslint-disable-next-line core/exhaustive-deps,react-hooks/exhaustive-deps
@@ -83,7 +83,7 @@ export default function PaymentPage() {
 
   const handleConfirmConcierge = async () => {
     if (expired || submitting) return;
-    if (!flow.tjHotelId) {
+    if (!flow.hotelMasterId) {
       setErrorMsg("Missing hotel context. Please go back and re-select.");
       return;
     }
@@ -91,16 +91,9 @@ export default function PaymentPage() {
     setSubmitting(true);
     try {
       const idToken = await getIdToken().catch(() => null);
-      // TODO(phase4-backend): The `bookings` table on the backend still has
-      //   `hotel_id BIGINT NOT NULL` (Agoda). Phase 1 of the TripJack-first
-      //   migration flagged this. We now send `tj_hotel_id` (TEXT). If the
-      //   backend rejects the create — POST /api/bookings → 400/500 — that's
-      //   the expected failure mode until a follow-up Phase 4 backend agent
-      //   adds the tj_hotel_id → hotel_id mapping (via hotel_provider_mapping)
-      //   server-side. The error surfaces in the UI via setErrorMsg below.
       const result = await createBooking(
         {
-          tj_hotel_id: flow.tjHotelId,
+          hotel_master_id: flow.hotelMasterId,
           provider: "tripjack",
           checkin: flow.checkIn,
           checkout: flow.checkOut,
@@ -162,12 +155,6 @@ export default function PaymentPage() {
       window.open(whatsappUrl, "_blank", "noopener,noreferrer");
       router.push("/book/confirmation");
     } catch (err) {
-      // TODO(phase4-backend): If the message is a 400/500 from POST /api/bookings,
-      // it almost certainly traces back to the `bookings.hotel_id BIGINT NOT NULL`
-      // schema rejecting our TripJack TEXT id. Surface a clean console.error so
-      // the issue is visible in DevTools but doesn't pollute the UI copy.
-      // eslint-disable-next-line no-console
-      console.error("[book/payment] createBooking failed (likely tj_hotel_id mismatch with bookings.hotel_id BIGINT — see Phase 4 backend TODO):", err);
       const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
       setErrorMsg(msg);
     } finally {

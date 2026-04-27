@@ -57,13 +57,12 @@ type GalleryCategory =
   | "Amenities";
 
 interface HotelDetail {
-  /** Numeric Agoda hotel_id from the legacy `/api/hotels/{id}` endpoint.
-   *  Phase 1 of the TripJack-first migration did NOT migrate this endpoint —
-   *  it 404s on TripJack TEXT ids. Optional so we can synthesise a partial
-   *  HotelDetail from the rates response when the static fetch fails. */
-  hotel_id?: number;
-  /** TripJack hotel ID (TEXT). Always present — sourced from the URL param. */
-  tj_hotel_id: string;
+  /** Hotel master UUID — canonical id used for booking + analytics. */
+  master_id: string;
+  /** 8-hex short id (used in pretty URLs). */
+  short_id?: string;
+  /** SEO slug. */
+  slug?: string;
   hotel_name: string;
   city: string;
   country: string;
@@ -754,7 +753,7 @@ export default function HotelPage() {
     }
   });
   const [pendingSaveAfterLogin, setPendingSaveAfterLogin] = useState(false);
-  const isSaved = hotel ? savedHotelIds.includes(hotel.tj_hotel_id) : false;
+  const isSaved = hotel ? savedHotelIds.includes(hotel.master_id) : false;
 
   /* Section refs for scroll-based tabs */
   const ratesRef = useRef<HTMLDivElement>(null);
@@ -763,24 +762,22 @@ export default function HotelPage() {
   const reviewsRef = useRef<HTMLDivElement>(null);
 
   /* ── Fetch hotel detail (static) ──
-   * NOTE: After Phase 1 of the TripJack-first migration, `hotelId` here is a
-   * TripJack TEXT id (e.g. "100000530749"). The legacy `/api/hotels/{id}`
-   * endpoint was NOT migrated — it still expects a numeric Agoda hotel_id —
-   * so it 404s on TripJack ids. We attempt the fetch (it still works for any
-   * legacy numeric id that may arrive) and fall back to the rates response
-   * (see the next effect) which carries the same hotel meta. The page is
-   * driven by either source, whichever resolves first. */
+   * `hotelId` is the URL path token — slug-shortid, short_id, master UUID, or
+   * legacy tj id. The backend's `_resolve_tj_from_path_id` normalises any of
+   * these to the master record before returning meta. If this endpoint fails
+   * (e.g. backend down), the rates effect below will populate `hotel` from
+   * the rates response. */
   useEffect(() => {
     fetch(`${API_BASE}/api/hotels/${hotelId}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((hotelData) => {
         if (hotelData) {
-          // Stamp tj_hotel_id from the URL param so downstream code (booking
-          // flow, analytics) can rely on a single canonical id.
-          const merged: HotelDetail = { ...hotelData, tj_hotel_id: hotelId };
-          setHotel(merged);
+          // The backend returns master_id / short_id / slug — keep the meta
+          // shape canonical so downstream code (booking flow, analytics) has
+          // one source of truth.
+          setHotel(hotelData as HotelDetail);
           trackHotelViewed({
-            hotel_id: hotelId,
+            hotel_id: hotelData.master_id ?? hotelId,
             hotel_name: hotelData.hotel_name,
             city: hotelData.city,
             country: hotelData.country,
@@ -789,8 +786,6 @@ export default function HotelPage() {
             currency: hotelData.rates_currency,
           });
         }
-        // If the static fetch fails (expected for TripJack TEXT ids), the
-        // rates effect below will populate `hotel` from the rates response.
       })
       .catch(() => {
         // Silent: handled by rates fallback.
@@ -824,15 +819,16 @@ export default function HotelPage() {
           setNoMatch(false);
           const ratesRes = res as RatesResponse;
           setRates(ratesRes);
-          // Fallback: if the static `/api/hotels/{id}` fetch failed (the
-          // common case for TripJack TEXT ids — see Phase 1 caveat), build a
-          // partial HotelDetail from the rates response so the page still
-          // renders name / photos / location.
+          // Fallback: if the static `/api/hotels/{id}` fetch failed (e.g. the
+          // backend returned 5xx), build a partial HotelDetail from the rates
+          // response so the page still renders name / photos / location.
           setHotel((prev) => {
             if (prev) return prev;
             const h = ratesRes.hotel;
             const fallback: HotelDetail = {
-              tj_hotel_id: h.tj_hotel_id,
+              master_id: h.master_id,
+              short_id: h.short_id,
+              slug: h.slug,
               hotel_name: h.hotel_name,
               city: h.city,
               country: h.country,
@@ -861,7 +857,7 @@ export default function HotelPage() {
               checkout: null,
             };
             trackHotelViewed({
-              hotel_id: hotelId,
+              hotel_id: fallback.master_id,
               hotel_name: fallback.hotel_name,
               city: fallback.city,
               country: fallback.country,
@@ -932,7 +928,7 @@ export default function HotelPage() {
     setLightboxIdx(idx);
     setLightboxOpen(true);
     if (hotel && !overridePhotos) {
-      trackHotelGalleryOpened({ hotel_id: hotel.tj_hotel_id, hotel_name: hotel.hotel_name, photo_index: idx });
+      trackHotelGalleryOpened({ hotel_id: hotel.master_id, hotel_name: hotel.hotel_name, photo_index: idx });
     }
   }, [hotel, photos]);
   const closeLightbox = useCallback(() => setLightboxOpen(false), []);
@@ -972,10 +968,10 @@ export default function HotelPage() {
       if (!hotel) return;
       const adults = booking.rooms.reduce((s, r) => s + r.adults, 0);
       const children = booking.rooms.reduce((s, r) => s + r.children, 0);
-      // `tjHotelId` is the canonical URL param after the Phase 1 TripJack-first
-      // migration. The value is a TEXT TripJack id (e.g. "100000530749").
+      // `hotelMasterId` is the canonical URL param post-Phase D — a master
+      // UUID that the booking flow threads through to POST /api/bookings.
       const qs = new URLSearchParams({
-        tjHotelId: hotel.tj_hotel_id,
+        hotelMasterId: hotel.master_id,
         optionId: plan.option_id,
         roomName: plan.room_name,
         mealBasis: plan.meal_basis || "",
@@ -1018,7 +1014,7 @@ export default function HotelPage() {
 
   const saveHotelToStorage = useCallback(() => {
     if (!hotel) return;
-    const hotelIdStr = hotel.tj_hotel_id;
+    const hotelIdStr = hotel.master_id;
     setSavedHotelIds((prev) => {
       if (prev.includes(hotelIdStr)) return prev;
       const next = [...prev, hotelIdStr];
@@ -1037,7 +1033,7 @@ export default function HotelPage() {
       setLoginModalOpen(true);
       return;
     }
-    const hotelIdStr = hotel.tj_hotel_id;
+    const hotelIdStr = hotel.master_id;
     if (savedHotelIds.includes(hotelIdStr)) {
       const updated = savedHotelIds.filter((id) => id !== hotelIdStr);
       writeSavedHotels(updated);
@@ -1078,7 +1074,7 @@ export default function HotelPage() {
   const handleTabClick = useCallback((tab: TabName) => {
     setActiveTab(tab);
     if (hotel) {
-      trackHotelTabClicked({ hotel_id: hotel.tj_hotel_id, hotel_name: hotel.hotel_name, tab_name: tab });
+      trackHotelTabClicked({ hotel_id: hotel.master_id, hotel_name: hotel.hotel_name, tab_name: tab });
     }
     const refMap: Record<TabName, React.RefObject<HTMLDivElement | null>> = {
       "Rates": ratesRef,
@@ -2807,7 +2803,7 @@ export default function HotelPage() {
         <UnlockRateModal
           open={unlockModalOpen}
           onClose={() => setUnlockModalOpen(false)}
-          hotelId={hotel.tj_hotel_id}
+          hotelId={hotel.master_id}
           hotelName={hotel.hotel_name}
           roomName={`${selectedPlan.room_name} • ${selectedPlan.meal_basis || "Room Only"}`}
           rateType={selectedPlan.refundable ? "preferred" : "standard"}
@@ -2827,7 +2823,7 @@ export default function HotelPage() {
         <UnlockRateModal
           open={unlockModalOpen}
           onClose={() => setUnlockModalOpen(false)}
-          hotelId={hotel.tj_hotel_id}
+          hotelId={hotel.master_id}
           hotelName={hotel.hotel_name}
           roomName="Rates on request"
           rateType="preferred"

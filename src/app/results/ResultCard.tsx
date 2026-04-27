@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import type { RankedHotel } from "@/lib/ranking";
 import { AmenityChips } from "@/components/AmenityIcons";
 import { useBookingFlow } from "@/context/BookingFlowContext";
+import { hotelUrl } from "@/lib/urls";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -67,7 +68,7 @@ export default function ResultCard({
       hotel.city_name,
       hotel.star_rating || 0,
     );
-    router.push(`/hotel/${hotel.tj_hotel_id}`);
+    router.push(hotelUrl(hotel));
   };
 
   return (
@@ -81,7 +82,7 @@ export default function ResultCard({
       }}
     >
       <Link
-        href={`/hotel/${hotel.tj_hotel_id}`}
+        href={hotelUrl(hotel)}
         className="block group"
         style={{ textDecoration: "none" }}
         onClick={handleCardClick}

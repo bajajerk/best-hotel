@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useCompare } from "@/context/CompareContext";
+import { hotelUrl } from "@/lib/urls";
 import { extractAmenities } from "@/components/AmenityIcons";
 import Header from "@/components/Header";
 import { trackCompareViewed } from "@/lib/analytics";
@@ -230,7 +231,7 @@ export default function ComparePage() {
           >
             {hotels.map((hotel, i) => (
               <div
-                key={hotel.tj_hotel_id}
+                key={hotel.master_id}
                 style={{
                   borderRight:
                     i < hotels.length - 1
@@ -258,7 +259,7 @@ export default function ComparePage() {
                   />
                   {/* Remove button */}
                   <button
-                    onClick={() => remove(hotel.tj_hotel_id)}
+                    onClick={() => remove(hotel.master_id)}
                     style={{
                       position: "absolute",
                       top: 10,
@@ -283,7 +284,7 @@ export default function ComparePage() {
                 {/* Name + location */}
                 <div style={{ padding: "16px 16px 12px" }}>
                   <Link
-                    href={`/hotel/${hotel.tj_hotel_id}`}
+                    href={hotelUrl(hotel)}
                     style={{
                       fontFamily: "var(--font-display)",
                       fontSize: 18,
@@ -592,7 +593,7 @@ export default function ComparePage() {
           >
             {hotels.map((hotel, i) => (
               <div
-                key={hotel.tj_hotel_id}
+                key={hotel.master_id}
                 style={{
                   padding: "20px 16px",
                   textAlign: "center",
@@ -603,7 +604,7 @@ export default function ComparePage() {
                 }}
               >
                 <Link
-                  href={`/hotel/${hotel.tj_hotel_id}`}
+                  href={hotelUrl(hotel)}
                   style={{
                     display: "inline-block",
                     background: "var(--ink)",
@@ -674,7 +675,7 @@ function CompareRow({
       {/* Values */}
       {hotels.map((hotel, i) => (
         <div
-          key={hotel.tj_hotel_id}
+          key={hotel.master_id}
           style={{
             padding: "14px 16px",
             display: "flex",

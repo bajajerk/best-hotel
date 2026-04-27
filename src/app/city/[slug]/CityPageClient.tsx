@@ -30,6 +30,7 @@ import {
   CuratedHotel,
 } from "@/lib/api";
 import type { BatchRatesResponse, CityGuide } from "@/lib/api";
+import { hotelUrl } from "@/lib/urls";
 import { rankHotels, sortRankedHotels, type SortStrategy } from "@/lib/ranking";
 import { useBooking } from "@/context/BookingContext";
 import Header from "@/components/Header";
@@ -600,7 +601,7 @@ export default function CityPage() {
       ...(curations.singles ?? []),
       ...(curations.families ?? []),
     ];
-    const ids = Array.from(new Set(all.map((h) => h.tj_hotel_id))).filter(Boolean);
+    const ids = Array.from(new Set(all.map((h) => h.master_id))).filter(Boolean);
     if (ids.length === 0) return;
 
     const { checkin: defIn, checkout: defOut } = defaultBookingDates();
@@ -663,7 +664,7 @@ export default function CityPage() {
   const rawAllHotels = Array.from(
     new Map(
       [...curations.couples, ...curations.singles, ...curations.families].map(
-        (h) => [h.tj_hotel_id, h]
+        (h) => [h.master_id, h]
       )
     ).values()
   );
@@ -672,9 +673,9 @@ export default function CityPage() {
   // stale curated `rates_from`/currency with live `from_price` / mrp currency.
   const allHotels: CuratedHotel[] = batchRates
     ? rawAllHotels
-        .filter((h) => !batchRates.unmatched_ids.includes(h.tj_hotel_id))
+        .filter((h) => !batchRates.unmatched_ids.includes(h.master_id))
         .map((h) => {
-          const rate = batchRates.results[h.tj_hotel_id];
+          const rate = batchRates.results[h.master_id];
           if (!rate) return h;
           return {
             ...h,
@@ -682,7 +683,7 @@ export default function CityPage() {
             rates_currency: rate.mrp?.currency || h.rates_currency || "INR",
           };
         })
-        .filter((h) => batchRates.results[h.tj_hotel_id])
+        .filter((h) => batchRates.results[h.master_id])
     : rawAllHotels;
 
   // ── Filter logic — DO NOT TOUCH ────────────────────────────────────────
@@ -1036,8 +1037,8 @@ export default function CityPage() {
             >
               {curatedPicks.map((h) => (
                 <Link
-                  key={h.tj_hotel_id}
-                  href={`/hotel/${h.tj_hotel_id}`}
+                  key={h.master_id}
+                  href={hotelUrl(h)}
                   style={{
                     display: "block",
                     textDecoration: "none",
@@ -1484,10 +1485,10 @@ export default function CityPage() {
                 {hotels.length > 0 ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                     {hotels.map((hotel, i) => {
-                      const rate = batchRates?.results[hotel.tj_hotel_id];
+                      const rate = batchRates?.results[hotel.master_id];
                       return (
                         <HotelResultCard
-                          key={hotel.tj_hotel_id}
+                          key={hotel.master_id}
                           hotel={hotel}
                           index={i}
                           liveMrp={rate?.mrp ?? null}

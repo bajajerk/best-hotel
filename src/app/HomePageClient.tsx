@@ -21,6 +21,7 @@ import type {
   PreferredHotel,
 } from "@/lib/api";
 import { SAMPLE_CITIES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
+import { hotelUrl } from "@/lib/urls";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DestinationSearch from "@/components/DestinationSearch";
@@ -623,7 +624,7 @@ export default function Home({
               {curatedEditorsPicks.map((h) => (
                 <Link
                   key={h.id}
-                  href={`/hotel/${h.tj_hotel_id}`}
+                  href={hotelUrl(h)}
                   style={{
                     display: "block",
                     textDecoration: "none",
@@ -698,8 +699,8 @@ export default function Home({
             >
               {fallbackEditorsPicks.map((h) => (
                 <Link
-                  key={h.tj_hotel_id}
-                  href={`/hotel/${h.tj_hotel_id}`}
+                  key={h.master_id}
+                  href={hotelUrl(h)}
                   style={{
                     display: "block",
                     textDecoration: "none",
@@ -1053,7 +1054,7 @@ export default function Home({
               {preferredHotels.map((h) => (
                 <Link
                   key={h.id}
-                  href={`/hotel/${h.tj_hotel_id}`}
+                  href={hotelUrl(h)}
                   className="preferred-tile"
                   style={{
                     display: "flex",

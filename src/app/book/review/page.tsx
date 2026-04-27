@@ -50,11 +50,9 @@ export default function ReviewBookingPage() {
   const [hydrated, setHydrated] = useState(false);
 
   // ── Read query params first; fall back to context ──
-  // Phase 1 of the TripJack-first migration: hotel ids are now TEXT TripJack
-  // ids (e.g. "100000530749"). The URL param is `tjHotelId`. We accept the
-  // legacy `hotelId` param as a temporary fallback so cached / external
-  // links don't break — anything that arrives is coerced to string.
-  const qHotelId = search.get("tjHotelId") || search.get("hotelId");
+  // Phase D: the canonical URL param is `hotelMasterId` — a hotel master UUID.
+  // The booking flow threads this all the way through to POST /api/bookings.
+  const qHotelMasterId = search.get("hotelMasterId");
   const qOptionId = search.get("optionId") || "";
   const qRoomName = search.get("roomName") || "";
   const qMealBasis = search.get("mealBasis") || "";
@@ -68,7 +66,7 @@ export default function ReviewBookingPage() {
   const qChildren = search.get("children");
   const qRooms = search.get("rooms");
 
-  const tjHotelId = qHotelId || flow.tjHotelId;
+  const hotelMasterId = qHotelMasterId || flow.hotelMasterId;
   const optionId = qOptionId || flow.optionId;
   const roomName = qRoomName || flow.roomName;
   const mealBasis = qMealBasis || flow.mealBasis;
@@ -92,7 +90,7 @@ export default function ReviewBookingPage() {
 
   // ── Bounce back to home if essential params missing ──
   useEffect(() => {
-    if (!tjHotelId || !optionId || !checkIn || !checkOut) {
+    if (!hotelMasterId || !optionId || !checkIn || !checkOut) {
       router.replace("/");
       return;
     }
@@ -101,15 +99,14 @@ export default function ReviewBookingPage() {
   }, []);
 
   // ── Lazy-fetch hotel meta if missing ──
-  // NOTE: `/api/hotels/{id}` was NOT migrated in Phase 1 — it still expects a
-  // numeric Agoda hotel_id and 404s on TripJack TEXT ids. We swallow the
-  // failure and fall back to whatever meta the booking flow already carries
-  // (set on the previous /hotel/[id] page from the rates response).
+  // GET /api/hotels/{master_id} returns the canonical meta record. If the
+  // backend is unreachable we fall back to whatever the booking flow already
+  // carries (set on /hotel/[id] from the rates response).
   useEffect(() => {
-    if (!tjHotelId) return;
+    if (!hotelMasterId) return;
     if (hotelName && hotelPhoto && hotelCity) return;
     let cancelled = false;
-    fetchHotelDetail(tjHotelId)
+    fetchHotelDetail(hotelMasterId)
       .then((h) => {
         if (cancelled || !h) return;
         const name = h.hotel_name || "";
@@ -121,20 +118,19 @@ export default function ReviewBookingPage() {
         setHotelStars(h.star_rating || 5);
       })
       .catch(() => {
-        // Expected: /api/hotels/{tj_hotel_id} returns 404. The booking flow
-        // already has hotel meta from the rates response. Silent.
+        // Booking flow already has hotel meta from the rates response. Silent.
       });
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tjHotelId]);
+  }, [hotelMasterId]);
 
   // ── Persist into context whenever inputs change so downstream pages have it ──
   useEffect(() => {
-    if (!hydrated || !tjHotelId) return;
+    if (!hydrated || !hotelMasterId) return;
     flow.setRatePlan({
-      tjHotelId,
+      hotelMasterId,
       hotelName,
       hotelPhoto,
       hotelCity,
@@ -153,13 +149,13 @@ export default function ReviewBookingPage() {
       rooms,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, tjHotelId, optionId, roomName, mealBasis, refundable, freeCancelUntil, totalPrice, currency, checkIn, checkOut, adults, children, rooms, hotelName, hotelPhoto, hotelCity, hotelStars]);
+  }, [hydrated, hotelMasterId, optionId, roomName, mealBasis, refundable, freeCancelUntil, totalPrice, currency, checkIn, checkOut, adults, children, rooms, hotelName, hotelPhoto, hotelCity, hotelStars]);
 
   if (!hydrated) return null;
 
   const handleContinue = () => {
     flow.setRatePlan({
-      tjHotelId: tjHotelId as string,
+      hotelMasterId: hotelMasterId as string,
       hotelName,
       hotelPhoto,
       hotelCity,

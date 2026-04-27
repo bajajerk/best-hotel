@@ -14,8 +14,12 @@ interface CuratedHotel {
   city_name: string;
   country: string;
   category: string;
-  /** TripJack hotel ID (TEXT). Replaced numeric `hotel_id` in Phase 1. */
-  tj_hotel_id: string;
+  /** Hotel master UUID. */
+  master_id: string;
+  /** 8-hex short id (used in pretty URLs). */
+  short_id: string;
+  /** SEO slug. */
+  slug: string;
   hotel_name: string;
   star_rating: number | null;
   rating_average: number | null;

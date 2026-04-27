@@ -50,10 +50,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let hotelPages: MetadataRoute.Sitemap = [];
   try {
     const backendUrl = process.env.BACKEND_URL || "http://134.122.41.91:5000";
-    // Fetch TripJack hotel IDs for each city to include in sitemap. After
-    // Phase 1 of the TripJack-first migration, the curations endpoint returns
-    // `tj_hotel_id` (TEXT), not the legacy numeric `hotel_id`.
-    const hotelIds: string[] = [];
+    // Fetch hotel slugs + short_ids from each city's curations and emit the
+    // canonical pretty URL `/hotel/<slug>-<short_id>`. Phase D migration.
+    const hotelPaths: string[] = [];
     for (const city of SAMPLE_CITIES.slice(0, 20)) {
       try {
         const res = await fetch(
@@ -64,15 +63,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           const data = await res.json();
           const hotels = data.hotels || data || [];
           for (const h of hotels) {
-            if (h.tj_hotel_id) hotelIds.push(h.tj_hotel_id);
+            if (h.slug && h.short_id) {
+              hotelPaths.push(`${h.slug}-${h.short_id}`);
+            } else if (h.short_id) {
+              hotelPaths.push(h.short_id);
+            } else if (h.master_id) {
+              hotelPaths.push(h.master_id);
+            }
           }
         }
       } catch {
         // Skip cities that fail
       }
     }
-    hotelPages = hotelIds.map((id) => ({
-      url: `${SITE_URL}/hotel/${id}`,
+    hotelPages = hotelPaths.map((path) => ({
+      url: `${SITE_URL}/hotel/${path}`,
       lastModified: new Date(),
       changeFrequency: "daily" as const,
       priority: 0.7,

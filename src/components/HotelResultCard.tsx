@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { CuratedHotel } from "@/lib/api";
+import { hotelUrl } from "@/lib/urls";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -100,7 +101,7 @@ export default function HotelResultCard({
         ease: [0.25, 0.46, 0.45, 0.94],
       }}
     >
-      <Link href={`/hotel/${hotel.tj_hotel_id}`} className="block group">
+      <Link href={hotelUrl(hotel)} className="block group">
         <div
           className="city-result-card-flat"
           style={{

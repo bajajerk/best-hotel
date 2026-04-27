@@ -7,8 +7,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   searchHotels,
   fetchCuratedCities,
-  fetchBatchRates,
-  defaultBookingDates,
   CuratedCity,
 } from "@/lib/api";
 import type { BatchRatesResponse } from "@/lib/api";
@@ -327,39 +325,19 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Batch-fetch live rates for the hotels returned by search. Hotels with no
-  // TripJack match are filtered out of the displayed list.
-  // NOTE: `/api/hotels/search` was NOT migrated in Phase 1 — it still
-  // returns numeric Agoda `hotel_id`. The batch rates endpoint accepts both
-  // numeric Agoda ids and TripJack TEXT ids, so we stringify the numeric ids
-  // and pass them through. Bookings clicked from search results will hit
-  // `/hotel/<numeric_id>` which the rates endpoint still resolves.
+  // Batch-fetch live rates for the hotels returned by search.
+  // NOTE: `/api/hotels/search` is the legacy admin endpoint that still returns
+  // numeric Agoda `hotel_id` rather than master UUIDs. The Phase D batch rates
+  // endpoint expects `hotel_master_ids`, so until search is migrated we skip
+  // the batch call here — list rendering relies on the static `rates_from`
+  // already attached to each result. Bookings clicked from search results hit
+  // `/hotel/<numeric_id>` which the rates endpoint resolves (legacy fallback
+  // in `_resolve_tj_from_path_id`).
   useEffect(() => {
-    const ids = Array.from(
-      new Set(hotelResults.map((h) => String(h.hotel_id)))
-    ).filter(Boolean);
-    if (ids.length === 0) {
-      setBatchRates(null);
-      return;
-    }
-
-    const { checkin: defIn, checkout: defOut } = defaultBookingDates();
-    const ci = checkIn || defIn;
-    const co = checkOut || defOut;
-    const adults = totalAdults > 0 ? totalAdults : 2;
-    const children = totalChildren;
-
-    let cancelled = false;
-    fetchBatchRates(ids, ci, co, adults, children)
-      .then((data) => {
-        if (!cancelled) setBatchRates(data);
-      })
-      .catch((err) => {
-        console.error("[Voyagr] Batch rates failed:", err);
-      });
-    return () => {
-      cancelled = true;
-    };
+    // Search endpoint doesn't yet expose master_id — leave batch rates off
+    // until the search backend is migrated. Static `rates_from` from each
+    // search result is rendered as-is.
+    setBatchRates(null);
   }, [hotelResults, checkIn, checkOut, totalAdults, totalChildren]);
 
   const performSearch = useCallback(async (q: string, options?: { persist?: boolean }) => {
@@ -427,25 +405,11 @@ export default function SearchPage() {
     ? matchingCities
     : matchingCities.filter((c) => c.continent === regionFilter);
 
-  // Merge batch rates into results: hide unmatched, override `rates_from` with
-  // the live `from_price`. Until the batch call completes, render with the
-  // stale values so the list is never empty (progressive enhancement).
-  // unmatched_ids is `string[]` post-Phase 1; coerce h.hotel_id (numeric) to
-  // string for comparison.
-  const livePricedResults = batchRates
-    ? hotelResults
-        .filter((h) => !batchRates.unmatched_ids.includes(String(h.hotel_id)))
-        .map((h) => {
-          const rate = batchRates.results[String(h.hotel_id)];
-          if (!rate) return h;
-          return {
-            ...h,
-            rates_from: rate.from_price,
-            rates_currency: rate.mrp?.currency || h.rates_currency || "INR",
-          };
-        })
-        .filter((h) => batchRates.results[String(h.hotel_id)])
-    : hotelResults;
+  // The /api/hotels/search endpoint hasn't been migrated to master_id yet, so
+  // the Phase D batch rates endpoint can't enrich these results. Render the
+  // raw search response as-is.
+  void batchRates;
+  const livePricedResults = hotelResults;
 
   // Apply star filter + region filter + sort to hotel results
   const filteredHotels = livePricedResults
@@ -1061,7 +1025,24 @@ export default function SearchPage() {
                 <span className="sr-only">Loading map…</span>
               </div>
             }>
-              <SearchMapView hotels={filteredHotels} />
+              <SearchMapView
+                hotels={filteredHotels.map((h) => ({
+                  // Search endpoint returns numeric Agoda `hotel_id` and no
+                  // master_id / slug yet — coerce it as the master id so
+                  // SearchMapView's link builder still produces a clickable
+                  // path. The backend resolver normalises the value.
+                  master_id: String(h.hotel_id),
+                  slug: null,
+                  short_id: null,
+                  hotel_name: h.hotel_name,
+                  city: h.city,
+                  country: h.country,
+                  star_rating: h.star_rating,
+                  photo1: h.photo1,
+                  latitude: h.latitude,
+                  longitude: h.longitude,
+                }))}
+              />
             </Suspense>
           </motion.div>
         )}
@@ -1092,6 +1073,9 @@ export default function SearchPage() {
                   <Link
                     href={`/hotel/${hotel.hotel_id}`}
                     style={{ textDecoration: "none", display: "block" }}
+                    // NOTE: search endpoint still returns numeric Agoda
+                    // `hotel_id`; the resolver handles it server-side. Once
+                    // search is migrated, swap this for `hotelUrl(hotel)`.
                   >
                     <div
                       className="card-hover search-hotel-card"

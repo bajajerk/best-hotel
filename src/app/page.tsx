@@ -149,7 +149,7 @@ export default async function HomePage() {
         <h2>Featured Hotels</h2>
         <ul>
           {uniqueHotels.slice(0, 30).map((hotel) => (
-            <li key={hotel.tj_hotel_id}>
+            <li key={hotel.master_id}>
               {hotel.hotel_name} — {hotel.city_name}, {hotel.country}
               {hotel.star_rating ? ` | ${hotel.star_rating}-star` : ""}
               {hotel.rating_average ? ` | Rating: ${hotel.rating_average}/10` : ""}
