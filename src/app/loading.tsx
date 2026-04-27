@@ -1,24 +1,16 @@
+import Header from "@/components/Header";
+import { LuxeLoader } from "@/components/loaders";
+
+/**
+ * Root route-transition loader.
+ * Mounts the standard Header so the chrome doesn't disappear during a
+ * navigation, then renders one of five cinematic luxe loaders below.
+ */
 export default function Loading() {
   return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{ background: "var(--cream)" }}
-    >
-      <div className="text-center">
-        <div
-          className="w-8 h-8 border-2 rounded-full animate-spin mx-auto mb-4"
-          style={{
-            borderColor: "var(--gold)",
-            borderTopColor: "transparent",
-          }}
-        />
-        <p
-          className="text-xs tracking-[0.2em] uppercase"
-          style={{ color: "var(--ink-light)", fontFamily: "var(--font-mono)" }}
-        >
-          Loading
-        </p>
-      </div>
+    <div style={{ minHeight: "100vh", background: "#0c0b0a" }}>
+      <Header />
+      <LuxeLoader />
     </div>
   );
 }
