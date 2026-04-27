@@ -11,20 +11,66 @@ import {
   type FlightPassenger,
 } from "@/lib/api";
 
-const TITLES = ["Mr", "Mrs", "Ms", "Mstr", "Miss"] as const;
+const ADULT_TITLES = ["Mr", "Mrs", "Ms"] as const;
+const CHILD_TITLES = ["Mstr", "Miss"] as const;
+const INFANT_TITLES = ["Mstr", "Miss"] as const;
+const ALL_TITLES = [...ADULT_TITLES, ...CHILD_TITLES] as const;
 
-type Title = (typeof TITLES)[number];
+type Title = (typeof ALL_TITLES)[number];
+type PaxType = "ADULT" | "CHILD" | "INFANT";
 
 interface PaxForm {
   ti: Title;
   fN: string;
   lN: string;
   dob: string;
-  pt: "ADULT";
+  pt: PaxType;
 }
 
 function emptyAdult(): PaxForm {
   return { ti: "Mr", fN: "", lN: "", dob: "", pt: "ADULT" };
+}
+
+function emptyChild(): PaxForm {
+  return { ti: "Mstr", fN: "", lN: "", dob: "", pt: "CHILD" };
+}
+
+function emptyInfant(): PaxForm {
+  return { ti: "Mstr", fN: "", lN: "", dob: "", pt: "INFANT" };
+}
+
+function titlesFor(pt: PaxType): readonly Title[] {
+  if (pt === "ADULT") return ADULT_TITLES;
+  if (pt === "CHILD") return CHILD_TITLES;
+  return INFANT_TITLES;
+}
+
+function paxLabel(pt: PaxType, idx: number) {
+  if (pt === "ADULT") return `Adult ${idx + 1}`;
+  if (pt === "CHILD") return `Child ${idx + 1}`;
+  return `Infant ${idx + 1}`;
+}
+
+function dobConstraints(pt: PaxType, departISO: string) {
+  // Approximate age cutoffs at travel date — adjust if needed by airline policy.
+  const depart = departISO ? new Date(departISO + "T00:00:00") : new Date();
+  const today = new Date().toISOString().slice(0, 10);
+  function shift(years: number) {
+    const d = new Date(depart);
+    d.setFullYear(d.getFullYear() - years);
+    return d.toISOString().slice(0, 10);
+  }
+  if (pt === "INFANT") return { min: shift(2), max: today, hint: "Must be under 2 yrs at travel" };
+  if (pt === "CHILD") return { min: shift(12), max: shift(2), hint: "2 – 12 yrs at travel" };
+  return { min: undefined, max: today, hint: "12+ yrs" };
+}
+
+function paxSummary(adults: number, children: number, infants: number) {
+  const parts: string[] = [];
+  parts.push(adults === 1 ? "1 Adult" : `${adults} Adults`);
+  if (children > 0) parts.push(children === 1 ? "1 Child" : `${children} Children`);
+  if (infants > 0) parts.push(infants === 1 ? "1 Infant" : `${infants} Infants`);
+  return parts.join(", ");
 }
 
 function fmtDate(iso: string) {
@@ -44,9 +90,15 @@ function PassengersContent() {
   const toCity = searchParams.get("toCity") ?? to;
   const date = searchParams.get("date") ?? "";
   const adults = Math.max(1, Number(searchParams.get("adults") ?? "1"));
+  const children = Math.max(0, Number(searchParams.get("children") ?? "0"));
+  const infants = Math.max(0, Number(searchParams.get("infants") ?? "0"));
   const totalFare = Number(searchParams.get("totalFare") ?? "0");
 
-  const [pax, setPax] = useState<PaxForm[]>(() => Array.from({ length: adults }, emptyAdult));
+  const [pax, setPax] = useState<PaxForm[]>(() => [
+    ...Array.from({ length: adults }, emptyAdult),
+    ...Array.from({ length: children }, emptyChild),
+    ...Array.from({ length: infants }, emptyInfant),
+  ]);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -59,11 +111,14 @@ function PassengersContent() {
 
   function validate(): string | null {
     if (!bookingId) return "Missing bookingId. Go back and re-select a fare.";
+    let aIdx = 0, cIdx = 0, iIdx = 0;
     for (let i = 0; i < pax.length; i++) {
       const p = pax[i];
-      if (!p.fN.trim()) return `Passenger ${i + 1}: first name required`;
-      if (!p.lN.trim()) return `Passenger ${i + 1}: last name required`;
-      if (!p.dob) return `Passenger ${i + 1}: date of birth required`;
+      const idx = p.pt === "ADULT" ? aIdx++ : p.pt === "CHILD" ? cIdx++ : iIdx++;
+      const who = paxLabel(p.pt, idx);
+      if (!p.fN.trim()) return `${who}: first name required`;
+      if (!p.lN.trim()) return `${who}: last name required`;
+      if (!p.dob) return `${who}: date of birth required`;
     }
     if (!/^\S+@\S+\.\S+$/.test(email)) return "Valid email is required";
     if (!/^\d{10}$/.test(phone.replace(/\D/g, ""))) return "Valid 10-digit phone is required";
@@ -159,61 +214,71 @@ function PassengersContent() {
             {fromCity} ({from}) → {toCity} ({to})
           </div>
           <div className="bar-meta">
-            {fmtDate(date)} · {adults === 1 ? "1 Adult" : `${adults} Adults`} · Economy
+            {fmtDate(date)} · {paxSummary(adults, children, infants)} · Economy
           </div>
         </div>
 
         <div className="section-title">Passenger details</div>
 
-        {pax.map((p, i) => (
-          <div className="pax-card" key={i}>
-            <div className="pax-head">Adult {i + 1}</div>
+        {(() => {
+          let aIdx = 0, cIdx = 0, iIdx = 0;
+          return pax.map((p, i) => {
+            const idx = p.pt === "ADULT" ? aIdx++ : p.pt === "CHILD" ? cIdx++ : iIdx++;
+            const titles = titlesFor(p.pt);
+            const dob = dobConstraints(p.pt, date);
+            return (
+              <div className="pax-card" key={i}>
+                <div className="pax-head">{paxLabel(p.pt, idx)}</div>
 
-            <div className="row">
-              <label className="field title-field">
-                <span className="lbl">Title</span>
-                <select
-                  value={p.ti}
-                  onChange={(e) => updatePax(i, { ti: e.target.value as Title })}
-                >
-                  {TITLES.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </label>
+                <div className="row">
+                  <label className="field title-field">
+                    <span className="lbl">Title</span>
+                    <select
+                      value={p.ti}
+                      onChange={(e) => updatePax(i, { ti: e.target.value as Title })}
+                    >
+                      {titles.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </label>
 
-              <label className="field grow">
-                <span className="lbl">First name</span>
-                <input
-                  type="text"
-                  autoComplete="given-name"
-                  value={p.fN}
-                  onChange={(e) => updatePax(i, { fN: e.target.value })}
-                  placeholder="As per passport"
-                />
-              </label>
-            </div>
+                  <label className="field grow">
+                    <span className="lbl">First name</span>
+                    <input
+                      type="text"
+                      autoComplete="given-name"
+                      value={p.fN}
+                      onChange={(e) => updatePax(i, { fN: e.target.value })}
+                      placeholder="As per passport"
+                    />
+                  </label>
+                </div>
 
-            <label className="field">
-              <span className="lbl">Last name</span>
-              <input
-                type="text"
-                autoComplete="family-name"
-                value={p.lN}
-                onChange={(e) => updatePax(i, { lN: e.target.value })}
-                placeholder="As per passport"
-              />
-            </label>
+                <label className="field">
+                  <span className="lbl">Last name</span>
+                  <input
+                    type="text"
+                    autoComplete="family-name"
+                    value={p.lN}
+                    onChange={(e) => updatePax(i, { lN: e.target.value })}
+                    placeholder="As per passport"
+                  />
+                </label>
 
-            <label className="field">
-              <span className="lbl">Date of birth</span>
-              <input
-                type="date"
-                value={p.dob}
-                onChange={(e) => updatePax(i, { dob: e.target.value })}
-                max={new Date().toISOString().slice(0, 10)}
-              />
-            </label>
-          </div>
-        ))}
+                <label className="field">
+                  <span className="lbl">Date of birth</span>
+                  <input
+                    type="date"
+                    value={p.dob}
+                    onChange={(e) => updatePax(i, { dob: e.target.value })}
+                    min={dob.min}
+                    max={dob.max}
+                  />
+                  <span className="hint">{dob.hint}</span>
+                </label>
+              </div>
+            );
+          });
+        })()}
 
         <div className="section-title">Contact info</div>
 
@@ -250,7 +315,7 @@ function PassengersContent() {
 
       <div className="sticky-pp">
         <div className="sticky-l">
-          <div className="sticky-lbl">{adults === 1 ? "1 traveller" : `${adults} travellers`} · {fromCity} → {toCity}</div>
+          <div className="sticky-lbl">{paxSummary(adults, children, infants)} · {fromCity} → {toCity}</div>
           <div className="sticky-total">
             {totalFare > 0 ? `₹${Math.round(totalFare).toLocaleString("en-IN")}` : "Confirm booking"}
           </div>

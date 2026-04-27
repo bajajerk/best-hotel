@@ -27,6 +27,14 @@ function fmtPrice(n: number) {
   return "₹" + Math.round(n).toLocaleString("en-IN");
 }
 
+function paxSummary(adults: number, children: number, infants: number) {
+  const parts: string[] = [];
+  parts.push(adults === 1 ? "1 Adult" : `${adults} Adults`);
+  if (children > 0) parts.push(children === 1 ? "1 Child" : `${children} Children`);
+  if (infants > 0) parts.push(infants === 1 ? "1 Infant" : `${infants} Infants`);
+  return parts.join(", ");
+}
+
 function FareCard({
   fare,
   selected,
@@ -94,6 +102,8 @@ function FareSelectContent() {
   const toCity = searchParams.get("toCity") ?? to;
   const date = searchParams.get("date") ?? "";
   const adults = Number(searchParams.get("adults") ?? "1");
+  const children = Number(searchParams.get("children") ?? "0");
+  const infants = Number(searchParams.get("infants") ?? "0");
 
   const [flight, setFlight] = useState<ParsedFlight | null>(null);
   const [loading, setLoading] = useState(true);
@@ -200,6 +210,8 @@ function FareSelectContent() {
         totalFare: String(fresh.totalAdultFare || selectedFare.totalFare),
         from, to, fromCity, toCity, date,
         adults: String(adults),
+        ...(children > 0 ? { children: String(children) } : {}),
+        ...(infants > 0 ? { infants: String(infants) } : {}),
       });
       router.push(`/flights/passengers?${p}`);
     } catch (e: unknown) {
@@ -215,11 +227,14 @@ function FareSelectContent() {
 
         <div className="fs-bar">
           <div className="bar-dest">
-            <Link href={`/flights/results?from=${from}&to=${to}&fromCity=${encodeURIComponent(fromCity)}&toCity=${encodeURIComponent(toCity)}&date=${date}&adults=${adults}`} className="bar-back">←</Link>
+            <Link
+              href={`/flights/results?from=${from}&to=${to}&fromCity=${encodeURIComponent(fromCity)}&toCity=${encodeURIComponent(toCity)}&date=${date}&adults=${adults}${children > 0 ? `&children=${children}` : ""}${infants > 0 ? `&infants=${infants}` : ""}`}
+              className="bar-back"
+            >←</Link>
             {fromCity} ({from}) → {toCity} ({to})
           </div>
           <div className="bar-meta">
-            {fmtDate(date)} · {adults === 1 ? "1 Adult" : `${adults} Adults`} · Economy
+            {fmtDate(date)} · {paxSummary(adults, children, infants)} · Economy
           </div>
         </div>
 

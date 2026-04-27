@@ -22,6 +22,7 @@ const PRIMARY_LINKS: {
 }[] = [
   { label: "Home", href: "/", icon: "home" },
   { label: "Search", href: "/search", icon: "search", highlighted: true, badge: "BROWSE" },
+  { label: "Flights", href: "/flights", icon: "flight" },
   {
     label: "Preferred Rates",
     href: "/preferred-rates",
