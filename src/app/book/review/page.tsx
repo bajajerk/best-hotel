@@ -50,7 +50,11 @@ export default function ReviewBookingPage() {
   const [hydrated, setHydrated] = useState(false);
 
   // ── Read query params first; fall back to context ──
-  const qHotelId = search.get("hotelId");
+  // Phase 1 of the TripJack-first migration: hotel ids are now TEXT TripJack
+  // ids (e.g. "100000530749"). The URL param is `tjHotelId`. We accept the
+  // legacy `hotelId` param as a temporary fallback so cached / external
+  // links don't break — anything that arrives is coerced to string.
+  const qHotelId = search.get("tjHotelId") || search.get("hotelId");
   const qOptionId = search.get("optionId") || "";
   const qRoomName = search.get("roomName") || "";
   const qMealBasis = search.get("mealBasis") || "";
@@ -64,7 +68,7 @@ export default function ReviewBookingPage() {
   const qChildren = search.get("children");
   const qRooms = search.get("rooms");
 
-  const hotelId = qHotelId ? Number(qHotelId) : flow.hotelId;
+  const tjHotelId = qHotelId || flow.tjHotelId;
   const optionId = qOptionId || flow.optionId;
   const roomName = qRoomName || flow.roomName;
   const mealBasis = qMealBasis || flow.mealBasis;
@@ -88,7 +92,7 @@ export default function ReviewBookingPage() {
 
   // ── Bounce back to home if essential params missing ──
   useEffect(() => {
-    if (!hotelId || !optionId || !checkIn || !checkOut) {
+    if (!tjHotelId || !optionId || !checkIn || !checkOut) {
       router.replace("/");
       return;
     }
@@ -97,11 +101,15 @@ export default function ReviewBookingPage() {
   }, []);
 
   // ── Lazy-fetch hotel meta if missing ──
+  // NOTE: `/api/hotels/{id}` was NOT migrated in Phase 1 — it still expects a
+  // numeric Agoda hotel_id and 404s on TripJack TEXT ids. We swallow the
+  // failure and fall back to whatever meta the booking flow already carries
+  // (set on the previous /hotel/[id] page from the rates response).
   useEffect(() => {
-    if (!hotelId) return;
+    if (!tjHotelId) return;
     if (hotelName && hotelPhoto && hotelCity) return;
     let cancelled = false;
-    fetchHotelDetail(hotelId)
+    fetchHotelDetail(tjHotelId)
       .then((h) => {
         if (cancelled || !h) return;
         const name = h.hotel_name || "";
@@ -112,18 +120,21 @@ export default function ReviewBookingPage() {
         setHotelCity(city);
         setHotelStars(h.star_rating || 5);
       })
-      .catch(() => {});
+      .catch(() => {
+        // Expected: /api/hotels/{tj_hotel_id} returns 404. The booking flow
+        // already has hotel meta from the rates response. Silent.
+      });
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hotelId]);
+  }, [tjHotelId]);
 
   // ── Persist into context whenever inputs change so downstream pages have it ──
   useEffect(() => {
-    if (!hydrated || !hotelId) return;
+    if (!hydrated || !tjHotelId) return;
     flow.setRatePlan({
-      hotelId,
+      tjHotelId,
       hotelName,
       hotelPhoto,
       hotelCity,
@@ -142,13 +153,13 @@ export default function ReviewBookingPage() {
       rooms,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, hotelId, optionId, roomName, mealBasis, refundable, freeCancelUntil, totalPrice, currency, checkIn, checkOut, adults, children, rooms, hotelName, hotelPhoto, hotelCity, hotelStars]);
+  }, [hydrated, tjHotelId, optionId, roomName, mealBasis, refundable, freeCancelUntil, totalPrice, currency, checkIn, checkOut, adults, children, rooms, hotelName, hotelPhoto, hotelCity, hotelStars]);
 
   if (!hydrated) return null;
 
   const handleContinue = () => {
     flow.setRatePlan({
-      hotelId: hotelId as number,
+      tjHotelId: tjHotelId as string,
       hotelName,
       hotelPhoto,
       hotelCity,

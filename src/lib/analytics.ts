@@ -29,7 +29,7 @@ export function trackSearchFilterApplied(params: {
 
 // Hotel Engagement
 export function trackHotelViewed(params: {
-  hotel_id: number;
+  hotel_id: string | number;
   hotel_name: string;
   city: string;
   country: string;
@@ -49,7 +49,7 @@ export function trackHotelViewed(params: {
 }
 
 export function trackHotelTabClicked(params: {
-  hotel_id: number;
+  hotel_id: string | number;
   hotel_name: string;
   tab_name: string;
 }) {
@@ -57,7 +57,7 @@ export function trackHotelTabClicked(params: {
 }
 
 export function trackHotelGalleryOpened(params: {
-  hotel_id: number;
+  hotel_id: string | number;
   hotel_name: string;
   photo_index: number;
 }) {
@@ -66,7 +66,7 @@ export function trackHotelGalleryOpened(params: {
 
 // Compare
 export function trackCompareHotelAdded(params: {
-  hotel_id: number;
+  hotel_id: string | number;
   hotel_name: string;
   city: string;
   compare_count: number;
@@ -75,7 +75,7 @@ export function trackCompareHotelAdded(params: {
 }
 
 export function trackCompareHotelRemoved(params: {
-  hotel_id: number;
+  hotel_id: string | number;
   hotel_name: string;
   compare_count: number;
 }) {
@@ -202,7 +202,7 @@ export function trackGuestsChanged(params: {
 
 // Lead Capture / Unlock Rate
 export function trackUnlockRateClicked(params: {
-  hotel_id: number;
+  hotel_id: string | number;
   hotel_name: string;
   room_name: string;
   rate_type: 'preferred' | 'standard';
@@ -213,7 +213,7 @@ export function trackUnlockRateClicked(params: {
 }
 
 export function trackLeadCaptured(params: {
-  hotel_id: number;
+  hotel_id: string | number;
   hotel_name: string;
   room_name: string;
   lead_id: string;

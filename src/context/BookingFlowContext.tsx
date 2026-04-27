@@ -51,8 +51,10 @@ export interface PaymentInfo {
 export type PaymentMethodKind = "upi" | "credit-card" | "debit-card" | "emi" | "net-banking";
 
 export interface BookingFlowState {
-  // Hotel meta (live data from /api/hotels/{id} or RatePlan)
-  hotelId: number | null;
+  // Hotel meta (live data from /api/hotels/{tj_hotel_id}/rates or RatePlan).
+  // After Phase 1 of the TripJack-first migration this is the TripJack hotel
+  // id (TEXT, e.g. "100000530749"), NOT the legacy Agoda numeric hotel_id.
+  tjHotelId: string | null;
   hotelName: string;
   hotelImage: string;
   hotelPhoto: string;
@@ -98,7 +100,8 @@ export interface BookingFlowState {
 }
 
 export interface RatePlanInput {
-  hotelId: number;
+  /** TripJack hotel id (TEXT). */
+  tjHotelId: string;
   hotelName?: string;
   hotelPhoto?: string;
   hotelCity?: string;
@@ -122,7 +125,7 @@ interface BookingFlowContextValue extends BookingFlowState {
   /** Total room count across all selectedRooms (sum of quantities). Legacy. */
   totalRoomCount: number;
   setHotel: (name: string, image: string, city: string, stars: number) => void;
-  setHotelMeta: (meta: { hotelId?: number; hotelName?: string; hotelPhoto?: string; hotelCity?: string; hotelStars?: number }) => void;
+  setHotelMeta: (meta: { tjHotelId?: string; hotelName?: string; hotelPhoto?: string; hotelCity?: string; hotelStars?: number }) => void;
   setRatePlan: (plan: RatePlanInput) => void;
   setStayDates: (checkIn: string, checkOut: string) => void;
   setSelectedRooms: (rooms: SelectedRoom[]) => void;
@@ -141,7 +144,7 @@ interface BookingFlowContextValue extends BookingFlowState {
 const BookingFlowContext = createContext<BookingFlowContextValue | null>(null);
 
 const INITIAL_STATE: BookingFlowState = {
-  hotelId: null,
+  tjHotelId: null,
   hotelName: "",
   hotelImage: "",
   hotelPhoto: "",
@@ -203,10 +206,10 @@ export function BookingFlowProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setHotelMeta = useCallback(
-    (meta: { hotelId?: number; hotelName?: string; hotelPhoto?: string; hotelCity?: string; hotelStars?: number }) => {
+    (meta: { tjHotelId?: string; hotelName?: string; hotelPhoto?: string; hotelCity?: string; hotelStars?: number }) => {
       setState((prev) => ({
         ...prev,
-        hotelId: meta.hotelId ?? prev.hotelId,
+        tjHotelId: meta.tjHotelId ?? prev.tjHotelId,
         hotelName: meta.hotelName ?? prev.hotelName,
         hotelPhoto: meta.hotelPhoto ?? prev.hotelPhoto,
         hotelImage: meta.hotelPhoto ?? prev.hotelImage,
@@ -220,7 +223,7 @@ export function BookingFlowProvider({ children }: { children: ReactNode }) {
   const setRatePlan = useCallback((plan: RatePlanInput) => {
     setState((prev) => ({
       ...prev,
-      hotelId: plan.hotelId,
+      tjHotelId: plan.tjHotelId,
       hotelName: plan.hotelName ?? prev.hotelName,
       hotelPhoto: plan.hotelPhoto ?? prev.hotelPhoto,
       hotelImage: plan.hotelPhoto ?? prev.hotelImage,

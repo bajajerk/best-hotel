@@ -15,7 +15,7 @@ interface LeadPayload {
   lastName: string;
   email: string;
   mobile: string;
-  hotelId: number;
+  hotelId: string | number;
   hotelName: string;
   roomName: string;
   rateType: "preferred" | "standard";

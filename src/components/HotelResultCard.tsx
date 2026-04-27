@@ -100,7 +100,7 @@ export default function HotelResultCard({
         ease: [0.25, 0.46, 0.45, 0.94],
       }}
     >
-      <Link href={`/hotel/${hotel.hotel_id}`} className="block group">
+      <Link href={`/hotel/${hotel.tj_hotel_id}`} className="block group">
         <div
           className="city-result-card-flat"
           style={{

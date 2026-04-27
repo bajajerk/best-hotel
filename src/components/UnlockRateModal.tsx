@@ -9,7 +9,7 @@ import { trackCtaClicked, trackWhatsAppClicked } from "@/lib/analytics";
 interface UnlockRateModalProps {
   open: boolean;
   onClose: () => void;
-  hotelId: number;
+  hotelId: string | number;
   hotelName: string;
   roomName: string;
   rateType: "preferred" | "standard";

@@ -49,7 +49,7 @@ export default function GuestDetailsPage() {
 
   // Bounce back to home if essential rate plan data is missing.
   useEffect(() => {
-    if (!flow.hotelId || !flow.optionId) {
+    if (!flow.tjHotelId || !flow.optionId) {
       router.replace("/");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

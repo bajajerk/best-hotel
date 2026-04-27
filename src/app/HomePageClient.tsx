@@ -623,7 +623,7 @@ export default function Home({
               {curatedEditorsPicks.map((h) => (
                 <Link
                   key={h.id}
-                  href={`/hotel/${h.hotel_id}`}
+                  href={`/hotel/${h.tj_hotel_id}`}
                   style={{
                     display: "block",
                     textDecoration: "none",
@@ -698,8 +698,8 @@ export default function Home({
             >
               {fallbackEditorsPicks.map((h) => (
                 <Link
-                  key={h.hotel_id}
-                  href={`/hotel/${h.hotel_id}`}
+                  key={h.tj_hotel_id}
+                  href={`/hotel/${h.tj_hotel_id}`}
                   style={{
                     display: "block",
                     textDecoration: "none",
@@ -1053,7 +1053,7 @@ export default function Home({
               {preferredHotels.map((h) => (
                 <Link
                   key={h.id}
-                  href={`/hotel/${h.hotel_id}`}
+                  href={`/hotel/${h.tj_hotel_id}`}
                   className="preferred-tile"
                   style={{
                     display: "flex",

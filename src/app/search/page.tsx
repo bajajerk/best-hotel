@@ -329,8 +329,15 @@ export default function SearchPage() {
 
   // Batch-fetch live rates for the hotels returned by search. Hotels with no
   // TripJack match are filtered out of the displayed list.
+  // NOTE: `/api/hotels/search` was NOT migrated in Phase 1 — it still
+  // returns numeric Agoda `hotel_id`. The batch rates endpoint accepts both
+  // numeric Agoda ids and TripJack TEXT ids, so we stringify the numeric ids
+  // and pass them through. Bookings clicked from search results will hit
+  // `/hotel/<numeric_id>` which the rates endpoint still resolves.
   useEffect(() => {
-    const ids = Array.from(new Set(hotelResults.map((h) => h.hotel_id))).filter(Boolean);
+    const ids = Array.from(
+      new Set(hotelResults.map((h) => String(h.hotel_id)))
+    ).filter(Boolean);
     if (ids.length === 0) {
       setBatchRates(null);
       return;
@@ -423,9 +430,11 @@ export default function SearchPage() {
   // Merge batch rates into results: hide unmatched, override `rates_from` with
   // the live `from_price`. Until the batch call completes, render with the
   // stale values so the list is never empty (progressive enhancement).
+  // unmatched_ids is `string[]` post-Phase 1; coerce h.hotel_id (numeric) to
+  // string for comparison.
   const livePricedResults = batchRates
     ? hotelResults
-        .filter((h) => !batchRates.unmatched_ids.includes(h.hotel_id))
+        .filter((h) => !batchRates.unmatched_ids.includes(String(h.hotel_id)))
         .map((h) => {
           const rate = batchRates.results[String(h.hotel_id)];
           if (!rate) return h;

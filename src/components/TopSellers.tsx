@@ -10,7 +10,7 @@ import Carousel from "./Carousel";
 // Types
 // ---------------------------------------------------------------------------
 export interface TopSellerHotel {
-  hotelId: number;
+  hotelId: string;
   name: string;
   city: string;
   citySlug: string;
@@ -32,7 +32,7 @@ export function computeTopSellers(hotels: CuratedHotel[], limit = 8): TopSellerH
   const scored = computeTopSellerScores(hotels, limit);
 
   return scored.map((item, idx) => ({
-    hotelId: item.hotel.hotel_id,
+    hotelId: item.hotel.tj_hotel_id,
     name: item.hotel.hotel_name,
     city: `${item.hotel.city_name}, ${item.hotel.country}`,
     citySlug: item.hotel.city_slug,

@@ -9,9 +9,10 @@ const MAX_COMPARE = 4;
 interface CompareContextValue {
   hotels: CuratedHotel[];
   add: (hotel: CuratedHotel) => void;
-  remove: (hotelId: number) => void;
+  /** TripJack hotel id (TEXT) — replaced numeric Agoda id in Phase 1. */
+  remove: (tjHotelId: string) => void;
   clear: () => void;
-  has: (hotelId: number) => boolean;
+  has: (tjHotelId: string) => boolean;
   isFull: boolean;
 }
 
@@ -23,10 +24,10 @@ export function CompareProvider({ children }: { children: ReactNode }) {
   const add = useCallback((hotel: CuratedHotel) => {
     setHotels((prev) => {
       if (prev.length >= MAX_COMPARE) return prev;
-      if (prev.some((h) => h.hotel_id === hotel.hotel_id)) return prev;
+      if (prev.some((h) => h.tj_hotel_id === hotel.tj_hotel_id)) return prev;
       const next = [...prev, hotel];
       trackCompareHotelAdded({
-        hotel_id: hotel.hotel_id,
+        hotel_id: hotel.tj_hotel_id,
         hotel_name: hotel.hotel_name,
         city: hotel.city_name,
         compare_count: next.length,
@@ -35,13 +36,13 @@ export function CompareProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const remove = useCallback((hotelId: number) => {
+  const remove = useCallback((tjHotelId: string) => {
     setHotels((prev) => {
-      const removed = prev.find((h) => h.hotel_id === hotelId);
-      const next = prev.filter((h) => h.hotel_id !== hotelId);
+      const removed = prev.find((h) => h.tj_hotel_id === tjHotelId);
+      const next = prev.filter((h) => h.tj_hotel_id !== tjHotelId);
       if (removed) {
         trackCompareHotelRemoved({
-          hotel_id: removed.hotel_id,
+          hotel_id: removed.tj_hotel_id,
           hotel_name: removed.hotel_name,
           compare_count: next.length,
         });
@@ -53,7 +54,7 @@ export function CompareProvider({ children }: { children: ReactNode }) {
   const clear = useCallback(() => setHotels([]), []);
 
   const has = useCallback(
-    (hotelId: number) => hotels.some((h) => h.hotel_id === hotelId),
+    (tjHotelId: string) => hotels.some((h) => h.tj_hotel_id === tjHotelId),
     [hotels]
   );
 

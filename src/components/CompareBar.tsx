@@ -49,7 +49,7 @@ export default function CompareBar() {
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           {hotels.map((hotel) => (
             <div
-              key={hotel.hotel_id}
+              key={hotel.tj_hotel_id}
               style={{
                 position: "relative",
                 display: "flex",
@@ -87,7 +87,7 @@ export default function CompareBar() {
                 {hotel.hotel_name}
               </span>
               <button
-                onClick={() => remove(hotel.hotel_id)}
+                onClick={() => remove(hotel.tj_hotel_id)}
                 style={{
                   background: "none",
                   border: "none",

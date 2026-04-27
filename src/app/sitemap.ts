@@ -50,8 +50,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let hotelPages: MetadataRoute.Sitemap = [];
   try {
     const backendUrl = process.env.BACKEND_URL || "http://134.122.41.91:5000";
-    // Fetch hotel IDs for each city to include in sitemap
-    const hotelIds: number[] = [];
+    // Fetch TripJack hotel IDs for each city to include in sitemap. After
+    // Phase 1 of the TripJack-first migration, the curations endpoint returns
+    // `tj_hotel_id` (TEXT), not the legacy numeric `hotel_id`.
+    const hotelIds: string[] = [];
     for (const city of SAMPLE_CITIES.slice(0, 20)) {
       try {
         const res = await fetch(
@@ -62,7 +64,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           const data = await res.json();
           const hotels = data.hotels || data || [];
           for (const h of hotels) {
-            if (h.hotel_id) hotelIds.push(h.hotel_id);
+            if (h.tj_hotel_id) hotelIds.push(h.tj_hotel_id);
           }
         }
       } catch {

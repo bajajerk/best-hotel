@@ -67,7 +67,7 @@ export default function ResultCard({
       hotel.city_name,
       hotel.star_rating || 0,
     );
-    router.push(`/hotel/${hotel.hotel_id}`);
+    router.push(`/hotel/${hotel.tj_hotel_id}`);
   };
 
   return (
@@ -81,7 +81,7 @@ export default function ResultCard({
       }}
     >
       <Link
-        href={`/hotel/${hotel.hotel_id}`}
+        href={`/hotel/${hotel.tj_hotel_id}`}
         className="block group"
         style={{ textDecoration: "none" }}
         onClick={handleCardClick}

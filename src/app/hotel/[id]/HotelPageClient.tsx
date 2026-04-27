@@ -57,7 +57,13 @@ type GalleryCategory =
   | "Amenities";
 
 interface HotelDetail {
-  hotel_id: number;
+  /** Numeric Agoda hotel_id from the legacy `/api/hotels/{id}` endpoint.
+   *  Phase 1 of the TripJack-first migration did NOT migrate this endpoint —
+   *  it 404s on TripJack TEXT ids. Optional so we can synthesise a partial
+   *  HotelDetail from the rates response when the static fetch fails. */
+  hotel_id?: number;
+  /** TripJack hotel ID (TEXT). Always present — sourced from the URL param. */
+  tj_hotel_id: string;
   hotel_name: string;
   city: string;
   country: string;
@@ -748,7 +754,7 @@ export default function HotelPage() {
     }
   });
   const [pendingSaveAfterLogin, setPendingSaveAfterLogin] = useState(false);
-  const isSaved = hotel ? savedHotelIds.includes(String(hotel.hotel_id)) : false;
+  const isSaved = hotel ? savedHotelIds.includes(hotel.tj_hotel_id) : false;
 
   /* Section refs for scroll-based tabs */
   const ratesRef = useRef<HTMLDivElement>(null);
@@ -756,15 +762,25 @@ export default function HotelPage() {
   const galleryRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
 
-  /* ── Fetch hotel detail (static) ── */
+  /* ── Fetch hotel detail (static) ──
+   * NOTE: After Phase 1 of the TripJack-first migration, `hotelId` here is a
+   * TripJack TEXT id (e.g. "100000530749"). The legacy `/api/hotels/{id}`
+   * endpoint was NOT migrated — it still expects a numeric Agoda hotel_id —
+   * so it 404s on TripJack ids. We attempt the fetch (it still works for any
+   * legacy numeric id that may arrive) and fall back to the rates response
+   * (see the next effect) which carries the same hotel meta. The page is
+   * driven by either source, whichever resolves first. */
   useEffect(() => {
     fetch(`${API_BASE}/api/hotels/${hotelId}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((hotelData) => {
-        setHotel(hotelData);
         if (hotelData) {
+          // Stamp tj_hotel_id from the URL param so downstream code (booking
+          // flow, analytics) can rely on a single canonical id.
+          const merged: HotelDetail = { ...hotelData, tj_hotel_id: hotelId };
+          setHotel(merged);
           trackHotelViewed({
-            hotel_id: hotelData.hotel_id,
+            hotel_id: hotelId,
             hotel_name: hotelData.hotel_name,
             city: hotelData.city,
             country: hotelData.country,
@@ -773,8 +789,12 @@ export default function HotelPage() {
             currency: hotelData.rates_currency,
           });
         }
+        // If the static fetch fails (expected for TripJack TEXT ids), the
+        // rates effect below will populate `hotel` from the rates response.
       })
-      .catch(console.error)
+      .catch(() => {
+        // Silent: handled by rates fallback.
+      })
       .finally(() => setLoading(false));
   }, [hotelId]);
 
@@ -802,7 +822,55 @@ export default function HotelPage() {
           setRates(null);
         } else {
           setNoMatch(false);
-          setRates(res as RatesResponse);
+          const ratesRes = res as RatesResponse;
+          setRates(ratesRes);
+          // Fallback: if the static `/api/hotels/{id}` fetch failed (the
+          // common case for TripJack TEXT ids — see Phase 1 caveat), build a
+          // partial HotelDetail from the rates response so the page still
+          // renders name / photos / location.
+          setHotel((prev) => {
+            if (prev) return prev;
+            const h = ratesRes.hotel;
+            const fallback: HotelDetail = {
+              tj_hotel_id: h.tj_hotel_id,
+              hotel_name: h.hotel_name,
+              city: h.city,
+              country: h.country,
+              star_rating: h.star_rating,
+              rating_average: 0,
+              number_of_reviews: 0,
+              rates_from: null,
+              rates_currency: ratesRes.rates[0]?.currency || "INR",
+              photo1: h.photo1 ?? null,
+              photo2: h.photo2 ?? null,
+              photo3: h.photo3 ?? null,
+              photo4: h.photo4 ?? null,
+              photo5: h.photo5 ?? null,
+              overview: h.overview ?? null,
+              addressline1: h.addressline1 ?? null,
+              addressline2: null,
+              latitude: h.latitude ?? null,
+              longitude: h.longitude ?? null,
+              chain_name: null,
+              brand_name: null,
+              accommodation_type: null,
+              numberrooms: null,
+              yearopened: null,
+              yearrenovated: null,
+              checkin: null,
+              checkout: null,
+            };
+            trackHotelViewed({
+              hotel_id: hotelId,
+              hotel_name: fallback.hotel_name,
+              city: fallback.city,
+              country: fallback.country,
+              star_rating: fallback.star_rating,
+              price_from: fallback.rates_from,
+              currency: fallback.rates_currency,
+            });
+            return fallback;
+          });
         }
       })
       .catch((e) => {
@@ -864,7 +932,7 @@ export default function HotelPage() {
     setLightboxIdx(idx);
     setLightboxOpen(true);
     if (hotel && !overridePhotos) {
-      trackHotelGalleryOpened({ hotel_id: hotel.hotel_id, hotel_name: hotel.hotel_name, photo_index: idx });
+      trackHotelGalleryOpened({ hotel_id: hotel.tj_hotel_id, hotel_name: hotel.hotel_name, photo_index: idx });
     }
   }, [hotel, photos]);
   const closeLightbox = useCallback(() => setLightboxOpen(false), []);
@@ -904,8 +972,10 @@ export default function HotelPage() {
       if (!hotel) return;
       const adults = booking.rooms.reduce((s, r) => s + r.adults, 0);
       const children = booking.rooms.reduce((s, r) => s + r.children, 0);
+      // `tjHotelId` is the canonical URL param after the Phase 1 TripJack-first
+      // migration. The value is a TEXT TripJack id (e.g. "100000530749").
       const qs = new URLSearchParams({
-        hotelId: String(hotel.hotel_id),
+        tjHotelId: hotel.tj_hotel_id,
         optionId: plan.option_id,
         roomName: plan.room_name,
         mealBasis: plan.meal_basis || "",
@@ -948,7 +1018,7 @@ export default function HotelPage() {
 
   const saveHotelToStorage = useCallback(() => {
     if (!hotel) return;
-    const hotelIdStr = String(hotel.hotel_id);
+    const hotelIdStr = hotel.tj_hotel_id;
     setSavedHotelIds((prev) => {
       if (prev.includes(hotelIdStr)) return prev;
       const next = [...prev, hotelIdStr];
@@ -967,7 +1037,7 @@ export default function HotelPage() {
       setLoginModalOpen(true);
       return;
     }
-    const hotelIdStr = String(hotel.hotel_id);
+    const hotelIdStr = hotel.tj_hotel_id;
     if (savedHotelIds.includes(hotelIdStr)) {
       const updated = savedHotelIds.filter((id) => id !== hotelIdStr);
       writeSavedHotels(updated);
@@ -1008,7 +1078,7 @@ export default function HotelPage() {
   const handleTabClick = useCallback((tab: TabName) => {
     setActiveTab(tab);
     if (hotel) {
-      trackHotelTabClicked({ hotel_id: hotel.hotel_id, hotel_name: hotel.hotel_name, tab_name: tab });
+      trackHotelTabClicked({ hotel_id: hotel.tj_hotel_id, hotel_name: hotel.hotel_name, tab_name: tab });
     }
     const refMap: Record<TabName, React.RefObject<HTMLDivElement | null>> = {
       "Rates": ratesRef,
@@ -2737,7 +2807,7 @@ export default function HotelPage() {
         <UnlockRateModal
           open={unlockModalOpen}
           onClose={() => setUnlockModalOpen(false)}
-          hotelId={hotel.hotel_id}
+          hotelId={hotel.tj_hotel_id}
           hotelName={hotel.hotel_name}
           roomName={`${selectedPlan.room_name} • ${selectedPlan.meal_basis || "Room Only"}`}
           rateType={selectedPlan.refundable ? "preferred" : "standard"}
@@ -2757,7 +2827,7 @@ export default function HotelPage() {
         <UnlockRateModal
           open={unlockModalOpen}
           onClose={() => setUnlockModalOpen(false)}
-          hotelId={hotel.hotel_id}
+          hotelId={hotel.tj_hotel_id}
           hotelName={hotel.hotel_name}
           roomName="Rates on request"
           rateType="preferred"

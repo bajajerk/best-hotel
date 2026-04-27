@@ -45,7 +45,9 @@ export interface CuratedHotel {
   country: string;
   country_code: string;
   category: 'singles' | 'couples' | 'families';
-  hotel_id: number;
+  /** TripJack hotel ID (TEXT, e.g. "100000530749"). The legacy Agoda numeric
+   *  `hotel_id` was removed in the TripJack-first migration (Phase 1). */
+  tj_hotel_id: string;
   hotel_name: string;
   star_rating: number | null;
   rating_average: number | null;
@@ -124,7 +126,14 @@ export async function fetchCityPrices(
 }
 
 export interface HotelDetail {
-  hotel_id: number;
+  /** Numeric Agoda hotel_id from the legacy `/api/hotels/{id}` endpoint.
+   *  Phase 1 of the TripJack-first migration did NOT migrate this endpoint,
+   *  so it is only reachable with a numeric Agoda id. The customer site no
+   *  longer threads this id anywhere — it just renders meta. Marked optional
+   *  because the rates response may serve as the meta source going forward. */
+  hotel_id?: number;
+  /** TripJack hotel ID (TEXT). Present when meta comes from the rates response. */
+  tj_hotel_id?: string;
   hotel_name: string;
   hotel_formerly_name: string | null;
   hotel_translated_name: string | null;
@@ -163,7 +172,11 @@ export interface HotelDetail {
   checkout: string | null;
 }
 
-/** Fetch full hotel detail by ID */
+/** Fetch full hotel detail by ID. NOTE: Phase 1 of the TripJack-first
+ *  migration did NOT migrate `/api/hotels/{id}` — it still expects a numeric
+ *  Agoda hotel_id. Calls with a TripJack TEXT id will 404. Callers should
+ *  treat a failure here as non-fatal and fall back to the rates response,
+ *  which carries the same hotel meta (name, photos, city, country, ...). */
 export async function fetchHotelDetail(id: number | string): Promise<HotelDetail> {
   const res = await fetch(`${API_BASE}/api/hotels/${id}`);
   if (!res.ok) throw new Error('Failed to fetch hotel detail');
@@ -259,7 +272,8 @@ export async function fetchHomeFeaturedCities(): Promise<HomeFeaturedCity[]> {
 // default photo. Frontend just renders what it gets.
 export type HomeFeaturedHotel = {
   id: number;
-  hotel_id: number;
+  /** TripJack hotel ID (TEXT). Replaced numeric Agoda `hotel_id` in Phase 1. */
+  tj_hotel_id: string;
   name: string;
   city_slug: string;
   city_name: string;
@@ -284,7 +298,8 @@ export async function fetchHomeFeaturedHotels(): Promise<HomeFeaturedHotel[]> {
 // `tagline` is optional editorial copy (e.g. "Sofitel · Accor luxury").
 export type PreferredHotel = {
   id: number;
-  hotel_id: number;
+  /** TripJack hotel ID (TEXT). Replaced numeric Agoda `hotel_id` in Phase 1. */
+  tj_hotel_id: string;
   name: string;
   city_slug: string | null;
   city_name: string;
@@ -765,7 +780,10 @@ export type RatePlan = {
 };
 
 export type RatesResponse = {
-  hotel: { hotel_id: number; hotel_name: string; city: string; country: string; star_rating: number; photo1?: string; photo2?: string; photo3?: string; photo4?: string; photo5?: string; overview?: string; latitude?: number; longitude?: number; addressline1?: string };
+  /** Hotel meta returned by GET /api/hotels/{tj_hotel_id}/rates. The id is
+   *  now `tj_hotel_id` (TEXT) — the legacy Agoda `hotel_id` field was removed
+   *  in Phase 1. Photos are TripJack CDN (i.travelapi.com/lodging/...). */
+  hotel: { tj_hotel_id: string; hotel_name: string; city: string; country: string; star_rating: number; photo1?: string; photo2?: string; photo3?: string; photo4?: string; photo5?: string; overview?: string; latitude?: number; longitude?: number; addressline1?: string };
   mrp: { agoda_rate: number; currency: string } | null;
   rates: RatePlan[];
   savings_pct: number | null;
@@ -776,10 +794,10 @@ export type RatesResponse = {
   warning?: string;
 };
 
-export type NoMatchError = { error: "no_tripjack_match"; hotel_id: number };
+export type NoMatchError = { error: "no_tripjack_match"; tj_hotel_id: string };
 
 export async function fetchHotelRates(
-  hotelId: number | string,
+  hotelId: string,
   checkin: string,
   checkout: string,
   adults: number = 2,
@@ -790,7 +808,7 @@ export async function fetchHotelRates(
   const res = await fetch(`${API_BASE}/api/hotels/${hotelId}/rates?${params}`, { cache: "no-store" });
   if (res.status === 404) {
     const body = await res.json().catch(() => ({}));
-    return { error: "no_tripjack_match", hotel_id: Number(hotelId), ...body };
+    return { error: "no_tripjack_match", tj_hotel_id: String(hotelId), ...body };
   }
   if (!res.ok) throw new Error(`Failed to load rates: ${res.status}`);
   return res.json();
@@ -811,12 +829,14 @@ export type BatchRate = {
 export type BatchRatesResponse = {
   checkin: string;
   checkout: string;
+  /** Keyed by tj_hotel_id (TEXT). */
   results: Record<string, BatchRate>;
-  unmatched_ids: number[];
+  /** TripJack hotel IDs (TEXT) that did not match a TripJack property. */
+  unmatched_ids: string[];
 };
 
 export async function fetchBatchRates(
-  hotelIds: number[],
+  tjHotelIds: string[],
   checkin: string,
   checkout: string,
   adults: number = 2,
@@ -825,7 +845,7 @@ export async function fetchBatchRates(
   const res = await fetch(`${API_BASE}/api/hotels/rates/batch`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ hotel_ids: hotelIds, checkin, checkout, adults, children }),
+    body: JSON.stringify({ tj_hotel_ids: tjHotelIds, checkin, checkout, adults, children }),
     cache: "no-store",
   });
   if (!res.ok) throw new Error(`Batch rates failed: ${res.status}`);
@@ -848,7 +868,14 @@ export function defaultBookingDates(): { checkin: string; checkout: string } {
 // with the signed-in user. Pass it via the `idToken` argument when available.
 
 export interface CreateBookingBody {
-  hotel_id: number;
+  /** TripJack hotel ID (TEXT, e.g. "100000530749").
+   *  KNOWN BACKEND CAVEAT: the `bookings` table on the backend still has
+   *  `hotel_id BIGINT NOT NULL` (Agoda). Phase 1 of the TripJack-first
+   *  migration flagged this; POST /api/bookings may reject a TEXT id until
+   *  a follow-up Phase 4 backend agent maps tj_hotel_id → Agoda hotel_id
+   *  via `hotel_provider_mapping` server-side. We send `tj_hotel_id` here
+   *  and leave error handling at the call site. */
+  tj_hotel_id: string;
   provider: string;
   checkin: string;
   checkout: string;

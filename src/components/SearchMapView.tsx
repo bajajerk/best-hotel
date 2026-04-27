@@ -9,7 +9,12 @@ import "leaflet/dist/leaflet.css";
 // Types
 // ---------------------------------------------------------------------------
 interface MapHotel {
-  hotel_id: number;
+  // string | number to bridge two callsites:
+  // - results page passes a TripJack TEXT id (post Phase 1 migration)
+  // - search page still passes a numeric Agoda id (search endpoint not yet
+  //   migrated; see Phase 1 caveats). Either is valid for the /hotel/[id]
+  //   route — the rates endpoint resolves both.
+  hotel_id: string | number;
   hotel_name: string;
   city: string;
   country: string;
