@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
+      // TripJack CDN (primary photo source post-tj_hotel_id migration).
+      { protocol: "https", hostname: "i.travelapi.com" },
+      // Agoda (legacy photos + MRP cross-ref hotels still on agoda.net).
       { protocol: "https", hostname: "pix1.agoda.net" },
       { protocol: "https", hostname: "pix2.agoda.net" },
       { protocol: "https", hostname: "pix3.agoda.net" },
