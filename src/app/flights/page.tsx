@@ -4,31 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
-
-// ── Airport data ──────────────────────────────────────────────────────────────
-
-const AIRPORTS = [
-  { code: "BOM", city: "Mumbai",       name: "Chhatrapati Shivaji Maharaj Intl", country: "India" },
-  { code: "DEL", city: "Delhi",        name: "Indira Gandhi International",      country: "India" },
-  { code: "BLR", city: "Bengaluru",    name: "Kempegowda International",         country: "India" },
-  { code: "MAA", city: "Chennai",      name: "Chennai International",            country: "India" },
-  { code: "GOI", city: "Goa",          name: "Dabolim Airport",                  country: "India" },
-  { code: "HYD", city: "Hyderabad",    name: "Rajiv Gandhi International",       country: "India" },
-  { code: "CCU", city: "Kolkata",      name: "NSCBI International",              country: "India" },
-  { code: "PNQ", city: "Pune",         name: "Pune Airport",                     country: "India" },
-  { code: "AMD", city: "Ahmedabad",    name: "SVP International",                country: "India" },
-  { code: "JAI", city: "Jaipur",       name: "Jaipur International",             country: "India" },
-  { code: "DXB", city: "Dubai",        name: "Dubai International",              country: "UAE" },
-  { code: "SIN", city: "Singapore",    name: "Changi Airport",                   country: "Singapore" },
-  { code: "MLE", city: "Maldives",     name: "Velana International",             country: "Maldives" },
-  { code: "LHR", city: "London",       name: "Heathrow",                         country: "UK" },
-  { code: "BKK", city: "Bangkok",      name: "Suvarnabhumi",                     country: "Thailand" },
-  { code: "KUL", city: "Kuala Lumpur", name: "KLIA",                             country: "Malaysia" },
-  { code: "NRT", city: "Tokyo",        name: "Narita International",             country: "Japan" },
-  { code: "CDG", city: "Paris",        name: "Charles de Gaulle",                country: "France" },
-  { code: "JFK", city: "New York",     name: "John F. Kennedy International",    country: "USA" },
-  { code: "DPS", city: "Bali",         name: "Ngurah Rai International",         country: "Indonesia" },
-];
+import RangeCalendar from "@/components/RangeCalendar";
+import { AIRPORTS } from "@/lib/airports";
 
 const POPULAR_INDIA = [
   { code: "DEL", city: "Delhi" },
