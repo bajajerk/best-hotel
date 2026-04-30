@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBooking } from "@/context/BookingContext";
+import LuxeDatePicker from "@/components/LuxeDatePicker";
 
 type AppState = "upload" | "processing" | "result";
 type EntryMode = "screenshot" | "manual";
@@ -46,6 +47,7 @@ export default function Tab3BeatPrice() {
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dateOpen, setDateOpen] = useState(false);
 
   // Auto-transition from processing to result after 3 seconds
   useEffect(() => {
@@ -325,48 +327,59 @@ export default function Tab3BeatPrice() {
           />
         </div>
 
-        {/* Check-in / Check-out */}
-        <div className="flex gap-3">
-          <input
-            type="date"
-            placeholder="Check-in"
-            value={form.checkIn}
-            onChange={(e) => {
-              setForm({ ...form, checkIn: e.target.value });
-              booking.setCheckIn(e.target.value);
-            }}
+        {/* Check-in / Check-out — driven by LuxeDatePicker */}
+        <div className="flex gap-3" style={{ position: "relative" }}>
+          <button
+            type="button"
+            onClick={() => setDateOpen(true)}
             style={{
               flex: 1,
               padding: "14px 12px",
               background: "var(--bg-input)",
               border: "1px solid var(--border)",
               borderRadius: 12,
-              color: "var(--ink)",
+              color: form.checkIn ? "var(--ink)" : "var(--ink-light)",
               fontSize: 12,
               fontFamily: "var(--font-dm-sans)",
-              colorScheme: "dark",
+              cursor: "pointer",
+              textAlign: "left",
             }}
-          />
-          <input
-            type="date"
-            placeholder="Check-out"
-            value={form.checkOut}
-            min={form.checkIn || undefined}
-            onChange={(e) => {
-              setForm({ ...form, checkOut: e.target.value });
-              booking.setCheckOut(e.target.value);
-            }}
+          >
+            {form.checkIn
+              ? new Date(form.checkIn + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+              : "Check-in"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setDateOpen(true)}
             style={{
               flex: 1,
               padding: "14px 12px",
               background: "var(--bg-input)",
               border: "1px solid var(--border)",
               borderRadius: 12,
-              color: "var(--ink)",
+              color: form.checkOut ? "var(--ink)" : "var(--ink-light)",
               fontSize: 12,
               fontFamily: "var(--font-dm-sans)",
-              colorScheme: "dark",
+              cursor: "pointer",
+              textAlign: "left",
             }}
+          >
+            {form.checkOut
+              ? new Date(form.checkOut + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+              : "Check-out"}
+          </button>
+          <LuxeDatePicker
+            variant="light"
+            checkIn={form.checkIn || null}
+            checkOut={form.checkOut || null}
+            onChange={({ checkIn: ci, checkOut: co }) => {
+              setForm((prev) => ({ ...prev, checkIn: ci ?? "", checkOut: co ?? "" }));
+              booking.setDates(ci ?? "", co ?? "");
+            }}
+            open={dateOpen}
+            onClose={() => setDateOpen(false)}
+            showTrigger={false}
           />
         </div>
 

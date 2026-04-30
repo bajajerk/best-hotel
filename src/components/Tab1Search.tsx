@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useBooking } from "@/context/BookingContext";
 import DestinationSearch from "@/components/DestinationSearch";
+import LuxeDatePicker from "@/components/LuxeDatePicker";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -25,11 +26,12 @@ const orchestrate = {
 export default function Tab1Search() {
   const router = useRouter();
   const {
-    checkIn, checkOut, setCheckIn, setCheckOut, setDates,
+    checkIn, checkOut, setDates,
     setDestination, formatDate,
   } = useBooking();
   const [localDestination, setLocalDestination] = useState("");
   const [error, setError] = useState("");
+  const [dateOpen, setDateOpen] = useState(false);
 
   function handleSearch() {
     // Validate
@@ -173,18 +175,19 @@ export default function Tab1Search() {
             />
           </div>
 
-          {/* Dates Row */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-            {/* Check-in */}
-            <label
+          {/* Dates Row — single LuxeDatePicker drives both visible cells */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px", position: "relative" }}>
+            <button
+              type="button"
+              onClick={() => { setDateOpen(true); if (error) setError(""); }}
               style={{
                 background: "var(--cream)",
                 border: "1px solid var(--cream-border)",
                 borderRadius: "10px",
                 padding: "12px 14px",
-                position: "relative",
                 cursor: "pointer",
                 display: "block",
+                textAlign: "left",
               }}
             >
               <div
@@ -209,35 +212,18 @@ export default function Tab1Search() {
               >
                 {formatDate(checkIn, "Select date")}
               </div>
-              <input
-                type="date"
-                value={checkIn}
-                min={new Date().toISOString().split("T")[0]}
-                onChange={(e) => {
-                  setCheckIn(e.target.value);
-                  if (error) setError("");
-                }}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  opacity: 0,
-                  cursor: "pointer",
-                  width: "100%",
-                  height: "100%",
-                }}
-              />
-            </label>
-
-            {/* Check-out */}
-            <label
+            </button>
+            <button
+              type="button"
+              onClick={() => { setDateOpen(true); if (error) setError(""); }}
               style={{
                 background: "var(--cream)",
                 border: "1px solid var(--cream-border)",
                 borderRadius: "10px",
                 padding: "12px 14px",
-                position: "relative",
                 cursor: "pointer",
                 display: "block",
+                textAlign: "left",
               }}
             >
               <div
@@ -262,24 +248,19 @@ export default function Tab1Search() {
               >
                 {formatDate(checkOut, "Select date")}
               </div>
-              <input
-                type="date"
-                value={checkOut}
-                min={checkIn || new Date().toISOString().split("T")[0]}
-                onChange={(e) => {
-                  setCheckOut(e.target.value);
-                  if (error) setError("");
-                }}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  opacity: 0,
-                  cursor: "pointer",
-                  width: "100%",
-                  height: "100%",
-                }}
-              />
-            </label>
+            </button>
+            <LuxeDatePicker
+              variant="light"
+              checkIn={checkIn || null}
+              checkOut={checkOut || null}
+              onChange={({ checkIn: ci, checkOut: co }) => {
+                setDates(ci ?? "", co ?? "");
+                if (error) setError("");
+              }}
+              open={dateOpen}
+              onClose={() => setDateOpen(false)}
+              showTrigger={false}
+            />
           </div>
 
           {/* Error message */}

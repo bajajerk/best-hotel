@@ -601,7 +601,7 @@ export default function CityPage() {
       ...(curations.singles ?? []),
       ...(curations.families ?? []),
     ];
-    const ids = Array.from(new Set(all.map((h) => h.master_id))).filter(Boolean);
+    const ids = Array.from(new Set(all.map((h) => h.id))).filter(Boolean);
     if (ids.length === 0) return;
 
     const { checkin: defIn, checkout: defOut } = defaultBookingDates();
@@ -664,7 +664,7 @@ export default function CityPage() {
   const rawAllHotels = Array.from(
     new Map(
       [...curations.couples, ...curations.singles, ...curations.families].map(
-        (h) => [h.master_id, h]
+        (h) => [h.id, h]
       )
     ).values()
   );
@@ -673,9 +673,9 @@ export default function CityPage() {
   // stale curated `rates_from`/currency with live `from_price` / mrp currency.
   const allHotels: CuratedHotel[] = batchRates
     ? rawAllHotels
-        .filter((h) => !batchRates.unmatched_ids.includes(h.master_id))
+        .filter((h) => !batchRates.unmatched_ids.includes(h.id))
         .map((h) => {
-          const rate = batchRates.results[h.master_id];
+          const rate = batchRates.results[h.id];
           if (!rate) return h;
           return {
             ...h,
@@ -683,7 +683,7 @@ export default function CityPage() {
             rates_currency: rate.mrp?.currency || h.rates_currency || "INR",
           };
         })
-        .filter((h) => batchRates.results[h.master_id])
+        .filter((h) => batchRates.results[h.id])
     : rawAllHotels;
 
   // ── Filter logic — DO NOT TOUCH ────────────────────────────────────────
@@ -1037,7 +1037,7 @@ export default function CityPage() {
             >
               {curatedPicks.map((h) => (
                 <Link
-                  key={h.master_id}
+                  key={h.id}
                   href={hotelUrl(h)}
                   style={{
                     display: "block",
@@ -1485,10 +1485,10 @@ export default function CityPage() {
                 {hotels.length > 0 ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                     {hotels.map((hotel, i) => {
-                      const rate = batchRates?.results[hotel.master_id];
+                      const rate = batchRates?.results[hotel.id];
                       return (
                         <HotelResultCard
-                          key={hotel.master_id}
+                          key={hotel.id}
                           hotel={hotel}
                           index={i}
                           liveMrp={rate?.mrp ?? null}

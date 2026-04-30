@@ -45,8 +45,11 @@ export interface CuratedHotel {
   country: string;
   country_code: string;
   category: 'singles' | 'couples' | 'families';
-  /** Hotel master UUID (canonical id used for booking / batch rates). */
-  master_id: string;
+  /** Hotel master UUID — the canonical id used for booking / batch rates.
+   *  Phase B contract: `id` is the master UUID; `row_id` is the curated_hotels PK. */
+  id: string;
+  /** Curated_hotels row PK (was `id` pre-Phase-B). Useful for list keys. */
+  row_id?: number;
   /** 8-hex short id (e.g. "a7988705"). Used in pretty URLs `<slug>-<short_id>`. */
   short_id: string;
   /** SEO-friendly slug, e.g. "park-hyatt-paris-vendome-paris-france". */

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import LuxeDatePicker from "@/components/LuxeDatePicker";
 import { useAuth } from "@/context/AuthContext";
 import {
   trackMatchMyRateStarted,
@@ -623,6 +624,7 @@ function UploadStep({
     outline: "none",
     transition: "border-color 0.2s ease",
   };
+  const [datesOpen, setDatesOpen] = useState(false);
 
   return (
     <motion.div
@@ -954,7 +956,7 @@ function UploadStep({
             </div>
 
             {/* Dates Row */}
-            <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ display: "flex", gap: 12, position: "relative" }}>
               <div style={{ flex: 1 }}>
                 <label
                   style={{
@@ -969,14 +971,15 @@ function UploadStep({
                 >
                   Check-in
                 </label>
-                <input
-                  type="date"
-                  value={manualForm.checkIn}
-                  onChange={(e) =>
-                    setManualForm({ ...manualForm, checkIn: e.target.value })
-                  }
-                  style={inputStyle}
-                />
+                <button
+                  type="button"
+                  onClick={() => setDatesOpen(true)}
+                  style={{ ...inputStyle, textAlign: "left", cursor: "pointer", color: manualForm.checkIn ? "var(--ink)" : "var(--ink-light)" }}
+                >
+                  {manualForm.checkIn
+                    ? new Date(manualForm.checkIn + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                    : "Select date"}
+                </button>
               </div>
               <div style={{ flex: 1 }}>
                 <label
@@ -992,16 +995,27 @@ function UploadStep({
                 >
                   Check-out
                 </label>
-                <input
-                  type="date"
-                  value={manualForm.checkOut}
-                  min={manualForm.checkIn || undefined}
-                  onChange={(e) =>
-                    setManualForm({ ...manualForm, checkOut: e.target.value })
-                  }
-                  style={inputStyle}
-                />
+                <button
+                  type="button"
+                  onClick={() => setDatesOpen(true)}
+                  style={{ ...inputStyle, textAlign: "left", cursor: "pointer", color: manualForm.checkOut ? "var(--ink)" : "var(--ink-light)" }}
+                >
+                  {manualForm.checkOut
+                    ? new Date(manualForm.checkOut + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                    : "Select date"}
+                </button>
               </div>
+              <LuxeDatePicker
+                variant="light"
+                checkIn={manualForm.checkIn || null}
+                checkOut={manualForm.checkOut || null}
+                onChange={({ checkIn: ci, checkOut: co }) =>
+                  setManualForm({ ...manualForm, checkIn: ci ?? "", checkOut: co ?? "" })
+                }
+                open={datesOpen}
+                onClose={() => setDatesOpen(false)}
+                showTrigger={false}
+              />
             </div>
 
             {/* Room Type + Guests */}
@@ -1776,8 +1790,20 @@ function DetailRow({
   type?: string;
   rawValue?: string;
 }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const inputBoxStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "8px 12px",
+    background: "var(--cream)",
+    border: "1px solid var(--cream-border)",
+    borderRadius: 8,
+    color: "var(--ink)",
+    fontSize: 13,
+    fontFamily: "var(--font-body)",
+    outline: "none",
+  };
   return (
-    <div style={{ gridColumn: span ? `span ${span}` : undefined }}>
+    <div style={{ gridColumn: span ? `span ${span}` : undefined, position: "relative" }}>
       <div
         style={{
           fontSize: 10,
@@ -1791,22 +1817,36 @@ function DetailRow({
         {label}
       </div>
       {editing ? (
-        <input
-          type={type || "text"}
-          value={type === "date" ? rawValue || "" : value}
-          onChange={(e) => onChange(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "8px 12px",
-            background: "var(--cream)",
-            border: "1px solid var(--cream-border)",
-            borderRadius: 8,
-            color: "var(--ink)",
-            fontSize: 13,
-            fontFamily: "var(--font-body)",
-            outline: "none",
-          }}
-        />
+        type === "date" ? (
+          <>
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              style={{ ...inputBoxStyle, textAlign: "left", cursor: "pointer" }}
+            >
+              {rawValue
+                ? new Date(rawValue + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                : "Select date"}
+            </button>
+            <LuxeDatePicker
+              mode="single"
+              variant="light"
+              checkIn={rawValue || null}
+              onChange={({ checkIn: ci }) => onChange(ci ?? "")}
+              open={pickerOpen}
+              onClose={() => setPickerOpen(false)}
+              showTrigger={false}
+              hidePresets
+            />
+          </>
+        ) : (
+          <input
+            type={type || "text"}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            style={inputBoxStyle}
+          />
+        )
       ) : (
         <div
           style={{

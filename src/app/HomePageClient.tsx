@@ -25,6 +25,7 @@ import { hotelUrl } from "@/lib/urls";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DestinationSearch from "@/components/DestinationSearch";
+import LuxeDatePicker from "@/components/LuxeDatePicker";
 import { useBooking } from "@/context/BookingContext";
 import { useAuth } from "@/context/AuthContext";
 import { trackCtaClicked } from "@/lib/analytics";
@@ -93,8 +94,7 @@ export default function Home({
   const {
     checkIn,
     checkOut,
-    setCheckIn,
-    setCheckOut,
+    setDates,
     formatDate,
     totalAdults,
     totalChildren,
@@ -125,6 +125,7 @@ export default function Home({
   // Search button always navigated to /search with no params.
   const [heroDestination, setHeroDestination] = useState("");
   const [heroDestError, setHeroDestError] = useState(false);
+  const [heroDateOpen, setHeroDateOpen] = useState(false);
 
   useEffect(() => {
     if (initialCities.length === 0) {
@@ -309,12 +310,20 @@ export default function Home({
                 }}
               />
             </div>
-            <label
+            {/* Date range — single LuxeDatePicker, dual-column trigger. */}
+            <button
+              type="button"
+              onClick={() => setHeroDateOpen(true)}
               style={{
                 padding: "10px 18px",
                 borderLeft: "1px solid rgba(255,255,255,0.08)",
-                position: "relative",
                 cursor: "pointer",
+                background: "transparent",
+                border: "none",
+                borderLeftWidth: 1,
+                borderLeftStyle: "solid",
+                borderLeftColor: "rgba(255,255,255,0.08)",
+                textAlign: "left",
               }}
             >
               <div className="luxe-tech" style={{ marginBottom: 4 }}>
@@ -328,26 +337,20 @@ export default function Home({
               >
                 {formatDate(checkIn)}
               </div>
-              <input
-                type="date"
-                value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  opacity: 0,
-                  cursor: "pointer",
-                  width: "100%",
-                  height: "100%",
-                }}
-              />
-            </label>
-            <label
+            </button>
+            <button
+              type="button"
+              onClick={() => setHeroDateOpen(true)}
               style={{
                 padding: "10px 18px",
                 borderLeft: "1px solid rgba(255,255,255,0.08)",
-                position: "relative",
                 cursor: "pointer",
+                background: "transparent",
+                border: "none",
+                borderLeftWidth: 1,
+                borderLeftStyle: "solid",
+                borderLeftColor: "rgba(255,255,255,0.08)",
+                textAlign: "left",
               }}
             >
               <div className="luxe-tech" style={{ marginBottom: 4 }}>
@@ -361,21 +364,16 @@ export default function Home({
               >
                 {formatDate(checkOut)}
               </div>
-              <input
-                type="date"
-                value={checkOut}
-                min={checkIn || undefined}
-                onChange={(e) => setCheckOut(e.target.value)}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  opacity: 0,
-                  cursor: "pointer",
-                  width: "100%",
-                  height: "100%",
-                }}
-              />
-            </label>
+            </button>
+            <LuxeDatePicker
+              variant="dark"
+              checkIn={checkIn || null}
+              checkOut={checkOut || null}
+              onChange={({ checkIn: ci, checkOut: co }) => setDates(ci ?? "", co ?? "")}
+              open={heroDateOpen}
+              onClose={() => setHeroDateOpen(false)}
+              showTrigger={false}
+            />
             <button
               onClick={handleHeroSearch}
               className="luxe-btn-primary"
