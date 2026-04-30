@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
+import LuxeDatePicker from "@/components/LuxeDatePicker";
 import { AIRPORTS } from "@/lib/airports";
 
 const POPULAR_INDIA = [
@@ -75,6 +76,7 @@ export default function FlightsPage() {
   const [infants, setInfants]     = useState(0);
   const [paxOpen, setPaxOpen]     = useState(false);
   const [cabin, setCabin]         = useState("ECONOMY");
+  const [dateOpen, setDateOpen]   = useState(false);
   const [activeField, setActiveField] = useState<"from" | "to" | null>(null);
   const [query, setQuery]         = useState("");
 
@@ -217,31 +219,50 @@ export default function FlightsPage() {
           )}
 
           {/* Dates */}
-          <div className={`dates-row${tripType === "R" ? " two-col" : ""}`}>
-            <div className="field border-top">
+          <div className={`dates-row${tripType === "R" ? " two-col" : ""}`} style={{ position: "relative" }}>
+            <div
+              className="field border-top"
+              role="button"
+              tabIndex={0}
+              onClick={() => setDateOpen(true)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setDateOpen(true); }}
+              style={{ cursor: "pointer" }}
+            >
               <div className="fl">Departure</div>
-              <input
-                type="date"
-                value={date}
-                min={today}
-                onChange={e => setDate(e.target.value)}
-                className={`date-input${!date ? " ph" : ""}`}
-              />
-              {date && <div className="fv-hint">{fmtDate(date)}</div>}
+              <div className={`fv${!date ? " fv-ph" : ""}`} style={{ color: date ? undefined : "rgba(247,245,242,0.5)" }}>
+                {date ? fmtDate(date) : "Add date"}
+              </div>
             </div>
             {tripType === "R" && (
-              <div className="field border-top border-left">
+              <div
+                className="field border-top border-left"
+                role="button"
+                tabIndex={0}
+                onClick={() => setDateOpen(true)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setDateOpen(true); }}
+                style={{ cursor: "pointer" }}
+              >
                 <div className="fl">Return</div>
-                <input
-                  type="date"
-                  value={returnDate}
-                  min={date || today}
-                  onChange={e => setReturnDate(e.target.value)}
-                  className={`date-input${!returnDate ? " ph" : ""}`}
-                />
-                {returnDate && <div className="fv-hint">{fmtDate(returnDate)}</div>}
+                <div className={`fv${!returnDate ? " fv-ph" : ""}`} style={{ color: returnDate ? undefined : "rgba(247,245,242,0.5)" }}>
+                  {returnDate ? fmtDate(returnDate) : "Add date"}
+                </div>
               </div>
             )}
+            <LuxeDatePicker
+              mode={tripType === "R" ? "range" : "single"}
+              variant="dark"
+              minDate={today}
+              checkIn={date || null}
+              checkOut={tripType === "R" ? (returnDate || null) : null}
+              onChange={({ checkIn: ci, checkOut: co }) => {
+                setDate(ci ?? "");
+                if (tripType === "R") setReturnDate(co ?? "");
+              }}
+              open={dateOpen}
+              onClose={() => setDateOpen(false)}
+              showTrigger={false}
+              hidePresets={tripType === "O"}
+            />
           </div>
 
           {/* Travellers */}
