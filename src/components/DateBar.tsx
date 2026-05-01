@@ -129,12 +129,12 @@ const DateBar = forwardRef<DateBarHandle, DateBarProps>(function DateBar(
           <div style={valueStyle(!!checkOut)}>{formatDate(checkOut, "Add date")}</div>
         </button>
         <div className="usc-cell" style={{ flex: 1, minWidth: 0, padding: "6px 10px" }}>
-          <GuestRoomPicker variant="light" compact />
+          <GuestRoomPicker variant={variant} compact />
         </div>
 
         <LuxeDatePicker
           mode="range"
-          variant="light"
+          variant={variant}
           checkIn={checkIn || null}
           checkOut={checkOut || null}
           onChange={handleChange}
