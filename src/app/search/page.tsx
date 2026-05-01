@@ -10,6 +10,7 @@ import {
   CuratedCity,
 } from "@/lib/api";
 import type { BatchRatesResponse } from "@/lib/api";
+import { hotelUrl } from "@/lib/urls";
 import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import { useBooking } from "@/context/BookingContext";
 import { trackSearch, trackSearchFilterApplied } from "@/lib/analytics";
@@ -59,20 +60,40 @@ const INDIA_SEARCHES = [
 
 // ---------------------------------------------------------------------------
 // Search result type
+//
+// Phase E: backend `/api/hotels/search` now returns canonical hotels_master
+// rows with `id` (master UUID), `short_id`, `slug`, `name`, `city_name`,
+// `country`, `star_rating`, `image_url`. The legacy numeric Agoda
+// `hotel_id` / `hotel_name` / `city` / `photo1` fields are GONE — we keep
+// them as optional aliases for resilience but read the new names first.
+//
+// Bug fix (search-cards-empty): the inline render was reading the legacy
+// names exclusively, so every card rendered "" / null / null → 30 blank
+// "5★ India / Call for rates" tiles.
 // ---------------------------------------------------------------------------
 interface HotelResult {
-  hotel_id: number;
-  hotel_name: string;
-  city: string;
-  country: string;
+  // Phase E canonical fields (backend source of truth).
+  id?: string;
+  short_id?: string | null;
+  slug?: string | null;
+  name?: string;
+  city_name?: string;
+  country?: string;
+  country_code?: string;
   star_rating: number | null;
   rating_average?: number | null;
   number_of_reviews?: number | null;
   rates_from?: number | null;
   rates_currency?: string | null;
-  photo1: string | null;
+  image_url?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  // Legacy aliases — kept optional for any caller still emitting the
+  // old shape. Renderer reads canonical first, falls back to these.
+  hotel_id?: number | string;
+  hotel_name?: string;
+  city?: string;
+  photo1?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -411,6 +432,12 @@ export default function SearchPage() {
   void batchRates;
   const livePricedResults = hotelResults;
 
+  // Phase E field-name shims: the search endpoint emits `name`/`city_name`/
+  // `image_url` but a few code paths still expect the legacy aliases. These
+  // helpers read canonical first, fall back to legacy.
+  const getName = (h: HotelResult): string => h.name || h.hotel_name || "";
+  const getCity = (h: HotelResult): string => h.city_name || h.city || "";
+
   // Apply star filter + region filter + sort to hotel results
   const filteredHotels = livePricedResults
     .filter((h) => {
@@ -419,7 +446,7 @@ export default function SearchPage() {
         if (starFilter !== 5 && (h.star_rating || 0) < starFilter) return false;
       }
       if (regionFilter !== "All") {
-        const continent = cityToContinentMap[h.city?.toLowerCase() || ""];
+        const continent = cityToContinentMap[getCity(h).toLowerCase()];
         if (continent && continent !== regionFilter) return false;
       }
       return true;
@@ -427,9 +454,9 @@ export default function SearchPage() {
     .sort((a, b) => {
       switch (sortBy) {
         case "name_asc":
-          return a.hotel_name.localeCompare(b.hotel_name);
+          return getName(a).localeCompare(getName(b));
         case "name_desc":
-          return b.hotel_name.localeCompare(a.hotel_name);
+          return getName(b).localeCompare(getName(a));
         case "stars_desc":
           return (b.star_rating || 0) - (a.star_rating || 0);
         case "rating_desc":
@@ -930,19 +957,18 @@ export default function SearchPage() {
             }>
               <SearchMapView
                 hotels={filteredHotels.map((h) => ({
-                  // Search endpoint returns numeric Agoda `hotel_id` and no
-                  // master_id / slug yet — coerce it as the master id so
-                  // SearchMapView's link builder still produces a clickable
-                  // path. The backend resolver normalises the value.
-                  id: String(h.hotel_id),
-                  master_id: String(h.hotel_id),
-                  slug: null,
-                  short_id: null,
-                  hotel_name: h.hotel_name,
-                  city: h.city,
-                  country: h.country,
+                  // Phase E — search endpoint now returns master `id` /
+                  // `short_id` / `slug` directly. SearchMapView's link
+                  // builder uses these to emit canonical pretty URLs.
+                  id: String(h.id ?? h.hotel_id ?? ""),
+                  master_id: String(h.id ?? h.hotel_id ?? ""),
+                  slug: h.slug ?? null,
+                  short_id: h.short_id ?? null,
+                  hotel_name: getName(h),
+                  city: getCity(h),
+                  country: h.country || "",
                   star_rating: h.star_rating,
-                  photo1: h.photo1,
+                  photo1: h.image_url ?? h.photo1 ?? null,
                   latitude: h.latitude,
                   longitude: h.longitude,
                 }))}
@@ -968,6 +994,19 @@ export default function SearchPage() {
 
             <div className="search-hotel-list" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {filteredHotels.map((hotel, i) => {
+                // Phase E field-name resolution — backend now returns
+                // `name` / `city_name` / `image_url` / `id` / `short_id` /
+                // `slug`. Read those first, fall back to legacy aliases.
+                const displayName = getName(hotel) || "Hotel";
+                const displayCity = getCity(hotel);
+                const displayCountry = hotel.country || "";
+                const photoSrc = hotel.image_url ?? hotel.photo1 ?? null;
+                // Stable React key — prefer the master id, then short_id,
+                // then slug, then legacy hotel_id, then index. Empty
+                // strings would collide so guard with `|| i`.
+                const cardKey =
+                  String(hotel.id || hotel.short_id || hotel.slug || hotel.hotel_id || `idx-${i}`);
+
                 // Member rate vs. MRP (×1.25 heuristic until search is migrated to live rates)
                 const marketRate = hotel.rates_from ? Math.round(hotel.rates_from * 1.25) : null;
                 const savePct = hotel.rates_from && marketRate
@@ -981,17 +1020,18 @@ export default function SearchPage() {
 
                 return (
                   <motion.div
-                    key={hotel.hotel_id}
+                    key={cardKey}
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, delay: i * 0.03 }}
                   >
                     <Link
-                      href={`/hotel/${hotel.hotel_id}`}
+                      href={hotelUrl({
+                        slug: hotel.slug ?? null,
+                        short_id: hotel.short_id ?? null,
+                        id: (hotel.id as string | undefined) ?? (hotel.hotel_id != null ? String(hotel.hotel_id) : null),
+                      })}
                       style={{ textDecoration: "none", display: "block" }}
-                      // NOTE: search endpoint still returns numeric Agoda
-                      // `hotel_id`; the resolver handles it server-side. Once
-                      // search is migrated, swap this for `hotelUrl(hotel)`.
                     >
                       <div
                         className="card-hover search-hotel-card"
@@ -1010,8 +1050,8 @@ export default function SearchPage() {
                         <div className="search-hotel-card-img" style={{ height: 152, overflow: "hidden", position: "relative" }}>
                           <img
                             className="card-img"
-                            src={hotel.photo1 ? safeImageSrc(hotel.photo1.startsWith("http") ? hotel.photo1 : `https://photos.hotelbeds.com/giata/${hotel.photo1}`) : FALLBACK_IMAGE}
-                            alt={hotel.hotel_name}
+                            src={photoSrc ? safeImageSrc(photoSrc.startsWith("http") ? photoSrc : `https://photos.hotelbeds.com/giata/${photoSrc}`) : FALLBACK_IMAGE}
+                            alt={displayName}
                             style={{
                               width: "100%",
                               height: "100%",
@@ -1076,7 +1116,7 @@ export default function SearchPage() {
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
                           }}>
-                            {hotel.hotel_name}
+                            {displayName}
                           </h3>
                           {/* Location chip */}
                           <div style={{
@@ -1091,7 +1131,7 @@ export default function SearchPage() {
                               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                               <circle cx="12" cy="10" r="3" />
                             </svg>
-                            {hotel.city}{hotel.country ? `, ${hotel.country}` : ""}
+                            {displayCity}{displayCountry ? `, ${displayCountry}` : ""}
                           </div>
                           {/* Amenity / proof badges (rating, reviews, "All inclusive") */}
                           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
