@@ -597,6 +597,10 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
                 cell.iso < previewEnd;
               const isFocused = focusIso === cell.iso;
 
+              // Range fill stretches edge-to-edge of the row cell. Force it to
+              // sit BEHIND the day-number pill (z-index: 0) so the number is
+              // always legible — even on selected check-in/check-out, where the
+              // champagne pill paints atop a tinted row.
               const cellStyle: CSSProperties = {
                 position: "relative",
                 height: 42,
@@ -606,8 +610,8 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
                 cursor: disabled ? "default" : "pointer",
                 background: inRange
                   ? variant === "dark"
-                    ? "rgba(200, 170, 118, 0.10)"
-                    : "rgba(200, 170, 118, 0.16)"
+                    ? "rgba(200, 170, 118, 0.18)"
+                    : "rgba(200, 170, 118, 0.18)"
                   : "transparent",
                 // Square the range edges so the connecting tint reads as a single bar.
                 borderRadius: isCheckIn
@@ -617,6 +621,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
                   : isCheckOut
                     ? "0 999px 999px 0"
                     : 0,
+                zIndex: 0,
               };
 
               const pillStyle: CSSProperties = {
@@ -629,6 +634,9 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
                 background: isSelected
                   ? "var(--luxe-champagne, #c8aa76)"
                   : "transparent",
+                // Selected: charcoal text on champagne fill (button-grade contrast).
+                // In-range: keep numbers in the soft-white / ink tone — readable on
+                // the 0.18 champagne tint without losing range continuity.
                 color: disabled
                   ? variant === "dark"
                     ? "var(--luxe-soft-white-30, rgba(247,245,242,0.3))"
@@ -649,6 +657,8 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
                   ? "none"
                   : "background 120ms ease, color 120ms ease, transform 120ms ease",
                 position: "relative",
+                // Day number always sits above the range fill.
+                zIndex: 1,
               };
 
               return (
@@ -669,9 +679,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
                     onMouseEnter={(e) => {
                       if (disabled || isSelected) return;
                       (e.currentTarget as HTMLDivElement).style.background =
-                        variant === "dark"
-                          ? "rgba(200, 170, 118, 0.18)"
-                          : "rgba(200, 170, 118, 0.22)";
+                        "rgba(200, 170, 118, 0.28)";
                     }}
                     onMouseLeave={(e) => {
                       if (disabled || isSelected) return;
@@ -716,8 +724,8 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
       : "CHOOSING CHECK-OUT";
 
   const panelBg = variant === "dark"
-    ? "rgba(20, 18, 15, 0.86)"
-    : "rgba(255, 253, 248, 0.92)";
+    ? "rgba(20, 18, 15, 0.96)"
+    : "rgba(255, 253, 248, 0.96)";
   const panelBorder = variant === "dark"
     ? "var(--luxe-champagne-line, rgba(200,170,118,0.28))"
     : "rgba(200, 170, 118, 0.4)";

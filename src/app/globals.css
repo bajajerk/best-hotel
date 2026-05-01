@@ -4155,6 +4155,37 @@ body:has(.precision-theme) {
   z-index: 2;
 }
 
+/* ── Hero search "Editing" state (Bug 5) ──
+   When any field inside the hero capsule is focused or hosts an open picker,
+   give it a champagne ring and dim its peers. Keeps the active field as the
+   single focal point — same trick MMT/Booking use to anchor attention. */
+#hero-search > * {
+  position: relative;
+  border-radius: 9999px;
+  transition: box-shadow 0.18s ease, opacity 0.18s ease;
+}
+#hero-search:focus-within > *:not(:focus-within):not(:hover) {
+  opacity: 0.55;
+}
+#hero-search > *:focus-within {
+  box-shadow: 0 0 0 3px rgba(200, 170, 118, 0.25);
+  z-index: 3;
+}
+
+/* /search page unified card — same "Editing" treatment on each cell */
+.usc-card .usc-cell {
+  position: relative;
+  border-radius: 8px;
+  transition: box-shadow 0.18s ease, opacity 0.18s ease;
+}
+.usc-card:focus-within .usc-cell:not(:focus-within) {
+  opacity: 0.6;
+}
+.usc-card .usc-cell:focus-within {
+  box-shadow: 0 0 0 3px rgba(200, 170, 118, 0.25);
+  z-index: 3;
+}
+
 /* ── Capsule buttons ── */
 .luxe-btn-primary {
   display: inline-flex;

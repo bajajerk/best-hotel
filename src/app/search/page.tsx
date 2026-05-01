@@ -445,8 +445,9 @@ export default function SearchPage() {
       }
     });
 
-  // Total city results + hotel results for stats
-  const totalResults = regionFilteredCities.length + filteredHotels.length;
+  // Hotel results are the primary count surfaced in the toolbar; matching cities
+  // are relocated below the results as a curated scroller and counted separately.
+  const totalResults = filteredHotels.length;
 
   return (
     <div className="luxe" style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
@@ -670,30 +671,8 @@ export default function SearchPage() {
                   color: "var(--ink)",
                   fontWeight: 500,
                 }}>
-                  {totalResults} result{totalResults !== 1 ? "s" : ""} for &ldquo;{query.trim()}&rdquo;
+                  {totalResults} {totalResults === 1 ? "hotel" : "hotels"} for &ldquo;{query.trim()}&rdquo;
                 </span>
-                {regionFilteredCities.length > 0 && (
-                  <span style={{
-                    fontSize: "11px",
-                    color: "var(--ink-light)",
-                    padding: "2px 10px",
-                    background: "var(--cream-deep)",
-                    borderRadius: "2px",
-                  }}>
-                    {regionFilteredCities.length} {regionFilteredCities.length === 1 ? "city" : "cities"}
-                  </span>
-                )}
-                {filteredHotels.length > 0 && (
-                  <span style={{
-                    fontSize: "11px",
-                    color: "var(--ink-light)",
-                    padding: "2px 10px",
-                    background: "var(--cream-deep)",
-                    borderRadius: "2px",
-                  }}>
-                    {filteredHotels.length} {filteredHotels.length === 1 ? "hotel" : "hotels"}
-                  </span>
-                )}
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -911,85 +890,6 @@ export default function SearchPage() {
           </motion.div>
         )}
 
-        {/* City matches */}
-        {regionFilteredCities.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            style={{ marginBottom: "56px" }}
-          >
-            <div className="type-eyebrow" style={{ marginBottom: "20px" }}>
-              Matching Destinations
-            </div>
-            <div className="search-city-grid" style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: "16px",
-            }}>
-              {regionFilteredCities.slice(0, 8).map((city) => (
-                <Link
-                  key={city.city_slug}
-                  href={`/city/${city.city_slug}`}
-                  style={{ textDecoration: "none", display: "block" }}
-                >
-                  <motion.div
-                    className="card-hover"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    style={{
-                      background: "var(--white)",
-                      border: "1px solid var(--cream-border)",
-                      overflow: "hidden",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ height: "140px", overflow: "hidden" }}>
-                      <img
-                        className="card-img"
-                        src={safeImageSrc(getCityImage(city.city_slug))}
-                        alt={city.city_name}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          display: "block",
-                          filter: "saturate(0.88)",
-                        }}
-                        loading="lazy"
-                        onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
-                      />
-                    </div>
-                    <div style={{ padding: "14px 16px 16px" }}>
-                      <div className="type-heading-3" style={{ color: "var(--ink)", fontStyle: "italic", fontSize: "17px", marginBottom: "2px" }}>
-                        {city.city_name}
-                      </div>
-                      <div style={{ fontSize: "11px", color: "var(--ink-light)", letterSpacing: "0.04em" }}>
-                        {city.country}
-                      </div>
-                      <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        marginTop: "10px",
-                        paddingTop: "10px",
-                        borderTop: "1px solid var(--cream-border)",
-                      }}>
-                        <span style={{ fontSize: "10px", color: "var(--ink-light)" }}>
-                          {city.hotel_count > 0 ? `${city.hotel_count}+ hotels` : "Explore"}
-                        </span>
-                        <span className="card-arrow" style={{ fontSize: "11px", color: "var(--gold)", fontWeight: 500 }}>
-                          View &rarr;
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
         {/* Hotel results — luxe shimmer while results stream in */}
         {searching && (
           <div style={{ padding: "8px 0 24px" }}>
@@ -1063,170 +963,347 @@ export default function SearchPage() {
               </span>
             </div>
 
-            <div className="search-hotel-list" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {filteredHotels.map((hotel, i) => (
-                <motion.div
-                  key={hotel.hotel_id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: i * 0.04 }}
-                >
-                  <Link
-                    href={`/hotel/${hotel.hotel_id}`}
-                    style={{ textDecoration: "none", display: "block" }}
-                    // NOTE: search endpoint still returns numeric Agoda
-                    // `hotel_id`; the resolver handles it server-side. Once
-                    // search is migrated, swap this for `hotelUrl(hotel)`.
-                  >
-                    <div
-                      className="card-hover search-hotel-card"
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "220px 1fr",
-                        background: "var(--white)",
-                        border: "1px solid var(--cream-border)",
-                        overflow: "hidden",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {/* Image */}
-                      <div className="search-hotel-card-img" style={{ height: "160px", overflow: "hidden", position: "relative" }}>
-                        <img
-                          className="card-img"
-                          src={hotel.photo1 ? safeImageSrc(hotel.photo1.startsWith("http") ? hotel.photo1 : `https://photos.hotelbeds.com/giata/${hotel.photo1}`) : FALLBACK_IMAGE}
-                          alt={hotel.hotel_name}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            display: "block",
-                            filter: "saturate(0.88)",
-                          }}
-                          loading="lazy"
-                          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
-                        />
-                        {hotel.star_rating && hotel.star_rating >= 4 && (
-                          <div style={{
-                            position: "absolute",
-                            top: "10px",
-                            left: "10px",
-                            background: "rgba(26,23,16,0.75)",
-                            backdropFilter: "blur(4px)",
-                            padding: "3px 8px",
-                            fontSize: "10px",
-                            color: "var(--gold)",
-                            letterSpacing: "1px",
-                            fontWeight: 500,
-                          }}>
-                            {"★".repeat(hotel.star_rating)}
-                          </div>
-                        )}
-                      </div>
+            <div className="search-hotel-list" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {filteredHotels.map((hotel, i) => {
+                // Member rate vs. MRP (×1.25 heuristic until search is migrated to live rates)
+                const marketRate = hotel.rates_from ? Math.round(hotel.rates_from * 1.25) : null;
+                const savePct = hotel.rates_from && marketRate
+                  ? Math.round(((marketRate - hotel.rates_from) / marketRate) * 100)
+                  : null;
+                const sym = hotel.rates_currency === "INR" ? "₹" : "$";
+                const formatPrice = (n: number) =>
+                  hotel.rates_currency === "INR"
+                    ? `${sym}${n.toLocaleString("en-IN")}`
+                    : `${sym}${n.toLocaleString("en-US")}`;
 
-                      {/* Content */}
-                      <div className="search-hotel-card-content" style={{ padding: "20px 28px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                          {hotel.star_rating && hotel.star_rating < 4 && (
-                            <span style={{ color: "var(--gold)", fontSize: "10px", letterSpacing: "1px" }}>
-                              {"★".repeat(hotel.star_rating)}
-                            </span>
+                return (
+                  <motion.div
+                    key={hotel.hotel_id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: i * 0.03 }}
+                  >
+                    <Link
+                      href={`/hotel/${hotel.hotel_id}`}
+                      style={{ textDecoration: "none", display: "block" }}
+                      // NOTE: search endpoint still returns numeric Agoda
+                      // `hotel_id`; the resolver handles it server-side. Once
+                      // search is migrated, swap this for `hotelUrl(hotel)`.
+                    >
+                      <div
+                        className="card-hover search-hotel-card"
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "200px 1fr 220px",
+                          background: "var(--white)",
+                          border: "1px solid var(--cream-border)",
+                          borderRadius: 10,
+                          overflow: "hidden",
+                          cursor: "pointer",
+                          minHeight: 152,
+                        }}
+                      >
+                        {/* Image — left rail */}
+                        <div className="search-hotel-card-img" style={{ height: 152, overflow: "hidden", position: "relative" }}>
+                          <img
+                            className="card-img"
+                            src={hotel.photo1 ? safeImageSrc(hotel.photo1.startsWith("http") ? hotel.photo1 : `https://photos.hotelbeds.com/giata/${hotel.photo1}`) : FALLBACK_IMAGE}
+                            alt={hotel.hotel_name}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                              filter: "saturate(0.9)",
+                              transition: "transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
+                            }}
+                            loading="lazy"
+                            onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
+                          />
+                          {savePct != null && savePct > 0 && (
+                            <div style={{
+                              position: "absolute",
+                              top: 10,
+                              left: 10,
+                              background: "var(--gold)",
+                              color: "#1a1710",
+                              padding: "3px 9px",
+                              fontSize: 10,
+                              fontWeight: 600,
+                              letterSpacing: "0.08em",
+                              textTransform: "uppercase",
+                              fontFamily: "var(--font-body)",
+                              borderRadius: 2,
+                            }}>
+                              Member · {savePct}% off
+                            </div>
                           )}
                         </div>
-                        <div className="type-heading-3" style={{
-                          color: "var(--ink)",
-                          fontStyle: "italic",
-                          marginBottom: "6px",
-                          fontSize: "18px",
-                        }}>
-                          {hotel.hotel_name}
-                        </div>
-                        <div style={{
+
+                        {/* Center column — name, stars, location, amenity badges */}
+                        <div className="search-hotel-card-content" style={{
+                          padding: "16px 20px",
                           display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          fontSize: "12px",
-                          color: "var(--ink-light)",
-                          letterSpacing: "0.04em",
+                          flexDirection: "column",
+                          justifyContent: "center",
+                          gap: 6,
+                          minWidth: 0,
                         }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-light)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                          </svg>
-                          {hotel.city}, {hotel.country}
-                        </div>
-                        {/* Rating / reviews / price chips */}
-                        {(hotel.rating_average || hotel.number_of_reviews || hotel.rates_from) && (
-                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "10px" }}>
+                          {/* Star row */}
+                          {hotel.star_rating && hotel.star_rating > 0 && (
+                            <div style={{
+                              color: "var(--gold)",
+                              fontSize: 11,
+                              letterSpacing: "1.5px",
+                              lineHeight: 1,
+                            }}>
+                              {"★".repeat(hotel.star_rating)}
+                            </div>
+                          )}
+                          {/* Hotel name — Playfair, ~18px */}
+                          <h3 style={{
+                            fontFamily: "var(--font-display)",
+                            fontStyle: "italic",
+                            fontSize: 18,
+                            fontWeight: 500,
+                            color: "var(--ink)",
+                            margin: 0,
+                            lineHeight: 1.25,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}>
+                            {hotel.hotel_name}
+                          </h3>
+                          {/* Location chip */}
+                          <div style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 5,
+                            fontSize: 12,
+                            color: "var(--ink-light)",
+                            letterSpacing: "0.02em",
+                          }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                              <circle cx="12" cy="10" r="3" />
+                            </svg>
+                            {hotel.city}{hotel.country ? `, ${hotel.country}` : ""}
+                          </div>
+                          {/* Amenity / proof badges (rating, reviews, "All inclusive") */}
+                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
                             {hotel.rating_average != null && hotel.rating_average > 0 && (
                               <span style={{
-                                fontSize: "10px",
-                                padding: "2px 8px",
-                                background: hotel.rating_average >= 8.5 ? "var(--gold-pale)" : "var(--cream)",
+                                fontSize: 10,
+                                padding: "3px 8px",
+                                background: hotel.rating_average >= 8.5 ? "var(--gold-pale, rgba(201,168,76,0.15))" : "var(--cream)",
                                 color: hotel.rating_average >= 8.5 ? "var(--gold)" : "var(--ink-mid)",
                                 border: "1px solid var(--cream-border)",
-                                fontWeight: 500,
+                                fontWeight: 600,
+                                borderRadius: 2,
+                                letterSpacing: "0.02em",
                               }}>
-                                {hotel.rating_average.toFixed(1)} rating
+                                {hotel.rating_average.toFixed(1)}
+                                {hotel.number_of_reviews ? ` · ${hotel.number_of_reviews.toLocaleString()} reviews` : ""}
                               </span>
                             )}
-                            {hotel.number_of_reviews != null && hotel.number_of_reviews > 0 && (
-                              <span style={{
-                                fontSize: "10px",
-                                padding: "2px 8px",
-                                background: "var(--cream)",
-                                color: "var(--ink-mid)",
-                                border: "1px solid var(--cream-border)",
-                              }}>
-                                {hotel.number_of_reviews.toLocaleString()} reviews
-                              </span>
-                            )}
-                            {hotel.rates_from != null && hotel.rates_from > 0 && (
-                              <span style={{
-                                fontSize: "10px",
-                                padding: "2px 8px",
-                                background: "var(--cream)",
-                                color: "var(--ink-mid)",
-                                border: "1px solid var(--cream-border)",
-                                fontWeight: 500,
-                              }}>
-                                {hotel.rates_currency === "INR"
-                                  ? `From ₹${Math.round(hotel.rates_from).toLocaleString("en-IN")}`
-                                  : `From $${Math.round(hotel.rates_from).toLocaleString("en-US")}`}
-                              </span>
-                            )}
+                            <span style={{
+                              fontSize: 10,
+                              padding: "3px 8px",
+                              background: "var(--cream)",
+                              color: "var(--success)",
+                              border: "1px solid var(--cream-border)",
+                              borderRadius: 2,
+                              letterSpacing: "0.02em",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
+                              </svg>
+                              Free cancellation
+                            </span>
                           </div>
-                        )}
+                        </div>
+
+                        {/* Right column — price + CTA */}
                         <div style={{
+                          padding: "16px 20px",
                           display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          marginTop: "12px",
-                          paddingTop: "12px",
-                          borderTop: "1px solid var(--cream-border)",
+                          flexDirection: "column",
+                          alignItems: "flex-end",
+                          justifyContent: "center",
+                          gap: 4,
+                          borderLeft: "1px solid var(--cream-border)",
+                          background: "linear-gradient(180deg, transparent 0%, rgba(201,168,76,0.04) 100%)",
                         }}>
+                          {hotel.rates_from != null && hotel.rates_from > 0 ? (
+                            <>
+                              <span style={{
+                                fontSize: 10,
+                                color: "var(--ink-light)",
+                                letterSpacing: "0.06em",
+                                textTransform: "uppercase",
+                                fontFamily: "var(--font-body)",
+                              }}>
+                                from
+                              </span>
+                              {marketRate && marketRate > hotel.rates_from && (
+                                <span style={{
+                                  fontSize: 12,
+                                  color: "var(--ink-light)",
+                                  textDecoration: "line-through",
+                                  lineHeight: 1,
+                                }}>
+                                  {formatPrice(marketRate)}
+                                </span>
+                              )}
+                              <span style={{
+                                fontFamily: "var(--font-display)",
+                                fontSize: 24,
+                                fontWeight: 500,
+                                color: "var(--ink)",
+                                lineHeight: 1.1,
+                              }}>
+                                {formatPrice(Math.round(hotel.rates_from))}
+                              </span>
+                              <span style={{
+                                fontSize: 10,
+                                color: "var(--ink-light)",
+                                letterSpacing: "0.04em",
+                              }}>
+                                per night · taxes incl.
+                              </span>
+                            </>
+                          ) : (
+                            <span style={{
+                              fontSize: 11,
+                              color: "var(--gold)",
+                              letterSpacing: "0.08em",
+                              textTransform: "uppercase",
+                              fontWeight: 500,
+                            }}>
+                              Call for rates
+                            </span>
+                          )}
                           <span style={{
-                            fontSize: "11px",
-                            color: "var(--success)",
-                            fontWeight: 500,
-                            letterSpacing: "0.04em",
-                            display: "flex",
+                            marginTop: 8,
+                            display: "inline-flex",
                             alignItems: "center",
-                            gap: "4px",
+                            gap: 4,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: "var(--gold)",
+                            fontFamily: "var(--font-body)",
+                            letterSpacing: "0.04em",
+                            whiteSpace: "nowrap",
                           }}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                              <polyline points="22 4 12 14.01 9 11.01" />
-                            </svg>
-                            Exclusive rate available
+                            View rates &rarr;
                           </span>
-                          <span className="card-arrow" style={{ fontSize: "11px", color: "var(--gold)", fontWeight: 500, letterSpacing: "0.04em" }}>
-                            View details &rarr;
-                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── Curated favourites in {city} — small horizontal scroller below results ── */}
+        {!searching && hasSearched && filteredHotels.length > 0 && regionFilteredCities.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            style={{ marginTop: 56 }}
+          >
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16 }}>
+              <div className="type-eyebrow">
+                Curated favourites{regionFilteredCities[0] ? ` in ${regionFilteredCities[0].city_name}` : ""}
+              </div>
+              <span style={{ fontSize: 11, color: "var(--ink-light)", letterSpacing: "0.04em" }}>
+                Editor&rsquo;s picks
+              </span>
+            </div>
+            <div
+              className="curated-scroller"
+              style={{
+                display: "flex",
+                gap: 12,
+                overflowX: "auto",
+                paddingBottom: 8,
+                scrollbarWidth: "thin",
+              }}
+            >
+              {regionFilteredCities.slice(0, 8).map((city) => (
+                <Link
+                  key={city.city_slug}
+                  href={`/city/${city.city_slug}`}
+                  style={{ textDecoration: "none", flex: "0 0 220px" }}
+                >
+                  <motion.div
+                    whileHover={{ y: -2 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                      background: "var(--white)",
+                      border: "1px solid var(--cream-border)",
+                      borderRadius: 8,
+                      overflow: "hidden",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div style={{ height: 110, overflow: "hidden", position: "relative" }}>
+                      <img
+                        src={safeImageSrc(getCityImage(city.city_slug))}
+                        alt={city.city_name}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                          filter: "saturate(0.9)",
+                        }}
+                        loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
+                      />
+                      <div style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: "linear-gradient(180deg, transparent 50%, rgba(20,18,15,0.55) 100%)",
+                      }} />
+                      <div style={{ position: "absolute", left: 12, bottom: 10 }}>
+                        <div style={{
+                          fontFamily: "var(--font-display)",
+                          fontStyle: "italic",
+                          fontSize: 16,
+                          color: "var(--cream)",
+                          lineHeight: 1.1,
+                        }}>
+                          {city.city_name}
+                        </div>
+                        <div style={{ fontSize: 10, color: "rgba(245,240,232,0.75)", marginTop: 2, letterSpacing: "0.04em" }}>
+                          {city.country}
                         </div>
                       </div>
                     </div>
-                  </Link>
-                </motion.div>
+                    <div style={{
+                      padding: "10px 12px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}>
+                      <span style={{ fontSize: 10, color: "var(--ink-light)" }}>
+                        {city.hotel_count > 0 ? `${city.hotel_count}+ hotels` : "Explore"}
+                      </span>
+                      <span style={{ fontSize: 10, color: "var(--gold)", fontWeight: 600, letterSpacing: "0.04em" }}>
+                        View &rarr;
+                      </span>
+                    </div>
+                  </motion.div>
+                </Link>
               ))}
             </div>
           </motion.div>
