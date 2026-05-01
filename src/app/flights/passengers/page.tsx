@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
+import LuxeDatePicker from "@/components/LuxeDatePicker";
 import { useAuth } from "@/context/AuthContext";
 import {
   validatePrebookFlight,
@@ -264,17 +265,23 @@ function PassengersContent() {
                   />
                 </label>
 
-                <label className="field">
+                <div className="field">
                   <span className="lbl">Date of birth</span>
-                  <input
-                    type="date"
-                    value={p.dob}
-                    onChange={(e) => updatePax(i, { dob: e.target.value })}
-                    min={dob.min}
-                    max={dob.max}
+                  <LuxeDatePicker
+                    mode="single"
+                    variant="dark"
+                    checkIn={p.dob || null}
+                    onChange={({ checkIn }) =>
+                      updatePax(i, { dob: checkIn ?? "" })
+                    }
+                    minDate={dob.min}
+                    maxDate={dob.max}
+                    monthsToShow={1}
+                    hidePresets
+                    placeholder="Select date of birth"
                   />
                   <span className="hint">{dob.hint}</span>
-                </label>
+                </div>
               </div>
             );
           });
