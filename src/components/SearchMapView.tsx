@@ -10,8 +10,9 @@ import { hotelUrl } from "@/lib/urls";
 // Types
 // ---------------------------------------------------------------------------
 interface MapHotel {
-  /** Hotel master UUID. */
-  master_id: string;
+  /** Hotel master UUID. Backend now uses `id`; alias `master_id` kept for compat. */
+  id: string;
+  master_id?: string;
   /** SEO slug — used for the canonical pretty URL. */
   slug?: string | null;
   /** 8-hex short id — used for the canonical pretty URL. */
@@ -321,7 +322,7 @@ export default function SearchMapView({ hotels }: SearchMapViewProps) {
         >
           {mappableHotels.map((hotel) => (
             <Link
-              key={hotel.master_id}
+              key={hotel.id}
               href={hotelUrl(hotel)}
               style={{
                 textDecoration: "none",

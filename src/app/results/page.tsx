@@ -124,8 +124,8 @@ export default function ResultsPage() {
           // Deduplicate by master_id (UUID, post Phase D migration)
           const seen = new Set<string>();
           const unique = allHotels.filter((h) => {
-            if (seen.has(h.master_id)) return false;
-            seen.add(h.master_id);
+            if (seen.has(h.id)) return false;
+            seen.add(h.id);
             return true;
           });
           setHotels(unique);
@@ -171,8 +171,8 @@ export default function ResultsPage() {
 
           const seen = new Set<string>();
           const unique = allHotels.filter((h) => {
-            if (seen.has(h.master_id)) return false;
-            seen.add(h.master_id);
+            if (seen.has(h.id)) return false;
+            seen.add(h.id);
             return true;
           });
           setHotels(unique);
@@ -204,8 +204,8 @@ export default function ResultsPage() {
 
           const seen = new Set<string>();
           const unique = allHotels.filter((h) => {
-            if (seen.has(h.master_id)) return false;
-            seen.add(h.master_id);
+            if (seen.has(h.id)) return false;
+            seen.add(h.id);
             return true;
           });
           setHotels(unique);
@@ -998,7 +998,8 @@ export default function ResultsPage() {
                 >
                   <SearchMapView
                     hotels={filteredAndRanked.map((r) => ({
-                      master_id: r.hotel.master_id,
+                      id: r.hotel.id,
+                      master_id: r.hotel.id,
                       slug: r.hotel.slug,
                       short_id: r.hotel.short_id,
                       hotel_name: r.hotel.hotel_name,
@@ -1026,7 +1027,7 @@ export default function ResultsPage() {
                 >
                   {visibleHotels.map((ranked, index) => (
                     <ResultCard
-                      key={ranked.hotel.master_id}
+                      key={ranked.hotel.id}
                       ranked={ranked}
                       index={index}
                     />

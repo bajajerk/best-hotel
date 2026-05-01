@@ -67,8 +67,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
               hotelPaths.push(`${h.slug}-${h.short_id}`);
             } else if (h.short_id) {
               hotelPaths.push(h.short_id);
-            } else if (h.master_id) {
-              hotelPaths.push(h.master_id);
+            } else if (h.id) {
+              hotelPaths.push(h.id);
             }
           }
         }

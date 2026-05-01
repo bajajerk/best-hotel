@@ -1031,6 +1031,7 @@ export default function SearchPage() {
                   // master_id / slug yet — coerce it as the master id so
                   // SearchMapView's link builder still produces a clickable
                   // path. The backend resolver normalises the value.
+                  id: String(h.hotel_id),
                   master_id: String(h.hotel_id),
                   slug: null,
                   short_id: null,

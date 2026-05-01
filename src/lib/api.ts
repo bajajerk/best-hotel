@@ -39,15 +39,18 @@ export interface CuratedCity {
 }
 
 export interface CuratedHotel {
-  id: number;
+  /** Hotel master UUID — the canonical id used for booking / batch rates.
+   *  Phase B contract: `id` is the master UUID; `row_id` is the curated_hotels PK
+   *  (was `id` pre-Phase-B). Backend sends both `id` and `master_id` (alias). */
+  id: string;
   city_slug: string;
   city_name: string;
   country: string;
   country_code: string;
   category: 'singles' | 'couples' | 'families';
-  /** Hotel master UUID — the canonical id used for booking / batch rates.
-   *  Phase B contract: `id` is the master UUID; `row_id` is the curated_hotels PK. */
-  id: string;
+  /** Backwards-compat alias for `id` (same UUID). FE callers that haven't
+   *  migrated from the old field name yet read this. Backend sends both. */
+  master_id?: string;
   /** Curated_hotels row PK (was `id` pre-Phase-B). Useful for list keys. */
   row_id?: number;
   /** 8-hex short id (e.g. "a7988705"). Used in pretty URLs `<slug>-<short_id>`. */
@@ -804,7 +807,9 @@ export type RatesResponse = {
    *  be a slug-shortid, short_id, master UUID, or the legacy tj id — backend
    *  resolves all forms. Photos are TripJack CDN (i.travelapi.com/lodging/...). */
   hotel: {
-    master_id: string;
+    /** Hotel master UUID. Backend sends both `id` and `master_id` (alias). */
+    id: string;
+    master_id?: string;
     short_id: string;
     slug: string;
     hotel_name: string;

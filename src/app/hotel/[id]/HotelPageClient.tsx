@@ -58,7 +58,9 @@ type GalleryCategory =
 
 interface HotelDetail {
   /** Hotel master UUID — canonical id used for booking + analytics. */
-  master_id: string;
+  id: string;
+  /** Backwards-compat alias for `id` (same UUID). Backend sends both. */
+  master_id?: string;
   /** 8-hex short id (used in pretty URLs). */
   short_id?: string;
   /** SEO slug. */
@@ -753,7 +755,7 @@ export default function HotelPage() {
     }
   });
   const [pendingSaveAfterLogin, setPendingSaveAfterLogin] = useState(false);
-  const isSaved = hotel ? savedHotelIds.includes(hotel.master_id) : false;
+  const isSaved = hotel ? savedHotelIds.includes(hotel.id) : false;
 
   /* Section refs for scroll-based tabs */
   const ratesRef = useRef<HTMLDivElement>(null);
@@ -777,7 +779,7 @@ export default function HotelPage() {
           // one source of truth.
           setHotel(hotelData as HotelDetail);
           trackHotelViewed({
-            hotel_id: hotelData.master_id ?? hotelId,
+            hotel_id: hotelData.id ?? hotelId,
             hotel_name: hotelData.hotel_name,
             city: hotelData.city,
             country: hotelData.country,
@@ -826,7 +828,8 @@ export default function HotelPage() {
             if (prev) return prev;
             const h = ratesRes.hotel;
             const fallback: HotelDetail = {
-              master_id: h.master_id,
+              id: h.id,
+              master_id: h.id,
               short_id: h.short_id,
               slug: h.slug,
               hotel_name: h.hotel_name,
@@ -857,7 +860,7 @@ export default function HotelPage() {
               checkout: null,
             };
             trackHotelViewed({
-              hotel_id: fallback.master_id,
+              hotel_id: fallback.id,
               hotel_name: fallback.hotel_name,
               city: fallback.city,
               country: fallback.country,
@@ -928,7 +931,7 @@ export default function HotelPage() {
     setLightboxIdx(idx);
     setLightboxOpen(true);
     if (hotel && !overridePhotos) {
-      trackHotelGalleryOpened({ hotel_id: hotel.master_id, hotel_name: hotel.hotel_name, photo_index: idx });
+      trackHotelGalleryOpened({ hotel_id: hotel.id, hotel_name: hotel.hotel_name, photo_index: idx });
     }
   }, [hotel, photos]);
   const closeLightbox = useCallback(() => setLightboxOpen(false), []);
@@ -971,7 +974,7 @@ export default function HotelPage() {
       // `hotelMasterId` is the canonical URL param post-Phase D — a master
       // UUID that the booking flow threads through to POST /api/bookings.
       const qs = new URLSearchParams({
-        hotelMasterId: hotel.master_id,
+        hotelMasterId: hotel.id,
         optionId: plan.option_id,
         roomName: plan.room_name,
         mealBasis: plan.meal_basis || "",
@@ -1014,7 +1017,7 @@ export default function HotelPage() {
 
   const saveHotelToStorage = useCallback(() => {
     if (!hotel) return;
-    const hotelIdStr = hotel.master_id;
+    const hotelIdStr = hotel.id;
     setSavedHotelIds((prev) => {
       if (prev.includes(hotelIdStr)) return prev;
       const next = [...prev, hotelIdStr];
@@ -1033,7 +1036,7 @@ export default function HotelPage() {
       setLoginModalOpen(true);
       return;
     }
-    const hotelIdStr = hotel.master_id;
+    const hotelIdStr = hotel.id;
     if (savedHotelIds.includes(hotelIdStr)) {
       const updated = savedHotelIds.filter((id) => id !== hotelIdStr);
       writeSavedHotels(updated);
@@ -1074,7 +1077,7 @@ export default function HotelPage() {
   const handleTabClick = useCallback((tab: TabName) => {
     setActiveTab(tab);
     if (hotel) {
-      trackHotelTabClicked({ hotel_id: hotel.master_id, hotel_name: hotel.hotel_name, tab_name: tab });
+      trackHotelTabClicked({ hotel_id: hotel.id, hotel_name: hotel.hotel_name, tab_name: tab });
     }
     const refMap: Record<TabName, React.RefObject<HTMLDivElement | null>> = {
       "Rates": ratesRef,
@@ -2823,7 +2826,7 @@ export default function HotelPage() {
         <UnlockRateModal
           open={unlockModalOpen}
           onClose={() => setUnlockModalOpen(false)}
-          hotelId={hotel.master_id}
+          hotelId={hotel.id}
           hotelName={hotel.hotel_name}
           roomName={`${selectedPlan.room_name} • ${selectedPlan.meal_basis || "Room Only"}`}
           rateType={selectedPlan.refundable ? "preferred" : "standard"}
@@ -2843,7 +2846,7 @@ export default function HotelPage() {
         <UnlockRateModal
           open={unlockModalOpen}
           onClose={() => setUnlockModalOpen(false)}
-          hotelId={hotel.master_id}
+          hotelId={hotel.id}
           hotelName={hotel.hotel_name}
           roomName="Rates on request"
           rateType="preferred"

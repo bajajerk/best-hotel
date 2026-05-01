@@ -38,7 +38,7 @@ export function computeTopSellers(hotels: CuratedHotel[], limit = 8): TopSellerH
   const scored = computeTopSellerScores(hotels, limit);
 
   return scored.map((item, idx) => ({
-    masterId: item.hotel.master_id,
+    masterId: item.hotel.id,
     shortId: item.hotel.short_id,
     slug: item.hotel.slug,
     name: item.hotel.hotel_name,

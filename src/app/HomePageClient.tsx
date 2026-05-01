@@ -697,7 +697,7 @@ export default function Home({
             >
               {fallbackEditorsPicks.map((h) => (
                 <Link
-                  key={h.master_id}
+                  key={h.id}
                   href={hotelUrl(h)}
                   style={{
                     display: "block",

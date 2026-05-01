@@ -231,7 +231,7 @@ export default function ComparePage() {
           >
             {hotels.map((hotel, i) => (
               <div
-                key={hotel.master_id}
+                key={hotel.id}
                 style={{
                   borderRight:
                     i < hotels.length - 1
@@ -259,7 +259,7 @@ export default function ComparePage() {
                   />
                   {/* Remove button */}
                   <button
-                    onClick={() => remove(hotel.master_id)}
+                    onClick={() => remove(hotel.id)}
                     style={{
                       position: "absolute",
                       top: 10,
@@ -593,7 +593,7 @@ export default function ComparePage() {
           >
             {hotels.map((hotel, i) => (
               <div
-                key={hotel.master_id}
+                key={hotel.id}
                 style={{
                   padding: "20px 16px",
                   textAlign: "center",
@@ -675,7 +675,7 @@ function CompareRow({
       {/* Values */}
       {hotels.map((hotel, i) => (
         <div
-          key={hotel.master_id}
+          key={hotel.id}
           style={{
             padding: "14px 16px",
             display: "flex",
