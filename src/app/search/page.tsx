@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  searchHotels,
+  searchHotelsPaginated,
   fetchCuratedCities,
+  fetchBatchRates,
   CuratedCity,
 } from "@/lib/api";
 import type { BatchRatesResponse } from "@/lib/api";
@@ -293,6 +294,228 @@ function DestinationPill({ href, label }: { href: string; label: string }) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Pagination pill (single-button primitive used by the Pagination control
+// below). Hoisted out of Pagination so React's static-components rule is
+// satisfied — keeps key/ref reconciliation fast across re-renders.
+// ---------------------------------------------------------------------------
+function PaginationPill({
+  children,
+  onClick,
+  disabled = false,
+  active = false,
+  ariaLabel,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  active?: boolean;
+  ariaLabel?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      aria-current={active ? "page" : undefined}
+      style={{
+        minWidth: 36,
+        height: 36,
+        padding: "0 12px",
+        border: `1px solid ${active ? "var(--gold)" : "var(--cream-border)"}`,
+        background: active ? "var(--gold)" : "var(--white)",
+        color: active ? "#1a1710" : (disabled ? "var(--ink-light)" : "var(--ink)"),
+        fontFamily: "var(--font-body)",
+        fontSize: 13,
+        fontWeight: active ? 600 : 500,
+        letterSpacing: "0.02em",
+        borderRadius: 999,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.45 : 1,
+        transition: "border-color 0.18s, background 0.18s, color 0.18s",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled && !active) {
+          e.currentTarget.style.borderColor = "var(--gold)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!disabled && !active) {
+          e.currentTarget.style.borderColor = "var(--cream-border)";
+        }
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Pagination control — luxe pills, champagne when active, hairline border.
+// Renders `1 2 … current ± 2 … total_pages` on desktop, `Prev / N of M / Next`
+// on mobile (driven via CSS so SSR markup stays the same).
+// ---------------------------------------------------------------------------
+function Pagination({
+  page,
+  totalPages,
+  totalCount,
+  perPage,
+  onChange,
+}: {
+  page: number;
+  totalPages: number;
+  totalCount: number;
+  perPage: number;
+  onChange: (newPage: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  // Build a compact list of page numbers to render: first, last, current ± 2,
+  // with "..." gaps between non-contiguous ranges.
+  const SIBLINGS = 1;
+  const set = new Set<number>([1, totalPages, page]);
+  for (let i = 1; i <= SIBLINGS; i++) {
+    if (page - i >= 1) set.add(page - i);
+    if (page + i <= totalPages) set.add(page + i);
+  }
+  // Always show 2 around the start/end so "1 2 … 12" looks balanced.
+  set.add(2); set.add(totalPages - 1);
+  const pages = Array.from(set).filter((n) => n >= 1 && n <= totalPages).sort((a, b) => a - b);
+
+  const items: (number | "ellipsis")[] = [];
+  for (let i = 0; i < pages.length; i++) {
+    if (i > 0 && pages[i] - pages[i - 1] > 1) items.push("ellipsis");
+    items.push(pages[i]);
+  }
+
+  const firstOnPage = (page - 1) * perPage + 1;
+  const lastOnPage = Math.min(page * perPage, totalCount);
+
+  return (
+    <nav
+      aria-label="Search results pagination"
+      className="search-pagination"
+      style={{
+        marginTop: 32,
+        paddingTop: 24,
+        borderTop: "1px solid var(--cream-border)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 12,
+      }}
+    >
+      {/* Desktop: full pill row */}
+      <div
+        className="search-pagination-desktop"
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+        }}
+      >
+        <PaginationPill
+          onClick={() => page > 1 && onChange(page - 1)}
+          disabled={page === 1}
+          ariaLabel="Previous page"
+        >
+          &larr; Prev
+        </PaginationPill>
+        {items.map((it, idx) =>
+          it === "ellipsis" ? (
+            <span
+              key={`gap-${idx}`}
+              style={{
+                color: "var(--ink-light)",
+                fontSize: 13,
+                padding: "0 4px",
+                userSelect: "none",
+              }}
+            >
+              &hellip;
+            </span>
+          ) : (
+            <PaginationPill
+              key={it}
+              active={it === page}
+              onClick={() => it !== page && onChange(it)}
+              ariaLabel={`Page ${it}`}
+            >
+              {it}
+            </PaginationPill>
+          ),
+        )}
+        <PaginationPill
+          onClick={() => page < totalPages && onChange(page + 1)}
+          disabled={page === totalPages}
+          ariaLabel="Next page"
+        >
+          Next &rarr;
+        </PaginationPill>
+      </div>
+
+      {/* Mobile: just Prev / N of M / Next — hidden on desktop via CSS */}
+      <div
+        className="search-pagination-mobile"
+        style={{
+          display: "none",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+        }}
+      >
+        <PaginationPill
+          onClick={() => page > 1 && onChange(page - 1)}
+          disabled={page === 1}
+          ariaLabel="Previous page"
+        >
+          &larr; Prev
+        </PaginationPill>
+        <span
+          style={{
+            fontSize: 13,
+            color: "var(--ink-mid)",
+            fontFamily: "var(--font-body)",
+            minWidth: 100,
+            textAlign: "center",
+          }}
+        >
+          Page {page} of {totalPages}
+        </span>
+        <PaginationPill
+          onClick={() => page < totalPages && onChange(page + 1)}
+          disabled={page === totalPages}
+          ariaLabel="Next page"
+        >
+          Next &rarr;
+        </PaginationPill>
+      </div>
+
+      {/* "Showing X–Y of Z" subtle line */}
+      {totalCount > 0 && (
+        <span
+          style={{
+            fontSize: 12,
+            color: "var(--ink-light)",
+            fontFamily: "var(--font-body)",
+            letterSpacing: "0.02em",
+          }}
+        >
+          Showing {firstOnPage.toLocaleString()}&ndash;{lastOnPage.toLocaleString()}
+          {" of "}
+          {totalCount.toLocaleString()}
+        </span>
+      )}
+    </nav>
+  );
+}
+
 // ============================================================================
 // Search Page
 // ============================================================================
@@ -300,12 +523,27 @@ export default function SearchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
+  // Pagination from URL — page is 1-indexed, per_page is bounded server-side.
+  const initialPage = (() => {
+    const p = parseInt(searchParams.get("page") || "1", 10);
+    return Number.isFinite(p) && p >= 1 ? p : 1;
+  })();
+  const initialPerPage = (() => {
+    const p = parseInt(searchParams.get("per_page") || "20", 10);
+    return Number.isFinite(p) && p >= 1 && p <= 50 ? p : 20;
+  })();
 
-  const { checkIn, checkOut, totalAdults, totalChildren } = useBooking();
+  const { checkIn, checkOut, totalAdults, totalChildren, rooms } = useBooking();
+  const roomsCount = rooms.length;
   const [query, setQuery] = useState(initialQuery);
   const [cities, setCities] = useState<CuratedCity[]>([]);
   const [hotelResults, setHotelResults] = useState<HotelResult[]>([]);
+  const [page, setPage] = useState<number>(initialPage);
+  const [perPage] = useState<number>(initialPerPage);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const [batchRates, setBatchRates] = useState<BatchRatesResponse | null>(null);
+  const [batchRatesLoading, setBatchRatesLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
@@ -338,36 +576,76 @@ export default function SearchPage() {
     setRecentSearches(getRecentSearches());
   }, []);
 
-  // Run search if initial query exists
+  // Re-run search whenever the query or page changes. We keep this in a
+  // single effect so deep links like `/search?q=Mumbai&page=3` work on
+  // first paint, and clicking the pagination control just bumps `page`
+  // and the same effect re-fetches.
   useEffect(() => {
     if (initialQuery) {
-      performSearch(initialQuery);
+      performSearch(initialQuery, { page });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [page]);
 
-  // Batch-fetch live rates for the hotels returned by search.
-  // NOTE: `/api/hotels/search` is the legacy admin endpoint that still returns
-  // numeric Agoda `hotel_id` rather than master UUIDs. The Phase D batch rates
-  // endpoint expects `hotel_master_ids`, so until search is migrated we skip
-  // the batch call here — list rendering relies on the static `rates_from`
-  // already attached to each result. Bookings clicked from search results hit
-  // `/hotel/<numeric_id>` which the rates endpoint resolves (legacy fallback
-  // in `_resolve_tj_from_path_id`).
+  // Batch-fetch live rates for the *current page* of search results.
+  // P0 RULE: rates are NEVER cached client-side either — `fetchBatchRates`
+  // sends `cache: 'no-store'`. Each page change kicks off a fresh batch.
+  // We don't block the list render on this — prices fade in as they arrive
+  // (10-30s for 20 hotels). On error, fall through to "Call for rates".
   useEffect(() => {
-    // Search endpoint doesn't yet expose master_id — leave batch rates off
-    // until the search backend is migrated. Static `rates_from` from each
-    // search result is rendered as-is.
+    if (!hotelResults.length || !checkIn || !checkOut) {
+      setBatchRates(null);
+      setBatchRatesLoading(false);
+      return;
+    }
+    const masterIds = hotelResults
+      .map((h) => (h.id ? String(h.id) : null))
+      .filter((x): x is string => !!x);
+    if (!masterIds.length) {
+      setBatchRates(null);
+      setBatchRatesLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setBatchRatesLoading(true);
     setBatchRates(null);
-  }, [hotelResults, checkIn, checkOut, totalAdults, totalChildren]);
+    fetchBatchRates(
+      masterIds,
+      checkIn,
+      checkOut,
+      Math.max(totalAdults, 1),
+      Math.max(totalChildren, 0),
+      Math.max(roomsCount, 1),
+    )
+      .then((resp) => {
+        if (cancelled) return;
+        setBatchRates(resp);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Quiet failure — cards fall back to "Call for rates" automatically.
+        setBatchRates(null);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setBatchRatesLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [hotelResults, checkIn, checkOut, totalAdults, totalChildren, roomsCount]);
 
-  const performSearch = useCallback(async (q: string, options?: { persist?: boolean }) => {
+  const performSearch = useCallback(async (
+    q: string,
+    options?: { persist?: boolean; page?: number },
+  ) => {
     if (!q.trim()) {
       setHotelResults([]);
+      setTotalCount(0);
+      setTotalPages(1);
       setHasSearched(false);
       return;
     }
 
+    const reqPage = Math.max(options?.page ?? 1, 1);
     setSearching(true);
     setHasSearched(true);
     if (options?.persist) {
@@ -375,26 +653,48 @@ export default function SearchPage() {
       setRecentSearches(getRecentSearches());
     }
     try {
-      const results = await searchHotels(q, 30);
-      setHotelResults(results || []);
+      const resp = await searchHotelsPaginated<HotelResult>(q, reqPage, perPage);
+      setHotelResults(resp.hotels || []);
+      setTotalCount(resp.count);
+      setTotalPages(Math.max(resp.total_pages, 1));
       trackSearch({
         query: q,
-        result_count: results?.length || 0,
+        result_count: resp.count,
         source: 'search_page',
         filters: { star_rating: starFilter, sort_by: sortBy, region: regionFilter },
       });
     } catch {
       setHotelResults([]);
+      setTotalCount(0);
+      setTotalPages(1);
     } finally {
       setSearching(false);
     }
-  }, [starFilter, sortBy, regionFilter, checkIn, checkOut]);
+  }, [starFilter, sortBy, regionFilter, checkIn, checkOut, perPage]);
 
   const handleRecentClick = (term: string) => {
     setQuery(term);
-    performSearch(term, { persist: true });
+    setPage(1);
+    performSearch(term, { persist: true, page: 1 });
     router.replace(`/search?q=${encodeURIComponent(term)}`);
   };
+
+  // Pagination handler — bump page state, replace URL with the new page
+  // (so deep links work and back-button paginates), and smooth-scroll the
+  // results into view so the user lands at the top of the freshly-rendered
+  // list. The page-change effect (above) re-runs `performSearch`.
+  const handlePageChange = useCallback((newPage: number) => {
+    if (newPage === page) return;
+    setPage(newPage);
+    const params = new URLSearchParams();
+    if (query.trim()) params.set("q", query.trim());
+    if (newPage > 1) params.set("page", String(newPage));
+    if (perPage !== 20) params.set("per_page", String(perPage));
+    router.replace(`/search${params.toString() ? `?${params.toString()}` : ""}`);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [page, query, perPage, router]);
 
   const clearRecentSearches = () => {
     if (typeof window !== "undefined") {
@@ -426,11 +726,25 @@ export default function SearchPage() {
     ? matchingCities
     : matchingCities.filter((c) => c.continent === regionFilter);
 
-  // The /api/hotels/search endpoint hasn't been migrated to master_id yet, so
-  // the Phase D batch rates endpoint can't enrich these results. Render the
-  // raw search response as-is.
-  void batchRates;
-  const livePricedResults = hotelResults;
+  // Merge live batch rates into each hotel — replace the static `rates_from`
+  // (which the search endpoint no longer emits anyway) with the freshly
+  // fetched live price keyed by master UUID. Hotels without a returned rate
+  // keep null and render "Call for rates" / "Calculating live rates…" based
+  // on `batchRatesLoading`.
+  const livePricedResults = useMemo<HotelResult[]>(() => {
+    if (!batchRates || !batchRates.results) return hotelResults;
+    return hotelResults.map((h) => {
+      const key = h.id ? String(h.id) : "";
+      const r = key ? batchRates.results[key] : undefined;
+      if (!r) return h;
+      const fromPrice = typeof r.from_price === "number" ? r.from_price : null;
+      return {
+        ...h,
+        rates_from: fromPrice,
+        rates_currency: r.currency ?? h.rates_currency ?? "INR",
+      };
+    });
+  }, [hotelResults, batchRates]);
 
   // Phase E field-name shims: the search endpoint emits `name`/`city_name`/
   // `image_url` but a few code paths still expect the legacy aliases. These
@@ -538,14 +852,17 @@ export default function SearchPage() {
                       setQuery(val);
                       if (debounceRef.current) clearTimeout(debounceRef.current);
                       debounceRef.current = setTimeout(() => {
-                        performSearch(val);
+                        // New query -> reset to page 1.
+                        setPage(1);
+                        performSearch(val, { page: 1 });
                       }, 400);
                     }}
                     onSelect={(_type, _value, label) => {
                       const filled = label ?? _value;
                       setQuery(filled);
                       if (debounceRef.current) clearTimeout(debounceRef.current);
-                      performSearch(filled, { persist: true });
+                      setPage(1);
+                      performSearch(filled, { persist: true, page: 1 });
                       requestAnimationFrame(() => dateBarRef.current?.openCheckIn());
                     }}
                   />
@@ -562,7 +879,8 @@ export default function SearchPage() {
                 onClick={() => {
                   if (!query.trim()) return;
                   if (debounceRef.current) clearTimeout(debounceRef.current);
-                  performSearch(query, { persist: true });
+                  setPage(1);
+                  performSearch(query, { persist: true, page: 1 });
                   const params = new URLSearchParams();
                   params.set("q", query.trim());
                   router.replace(`/search?${params.toString()}`);
@@ -701,7 +1019,9 @@ export default function SearchPage() {
                   color: "var(--ink)",
                   fontWeight: 500,
                 }}>
-                  {totalResults} {totalResults === 1 ? "hotel" : "hotels"} for &ldquo;{query.trim()}&rdquo;
+                  {(totalCount > 0 ? totalCount : totalResults).toLocaleString()}{" "}
+                  {(totalCount > 0 ? totalCount : totalResults) === 1 ? "hotel" : "hotels"}{" "}
+                  for &ldquo;{query.trim()}&rdquo;
                 </span>
               </div>
 
@@ -988,7 +1308,9 @@ export default function SearchPage() {
                 Hotels Found
               </div>
               <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>
-                {filteredHotels.length} result{filteredHotels.length !== 1 ? "s" : ""}
+                {totalCount > filteredHotels.length
+                  ? `${filteredHotels.length} of ${totalCount.toLocaleString()} result${totalCount !== 1 ? "s" : ""}`
+                  : `${filteredHotels.length} result${filteredHotels.length !== 1 ? "s" : ""}`}
               </span>
             </div>
 
@@ -1135,7 +1457,16 @@ export default function SearchPage() {
                           </div>
                           {/* Amenity / proof badges (rating, reviews, "All inclusive") */}
                           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
-                            {hotel.rating_average != null && hotel.rating_average > 0 && (
+                            {/* Hide the numeric rating chip when it's just an
+                                echo of star_rating (TripJack has no review
+                                ratings; backend mirrors star into rating_average,
+                                producing redundant "5.0" pills next to ★★★★★).
+                                Only show this chip if the score is genuinely
+                                review-derived AND on the 0–10 scale. */}
+                            {hotel.rating_average != null
+                              && hotel.rating_average > 0
+                              && hotel.rating_average !== hotel.star_rating
+                              && hotel.rating_average > 5 && (
                               <span style={{
                                 fontSize: 10,
                                 padding: "3px 8px",
@@ -1220,6 +1551,30 @@ export default function SearchPage() {
                                 per night · taxes incl.
                               </span>
                             </>
+                          ) : batchRatesLoading ? (
+                            <span style={{
+                              fontSize: 11,
+                              color: "var(--ink-light)",
+                              letterSpacing: "0.06em",
+                              textTransform: "uppercase",
+                              fontWeight: 500,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}>
+                              <span
+                                aria-hidden
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: "50%",
+                                  border: "1.5px solid var(--cream-border)",
+                                  borderTopColor: "var(--gold)",
+                                  animation: "voyagr-spin 0.8s linear infinite",
+                                }}
+                              />
+                              Calculating&hellip;
+                            </span>
                           ) : (
                             <span style={{
                               fontSize: 11,
@@ -1252,6 +1607,18 @@ export default function SearchPage() {
                 );
               })}
             </div>
+
+            {/* Pagination — only meaningful when no client-side filter is
+                trimming the page below the API page-size, otherwise the
+                page numbers describe the unfiltered universe. We still
+                show it because the user can clear filters and resume.  */}
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              perPage={perPage}
+              onChange={handlePageChange}
+            />
           </motion.div>
         )}
 

@@ -198,6 +198,46 @@ export async function searchHotels(query: string, limit: number = 10): Promise<a
   return data.results;
 }
 
+/** Paginated /api/hotels/search response. Used by the search results page;
+ * typeahead suggesters (DestinationSearch) keep using `searchHotels` above
+ * which only needs the first N. */
+export type PaginatedSearchResponse<T = unknown> = {
+  count: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+  hotels: T[];
+  /** Alias of `hotels` — older backend versions emit only this. */
+  results: T[];
+};
+
+export async function searchHotelsPaginated<T = unknown>(
+  query: string,
+  page: number = 1,
+  perPage: number = 20,
+): Promise<PaginatedSearchResponse<T>> {
+  const params = new URLSearchParams({
+    q: query,
+    page: String(page),
+    per_page: String(perPage),
+  });
+  const res = await fetch(`${API_BASE}/api/hotels/search?${params}`);
+  if (!res.ok) throw new Error('Failed to search hotels');
+  const data = await res.json();
+  // Defensive defaults — earlier deployments returned only `results` & `count`.
+  const hotels: T[] = (data.hotels ?? data.results ?? []) as T[];
+  return {
+    count: typeof data.count === 'number' ? data.count : hotels.length,
+    page: typeof data.page === 'number' ? data.page : page,
+    per_page: typeof data.per_page === 'number' ? data.per_page : perPage,
+    total_pages: typeof data.total_pages === 'number'
+      ? data.total_pages
+      : Math.max(1, Math.ceil((data.count ?? hotels.length) / perPage)),
+    hotels,
+    results: hotels,
+  };
+}
+
 export type SearchHotelHit = {
   hotel_id: number;
   hotel_name: string;
@@ -866,7 +906,9 @@ export async function fetchHotelRates(
 // in `unmatched_ids` so the UI can filter them out.
 
 export type BatchRate = {
-  from_price: number;
+  from_price: number | null;
+  /** ISO currency code returned by the backend (post P0-rates-keying). */
+  currency?: string | null;
   mrp: { agoda_rate: number; currency: string } | null;
   savings_pct: number | null;
 };
@@ -885,12 +927,21 @@ export async function fetchBatchRates(
   checkin: string,
   checkout: string,
   adults: number = 2,
-  children: number = 0
+  children: number = 0,
+  rooms: number = 1,
 ): Promise<BatchRatesResponse> {
   const res = await fetch(`${API_BASE}/api/hotels/rates/batch`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ hotel_master_ids: hotelMasterIds, checkin, checkout, adults, children }),
+    body: JSON.stringify({
+      hotel_master_ids: hotelMasterIds,
+      checkin,
+      checkout,
+      adults,
+      children,
+      rooms,
+    }),
+    // P0 RULE: rates are NEVER cached — see KNOWLEDGE.md / feedback_never_cache_prices.md.
     cache: "no-store",
   });
   if (!res.ok) throw new Error(`Batch rates failed: ${res.status}`);

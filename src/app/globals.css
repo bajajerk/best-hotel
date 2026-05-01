@@ -506,6 +506,21 @@ main {
   100% { background-position: 200% 0; }
 }
 
+/* Search results: per-card "calculating live rates…" spinner. Used by
+   the search page while the batch-rates POST is in flight. */
+@keyframes voyagr-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Search results pagination — desktop shows pill row, mobile collapses
+   to Prev / N of M / Next. The mobile breakpoint matches the rest of the
+   search page (640px). */
+@media (max-width: 640px) {
+  .search-pagination-desktop { display: none !important; }
+  .search-pagination-mobile  { display: inline-flex !important; }
+}
+
 .animate-blink {
   animation: blink 1s infinite;
 }
