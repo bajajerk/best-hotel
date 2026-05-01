@@ -523,8 +523,11 @@ export default function SearchPage() {
                     }}
                   />
                 </div>
-                {/* Dates + Guests (inline composable) */}
-                <DateBar variant="light" inline ref={dateBarRef} />
+                {/* Dates + Guests (inline composable). The page is wrapped in
+                    `.luxe` (dark theme), so DateBar must render its calendar
+                    panel + cells with the dark variant — otherwise the picker
+                    pops a light panel on a dark page. */}
+                <DateBar variant="dark" inline ref={dateBarRef} />
               </div>
               {/* Search submit */}
               <button
