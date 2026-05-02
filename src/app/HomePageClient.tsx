@@ -796,7 +796,7 @@ export default function Home({
         </div>
       </motion.section>
 
-      {/* ── The Voyagr Club Difference — 6-up grid ───────────────────────── */}
+      {/* ── The Voyagr Club Difference — 5-up grid ───────────────────────── */}
       <motion.section
         initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -811,49 +811,55 @@ export default function Home({
             </div>
             <h2
               className="luxe-display"
-              style={{ fontSize: "clamp(22px, 2.6vw, 36px)", marginBottom: 0 }}
+              style={{ fontSize: "clamp(22px, 2.6vw, 36px)", marginBottom: 10 }}
             >
               Why members <em>stay</em> with us
             </h2>
+            <p
+              style={{
+                fontSize: 14,
+                color: "var(--luxe-soft-white-70)",
+                lineHeight: 1.6,
+                margin: 0,
+              }}
+            >
+              Five small things that quietly add up to a different way of travelling.
+            </p>
           </div>
 
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gridTemplateColumns: "repeat(5, 1fr)",
               gap: 16,
             }}
+            className="why-members-grid"
           >
             {[
               {
                 num: "01",
-                title: "Preferred Access to Top Hotels",
-                desc: "Elevated access to a curated collection of the world's finest hotels with exclusive member privileges.",
+                title: "Preferred Access",
+                desc: "Curated luxury hotels with member-only privileges.",
               },
               {
                 num: "02",
-                title: "A Real Human Concierge",
-                desc: "Every booking handled by a real concierge on WhatsApp, available 24/7.",
+                title: "Human Concierge",
+                desc: "Real concierge on WhatsApp, 24/7.",
               },
               {
                 num: "03",
-                title: "Handpicked Perks on Every Stay",
-                desc: "Room upgrades, spa credits, welcome drinks, early check-in, breakfast, lounge access, and more.",
+                title: "Handpicked Perks",
+                desc: "Upgrades, spa credits, breakfast, late checkout — on every stay.",
               },
               {
                 num: "04",
-                title: "Verified Luxury Properties",
-                desc: "Only properties we've vetted ourselves for service, cleanliness, and guest satisfaction.",
+                title: "Verified Properties",
+                desc: "Personally vetted for service, cleanliness, and guest experience.",
               },
               {
                 num: "05",
-                title: "Flexible Support, Always",
-                desc: "24/7 concierge team for modifications, special requests, and anything that comes up.",
-              },
-              {
-                num: "06",
-                title: "Free Membership, No Lock-In",
-                desc: "No annual fees, no points programs that expire. Same privileged access from day one.",
+                title: "Flexible Support",
+                desc: "Changes, special requests, anything — handled.",
               },
             ].map((d) => (
               <div key={d.num} className="luxe-card">

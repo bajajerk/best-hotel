@@ -1021,6 +1021,11 @@ main {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 
+  /* ── Home: Why members grid — 2 columns on tablet ── */
+  .why-members-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
   /* ── Home: Section padding — moderate ── */
   .section-featured,
   .section-popular,
@@ -1171,6 +1176,11 @@ main {
   .why-grid {
     grid-template-columns: 1fr !important;
     gap: 32px !important;
+  }
+
+  /* 8b. Why members grid — 1 column on mobile */
+  .why-members-grid {
+    grid-template-columns: 1fr !important;
   }
 
   /* 9a. Continent pills — horizontal scroll on mobile */
