@@ -12,12 +12,21 @@
      • Playfair Display italic for month names
      • JetBrains Mono caps for day-of-week + eyebrow + presets
      • Manrope for date numbers and body
-     • Two months side-by-side ≥768px; one month on mobile
+     • Two months side-by-side ≥640px; vertical scroll-stack on mobile
      • Past dates dimmed and disabled
      • Today gets a subtle champagne dot
      • Range hover preview while choosing check-out
      • Quick presets (this weekend, next weekend, 1w, 2w)
-     • Footer shows nights count + "Done" gold pill
+     • Footer shows nights count + "Confirm" gold pill
+
+   Mobile (≤640px) uses a true iOS-style bottom sheet:
+     • Slide-up from bottom, ~92vh, 28px top corners, drag handle
+     • Sticky header (title + live subtitle + × close)
+     • Sticky weekday bar
+     • Vertical scroll-stack of months, ~18 months out
+     • 44×44 minimum tap targets (clamp(44px, 13vw, 56px))
+     • Sticky bottom action bar with nights summary + Confirm pill
+     • Backdrop fade + slide-down close, body scroll lock, Esc parity
 
    API is dead-simple and headless: the parent owns the dates and passes
    them in, so context-bound consumers (DateBar → useBooking()) keep working.
@@ -41,6 +50,7 @@ import {
   useEffect,
   useMemo,
   useCallback,
+  useLayoutEffect,
   CSSProperties,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -150,6 +160,13 @@ function formatLong(iso: string | null): string {
   });
 }
 
+function formatShort(iso: string | null): string {
+  if (!iso) return "";
+  return fromIso(iso).toLocaleDateString("en-US", {
+    month: "short", day: "numeric",
+  });
+}
+
 /* ────────────────────────────────────────────────────────────────────────── */
 /* Month grid                                                                  */
 /* ────────────────────────────────────────────────────────────────────────── */
@@ -229,10 +246,16 @@ function buildMonth(
 /* Component                                                                   */
 /* ────────────────────────────────────────────────────────────────────────── */
 
-const PANEL_VARIANTS = {
+const DESKTOP_PANEL_VARIANTS = {
   hidden: { opacity: 0, scale: 0.96, y: -4 },
   visible: { opacity: 1, scale: 1, y: 0 },
   exit: { opacity: 0, scale: 0.97, y: -2 },
+};
+
+const MOBILE_SHEET_VARIANTS = {
+  hidden: { y: "100%" },
+  visible: { y: 0 },
+  exit: { y: "100%" },
 };
 
 export default function LuxeDatePicker(props: LuxeDatePickerProps) {
@@ -288,9 +311,11 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
 
   const panelRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const sheetScrollRef = useRef<HTMLDivElement | null>(null);
+  const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // Track whether we're rendering into a phone-sized viewport so we can
-  // switch to a fullscreen-sheet layout instead of the desktop popover.
+  // switch to a bottom-sheet layout instead of the desktop popover.
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -328,9 +353,33 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // Outside click + Esc.
+  // Body-scroll lock + Esc key while sheet/popover is open.
   useEffect(() => {
     if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    const prevTouch = document.body.style.touchAction;
+    if (isMobile) {
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        closePanel();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.touchAction = prevTouch;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, isMobile, closePanel]);
+
+  // Outside click — desktop only. On mobile the backdrop has its own onClick
+  // and the sheet is full-bleed, so there's no "outside" mouse target.
+  useEffect(() => {
+    if (!open || isMobile) return;
     function onDocMouseDown(e: MouseEvent) {
       const t = e.target as Node;
       if (panelRef.current && panelRef.current.contains(t)) return;
@@ -339,19 +388,11 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
       if (anchor && anchor.contains(t)) return;
       closePanel();
     }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        closePanel();
-      }
-    }
     document.addEventListener("mousedown", onDocMouseDown);
-    document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("mousedown", onDocMouseDown);
-      document.removeEventListener("keydown", onKey);
     };
-  }, [open, anchorRef, closePanel]);
+  }, [open, isMobile, anchorRef, closePanel]);
 
   /* ─── month-grid memos ─── */
   const today = useMemo(() => todayIso(), []);
@@ -389,6 +430,27 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
     return lastShown < maxMonth;
   }, [baseDate, maxIso, showTwoMonths]);
 
+  /* ─── mobile vertical-scroll month list ─── */
+  // Build the full list of months from `today` up to maxIso so users can
+  // scroll through 18 months in one continuous list — feels native, no nav.
+  const mobileMonths = useMemo(() => {
+    if (!isMobile) return [];
+    const start = new Date();
+    start.setDate(1);
+    const end = fromIso(maxIso);
+    const out: { year: number; month: number; key: string }[] = [];
+    const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+    while (cur <= end) {
+      out.push({
+        year: cur.getFullYear(),
+        month: cur.getMonth(),
+        key: `${cur.getFullYear()}-${cur.getMonth()}`,
+      });
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    return out;
+  }, [isMobile, maxIso]);
+
   /* ─── handlers ─── */
   const handleDayClick = useCallback(
     (iso: string) => {
@@ -413,12 +475,14 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
         } else {
           onChange({ checkIn, checkOut: iso });
           setSelecting("checkIn");
-          // Auto-close on completed range — that's the standard delight pattern.
-          closePanel();
+          // Desktop: auto-close on completed range.
+          // Mobile: keep sheet open so the user can hit Confirm — gives a
+          // clear "I'm done" moment and is consistent with iOS patterns.
+          if (!isMobile) closePanel();
         }
       }
     },
-    [mode, selecting, checkIn, checkOut, onChange, closePanel],
+    [mode, selecting, checkIn, checkOut, onChange, closePanel, isMobile],
   );
 
   const goPrev = useCallback(() => {
@@ -447,7 +511,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
 
   const onGridKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!focusIso) return;
+      if (!focusIso || isMobile) return;
       let next: string | null = null;
       if (e.key === "ArrowLeft") next = addDays(focusIso, -1);
       else if (e.key === "ArrowRight") next = addDays(focusIso, 1);
@@ -478,7 +542,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
         }
       }
     },
-    [focusIso, minIso, maxIso, handleDayClick, baseDate, showTwoMonths],
+    [focusIso, isMobile, minIso, maxIso, handleDayClick, baseDate, showTwoMonths],
   );
 
   /* ─── presets ─── */
@@ -507,8 +571,19 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
       setSelecting("checkIn");
       const d = fromIso(p.checkIn);
       setBaseDate(new Date(d.getFullYear(), d.getMonth(), 1));
+      // On mobile: scroll the picked month into view in the long stack.
+      if (isMobile) {
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        // Defer to next frame so DOM has settled.
+        requestAnimationFrame(() => {
+          const el = monthRefs.current.get(key);
+          if (el && sheetScrollRef.current) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+      }
     },
-    [onChange],
+    [onChange, isMobile],
   );
 
   /* ─── nights count ─── */
@@ -523,211 +598,287 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
+  /* ─── auto-scroll the relevant month into view on mobile ─── */
+  // When the sheet opens, jump to the month containing checkIn (or today).
+  // When the user has just picked check-in and is now picking check-out,
+  // smooth-scroll to the check-in month so they can continue from context.
+  useLayoutEffect(() => {
+    if (!isMobile || !open) return;
+    const anchorIso =
+      (mode === "range" && selecting === "checkOut" && checkIn) ||
+      checkIn ||
+      today;
+    if (!anchorIso) return;
+    const d = fromIso(anchorIso);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    // Two passes: first an instant jump on open, then any subsequent updates
+    // scroll smoothly. We don't have a "just-opened" flag, so always smooth.
+    requestAnimationFrame(() => {
+      const el = monthRefs.current.get(key);
+      const scroller = sheetScrollRef.current;
+      if (!el || !scroller) return;
+      // Use scrollTop math (not scrollIntoView) so we don't pull the parent
+      // page along — the scroller is the months list inside the sheet.
+      const top = el.offsetTop - 4;
+      scroller.scrollTo({ top, behavior: prefersReducedMotion ? "auto" : "smooth" });
+    });
+  }, [open, isMobile, selecting, checkIn, today, mode, prefersReducedMotion]);
+
   /* ────────────────────────────────────────────────────────────────────── */
   /* Render — month                                                          */
   /* ────────────────────────────────────────────────────────────────────── */
 
-  const renderMonth = (year: number, month: number, weeks: DayCell[][]) => (
-    <div style={{ flex: 1, minWidth: isMobile ? 0 : 240, width: isMobile ? "100%" : undefined }}>
-      {/* Month name — Playfair italic with champagne underline */}
+  const renderMonth = (
+    year: number,
+    month: number,
+    weeks: DayCell[][],
+    opts: { mobile?: boolean; showWeekdays?: boolean } = {},
+  ) => {
+    const { mobile = false, showWeekdays = true } = opts;
+    const cellHeight = mobile ? "clamp(44px, 13vw, 56px)" : 42;
+    const pillSize = mobile ? "clamp(40px, 12vw, 50px)" : 38;
+    const numberFontSize = mobile ? 16 : 14;
+
+    return (
       <div
         style={{
-          textAlign: "center",
-          fontFamily: "var(--font-display, serif)",
-          fontStyle: "italic",
-          fontSize: 22,
-          fontWeight: 500,
-          letterSpacing: "0.005em",
-          color: variant === "dark" ? "var(--luxe-soft-white)" : "var(--ink)",
-          marginBottom: 14,
-          paddingBottom: 10,
-          position: "relative",
+          flex: 1,
+          minWidth: mobile ? 0 : 240,
+          width: mobile ? "100%" : undefined,
+          marginBottom: mobile ? 4 : 0,
         }}
       >
-        {MONTH_NAMES[month]}{" "}
-        <span style={{ fontStyle: "normal", color: "var(--luxe-champagne, var(--luxe-champagne))", fontWeight: 400 }}>
-          {year}
-        </span>
-        <span
-          aria-hidden
+        {/* Month name — Playfair italic with champagne underline */}
+        <div
           style={{
-            position: "absolute",
-            left: "50%",
-            bottom: 0,
-            width: 28,
-            height: 1,
-            transform: "translateX(-50%)",
-            background: "linear-gradient(90deg, transparent, var(--luxe-champagne, var(--luxe-champagne)), transparent)",
+            textAlign: "center",
+            fontFamily: "var(--font-display, serif)",
+            fontStyle: "italic",
+            fontSize: mobile ? 24 : 22,
+            fontWeight: 500,
+            letterSpacing: "0.005em",
+            color: variant === "dark" ? "var(--luxe-soft-white)" : "var(--ink)",
+            marginBottom: 14,
+            paddingBottom: 10,
+            position: "relative",
           }}
-        />
-      </div>
-
-      {/* Weekday header — JetBrains Mono caps */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", marginBottom: 6 }}>
-        {WEEKDAYS.map((wd) => (
-          <div
-            key={wd}
+        >
+          {MONTH_NAMES[month]}{" "}
+          <span style={{ fontStyle: "normal", color: "var(--luxe-champagne, var(--luxe-champagne))", fontWeight: 400 }}>
+            {year}
+          </span>
+          <span
+            aria-hidden
             style={{
-              textAlign: "center",
-              fontFamily: "var(--font-mono, monospace)",
-              fontSize: 10,
-              fontWeight: 500,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: variant === "dark" ? "var(--luxe-soft-white-50)" : "var(--ink-light)",
-              padding: "6px 0",
+              position: "absolute",
+              left: "50%",
+              bottom: 0,
+              width: 28,
+              height: 1,
+              transform: "translateX(-50%)",
+              background: "linear-gradient(90deg, transparent, var(--luxe-champagne, var(--luxe-champagne)), transparent)",
             }}
-          >
-            {wd}
+          />
+        </div>
+
+        {/* Weekday header — JetBrains Mono caps. On mobile this is rendered
+            once at the sheet level (sticky), so suppress it per-month. */}
+        {showWeekdays && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", marginBottom: 6 }}>
+            {WEEKDAYS.map((wd) => (
+              <div
+                key={wd}
+                style={{
+                  textAlign: "center",
+                  fontFamily: "var(--font-mono, monospace)",
+                  fontSize: 10,
+                  fontWeight: 500,
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: variant === "dark" ? "var(--luxe-soft-white-50)" : "var(--ink-light)",
+                  padding: "6px 0",
+                }}
+              >
+                {wd}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* Day cells */}
-      <div role="grid">
-        {weeks.map((week, wi) => (
-          <div
-            key={wi}
-            role="row"
-            style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}
-          >
-            {week.map((cell, ci) => {
-              if (!cell.iso) return <div key={ci} style={{ height: 42 }} />;
+        {/* Day cells */}
+        <div role="grid">
+          {weeks.map((week, wi) => (
+            <div
+              key={wi}
+              role="row"
+              style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}
+            >
+              {week.map((cell, ci) => {
+                if (!cell.iso) return <div key={ci} style={{ height: cellHeight }} />;
 
-              const disabled = cell.isPast || cell.isFuture;
-              const isCheckIn = checkIn === cell.iso;
-              const isCheckOut = checkOut === cell.iso;
-              const isSelected = isCheckIn || isCheckOut;
-              const previewEnd =
-                mode === "range" && selecting === "checkOut" && hoverIso && checkIn && hoverIso > checkIn
-                  ? hoverIso
-                  : checkOut;
-              const inRange =
-                mode === "range" &&
-                checkIn &&
-                previewEnd &&
-                cell.iso > checkIn &&
-                cell.iso < previewEnd;
-              const isFocused = focusIso === cell.iso;
+                const disabled = cell.isPast || cell.isFuture;
+                const isCheckIn = checkIn === cell.iso;
+                const isCheckOut = checkOut === cell.iso;
+                const isSelected = isCheckIn || isCheckOut;
+                const previewEnd =
+                  mode === "range" && selecting === "checkOut" && hoverIso && checkIn && hoverIso > checkIn
+                    ? hoverIso
+                    : checkOut;
+                const inRange =
+                  mode === "range" &&
+                  checkIn &&
+                  previewEnd &&
+                  cell.iso > checkIn &&
+                  cell.iso < previewEnd;
+                const isFocused = focusIso === cell.iso && !mobile;
 
-              // Range fill stretches edge-to-edge of the row cell. Force it to
-              // sit BEHIND the day-number pill (z-index: 0) so the number is
-              // always legible — even on selected check-in/check-out, where the
-              // champagne pill paints atop a tinted row.
-              const cellStyle: CSSProperties = {
-                position: "relative",
-                height: 42,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: disabled ? "default" : "pointer",
-                background: inRange
-                  ? variant === "dark"
+                // Range fill stretches edge-to-edge of the row cell. Force it to
+                // sit BEHIND the day-number pill (z-index: 0) so the number is
+                // always legible — even on selected check-in/check-out, where the
+                // champagne pill paints atop a tinted row.
+                const cellStyle: CSSProperties = {
+                  position: "relative",
+                  height: cellHeight,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: disabled ? "default" : "pointer",
+                  background: inRange
                     ? "rgba(200, 170, 118, 0.18)"
-                    : "rgba(200, 170, 118, 0.18)"
-                  : "transparent",
-                // Square the range edges so the connecting tint reads as a single bar.
-                borderRadius: isCheckIn
-                  ? mode === "range"
+                    : "transparent",
+                  // Square the range edges so the connecting tint reads as a single bar.
+                  borderRadius: isCheckIn && mode === "range" && checkOut
                     ? "999px 0 0 999px"
-                    : "999px"
-                  : isCheckOut
-                    ? "0 999px 999px 0"
-                    : 0,
-                zIndex: 0,
-              };
+                    : isCheckOut
+                      ? "0 999px 999px 0"
+                      : isCheckIn && mode === "range" && !checkOut
+                        ? "999px"
+                        : 0,
+                  zIndex: 0,
+                  // Mobile: make the entire cell the tap target (44+ px).
+                  WebkitTapHighlightColor: "transparent",
+                };
 
-              const pillStyle: CSSProperties = {
-                width: 38,
-                height: 38,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 999,
-                background: isSelected
-                  ? "var(--luxe-champagne, var(--luxe-champagne))"
-                  : "transparent",
-                // Selected: charcoal text on champagne fill (button-grade contrast).
-                // In-range: keep numbers in the soft-white / ink tone — readable on
-                // the 0.18 champagne tint without losing range continuity.
-                color: disabled
-                  ? variant === "dark"
-                    ? "var(--luxe-soft-white-30, rgba(247,245,242,0.3))"
-                    : "rgba(0,0,0,0.25)"
-                  : isSelected
-                    ? "var(--luxe-black, var(--luxe-black))"
-                    : variant === "dark"
-                      ? "var(--luxe-soft-white)"
-                      : "var(--ink)",
-                fontFamily: "var(--font-body, sans-serif)",
-                fontSize: 14,
-                fontWeight: isSelected ? 600 : cell.isToday ? 600 : 400,
-                outline: isFocused
-                  ? `1px solid ${isSelected ? "rgba(12,11,10,0.6)" : "var(--luxe-champagne, var(--luxe-champagne))"}`
-                  : "none",
-                outlineOffset: isFocused ? 2 : 0,
-                transition: prefersReducedMotion
-                  ? "none"
-                  : "background 120ms ease, color 120ms ease, transform 120ms ease",
-                position: "relative",
-                // Day number always sits above the range fill.
-                zIndex: 1,
-              };
+                const pillStyle: CSSProperties = {
+                  width: pillSize,
+                  height: pillSize,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 999,
+                  background: isSelected
+                    ? "var(--luxe-champagne, var(--luxe-champagne))"
+                    : "transparent",
+                  // Selected: charcoal text on champagne fill (button-grade contrast).
+                  // In-range: keep numbers in the soft-white / ink tone — readable on
+                  // the 0.18 champagne tint without losing range continuity.
+                  color: disabled
+                    ? variant === "dark"
+                      ? "var(--luxe-soft-white-30, rgba(247,245,242,0.3))"
+                      : "rgba(0,0,0,0.25)"
+                    : isSelected
+                      ? "var(--luxe-black, var(--luxe-black))"
+                      : variant === "dark"
+                        ? "var(--luxe-soft-white)"
+                        : "var(--ink)",
+                  fontFamily: "var(--font-body, sans-serif)",
+                  fontSize: numberFontSize,
+                  fontWeight: isSelected ? 600 : cell.isToday ? 600 : 400,
+                  outline: isFocused
+                    ? `1px solid ${isSelected ? "rgba(12,11,10,0.6)" : "var(--luxe-champagne, var(--luxe-champagne))"}`
+                    : "none",
+                  outlineOffset: isFocused ? 2 : 0,
+                  transition: prefersReducedMotion
+                    ? "none"
+                    : "background 80ms ease-out, color 120ms ease, transform 80ms ease-out",
+                  position: "relative",
+                  // Day number always sits above the range fill.
+                  zIndex: 1,
+                  // Apple-style press feedback.
+                  willChange: "transform",
+                };
 
-              return (
-                <div
-                  key={ci}
-                  role="gridcell"
-                  aria-selected={isSelected}
-                  aria-disabled={disabled}
-                  onClick={() => !disabled && handleDayClick(cell.iso)}
-                  onMouseEnter={() => !disabled && setHoverIso(cell.iso)}
-                  onMouseLeave={() => setHoverIso(null)}
-                  onFocus={() => setFocusIso(cell.iso)}
-                  tabIndex={disabled ? -1 : isFocused ? 0 : -1}
-                  style={cellStyle}
-                >
+                return (
                   <div
-                    style={pillStyle}
-                    onMouseEnter={(e) => {
-                      if (disabled || isSelected) return;
-                      (e.currentTarget as HTMLDivElement).style.background =
-                        "rgba(200, 170, 118, 0.28)";
+                    key={ci}
+                    role="gridcell"
+                    aria-selected={isSelected}
+                    aria-disabled={disabled}
+                    aria-label={cell.iso}
+                    onClick={() => !disabled && handleDayClick(cell.iso)}
+                    onMouseEnter={() => !disabled && !mobile && setHoverIso(cell.iso)}
+                    onMouseLeave={() => !mobile && setHoverIso(null)}
+                    onFocus={() => !mobile && setFocusIso(cell.iso)}
+                    onTouchStart={(e) => {
+                      if (disabled) return;
+                      const pill = (e.currentTarget.firstElementChild as HTMLDivElement | null);
+                      if (pill && !prefersReducedMotion) {
+                        pill.style.transform = "scale(0.92)";
+                        if (!isSelected) {
+                          pill.style.background = "rgba(200, 170, 118, 0.30)";
+                        }
+                      }
                     }}
-                    onMouseLeave={(e) => {
-                      if (disabled || isSelected) return;
-                      (e.currentTarget as HTMLDivElement).style.background = "transparent";
+                    onTouchEnd={(e) => {
+                      if (disabled) return;
+                      const pill = (e.currentTarget.firstElementChild as HTMLDivElement | null);
+                      if (pill && !prefersReducedMotion) {
+                        pill.style.transform = "";
+                        if (!isSelected) pill.style.background = "transparent";
+                      }
                     }}
+                    onTouchCancel={(e) => {
+                      const pill = (e.currentTarget.firstElementChild as HTMLDivElement | null);
+                      if (pill) {
+                        pill.style.transform = "";
+                        if (!isSelected) pill.style.background = "transparent";
+                      }
+                    }}
+                    tabIndex={disabled || mobile ? -1 : isFocused ? 0 : -1}
+                    style={cellStyle}
                   >
-                    {cell.day}
-                    {/* Today dot — only when not selected (selection state already implies focus). */}
-                    {cell.isToday && !isSelected && (
-                      <span
-                        aria-hidden
-                        style={{
-                          position: "absolute",
-                          bottom: 5,
-                          left: "50%",
-                          transform: "translateX(-50%)",
-                          width: 4,
-                          height: 4,
-                          borderRadius: "50%",
-                          background: "var(--luxe-champagne, var(--luxe-champagne))",
-                        }}
-                      />
-                    )}
+                    <div
+                      style={pillStyle}
+                      onMouseEnter={(e) => {
+                        if (disabled || isSelected || mobile) return;
+                        (e.currentTarget as HTMLDivElement).style.background =
+                          "rgba(200, 170, 118, 0.28)";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (disabled || isSelected || mobile) return;
+                        (e.currentTarget as HTMLDivElement).style.background = "transparent";
+                      }}
+                    >
+                      {cell.day}
+                      {/* Today dot — only when not selected (selection state already implies focus). */}
+                      {cell.isToday && !isSelected && (
+                        <span
+                          aria-hidden
+                          style={{
+                            position: "absolute",
+                            bottom: mobile ? 7 : 5,
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            width: 4,
+                            height: 4,
+                            borderRadius: "50%",
+                            background: "var(--luxe-champagne, var(--luxe-champagne))",
+                          }}
+                        />
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   /* ────────────────────────────────────────────────────────────────────── */
-  /* Render — popover panel                                                  */
+  /* Render — popover panel (DESKTOP)                                        */
   /* ────────────────────────────────────────────────────────────────────── */
 
   const eyebrow = mode === "single"
@@ -744,7 +895,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
     : "rgba(200, 170, 118, 0.4)";
   const panelText = variant === "dark" ? "var(--luxe-soft-white)" : "var(--ink)";
 
-  const panel = (
+  const desktopPanel = (
     <motion.div
       ref={panelRef}
       role="dialog"
@@ -754,28 +905,21 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
       initial={prefersReducedMotion ? false : "hidden"}
       animate="visible"
       exit="exit"
-      variants={PANEL_VARIANTS}
+      variants={DESKTOP_PANEL_VARIANTS}
       transition={{ duration: prefersReducedMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
       style={{
         background: panelBg,
         backdropFilter: "blur(24px) saturate(140%)",
         WebkitBackdropFilter: "blur(24px) saturate(140%)",
-        border: isMobile ? "none" : `1px solid ${panelBorder}`,
-        borderRadius: isMobile ? 0 : 18,
-        boxShadow: isMobile
-          ? "none"
-          : variant === "dark"
-            ? "0 24px 64px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.35)"
-            : "0 24px 64px rgba(20,18,15,0.18), 0 4px 12px rgba(20,18,15,0.08)",
-        padding: isMobile ? "18px 16px calc(20px + env(safe-area-inset-bottom, 0))" : 22,
+        border: `1px solid ${panelBorder}`,
+        borderRadius: 18,
+        boxShadow: variant === "dark"
+          ? "0 24px 64px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.35)"
+          : "0 24px 64px rgba(20,18,15,0.18), 0 4px 12px rgba(20,18,15,0.08)",
+        padding: 22,
         color: panelText,
-        width: isMobile ? "100vw" : "min(720px, calc(100vw - 24px))",
+        width: "min(720px, calc(100vw - 24px))",
         maxWidth: "100vw",
-        height: isMobile ? "100vh" : undefined,
-        maxHeight: isMobile ? "100vh" : undefined,
-        overflowY: isMobile ? "auto" : undefined,
-        display: isMobile ? "flex" : undefined,
-        flexDirection: isMobile ? "column" : undefined,
       }}
     >
       {/* Eyebrow + nav */}
@@ -827,10 +971,9 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
         transition={{ duration: prefersReducedMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
         style={{
           display: "flex",
-          gap: isMobile ? 0 : 28,
+          gap: 28,
           flexWrap: "wrap",
           justifyContent: "center",
-          flex: isMobile ? 1 : undefined,
           minHeight: 0,
         }}
       >
@@ -928,6 +1071,348 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
   );
 
   /* ────────────────────────────────────────────────────────────────────── */
+  /* Render — bottom sheet (MOBILE)                                          */
+  /* ────────────────────────────────────────────────────────────────────── */
+
+  // Live header subtitle: communicates state without making the user hunt
+  // for it in the footer. Updates the moment a date is tapped.
+  const mobileSubtitle = (() => {
+    if (mode === "single") {
+      return checkIn ? formatLong(checkIn) : "Choose a date";
+    }
+    if (checkIn && checkOut) {
+      return `${formatShort(checkIn)} → ${formatShort(checkOut)} · ${nights} night${nights !== 1 ? "s" : ""}`;
+    }
+    if (checkIn) {
+      return `From ${formatShort(checkIn)} · pick check-out`;
+    }
+    return "Choose check-in";
+  })();
+
+  const sheetTitle = mode === "single" ? "Select date" : "Select dates";
+  const canConfirm = mode === "single" ? !!checkIn : !!(checkIn && checkOut);
+
+  // Sheet surface always renders dark on mobile to feel premium and stand
+  // apart from the page chrome. We still respect `variant` for token mapping
+  // back to the desktop sub-renderer (e.g. weekday text color), but the sheet
+  // itself uses charcoal + champagne always.
+  const sheetSurface = "rgba(20, 18, 15, 0.98)";
+  const sheetText = "var(--luxe-soft-white)";
+  const sheetSubText = "var(--luxe-soft-white-70)";
+  const sheetMutedText = "var(--luxe-soft-white-50)";
+  const sheetHairline = "rgba(255, 255, 255, 0.07)";
+
+  const mobileSheet = (
+    <motion.div
+      ref={panelRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={mode === "single" ? "Select date" : "Select check-in and check-out dates"}
+      initial={prefersReducedMotion ? false : "hidden"}
+      animate="visible"
+      exit="exit"
+      variants={MOBILE_SHEET_VARIANTS}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
+      style={{
+        position: "fixed",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: "92vh",
+        background: sheetSurface,
+        backdropFilter: "blur(24px) saturate(140%)",
+        WebkitBackdropFilter: "blur(24px) saturate(140%)",
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        boxShadow: "0 -12px 48px rgba(0,0,0,0.55)",
+        color: sheetText,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        // Top hairline kiss of champagne to set a luxe edge against backdrop.
+        borderTop: "1px solid var(--luxe-champagne-line, rgba(200,170,118,0.28))",
+      }}
+    >
+      {/* Drag handle */}
+      <div
+        aria-hidden
+        style={{
+          position: "relative",
+          height: 18,
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          paddingTop: 8,
+        }}
+      >
+        <span
+          style={{
+            width: 44,
+            height: 4,
+            borderRadius: 999,
+            background: "rgba(255,255,255,0.18)",
+          }}
+        />
+      </div>
+
+      {/* Sticky header */}
+      <div
+        style={{
+          flexShrink: 0,
+          padding: "6px 20px 14px",
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: 12,
+          borderBottom: `1px solid ${sheetHairline}`,
+          background: sheetSurface,
+        }}
+      >
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div
+            style={{
+              fontFamily: "var(--font-display, serif)",
+              fontStyle: "italic",
+              fontSize: 22,
+              fontWeight: 500,
+              letterSpacing: "0.005em",
+              color: sheetText,
+              lineHeight: 1.1,
+            }}
+          >
+            {sheetTitle}
+          </div>
+          <div
+            style={{
+              fontFamily: "var(--font-body, sans-serif)",
+              fontSize: 13,
+              color: checkIn ? sheetSubText : "var(--luxe-champagne)",
+              letterSpacing: "0.01em",
+              marginTop: 4,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {mobileSubtitle}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={closePanel}
+          aria-label="Close"
+          style={{
+            width: 44,
+            height: 44,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "1px solid rgba(255,255,255,0.10)",
+            borderRadius: 999,
+            background: "transparent",
+            color: sheetText,
+            cursor: "pointer",
+            flexShrink: 0,
+            WebkitTapHighlightColor: "transparent",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+            <path d="M6 6 18 18M18 6 6 18" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Presets row — horizontal scroller (only in range mode) */}
+      {presets.length > 0 && (
+        <div
+          style={{
+            flexShrink: 0,
+            padding: "12px 16px 4px",
+            borderBottom: `1px solid ${sheetHairline}`,
+            background: sheetSurface,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              overflowX: "auto",
+              scrollSnapType: "x proximity",
+              paddingBottom: 8,
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "none",
+            }}
+          >
+            {presets.map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => applyPreset(p)}
+                style={{
+                  ...presetChipStyle(variant),
+                  scrollSnapAlign: "start",
+                  flexShrink: 0,
+                  padding: "8px 14px",
+                  fontSize: 11,
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sticky weekday bar */}
+      <div
+        style={{
+          flexShrink: 0,
+          display: "grid",
+          gridTemplateColumns: "repeat(7, 1fr)",
+          padding: "10px 16px",
+          borderBottom: `1px solid ${sheetHairline}`,
+          background: sheetSurface,
+        }}
+      >
+        {WEEKDAYS.map((wd) => (
+          <div
+            key={wd}
+            style={{
+              textAlign: "center",
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: sheetMutedText,
+            }}
+          >
+            {wd}
+          </div>
+        ))}
+      </div>
+
+      {/* Scrollable months stack */}
+      <div
+        ref={sheetScrollRef}
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          padding: "16px 16px 12px",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
+        }}
+      >
+        {mobileMonths.map((mm) => {
+          const weeks = buildMonth(mm.year, mm.month, minIso, maxIso, today);
+          return (
+            <div
+              key={mm.key}
+              ref={(el) => {
+                if (el) monthRefs.current.set(mm.key, el);
+                else monthRefs.current.delete(mm.key);
+              }}
+              style={{ marginBottom: 18 }}
+            >
+              {renderMonth(mm.year, mm.month, weeks, { mobile: true, showWeekdays: false })}
+            </div>
+          );
+        })}
+        <div style={{ height: 12 }} />
+      </div>
+
+      {/* Sticky bottom action bar */}
+      <div
+        style={{
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          padding: "14px 16px calc(14px + env(safe-area-inset-bottom, 0))",
+          borderTop: `1px solid ${sheetHairline}`,
+          background: sheetSurface,
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          {mode === "range" ? (
+            checkIn && checkOut ? (
+              <div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono, monospace)",
+                    fontSize: 11,
+                    letterSpacing: "0.22em",
+                    textTransform: "uppercase",
+                    fontWeight: 600,
+                    color: "var(--luxe-champagne)",
+                  }}
+                >
+                  {nights} night{nights !== 1 ? "s" : ""}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-body, sans-serif)",
+                    fontSize: 12,
+                    color: sheetSubText,
+                    marginTop: 2,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {formatShort(checkIn)} → {formatShort(checkOut)}
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  fontFamily: "var(--font-mono, monospace)",
+                  fontSize: 10,
+                  letterSpacing: "0.22em",
+                  textTransform: "uppercase",
+                  color: sheetMutedText,
+                  fontWeight: 500,
+                }}
+              >
+                {checkIn ? "Pick check-out" : "Pick check-in"}
+              </div>
+            )
+          ) : (
+            <div
+              style={{
+                fontFamily: "var(--font-body, sans-serif)",
+                fontSize: 13,
+                color: checkIn ? sheetSubText : sheetMutedText,
+              }}
+            >
+              {checkIn ? formatLong(checkIn) : "Pick a date"}
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={closePanel}
+          disabled={!canConfirm}
+          style={{
+            ...doneBtnStyle(),
+            padding: "13px 28px",
+            fontSize: 14,
+            opacity: canConfirm ? 1 : 0.5,
+            cursor: canConfirm ? "pointer" : "not-allowed",
+            minHeight: 48,
+            WebkitTapHighlightColor: "transparent",
+          }}
+        >
+          Confirm
+        </button>
+      </div>
+    </motion.div>
+  );
+
+  /* ────────────────────────────────────────────────────────────────────── */
   /* Render — wrapper                                                        */
   /* ────────────────────────────────────────────────────────────────────── */
 
@@ -972,48 +1457,70 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
 
       <AnimatePresence>
         {open && (
-          <div
-            // Anchored vs centered modal layout. When an anchor is provided we
-            // try to attach to its bottom-left; on small screens we fall back
-            // to a centered overlay so the picker is always reachable.
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 9999,
-              display: "flex",
-              alignItems: isMobile ? "stretch" : "center",
-              justifyContent: "center",
-              padding: isMobile ? 0 : 12,
-              pointerEvents: "none",
-            }}
-          >
-            {/* Backdrop — subtle, doesn't darken the page much (this is a tool, not a takeover) */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
-              onClick={closePanel}
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: variant === "dark" ? "rgba(0,0,0,0.32)" : "rgba(20,18,15,0.18)",
-                pointerEvents: "auto",
-              }}
-              aria-hidden
-            />
+          isMobile ? (
+            // Mobile: full-screen overlay with backdrop + slide-up sheet.
             <div
               style={{
-                position: "relative",
+                position: "fixed",
+                inset: 0,
+                zIndex: 9999,
                 pointerEvents: "auto",
-                maxWidth: "100%",
-                width: isMobile ? "100%" : undefined,
-                display: isMobile ? "flex" : undefined,
               }}
             >
-              {panel}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.22 }}
+                onClick={closePanel}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "rgba(0,0,0,0.55)",
+                }}
+                aria-hidden
+              />
+              {mobileSheet}
             </div>
-          </div>
+          ) : (
+            // Desktop: centered popover with light backdrop.
+            <div
+              style={{
+                position: "fixed",
+                inset: 0,
+                zIndex: 9999,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 12,
+                pointerEvents: "none",
+              }}
+            >
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
+                onClick={closePanel}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: variant === "dark" ? "rgba(0,0,0,0.32)" : "rgba(20,18,15,0.18)",
+                  pointerEvents: "auto",
+                }}
+                aria-hidden
+              />
+              <div
+                style={{
+                  position: "relative",
+                  pointerEvents: "auto",
+                  maxWidth: "100%",
+                }}
+              >
+                {desktopPanel}
+              </div>
+            </div>
+          )
         )}
       </AnimatePresence>
     </>
@@ -1059,6 +1566,7 @@ function presetChipStyle(variant: LuxeDatePickerVariant): CSSProperties {
     borderRadius: 999,
     cursor: "pointer",
     transition: "background 140ms ease, border-color 140ms ease",
+    whiteSpace: "nowrap",
   };
 }
 
