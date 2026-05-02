@@ -263,9 +263,9 @@ export default function Home({
               marginBottom: 28,
             }}
           >
-            Member access to hotel rates travel agents have always paid &mdash;
-            never on MakeMyTrip or Booking.com. A real human concierge on
-            WhatsApp, available 24/7.
+            Access exclusive member-only pricing at premium hotels worldwide.
+            Enjoy curated recommendations, upgrades, and a dedicated concierge
+            &mdash; all with a seamless booking experience.
           </p>
 
           {/* Search bar — glass capsule */}
