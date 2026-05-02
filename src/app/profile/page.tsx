@@ -187,7 +187,7 @@ export default function ProfilePage() {
     basic: { label: "Basic", color: "var(--ink-light)", bg: "var(--cream-deep)" },
     silver: { label: "Silver", color: "#6b7280", bg: "#f3f4f6" },
     gold: { label: "Gold", color: "var(--gold)", bg: "var(--gold-pale)" },
-    platinum: { label: "Platinum", color: "#1a1710", bg: "#e5e7eb" },
+    platinum: { label: "Platinum", color: "var(--ink)", bg: "#e5e7eb" },
   };
   const t = tierConfig[tier] || tierConfig.basic;
 
@@ -650,7 +650,7 @@ const s: Record<string, React.CSSProperties> = {
     padding: "11px 0",
     border: "none",
     background: "var(--gold)",
-    color: "#1a1710",
+    color: "var(--ink)",
     fontFamily: "var(--font-body)",
     fontSize: 14,
     fontWeight: 500,
@@ -726,7 +726,7 @@ const s: Record<string, React.CSSProperties> = {
     border: "none",
     borderRadius: 8,
     background: "var(--gold)",
-    color: "#1a1710",
+    color: "var(--ink)",
     fontFamily: "var(--font-body)",
     fontSize: 14,
     fontWeight: 500,

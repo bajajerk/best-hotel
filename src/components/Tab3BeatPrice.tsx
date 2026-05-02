@@ -408,7 +408,7 @@ export default function Tab3BeatPrice() {
           style={{
             padding: 16,
             background: "var(--gold)",
-            color: "#1a1710",
+            color: "var(--ink)",
             fontFamily: "var(--font-dm-sans)",
             fontSize: 14,
             fontWeight: 500,
@@ -773,7 +773,7 @@ export default function Tab3BeatPrice() {
           style={{
             padding: 16,
             background: "var(--gold)",
-            color: "#1a1710",
+            color: "var(--ink)",
             fontFamily: "var(--font-dm-sans)",
             fontSize: 14,
             fontWeight: 500,

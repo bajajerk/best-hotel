@@ -124,7 +124,7 @@ function Toast({ message, visible }: { message: string; visible: boolean }) {
             bottom: 32,
             left: "50%",
             transform: "translateX(-50%)",
-            background: "var(--error, #8b3a3a)",
+            background: "var(--error, var(--error))",
             color: "#fff",
             padding: "12px 24px",
             fontSize: "13px",
@@ -262,8 +262,8 @@ export default function BookingModal({
     fontSize: "14px",
     fontFamily: "var(--font-body)",
     color: "var(--ink)",
-    background: "var(--white, #fdfaf5)",
-    border: errors[field] ? "1.5px solid var(--error, #8b3a3a)" : "1px solid var(--cream-border, #e0d8c8)",
+    background: "var(--white, var(--white))",
+    border: errors[field] ? "1.5px solid var(--error, var(--error))" : "1px solid var(--cream-border, #e0d8c8)",
     outline: "none",
     transition: "border-color 0.2s",
     boxSizing: "border-box" as const,
@@ -321,7 +321,7 @@ export default function BookingModal({
                 zIndex: 10001,
                 display: "flex",
                 flexDirection: "column",
-                background: "var(--cream, #f5f0e8)",
+                background: "var(--cream, var(--cream))",
                 borderTopLeftRadius: 16,
                 borderTopRightRadius: 16,
                 overflow: "hidden",
@@ -332,7 +332,7 @@ export default function BookingModal({
                 style={{
                   flexShrink: 0,
                   borderBottom: "1px solid var(--cream-border, #e0d8c8)",
-                  background: "var(--white, #fdfaf5)",
+                  background: "var(--white, var(--white))",
                 }}
               >
                 <FlowProgressBar
@@ -383,7 +383,7 @@ export default function BookingModal({
                         fontSize: "22px",
                         fontWeight: 400,
                         fontStyle: "italic",
-                        color: "var(--cream, #f5f0e8)",
+                        color: "var(--cream, var(--cream))",
                         lineHeight: 1.2,
                         marginBottom: 8,
                         paddingRight: 40,
@@ -402,7 +402,7 @@ export default function BookingModal({
                         fontFamily: "var(--font-body)",
                       }}
                     >
-                      <span style={{ color: "var(--gold, #C9A84C)", fontWeight: 600 }}>
+                      <span style={{ color: "var(--gold, var(--gold))", fontWeight: 600 }}>
                         {roomName}
                       </span>
                       <span>
@@ -453,7 +453,7 @@ export default function BookingModal({
 
                       <div
                         style={{
-                          background: "var(--white, #fdfaf5)",
+                          background: "var(--white, var(--white))",
                           border: "1px solid var(--cream-border, #e0d8c8)",
                           padding: "16px 20px",
                         }}
@@ -477,13 +477,13 @@ export default function BookingModal({
                         {/* Saving row */}
                         {hasSaving && (
                           <div className="flex items-baseline justify-between" style={{ marginBottom: 8 }}>
-                            <span style={{ fontSize: "12px", color: "var(--success, #4a7c59)", fontWeight: 600 }}>
+                            <span style={{ fontSize: "12px", color: "var(--success, var(--success))", fontWeight: 600 }}>
                               You save
                             </span>
                             <span
                               style={{
                                 fontSize: "12px",
-                                color: "var(--success, #4a7c59)",
+                                color: "var(--success, var(--success))",
                                 fontWeight: 600,
                                 fontFamily: "var(--font-mono)",
                               }}
@@ -539,7 +539,7 @@ export default function BookingModal({
                         <div
                           style={{
                             background: "var(--gold-pale, rgba(201,168,76,0.08))",
-                            border: "1px solid var(--gold, #C9A84C)",
+                            border: "1px solid var(--gold, var(--gold))",
                             padding: "16px 20px",
                           }}
                         >
@@ -551,7 +551,7 @@ export default function BookingModal({
                                   height="16"
                                   viewBox="0 0 24 24"
                                   fill="none"
-                                  stroke="var(--success, #4a7c59)"
+                                  stroke="var(--success, var(--success))"
                                   strokeWidth="2.5"
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
@@ -586,7 +586,7 @@ export default function BookingModal({
 
                       <div
                         style={{
-                          background: "var(--white, #fdfaf5)",
+                          background: "var(--white, var(--white))",
                           border: "1px solid var(--cream-border, #e0d8c8)",
                           padding: "20px",
                         }}
@@ -602,7 +602,7 @@ export default function BookingModal({
                               style={inputStyle("firstName")}
                             />
                             {errors.firstName && (
-                              <p style={{ fontSize: "11px", color: "var(--error, #8b3a3a)", marginTop: 4 }}>
+                              <p style={{ fontSize: "11px", color: "var(--error, var(--error))", marginTop: 4 }}>
                                 First name is required
                               </p>
                             )}
@@ -618,7 +618,7 @@ export default function BookingModal({
                               style={inputStyle("lastName")}
                             />
                             {errors.lastName && (
-                              <p style={{ fontSize: "11px", color: "var(--error, #8b3a3a)", marginTop: 4 }}>
+                              <p style={{ fontSize: "11px", color: "var(--error, var(--error))", marginTop: 4 }}>
                                 Last name is required
                               </p>
                             )}
@@ -634,7 +634,7 @@ export default function BookingModal({
                               style={inputStyle("email")}
                             />
                             {errors.email && (
-                              <p style={{ fontSize: "11px", color: "var(--error, #8b3a3a)", marginTop: 4 }}>
+                              <p style={{ fontSize: "11px", color: "var(--error, var(--error))", marginTop: 4 }}>
                                 Valid email is required
                               </p>
                             )}
@@ -650,7 +650,7 @@ export default function BookingModal({
                               style={inputStyle("mobile")}
                             />
                             {errors.mobile && (
-                              <p style={{ fontSize: "11px", color: "var(--error, #8b3a3a)", marginTop: 4 }}>
+                              <p style={{ fontSize: "11px", color: "var(--error, var(--error))", marginTop: 4 }}>
                                 Valid mobile number is required
                               </p>
                             )}
@@ -668,7 +668,7 @@ export default function BookingModal({
                     style={{
                       flexShrink: 0,
                       padding: "16px 24px",
-                      background: "var(--cream, #f5f0e8)",
+                      background: "var(--cream, var(--cream))",
                       borderTop: "1px solid var(--cream-border, #e0d8c8)",
                     }}
                   >
@@ -681,8 +681,8 @@ export default function BookingModal({
                         fontWeight: 600,
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
-                        background: "var(--gold, #C9A84C)",
-                        color: "var(--ink, #1a1710)",
+                        background: "var(--gold, var(--gold))",
+                        color: "var(--ink, var(--ink))",
                         border: "none",
                         cursor: "pointer",
                         transition: "opacity 0.2s",
@@ -726,7 +726,7 @@ export default function BookingModal({
                         width: 72,
                         height: 72,
                         borderRadius: "50%",
-                        background: "var(--success, #4a7c59)",
+                        background: "var(--success, var(--success))",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -757,7 +757,7 @@ export default function BookingModal({
                         fontWeight: 600,
                         letterSpacing: "0.12em",
                         textTransform: "uppercase",
-                        color: "var(--success, #4a7c59)",
+                        color: "var(--success, var(--success))",
                         marginBottom: 6,
                         fontFamily: "var(--font-body)",
                       }}
@@ -797,7 +797,7 @@ export default function BookingModal({
                     {/* Booking Reference — monospace */}
                     <div
                       style={{
-                        background: "var(--white, #fdfaf5)",
+                        background: "var(--white, var(--white))",
                         border: "1px solid var(--cream-border, #e0d8c8)",
                         padding: "16px 32px",
                         marginBottom: 24,
@@ -831,7 +831,7 @@ export default function BookingModal({
                     {/* Summary card */}
                     <div
                       style={{
-                        background: "var(--white, #fdfaf5)",
+                        background: "var(--white, var(--white))",
                         border: "1px solid var(--cream-border, #e0d8c8)",
                         padding: "20px 24px",
                         width: "100%",
@@ -876,10 +876,10 @@ export default function BookingModal({
                       {/* Saving row (if applicable) */}
                       {hasSaving && (
                         <div className="flex justify-between" style={{ fontSize: "13px", marginBottom: 4 }}>
-                          <span style={{ color: "var(--success, #4a7c59)", fontWeight: 600 }}>You saved</span>
+                          <span style={{ color: "var(--success, var(--success))", fontWeight: 600 }}>You saved</span>
                           <span
                             style={{
-                              color: "var(--success, #4a7c59)",
+                              color: "var(--success, var(--success))",
                               fontWeight: 600,
                               fontFamily: "var(--font-mono)",
                             }}
@@ -929,8 +929,8 @@ export default function BookingModal({
                           fontWeight: 600,
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
-                          background: "var(--gold, #C9A84C)",
-                          color: "var(--ink, #1a1710)",
+                          background: "var(--gold, var(--gold))",
+                          color: "var(--ink, var(--ink))",
                           border: "none",
                           cursor: "pointer",
                           fontFamily: "var(--font-body)",
@@ -951,7 +951,7 @@ export default function BookingModal({
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
                           background: "transparent",
-                          color: "var(--ink-light, #7a7465)",
+                          color: "var(--ink-light, var(--ink-light))",
                           border: "1px solid var(--cream-border, #e0d8c8)",
                           cursor: "pointer",
                           fontFamily: "var(--font-body)",

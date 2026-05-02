@@ -330,7 +330,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: "none",
     borderRadius: 10,
     background: "var(--gold)",
-    color: "#1a1710",
+    color: "var(--ink)",
     fontFamily: "var(--font-body)",
     fontSize: 15,
     fontWeight: 500,

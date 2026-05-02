@@ -201,7 +201,7 @@ export default function BusinessClassFlightsPage() {
                 fontWeight: 600,
                 fontSize: "clamp(36px, 6vw, 72px)",
                 lineHeight: 1.1,
-                color: "#fdfaf5",
+                color: "var(--white)",
                 maxWidth: "700px",
                 marginBottom: "20px",
               }}
@@ -272,7 +272,7 @@ export default function BusinessClassFlightsPage() {
                         fontFamily: "var(--font-body)",
                         fontWeight: 600,
                         fontSize: "14px",
-                        color: "#fdfaf5",
+                        color: "var(--white)",
                       }}
                     >
                       {feat.route}
@@ -283,7 +283,7 @@ export default function BusinessClassFlightsPage() {
                       fontFamily: "var(--font-display)",
                       fontWeight: 700,
                       fontSize: "28px",
-                      color: "#fdfaf5",
+                      color: "var(--white)",
                       marginBottom: "4px",
                     }}
                   >
@@ -558,7 +558,7 @@ export default function BusinessClassFlightsPage() {
                           fontFamily: "var(--font-display)",
                           fontWeight: 600,
                           fontSize: "var(--text-heading-3)",
-                          color: "#fdfaf5",
+                          color: "var(--white)",
                         }}
                       >
                         {deal.from} → {deal.to}
@@ -721,7 +721,7 @@ export default function BusinessClassFlightsPage() {
                         fontWeight: 600,
                         fontSize: "var(--text-body-sm)",
                         letterSpacing: "0.04em",
-                        color: "#fdfaf5",
+                        color: "var(--white)",
                         background: "var(--ink)",
                         border: "none",
                         borderRadius: "100px",
@@ -735,7 +735,7 @@ export default function BusinessClassFlightsPage() {
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = "var(--ink)";
-                        e.currentTarget.style.color = "#fdfaf5";
+                        e.currentTarget.style.color = "var(--white)";
                       }}
                     >
                       Book Now

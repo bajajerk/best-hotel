@@ -191,7 +191,7 @@ function ExperienceCard({
               fontWeight: 600,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "var(--emerald, #10B981)",
+              color: "var(--emerald, var(--emerald))",
             }}
           >
             Voyagr Club members enjoy:
@@ -220,7 +220,7 @@ function ExperienceCard({
                   height="11"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="var(--emerald, #10B981)"
+                  stroke="var(--emerald, var(--emerald))"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -261,7 +261,7 @@ function ExperienceCard({
             <path d="M9 12l2 2 4-4" />
           </svg>
           <span style={{ fontSize: "11px", color: "var(--ink-mid)" }}>
-            <strong style={{ color: "var(--emerald, #10B981)" }}>
+            <strong style={{ color: "var(--emerald, var(--emerald))" }}>
               Privileged access
             </strong>{" "}
             &amp; exclusive perks

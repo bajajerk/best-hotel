@@ -76,8 +76,8 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
   const isDark = variant === "dark";
   const bgCard = isDark ? "var(--bg-input, rgba(255,255,255,0.06))" : "rgba(0,0,0,0.04)";
   const borderColor = isDark ? "var(--border, rgba(255,255,255,0.08))" : "rgba(0,0,0,0.08)";
-  const labelColor = isDark ? "var(--white-30, rgba(255,255,255,0.3))" : "#7a7465";
-  const valueColor = isDark ? "var(--white-80, rgba(255,255,255,0.8))" : "#1a1710";
+  const labelColor = isDark ? "var(--white-30, rgba(255,255,255,0.3))" : "var(--ink-light)";
+  const valueColor = isDark ? "var(--white-80, rgba(255,255,255,0.8))" : "var(--ink)";
   const dropdownBg = isDark ? "#1e1e1e" : "#ffffff";
   const dropdownBorder = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)";
   const rowBorder = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
@@ -103,7 +103,7 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
             letterSpacing: compact ? "0.08em" : 1.2,
             textTransform: "uppercase",
             fontWeight: compact ? 600 : 400,
-            color: compact ? "var(--ink-light, #7a7465)" : labelColor,
+            color: compact ? "var(--ink-light, var(--ink-light))" : labelColor,
             marginBottom: compact ? 4 : 4,
           }}
         >
@@ -114,7 +114,7 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
             fontFamily: compact ? "var(--font-body, sans-serif)" : "var(--font-dm-sans)",
             fontSize: compact ? 14 : 14,
             fontWeight: compact ? 500 : 400,
-            color: compact ? "var(--ink, #1a1710)" : valueColor,
+            color: compact ? "var(--ink, var(--ink))" : valueColor,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -133,7 +133,7 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
               marginLeft: 8,
             }}
           >
-            <path d="M1 1L5 5L9 1" stroke={compact ? "var(--ink-light, #7a7465)" : labelColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M1 1L5 5L9 1" stroke={compact ? "var(--ink-light, var(--ink-light))" : labelColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       </div>
@@ -317,7 +317,7 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
               width: "100%",
               marginTop: 10,
               padding: "10px 0",
-              background: isDark ? "var(--gold, #c9a96e)" : "#1a1710",
+              background: isDark ? "var(--gold, #c9a96e)" : "var(--ink)",
               border: "none",
               borderRadius: 10,
               fontSize: 13,

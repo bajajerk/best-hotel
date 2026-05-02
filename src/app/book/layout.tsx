@@ -17,7 +17,7 @@ const STEPS = [
   { key: "confirmation", label: "Confirmation", path: "/book/confirmation" },
 ];
 
-const CHAMPAGNE = "#c8aa76";
+const CHAMPAGNE = "var(--luxe-champagne)";
 const SOFT_WHITE_45 = "rgba(247, 245, 242, 0.45)";
 const SOFT_WHITE_85 = "rgba(247, 245, 242, 0.85)";
 

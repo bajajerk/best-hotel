@@ -317,43 +317,43 @@ function FareSelectContent() {
       )}
 
       <style>{`
-        .fs-page { min-height: 100vh; background: #f5f0e8; padding-top: 72px; padding-bottom: 24px; }
+        .fs-page { min-height: 100vh; background: var(--cream); padding-top: 72px; padding-bottom: 24px; }
 
-        .fs-bar { background: #0B1B2B; padding: 14px 16px; border-bottom: 1px solid rgba(201,168,76,0.1); }
+        .fs-bar { background: var(--navy); padding: 14px 16px; border-bottom: 1px solid rgba(201,168,76,0.1); }
         .bar-back { color: rgba(253,250,245,0.45); text-decoration: none; font-size: 18px; margin-right: 10px; transition: color 0.2s; }
-        .bar-back:hover { color: #C9A84C; }
-        .bar-dest { font-size: 15px; font-weight: 600; color: #fdfaf5; margin-bottom: 4px; font-family: var(--font-body); }
+        .bar-back:hover { color: var(--gold); }
+        .bar-dest { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 4px; font-family: var(--font-body); }
         .bar-meta { font-size: 11px; color: rgba(253,250,245,0.42); font-family: var(--font-body); }
 
-        .fs-loading, .fs-empty { text-align: center; padding: 60px 16px; color: #7a7465; font-family: var(--font-body); font-size: 14px; }
+        .fs-loading, .fs-empty { text-align: center; padding: 60px 16px; color: var(--ink-light); font-family: var(--font-body); font-size: 14px; }
         .fs-error { padding: 40px 16px; text-align: center; }
         .err-msg { color: #b54a3a; font-family: var(--font-body); font-size: 14px; margin-bottom: 12px; }
-        .err-link { color: #C9A84C; text-decoration: none; font-family: var(--font-body); font-size: 13px; font-weight: 600; }
+        .err-link { color: var(--gold); text-decoration: none; font-family: var(--font-body); font-size: 13px; font-weight: 600; }
 
-        .flight-sum { background: #fdfaf5; border: 1.5px solid #ece6dc; border-radius: 10px; padding: 16px; margin: 16px 12px 12px; }
-        .sum-airline { font-size: 13px; font-weight: 600; color: #1a1710; font-family: var(--font-body); margin-bottom: 12px; }
+        .flight-sum { background: var(--white); border: 1.5px solid #ece6dc; border-radius: 10px; padding: 16px; margin: 16px 12px 12px; }
+        .sum-airline { font-size: 13px; font-weight: 600; color: var(--ink); font-family: var(--font-body); margin-bottom: 12px; }
         .sum-route { display: flex; justify-content: space-between; align-items: center; }
-        .sum-time { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: #1a1710; line-height: 1.1; }
-        .sum-code { font-size: 11px; color: #7a7465; font-family: var(--font-body); margin-top: 2px; text-align: center; }
+        .sum-time { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+        .sum-code { font-size: 11px; color: var(--ink-light); font-family: var(--font-body); margin-top: 2px; text-align: center; }
         .sum-mid { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 0 12px; gap: 4px; }
-        .sum-dur { font-size: 11px; color: #7a7465; font-family: var(--font-body); }
+        .sum-dur { font-size: 11px; color: var(--ink-light); font-family: var(--font-body); }
         .sum-line { display: flex; align-items: center; width: 100%; }
-        .sum-dot { width: 7px; height: 7px; border-radius: 50%; background: #c8c2b8; border: 1.5px solid #fdfaf5; box-shadow: 0 0 0 1px #c8c2b8; flex-shrink: 0; }
+        .sum-dot { width: 7px; height: 7px; border-radius: 50%; background: #c8c2b8; border: 1.5px solid var(--white); box-shadow: 0 0 0 1px #c8c2b8; flex-shrink: 0; }
         .sum-dash { flex: 1; height: 1px; background: #d5cfc7; }
-        .sum-stops { font-size: 10px; color: #10B981; font-weight: 600; font-family: var(--font-body); }
+        .sum-stops { font-size: 10px; color: var(--emerald); font-weight: 600; font-family: var(--font-body); }
 
-        .section-title { font-size: 13px; font-weight: 700; color: #1a1710; padding: 12px 16px 4px; font-family: var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; }
+        .section-title { font-size: 13px; font-weight: 700; color: var(--ink); padding: 12px 16px 4px; font-family: var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; }
 
         .fare-list { padding: 4px 0; }
-        .fare-card { background: #fdfaf5; border: 1.5px solid #ece6dc; border-radius: 10px; padding: 16px; margin: 0 12px 10px; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
+        .fare-card { background: var(--white); border: 1.5px solid #ece6dc; border-radius: 10px; padding: 16px; margin: 0 12px 10px; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
         .fare-card.cheap { border-color: rgba(201,168,76,0.5); }
-        .fare-card.sel   { border-color: #C9A84C; box-shadow: 0 0 0 3px rgba(201,168,76,0.13); }
-        .fare-card:hover { border-color: #C9A84C; }
+        .fare-card.sel   { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.13); }
+        .fare-card:hover { border-color: var(--gold); }
 
         .fare-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .fare-name { font-size: 13px; font-weight: 700; color: #1a1710; font-family: var(--font-body); letter-spacing: 0.04em; text-transform: uppercase; }
+        .fare-name { font-size: 13px; font-weight: 700; color: var(--ink); font-family: var(--font-body); letter-spacing: 0.04em; text-transform: uppercase; }
         .fare-badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--font-body); }
-        .fare-badge.cheap { background: #C9A84C; color: #0B1B2B; }
+        .fare-badge.cheap { background: var(--gold); color: var(--navy); }
 
         .fare-feats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin-bottom: 14px; }
         .feat { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #4a4538; font-family: var(--font-body); }
@@ -361,18 +361,18 @@ function FareSelectContent() {
 
         .fare-bottom { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #ece6dc; padding-top: 12px; }
         .fare-price-wrap { display: flex; flex-direction: column; gap: 2px; }
-        .fare-price { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: #1a1710; }
-        .fare-price small { font-size: 11px; font-weight: 400; color: #7a7465; font-family: var(--font-body); }
-        .fare-tax { font-size: 10px; color: #7a7465; font-family: var(--font-body); }
-        .fare-select { font-size: 12px; font-weight: 700; color: #C9A84C; font-family: var(--font-body); letter-spacing: 0.04em; padding: 4px 0; }
-        .fare-select.sel-state { background: #C9A84C; color: #0B1B2B; padding: 5px 12px; border-radius: 4px; }
+        .fare-price { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--ink); }
+        .fare-price small { font-size: 11px; font-weight: 400; color: var(--ink-light); font-family: var(--font-body); }
+        .fare-tax { font-size: 10px; color: var(--ink-light); font-family: var(--font-body); }
+        .fare-select { font-size: 12px; font-weight: 700; color: var(--gold); font-family: var(--font-body); letter-spacing: 0.04em; padding: 4px 0; }
+        .fare-select.sel-state { background: var(--gold); color: var(--navy); padding: 5px 12px; border-radius: 4px; }
 
         /* Sticky CTA */
         .sticky-fs { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(253,250,245,0.97); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid #ece6dc; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 16px; padding-bottom: max(13px, env(safe-area-inset-bottom)); z-index: 50; box-shadow: 0 -4px 20px rgba(0,0,0,0.07); }
         .sticky-l { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
-        .sticky-lbl { font-size: 12px; color: #7a7465; font-family: var(--font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sticky-total { font-size: 19px; font-weight: 700; color: #1a1710; font-family: var(--font-mono); }
-        .sticky-btn { background: #C9A84C; color: #0B1B2B; padding: 12px 28px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border: none; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; flex-shrink: 0; }
+        .sticky-lbl { font-size: 12px; color: var(--ink-light); font-family: var(--font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sticky-total { font-size: 19px; font-weight: 700; color: var(--ink); font-family: var(--font-mono); }
+        .sticky-btn { background: var(--gold); color: var(--navy); padding: 12px 28px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border: none; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; flex-shrink: 0; }
         .sticky-btn.dim { background: #e0d8c8; color: #aaa; cursor: not-allowed; }
         @media (max-width: 380px) {
           .sticky-btn { padding: 12px 18px; }
@@ -385,8 +385,8 @@ function FareSelectContent() {
 export default function FareSelectPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: "100vh", background: "#f5f0e8", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontFamily: "var(--font-body)", color: "#7a7465", fontSize: "14px" }}>Loading…</div>
+      <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ fontFamily: "var(--font-body)", color: "var(--ink-light)", fontSize: "14px" }}>Loading…</div>
       </div>
     }>
       <FareSelectContent />

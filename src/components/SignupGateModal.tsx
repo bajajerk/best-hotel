@@ -100,7 +100,7 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
           style={{
             fontFamily: "var(--font-mono)",
             fontSize: "9px",
-            color: "#C9A84C",
+            color: "var(--gold)",
             letterSpacing: "0.4em",
             textTransform: "uppercase",
             marginBottom: "16px",
@@ -121,7 +121,7 @@ export default function SignupGateModal({ open, onClose, hotelName }: SignupGate
           }}
         >
           Your member rate for{" "}
-          <em style={{ fontStyle: "italic", color: "#C9A84C" }}>{hotelName}</em>
+          <em style={{ fontStyle: "italic", color: "var(--gold)" }}>{hotelName}</em>
         </h2>
 
         {/* Subtext */}

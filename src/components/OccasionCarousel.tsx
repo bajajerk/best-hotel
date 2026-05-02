@@ -267,7 +267,7 @@ export default function OccasionCarousel() {
         >
           <div
             className="type-eyebrow"
-            style={{ marginBottom: 8, color: "#C9A84C" }}
+            style={{ marginBottom: 8, color: "var(--gold)" }}
           >
             Explore
           </div>
@@ -276,7 +276,7 @@ export default function OccasionCarousel() {
             style={{ color: "var(--ink)", marginBottom: 10 }}
           >
             By{" "}
-            <em style={{ fontStyle: "italic", color: "#C9A84C" }}>
+            <em style={{ fontStyle: "italic", color: "var(--gold)" }}>
               Occasion
             </em>
           </h2>

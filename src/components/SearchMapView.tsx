@@ -63,7 +63,7 @@ function createGoldIcon(starRating: number | null): L.DivIcon {
         justify-content: center;
         width: 32px;
         height: 32px;
-        background: var(--gold, #C9A84C);
+        background: var(--gold, var(--gold));
         border: 2px solid var(--white, #fff);
         border-radius: 50% 50% 50% 0;
         transform: rotate(-45deg);
@@ -95,8 +95,8 @@ function createActiveIcon(starRating: number | null): L.DivIcon {
         justify-content: center;
         width: 40px;
         height: 40px;
-        background: var(--ink, #1a1710);
-        border: 3px solid var(--gold, #C9A84C);
+        background: var(--ink, var(--ink));
+        border: 3px solid var(--gold, var(--gold));
         border-radius: 50% 50% 50% 0;
         transform: rotate(-45deg);
         box-shadow: 0 4px 16px rgba(0,0,0,0.35);
@@ -104,7 +104,7 @@ function createActiveIcon(starRating: number | null): L.DivIcon {
       ">
         <span style="
           transform: rotate(45deg);
-          color: var(--gold, #C9A84C);
+          color: var(--gold, var(--gold));
           font-size: 13px;
           font-weight: 700;
           font-family: var(--font-body, sans-serif);
@@ -200,7 +200,7 @@ export default function SearchMapView({ hotels }: SearchMapViewProps) {
       const photoSrc = sanitizePhoto(hotel.photo1);
       const starsHtml =
         hotel.star_rating && hotel.star_rating > 0
-          ? `<div style="color: #C9A84C; font-size: 10px; letter-spacing: 1px; margin-bottom: 4px;">${"★".repeat(hotel.star_rating)}</div>`
+          ? `<div style="color: var(--gold); font-size: 10px; letter-spacing: 1px; margin-bottom: 4px;">${"★".repeat(hotel.star_rating)}</div>`
           : "";
 
       marker.bindPopup(
@@ -212,7 +212,7 @@ export default function SearchMapView({ hotels }: SearchMapViewProps) {
           </div>
           <div style="padding: 12px 14px;">
             ${starsHtml}
-            <div style="font-family: var(--font-display, 'Cormorant Garamond', serif); font-size: 16px; font-weight: 500; font-style: italic; color: #1a1710; margin-bottom: 4px; line-height: 1.2;">
+            <div style="font-family: var(--font-display, 'Cormorant Garamond', serif); font-size: 16px; font-weight: 500; font-style: italic; color: var(--ink); margin-bottom: 4px; line-height: 1.2;">
               ${hotel.hotel_name}
             </div>
             <div style="font-size: 11px; color: #8a8578; display: flex; align-items: center; gap: 4px; margin-bottom: 10px;">
@@ -223,7 +223,7 @@ export default function SearchMapView({ hotels }: SearchMapViewProps) {
               ${hotel.city}, ${hotel.country}
             </div>
             <a href="${hotelUrl(hotel)}"
-              style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: #C9A84C; text-decoration: none; letter-spacing: 0.06em; padding: 6px 14px; border: 1px solid #C9A84C; transition: all 0.2s;">
+              style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: var(--gold); text-decoration: none; letter-spacing: 0.06em; padding: 6px 14px; border: 1px solid var(--gold); transition: all 0.2s;">
               View details &rarr;
             </a>
           </div>

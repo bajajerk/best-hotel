@@ -342,63 +342,63 @@ function PassengersContent() {
 }
 
 const styleBlock = `
-  .pp-page { min-height: 100vh; background: #f5f0e8; padding-top: 72px; padding-bottom: 24px; }
+  .pp-page { min-height: 100vh; background: var(--cream); padding-top: 72px; padding-bottom: 24px; }
 
-  .pp-bar { background: #0B1B2B; padding: 14px 16px; border-bottom: 1px solid rgba(201,168,76,0.1); }
+  .pp-bar { background: var(--navy); padding: 14px 16px; border-bottom: 1px solid rgba(201,168,76,0.1); }
   .bar-back { background: none; border: none; color: rgba(253,250,245,0.45); font-size: 18px; margin-right: 10px; cursor: pointer; padding: 0; transition: color 0.2s; font-family: inherit; }
-  .bar-back:hover { color: #C9A84C; }
-  .bar-dest { font-size: 15px; font-weight: 600; color: #fdfaf5; margin-bottom: 4px; font-family: var(--font-body); display: flex; align-items: center; }
+  .bar-back:hover { color: var(--gold); }
+  .bar-dest { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 4px; font-family: var(--font-body); display: flex; align-items: center; }
   .bar-meta { font-size: 11px; color: rgba(253,250,245,0.42); font-family: var(--font-body); }
 
-  .section-title { font-size: 11px; font-weight: 700; color: #1a1710; padding: 16px 16px 6px; font-family: var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; }
+  .section-title { font-size: 11px; font-weight: 700; color: var(--ink); padding: 16px 16px 6px; font-family: var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; }
 
-  .pax-card { background: #fdfaf5; border: 1.5px solid #ece6dc; border-radius: 10px; padding: 16px; margin: 0 12px 10px; }
-  .pax-head { font-size: 13px; font-weight: 700; color: #1a1710; font-family: var(--font-body); margin-bottom: 12px; }
+  .pax-card { background: var(--white); border: 1.5px solid #ece6dc; border-radius: 10px; padding: 16px; margin: 0 12px 10px; }
+  .pax-head { font-size: 13px; font-weight: 700; color: var(--ink); font-family: var(--font-body); margin-bottom: 12px; }
 
   .row { display: flex; gap: 10px; }
   .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
   .field.grow { flex: 1; }
   .field.title-field { flex: 0 0 90px; }
   .field:last-child { margin-bottom: 0; }
-  .lbl { font-size: 11px; color: #7a7465; font-family: var(--font-body); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
-  .field input, .field select { background: #fff; border: 1.5px solid #ece6dc; border-radius: 6px; padding: 10px 12px; font-size: 14px; color: #1a1710; font-family: var(--font-body); transition: border-color 0.2s; outline: none; width: 100%; box-sizing: border-box; }
-  .field input:focus, .field select:focus { border-color: #C9A84C; }
+  .lbl { font-size: 11px; color: var(--ink-light); font-family: var(--font-body); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
+  .field input, .field select { background: #fff; border: 1.5px solid #ece6dc; border-radius: 6px; padding: 10px 12px; font-size: 14px; color: var(--ink); font-family: var(--font-body); transition: border-color 0.2s; outline: none; width: 100%; box-sizing: border-box; }
+  .field input:focus, .field select:focus { border-color: var(--gold); }
   .field input::placeholder { color: #b8b0a0; }
-  .hint { font-size: 11px; color: #7a7465; font-family: var(--font-body); margin: 4px 0 0; }
+  .hint { font-size: 11px; color: var(--ink-light); font-family: var(--font-body); margin: 4px 0 0; }
 
   .form-error { background: rgba(181,74,58,0.08); border: 1px solid rgba(181,74,58,0.3); color: #b54a3a; font-size: 13px; padding: 10px 14px; border-radius: 6px; margin: 8px 12px; font-family: var(--font-body); }
 
   /* Sticky CTA */
   .sticky-pp { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(253,250,245,0.97); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid #ece6dc; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 16px; padding-bottom: max(13px, env(safe-area-inset-bottom)); z-index: 50; box-shadow: 0 -4px 20px rgba(0,0,0,0.07); }
   .sticky-l { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
-  .sticky-lbl { font-size: 12px; color: #7a7465; font-family: var(--font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sticky-total { font-size: 15px; font-weight: 700; color: #1a1710; font-family: var(--font-body); }
-  .sticky-btn { background: #C9A84C; color: #0B1B2B; padding: 12px 28px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border: none; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; flex-shrink: 0; }
+  .sticky-lbl { font-size: 12px; color: var(--ink-light); font-family: var(--font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sticky-total { font-size: 15px; font-weight: 700; color: var(--ink); font-family: var(--font-body); }
+  .sticky-btn { background: var(--gold); color: var(--navy); padding: 12px 28px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border: none; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; flex-shrink: 0; }
   .sticky-btn.dim { opacity: 0.6; cursor: not-allowed; }
   @media (max-width: 380px) {
     .sticky-btn { padding: 12px 18px; }
   }
 
   /* Success state */
-  .success-card { background: #fdfaf5; border: 1.5px solid #ece6dc; border-radius: 12px; padding: 28px 20px; margin: 24px 12px; text-align: center; }
-  .success-ico { width: 56px; height: 56px; border-radius: 50%; background: #10B981; color: #fff; font-size: 28px; line-height: 56px; margin: 0 auto 14px; font-weight: 700; }
-  .success-title { font-size: 20px; font-weight: 700; color: #1a1710; font-family: var(--font-display, var(--font-body)); margin-bottom: 6px; }
-  .success-sub { font-size: 13px; color: #7a7465; font-family: var(--font-body); margin-bottom: 20px; }
+  .success-card { background: var(--white); border: 1.5px solid #ece6dc; border-radius: 12px; padding: 28px 20px; margin: 24px 12px; text-align: center; }
+  .success-ico { width: 56px; height: 56px; border-radius: 50%; background: var(--emerald); color: #fff; font-size: 28px; line-height: 56px; margin: 0 auto 14px; font-weight: 700; }
+  .success-title { font-size: 20px; font-weight: 700; color: var(--ink); font-family: var(--font-display, var(--font-body)); margin-bottom: 6px; }
+  .success-sub { font-size: 13px; color: var(--ink-light); font-family: var(--font-body); margin-bottom: 20px; }
   .success-meta { background: #f7f1e6; border-radius: 8px; padding: 14px 16px; text-align: left; margin-bottom: 20px; }
   .meta-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; font-family: var(--font-body); }
   .meta-row + .meta-row { border-top: 1px solid #ece6dc; }
-  .meta-k { color: #7a7465; }
-  .meta-v { color: #1a1710; font-weight: 600; }
+  .meta-k { color: var(--ink-light); }
+  .meta-v { color: var(--ink); font-weight: 600; }
   .meta-v.mono { font-family: var(--font-mono); font-size: 12px; word-break: break-all; text-align: right; max-width: 60%; }
   .success-actions { display: flex; justify-content: center; }
-  .success-link { color: #C9A84C; text-decoration: none; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+  .success-link { color: var(--gold); text-decoration: none; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 `;
 
 export default function PassengersPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: "100vh", background: "#f5f0e8", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontFamily: "var(--font-body)", color: "#7a7465", fontSize: "14px" }}>Loading…</div>
+      <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ fontFamily: "var(--font-body)", color: "var(--ink-light)", fontSize: "14px" }}>Loading…</div>
       </div>
     }>
       <PassengersContent />

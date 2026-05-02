@@ -364,78 +364,78 @@ function ResultsContent() {
       </div>
 
       <style>{`
-        .results-page { min-height: 100vh; background: #f5f0e8; padding-top: 72px; }
+        .results-page { min-height: 100vh; background: var(--cream); padding-top: 72px; }
 
         /* ── Route bar ── */
-        .results-bar { background: #0B1B2B; padding: 14px 16px; border-bottom: 1px solid rgba(201,168,76,0.1); }
+        .results-bar { background: var(--navy); padding: 14px 16px; border-bottom: 1px solid rgba(201,168,76,0.1); }
         .rb-back { color: rgba(253,250,245,0.45); text-decoration: none; font-size: 18px; margin-right: 10px; transition: color 0.2s; }
-        .rb-back:hover { color: #C9A84C; }
-        .rb-dest { font-size: 15px; font-weight: 600; color: #fdfaf5; margin-bottom: 4px; font-family: var(--font-body); }
+        .rb-back:hover { color: var(--gold); }
+        .rb-dest { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 4px; font-family: var(--font-body); }
         .rb-meta { font-size: 11px; color: rgba(253,250,245,0.42); font-family: var(--font-body); }
-        .rb-edit { color: #C9A84C; text-decoration: none; margin-left: 6px; font-weight: 500; }
+        .rb-edit { color: var(--gold); text-decoration: none; margin-left: 6px; font-weight: 500; }
 
         /* ── Filter ── */
         .filter-row { display: flex; background: #fff; padding: 0 8px; border-bottom: 1px solid #ece6dc; overflow-x: auto; scrollbar-width: none; position: sticky; top: 72px; z-index: 40; }
         .filter-row::-webkit-scrollbar { display: none; }
-        .fp { padding: 13px 14px; font-size: 12px; font-weight: 400; color: #7a7465; cursor: pointer; white-space: nowrap; border-bottom: 2.5px solid transparent; transition: all 0.2s; font-family: var(--font-body); letter-spacing: 0.02em; user-select: none; display: inline-flex; align-items: center; gap: 5px; }
-        .fp.a { color: #1a1710; font-weight: 700; border-bottom-color: #C9A84C; }
-        .fp-arrow { font-size: 10px; color: #7a7465; }
-        .fp.a .fp-arrow { color: #C9A84C; font-weight: 700; }
+        .fp { padding: 13px 14px; font-size: 12px; font-weight: 400; color: var(--ink-light); cursor: pointer; white-space: nowrap; border-bottom: 2.5px solid transparent; transition: all 0.2s; font-family: var(--font-body); letter-spacing: 0.02em; user-select: none; display: inline-flex; align-items: center; gap: 5px; }
+        .fp.a { color: var(--ink); font-weight: 700; border-bottom-color: var(--gold); }
+        .fp-arrow { font-size: 10px; color: var(--ink-light); }
+        .fp.a .fp-arrow { color: var(--gold); font-weight: 700; }
 
         /* ── Count ── */
-        .res-count { font-size: 11px; color: #7a7465; padding: 10px 16px 4px; font-family: var(--font-body); letter-spacing: 0.04em; }
+        .res-count { font-size: 11px; color: var(--ink-light); padding: 10px 16px 4px; font-family: var(--font-body); letter-spacing: 0.04em; }
 
         /* ── Empty / error ── */
         .res-empty { text-align: center; padding: 48px 24px; }
-        .empty-title { font-size: 16px; font-weight: 700; color: #1a1710; font-family: var(--font-body); margin-bottom: 6px; }
-        .empty-sub { font-size: 13px; color: #7a7465; font-family: var(--font-body); margin-bottom: 16px; line-height: 1.5; }
-        .empty-link { color: #C9A84C; text-decoration: none; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+        .empty-title { font-size: 16px; font-weight: 700; color: var(--ink); font-family: var(--font-body); margin-bottom: 6px; }
+        .empty-sub { font-size: 13px; color: var(--ink-light); font-family: var(--font-body); margin-bottom: 16px; line-height: 1.5; }
+        .empty-link { color: var(--gold); text-decoration: none; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 
         /* ── Cards ── */
         .cards-wrap { padding: 8px 0; }
-        .flight-card { background: #fdfaf5; border: 1.5px solid #ece6dc; border-radius: 10px; padding: 14px 16px; margin: 0 12px 10px; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
+        .flight-card { background: var(--white); border: 1.5px solid #ece6dc; border-radius: 10px; padding: 14px 16px; margin: 0 12px 10px; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
         .flight-card.cheap { border-color: rgba(201,168,76,0.5); }
         .flight-card.best  { border-color: rgba(16,185,129,0.38); }
-        .flight-card.sel   { border-color: #C9A84C; box-shadow: 0 0 0 3px rgba(201,168,76,0.13); }
-        .flight-card:hover { border-color: #C9A84C; }
+        .flight-card.sel   { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.13); }
+        .flight-card:hover { border-color: var(--gold); }
 
         /* ── Card inner ── */
         .fc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .fc-airline { font-size: 13px; font-weight: 600; color: #1a1710; font-family: var(--font-body); }
+        .fc-airline { font-size: 13px; font-weight: 600; color: var(--ink); font-family: var(--font-body); }
         .fc-badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--font-body); }
-        .fc-badge.cheap { background: #C9A84C; color: #0B1B2B; }
-        .fc-badge.best  { background: #10B981; color: #fff; }
+        .fc-badge.cheap { background: var(--gold); color: var(--navy); }
+        .fc-badge.best  { background: var(--emerald); color: #fff; }
 
         .fc-route { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .fc-time { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: #1a1710; line-height: 1.1; }
-        .fc-code { font-size: 11px; color: #7a7465; font-family: var(--font-body); margin-top: 2px; text-align: center; }
+        .fc-time { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+        .fc-code { font-size: 11px; color: var(--ink-light); font-family: var(--font-body); margin-top: 2px; text-align: center; }
 
         .fc-mid { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 0 12px; gap: 4px; }
-        .fc-dur { font-size: 11px; color: #7a7465; font-family: var(--font-body); }
+        .fc-dur { font-size: 11px; color: var(--ink-light); font-family: var(--font-body); }
         .fc-line { display: flex; align-items: center; width: 100%; }
-        .fc-dot { width: 7px; height: 7px; border-radius: 50%; background: #c8c2b8; border: 1.5px solid #fdfaf5; box-shadow: 0 0 0 1px #c8c2b8; flex-shrink: 0; }
+        .fc-dot { width: 7px; height: 7px; border-radius: 50%; background: #c8c2b8; border: 1.5px solid var(--white); box-shadow: 0 0 0 1px #c8c2b8; flex-shrink: 0; }
         .fc-dash { flex: 1; height: 1px; background: #d5cfc7; }
-        .fc-stops { font-size: 10px; color: #7a7465; font-family: var(--font-body); }
-        .non-stop { color: #10B981; font-weight: 600; }
+        .fc-stops { font-size: 10px; color: var(--ink-light); font-family: var(--font-body); }
+        .non-stop { color: var(--emerald); font-weight: 600; }
 
         .fc-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
-        .fc-class { font-size: 11px; color: #7a7465; font-family: var(--font-body); }
+        .fc-class { font-size: 11px; color: var(--ink-light); font-family: var(--font-body); }
         .fc-price-wrap { display: flex; align-items: flex-end; gap: 12px; }
         .fc-price-col { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-        .fc-price { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: #1a1710; }
-        .fc-price small { font-size: 11px; font-weight: 400; color: #7a7465; font-family: var(--font-body); }
+        .fc-price { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--ink); }
+        .fc-price small { font-size: 11px; font-weight: 400; color: var(--ink-light); font-family: var(--font-body); }
         .fc-total { font-size: 11px; color: #4a4538; font-family: var(--font-body); font-weight: 600; }
-        .fc-total-pax { color: #7a7465; font-weight: 400; }
-        .fc-select { font-size: 12px; font-weight: 700; color: #C9A84C; font-family: var(--font-body); letter-spacing: 0.04em; cursor: pointer; transition: all 0.2s; padding: 4px 0; }
-        .fc-select.sel-state { background: #C9A84C; color: #0B1B2B; padding: 5px 12px; border-radius: 4px; }
+        .fc-total-pax { color: var(--ink-light); font-weight: 400; }
+        .fc-select { font-size: 12px; font-weight: 700; color: var(--gold); font-family: var(--font-body); letter-spacing: 0.04em; cursor: pointer; transition: all 0.2s; padding: 4px 0; }
+        .fc-select.sel-state { background: var(--gold); color: var(--navy); padding: 5px 12px; border-radius: 4px; }
 
         /* ── Sticky CTA ── */
         .sticky { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(253,250,245,0.97); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid #ece6dc; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 16px; padding-bottom: max(13px, env(safe-area-inset-bottom)); z-index: 50; box-shadow: 0 -4px 20px rgba(0,0,0,0.07); }
         .sticky-l { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
-        .sticky-lbl { font-size: 12px; color: #7a7465; font-family: var(--font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sticky-total { font-size: 19px; font-weight: 700; color: #1a1710; font-family: var(--font-mono); }
-        .sticky-total-meta { font-size: 10px; font-weight: 400; color: #7a7465; font-family: var(--font-body); margin-left: 4px; letter-spacing: 0.04em; }
-        .sticky-btn { background: #C9A84C; color: #0B1B2B; padding: 12px 28px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border: none; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; flex-shrink: 0; }
+        .sticky-lbl { font-size: 12px; color: var(--ink-light); font-family: var(--font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sticky-total { font-size: 19px; font-weight: 700; color: var(--ink); font-family: var(--font-mono); }
+        .sticky-total-meta { font-size: 10px; font-weight: 400; color: var(--ink-light); font-family: var(--font-body); margin-left: 4px; letter-spacing: 0.04em; }
+        .sticky-btn { background: var(--gold); color: var(--navy); padding: 12px 28px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border: none; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; flex-shrink: 0; }
         .sticky-btn.dim { background: #e0d8c8; color: #aaa; cursor: not-allowed; }
         @media (max-width: 380px) {
           .sticky-btn { padding: 12px 18px; }
@@ -450,8 +450,8 @@ function ResultsContent() {
 export default function FlightResultsPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: "100vh", background: "#f5f0e8", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontFamily: "var(--font-body)", color: "#7a7465", fontSize: "14px" }}>Loading…</div>
+      <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ fontFamily: "var(--font-body)", color: "var(--ink-light)", fontSize: "14px" }}>Loading…</div>
       </div>
     }>
       <ResultsContent />

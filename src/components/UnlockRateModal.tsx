@@ -123,7 +123,7 @@ function Toast({
             border: type === "error"
               ? "1px solid rgba(200, 100, 100, 0.4)"
               : "1px solid rgba(200, 170, 118, 0.4)",
-            color: "#f7f5f2",
+            color: "var(--luxe-soft-white)",
             padding: "13px 22px",
             fontSize: 12.5,
             fontWeight: 500,
@@ -241,7 +241,7 @@ function Field({
     border: invalid
       ? "1px solid rgba(220, 120, 110, 0.7)"
       : focused
-        ? "1px solid var(--luxe-champagne, #c8aa76)"
+        ? "1px solid var(--luxe-champagne, var(--luxe-champagne))"
         : "1px solid rgba(255, 255, 255, 0.12)",
     borderRadius: 10,
     transition: "background 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -258,7 +258,7 @@ function Field({
     background: "transparent",
     border: "none",
     outline: "none",
-    color: "var(--luxe-soft-white, #f7f5f2)",
+    color: "var(--luxe-soft-white, var(--luxe-soft-white))",
     fontSize: 14,
     fontFamily: "var(--font-body)",
     letterSpacing: "0.01em",
@@ -275,7 +275,7 @@ function Field({
     color: invalid
       ? "rgba(220, 140, 130, 0.95)"
       : focused
-        ? "var(--luxe-champagne, #c8aa76)"
+        ? "var(--luxe-champagne, var(--luxe-champagne))"
         : "rgba(247, 245, 242, 0.55)",
     marginBottom: 8,
     transition: "color 0.3s ease",
@@ -292,7 +292,7 @@ function Field({
               fontSize: 14,
               fontFamily: "var(--font-mono), monospace",
               color: focused
-                ? "var(--luxe-champagne, #c8aa76)"
+                ? "var(--luxe-champagne, var(--luxe-champagne))"
                 : "rgba(247, 245, 242, 0.55)",
               borderRight: "1px solid rgba(255, 255, 255, 0.08)",
               marginRight: 10,
@@ -370,7 +370,7 @@ function TrustStrip() {
             letterSpacing: "0.02em",
           }}
         >
-          <span style={{ color: "var(--luxe-champagne, #c8aa76)", display: "inline-flex", lineHeight: 0 }}>
+          <span style={{ color: "var(--luxe-champagne, var(--luxe-champagne))", display: "inline-flex", lineHeight: 0 }}>
             {it.icon}
           </span>
           {it.label}
@@ -626,7 +626,7 @@ export default function UnlockRateModal({
                   backdropFilter: "blur(28px) saturate(120%)",
                   WebkitBackdropFilter: "blur(28px) saturate(120%)",
                   overflow: "hidden",
-                  color: "var(--luxe-soft-white, #f7f5f2)",
+                  color: "var(--luxe-soft-white, var(--luxe-soft-white))",
                   fontFamily: "var(--font-body)",
                 }}
               >
@@ -652,7 +652,7 @@ export default function UnlockRateModal({
                     transition: "all 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "var(--luxe-champagne, #c8aa76)";
+                    e.currentTarget.style.color = "var(--luxe-champagne, var(--luxe-champagne))";
                     e.currentTarget.style.borderColor = "var(--luxe-champagne-line, rgba(200,170,118,0.4))";
                     e.currentTarget.style.background = "rgba(200, 170, 118, 0.08)";
                   }}
@@ -796,7 +796,7 @@ function ModalBodyForm({
             fontWeight: 700,
             letterSpacing: "0.4em",
             textTransform: "uppercase",
-            color: "var(--luxe-champagne, #c8aa76)",
+            color: "var(--luxe-champagne, var(--luxe-champagne))",
             margin: 0,
             marginBottom: 14,
           }}
@@ -811,7 +811,7 @@ function ModalBodyForm({
             fontSize: "clamp(28px, 4.5vw, 42px)",
             lineHeight: 1.05,
             letterSpacing: "-0.02em",
-            color: "var(--luxe-soft-white, #f7f5f2)",
+            color: "var(--luxe-soft-white, var(--luxe-soft-white))",
             margin: 0,
             marginBottom: 10,
             paddingRight: 48,
@@ -872,7 +872,7 @@ function ModalBodyForm({
                   borderRadius: 999,
                   fontSize: 10,
                   fontWeight: 600,
-                  color: "var(--luxe-champagne, #c8aa76)",
+                  color: "var(--luxe-champagne, var(--luxe-champagne))",
                   letterSpacing: "0.06em",
                   textTransform: "uppercase",
                 }}
@@ -889,7 +889,7 @@ function ModalBodyForm({
                 fontWeight: 700,
                 letterSpacing: "0.4em",
                 textTransform: "uppercase",
-                color: "var(--luxe-champagne, #c8aa76)",
+                color: "var(--luxe-champagne, var(--luxe-champagne))",
                 margin: 0,
                 marginBottom: 10,
               }}
@@ -904,7 +904,7 @@ function ModalBodyForm({
                 fontSize: 22,
                 lineHeight: 1.15,
                 letterSpacing: "-0.015em",
-                color: "var(--luxe-soft-white, #f7f5f2)",
+                color: "var(--luxe-soft-white, var(--luxe-soft-white))",
                 margin: 0,
                 marginBottom: 14,
                 paddingRight: hasSaving ? 110 : 0,
@@ -963,7 +963,7 @@ function ModalBodyForm({
                       fontStyle: "italic",
                       fontSize: 24,
                       lineHeight: 1.1,
-                      color: "var(--luxe-champagne, #c8aa76)",
+                      color: "var(--luxe-champagne, var(--luxe-champagne))",
                       margin: 0,
                       letterSpacing: "-0.01em",
                     }}
@@ -993,7 +993,7 @@ function ModalBodyForm({
                         fontWeight: 500,
                         fontSize: 30,
                         lineHeight: 1.05,
-                        color: "var(--luxe-champagne, #c8aa76)",
+                        color: "var(--luxe-champagne, var(--luxe-champagne))",
                         margin: 0,
                         letterSpacing: "-0.02em",
                       }}
@@ -1017,7 +1017,7 @@ function ModalBodyForm({
                   <div
                     style={{
                       fontFamily: "var(--font-mono), monospace",
-                      color: "var(--luxe-champagne, #c8aa76)",
+                      color: "var(--luxe-champagne, var(--luxe-champagne))",
                       fontWeight: 600,
                       fontSize: 13,
                       letterSpacing: "0.02em",
@@ -1041,7 +1041,7 @@ function ModalBodyForm({
                   fontWeight: 700,
                   letterSpacing: "0.4em",
                   textTransform: "uppercase",
-                  color: "var(--luxe-champagne, #c8aa76)",
+                  color: "var(--luxe-champagne, var(--luxe-champagne))",
                   margin: 0,
                   marginBottom: 12,
                 }}
@@ -1070,14 +1070,14 @@ function ModalBodyForm({
                       border: "1px solid var(--luxe-champagne-line, rgba(200,170,118,0.22))",
                       borderRadius: 999,
                       fontSize: 11.5,
-                      color: "var(--luxe-soft-white, #f7f5f2)",
+                      color: "var(--luxe-soft-white, var(--luxe-soft-white))",
                       fontFamily: "var(--font-body)",
                       letterSpacing: "0.005em",
                     }}
                   >
                     <span
                       style={{
-                        color: "var(--luxe-champagne, #c8aa76)",
+                        color: "var(--luxe-champagne, var(--luxe-champagne))",
                         display: "inline-flex",
                       }}
                     >
@@ -1128,7 +1128,7 @@ function ModalBodyForm({
                 fontWeight: 700,
                 letterSpacing: "0.4em",
                 textTransform: "uppercase",
-                color: "var(--luxe-champagne, #c8aa76)",
+                color: "var(--luxe-champagne, var(--luxe-champagne))",
                 margin: 0,
               }}
             >
@@ -1223,8 +1223,8 @@ function ModalBodyForm({
               borderRadius: 999,
               border: "none",
               cursor: submitting ? "wait" : "pointer",
-              background: "var(--luxe-champagne, #c8aa76)",
-              color: "#0c0b0a",
+              background: "var(--luxe-champagne, var(--luxe-champagne))",
+              color: "var(--luxe-black)",
               fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif",
               fontStyle: "italic",
               fontWeight: 500,
@@ -1245,7 +1245,7 @@ function ModalBodyForm({
               e.currentTarget.style.boxShadow = "0 10px 28px rgba(200, 170, 118, 0.28)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = "var(--luxe-champagne, #c8aa76)";
+              e.currentTarget.style.background = "var(--luxe-champagne, var(--luxe-champagne))";
               e.currentTarget.style.transform = "translateY(0)";
               e.currentTarget.style.boxShadow = "0 6px 22px rgba(200, 170, 118, 0.18)";
             }}
@@ -1383,7 +1383,7 @@ function ModalBodySuccess({
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
             transition={{ delay: 0.5, duration: 0.4 }}
-            style={{ color: "var(--luxe-champagne, #c8aa76)", display: "flex" }}
+            style={{ color: "var(--luxe-champagne, var(--luxe-champagne))", display: "flex" }}
           >
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
@@ -1399,7 +1399,7 @@ function ModalBodySuccess({
           fontWeight: 700,
           letterSpacing: "0.4em",
           textTransform: "uppercase",
-          color: "var(--luxe-champagne, #c8aa76)",
+          color: "var(--luxe-champagne, var(--luxe-champagne))",
           margin: 0,
           marginBottom: 12,
         }}
@@ -1415,7 +1415,7 @@ function ModalBodySuccess({
           fontSize: "clamp(30px, 5vw, 44px)",
           lineHeight: 1.05,
           letterSpacing: "-0.02em",
-          color: "var(--luxe-soft-white, #f7f5f2)",
+          color: "var(--luxe-soft-white, var(--luxe-soft-white))",
           margin: 0,
           marginBottom: 12,
         }}
@@ -1435,7 +1435,7 @@ function ModalBodySuccess({
         }}
       >
         Our concierge will WhatsApp you within{" "}
-        <strong style={{ color: "var(--luxe-soft-white, #f7f5f2)", fontWeight: 600 }}>
+        <strong style={{ color: "var(--luxe-soft-white, var(--luxe-soft-white))", fontWeight: 600 }}>
           15 minutes
         </strong>{" "}
         with your confirmed preferred rate.
@@ -1472,7 +1472,7 @@ function ModalBodySuccess({
               fontSize: 14,
               fontWeight: 600,
               letterSpacing: "0.1em",
-              color: "var(--luxe-champagne, #c8aa76)",
+              color: "var(--luxe-champagne, var(--luxe-champagne))",
             }}
           >
             {leadId}
@@ -1502,7 +1502,7 @@ function ModalBodySuccess({
             fontSize: 18,
             lineHeight: 1.2,
             letterSpacing: "-0.015em",
-            color: "var(--luxe-soft-white, #f7f5f2)",
+            color: "var(--luxe-soft-white, var(--luxe-soft-white))",
             margin: 0,
             marginBottom: 4,
           }}
@@ -1560,7 +1560,7 @@ function ModalBodySuccess({
                 fontWeight: 500,
                 fontSize: 22,
                 letterSpacing: "-0.01em",
-                color: "var(--luxe-champagne, #c8aa76)",
+                color: "var(--luxe-champagne, var(--luxe-champagne))",
               }}
             >
               {formatCurrency(totalPrice, currency)}
@@ -1651,7 +1651,7 @@ function ModalBodySuccess({
             transition: "all 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = "var(--luxe-soft-white, #f7f5f2)";
+            e.currentTarget.style.color = "var(--luxe-soft-white, var(--luxe-soft-white))";
             e.currentTarget.style.borderColor = "rgba(255,255,255,0.28)";
           }}
           onMouseLeave={(e) => {
@@ -1703,7 +1703,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
       </span>
       <span
         style={{
-          color: "var(--luxe-soft-white, #f7f5f2)",
+          color: "var(--luxe-soft-white, var(--luxe-soft-white))",
           fontWeight: 500,
           fontFamily: "var(--font-body)",
         }}
@@ -1738,7 +1738,7 @@ function pillStyle(): React.CSSProperties {
     border: "1px solid rgba(255, 255, 255, 0.1)",
     borderRadius: 999,
     fontSize: 12,
-    color: "var(--luxe-soft-white, #f7f5f2)",
+    color: "var(--luxe-soft-white, var(--luxe-soft-white))",
     fontFamily: "var(--font-body)",
     letterSpacing: "0.01em",
   };

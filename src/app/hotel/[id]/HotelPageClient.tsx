@@ -2368,7 +2368,7 @@ export default function HotelPage() {
                       textTransform: "uppercase",
                       borderRadius: 999,
                       background: selectedPlan ? "var(--luxe-champagne)" : "rgba(255,255,255,0.05)",
-                      color: selectedPlan ? "#0c0b0a" : "var(--luxe-soft-white-50)",
+                      color: selectedPlan ? "var(--luxe-black)" : "var(--luxe-soft-white-50)",
                       border: selectedPlan ? "none" : "1px solid var(--luxe-hairline-strong)",
                       cursor: selectedPlan ? "pointer" : "not-allowed",
                       transition: "all 0.3s",

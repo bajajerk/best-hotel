@@ -3,10 +3,10 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-const TEXT_PRIMARY = "#f7f5f2";
+const TEXT_PRIMARY = "var(--luxe-soft-white)";
 const TEXT_MUTED = "rgba(247, 245, 242, 0.65)";
 const TEXT_SOFT = "rgba(247, 245, 242, 0.45)";
-const GOLD = "#c8aa76";
+const GOLD = "var(--luxe-champagne)";
 
 export default function AboutPage() {
   return (

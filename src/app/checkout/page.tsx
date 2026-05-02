@@ -310,7 +310,7 @@ export default function CheckoutPage() {
         }
         .vc-steps__label--active {
           color: var(--ink);
-          border-bottom-color: #C9A84C;
+          border-bottom-color: var(--gold);
         }
         .vc-steps__label--done {
           color: var(--ink);
@@ -363,7 +363,7 @@ export default function CheckoutPage() {
           color: var(--ink);
         }
         .vc-card__row-value--gold {
-          color: #C9A84C;
+          color: var(--gold);
         }
         .vc-card__divider {
           height: 1px;
@@ -418,7 +418,7 @@ export default function CheckoutPage() {
           color: var(--ink-light);
         }
         .vc-input:focus {
-          border-color: #C9A84C;
+          border-color: var(--gold);
         }
         .vc-label {
           font-family: var(--font-body, 'DM Sans', sans-serif);
@@ -458,7 +458,7 @@ export default function CheckoutPage() {
         .vc-tabs__btn--active {
           color: var(--ink);
           font-weight: 500;
-          border-bottom-color: #C9A84C;
+          border-bottom-color: var(--gold);
         }
 
         /* ── Bank grid ── */
@@ -483,7 +483,7 @@ export default function CheckoutPage() {
         .vc-bank-btn--active {
           background: rgba(201,168,76,0.12);
           border-color: rgba(201,168,76,0.4);
-          color: #C9A84C;
+          color: var(--gold);
         }
 
         /* ── EMI ── */

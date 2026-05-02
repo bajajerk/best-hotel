@@ -1541,7 +1541,7 @@ function HotelRecommendationCard({ hotel }: { hotel: RecommendationHotel }) {
             top: "12px",
             left: "12px",
             background: "var(--gold)",
-            color: "#1a1710",
+            color: "var(--ink)",
             fontSize: "9px",
             fontWeight: 600,
             padding: "5px 12px",
@@ -1606,7 +1606,7 @@ function HotelRecommendationCard({ hotel }: { hotel: RecommendationHotel }) {
               fontWeight: 600,
               letterSpacing: "0.08em",
               textTransform: "uppercase" as const,
-              color: "var(--emerald, #10B981)",
+              color: "var(--emerald, var(--emerald))",
               marginBottom: "6px",
             }}
           >
@@ -1631,7 +1631,7 @@ function HotelRecommendationCard({ hotel }: { hotel: RecommendationHotel }) {
                   height="10"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="var(--emerald, #10B981)"
+                  stroke="var(--emerald, var(--emerald))"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -1671,7 +1671,7 @@ function HotelRecommendationCard({ hotel }: { hotel: RecommendationHotel }) {
               fontWeight: 600,
               letterSpacing: "0.04em",
               color: "#fff",
-              background: "var(--emerald, #10B981)",
+              background: "var(--emerald, var(--emerald))",
               border: "none",
               cursor: "pointer",
               textDecoration: "none",
@@ -1680,11 +1680,11 @@ function HotelRecommendationCard({ hotel }: { hotel: RecommendationHotel }) {
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLAnchorElement).style.background =
-                "var(--emerald-dark, #059669)";
+                "var(--emerald-dark, var(--emerald-dark))";
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLAnchorElement).style.background =
-                "var(--emerald, #10B981)";
+                "var(--emerald, var(--emerald))";
             }}
           >
             See Perks &amp; Rates

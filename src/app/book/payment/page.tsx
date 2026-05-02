@@ -7,10 +7,10 @@ import { useBookingFlow } from "@/context/BookingFlowContext";
 import { useAuth } from "@/context/AuthContext";
 import { createBooking } from "@/lib/api";
 
-const GOLD = "#c8aa76";
+const GOLD = "var(--luxe-champagne)";
 const SURFACE = "rgba(255,255,255,0.04)";
 const SURFACE_BORDER = "rgba(255,255,255,0.08)";
-const TEXT_PRIMARY = "#f7f5f2";
+const TEXT_PRIMARY = "var(--luxe-soft-white)";
 const TEXT_MUTED = "rgba(247, 245, 242, 0.65)";
 const TEXT_SOFT = "rgba(247, 245, 242, 0.45)";
 const ERROR = "#e08585";

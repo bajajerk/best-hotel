@@ -7,7 +7,7 @@
    Replaces every `<input type="date">` and powers the popover inside DateBar.
 
    Design language:
-     • Charcoal #0c0b0a · champagne #c8aa76 · ivory #f5f0e8
+     • Charcoal var(--luxe-black) · champagne var(--luxe-champagne) · ivory var(--cream)
      • Glass blur (backdrop-filter) on the popover panel
      • Playfair Display italic for month names
      • JetBrains Mono caps for day-of-week + eyebrow + presets
@@ -545,7 +545,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
         }}
       >
         {MONTH_NAMES[month]}{" "}
-        <span style={{ fontStyle: "normal", color: "var(--luxe-champagne, #c8aa76)", fontWeight: 400 }}>
+        <span style={{ fontStyle: "normal", color: "var(--luxe-champagne, var(--luxe-champagne))", fontWeight: 400 }}>
           {year}
         </span>
         <span
@@ -557,7 +557,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
             width: 28,
             height: 1,
             transform: "translateX(-50%)",
-            background: "linear-gradient(90deg, transparent, var(--luxe-champagne, #c8aa76), transparent)",
+            background: "linear-gradient(90deg, transparent, var(--luxe-champagne, var(--luxe-champagne)), transparent)",
           }}
         />
       </div>
@@ -645,7 +645,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
                 justifyContent: "center",
                 borderRadius: 999,
                 background: isSelected
-                  ? "var(--luxe-champagne, #c8aa76)"
+                  ? "var(--luxe-champagne, var(--luxe-champagne))"
                   : "transparent",
                 // Selected: charcoal text on champagne fill (button-grade contrast).
                 // In-range: keep numbers in the soft-white / ink tone — readable on
@@ -655,7 +655,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
                     ? "var(--luxe-soft-white-30, rgba(247,245,242,0.3))"
                     : "rgba(0,0,0,0.25)"
                   : isSelected
-                    ? "var(--luxe-black, #0c0b0a)"
+                    ? "var(--luxe-black, var(--luxe-black))"
                     : variant === "dark"
                       ? "var(--luxe-soft-white)"
                       : "var(--ink)",
@@ -663,7 +663,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
                 fontSize: 14,
                 fontWeight: isSelected ? 600 : cell.isToday ? 600 : 400,
                 outline: isFocused
-                  ? `1px solid ${isSelected ? "rgba(12,11,10,0.6)" : "var(--luxe-champagne, #c8aa76)"}`
+                  ? `1px solid ${isSelected ? "rgba(12,11,10,0.6)" : "var(--luxe-champagne, var(--luxe-champagne))"}`
                   : "none",
                 outlineOffset: isFocused ? 2 : 0,
                 transition: prefersReducedMotion
@@ -712,7 +712,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
                           width: 4,
                           height: 4,
                           borderRadius: "50%",
-                          background: "var(--luxe-champagne, #c8aa76)",
+                          background: "var(--luxe-champagne, var(--luxe-champagne))",
                         }}
                       />
                     )}
@@ -802,7 +802,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
             fontSize: 10,
             letterSpacing: "0.22em",
             textTransform: "uppercase",
-            color: "var(--luxe-champagne, #c8aa76)",
+            color: "var(--luxe-champagne, var(--luxe-champagne))",
             fontWeight: 500,
           }}
         >
@@ -918,7 +918,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
             (e.currentTarget as HTMLButtonElement).style.background = "#d8b985";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "var(--luxe-champagne, #c8aa76)";
+            (e.currentTarget as HTMLButtonElement).style.background = "var(--luxe-champagne, var(--luxe-champagne))";
           }}
         >
           Done
@@ -1053,7 +1053,7 @@ function presetChipStyle(variant: LuxeDatePickerVariant): CSSProperties {
     letterSpacing: "0.14em",
     textTransform: "uppercase",
     fontWeight: 500,
-    color: "var(--luxe-champagne, #c8aa76)",
+    color: "var(--luxe-champagne, var(--luxe-champagne))",
     background: variant === "dark" ? "rgba(200,170,118,0.08)" : "rgba(200,170,118,0.10)",
     border: "1px solid var(--luxe-champagne-line, rgba(200,170,118,0.28))",
     borderRadius: 999,
@@ -1065,8 +1065,8 @@ function presetChipStyle(variant: LuxeDatePickerVariant): CSSProperties {
 function doneBtnStyle(): CSSProperties {
   return {
     padding: "10px 22px",
-    background: "var(--luxe-champagne, #c8aa76)",
-    color: "var(--luxe-black, #0c0b0a)",
+    background: "var(--luxe-champagne, var(--luxe-champagne))",
+    color: "var(--luxe-black, var(--luxe-black))",
     border: "none",
     borderRadius: 999,
     fontFamily: "var(--font-body, sans-serif)",

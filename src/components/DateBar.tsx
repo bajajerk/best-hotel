@@ -47,9 +47,9 @@ const DateBar = forwardRef<DateBarHandle, DateBarProps>(function DateBar(
   const bgCard = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)";
   const bgInput = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)";
   const border = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
-  const labelColor = isDark ? "rgba(255,255,255,0.3)" : "#7a7465";
-  const valueColor = isDark ? "rgba(255,255,255,0.8)" : "#1a1710";
-  const placeholderColor = isDark ? "rgba(255,255,255,0.3)" : "#7a7465";
+  const labelColor = isDark ? "rgba(255,255,255,0.3)" : "var(--ink-light)";
+  const valueColor = isDark ? "rgba(255,255,255,0.8)" : "var(--ink)";
+  const placeholderColor = isDark ? "rgba(255,255,255,0.3)" : "var(--ink-light)";
 
   const handleChange = useCallback(
     ({ checkIn: ci, checkOut: co }: { checkIn: string | null; checkOut: string | null }) => {
@@ -245,7 +245,7 @@ const DateBar = forwardRef<DateBarHandle, DateBarProps>(function DateBar(
               fontSize: 10,
               letterSpacing: "0.12em",
               textTransform: "uppercase",
-              color: isDark ? "var(--luxe-champagne, #c8aa76)" : "var(--gold)",
+              color: isDark ? "var(--luxe-champagne, var(--luxe-champagne))" : "var(--gold)",
               fontFamily: "var(--font-mono, monospace)",
               fontWeight: 500,
             }}

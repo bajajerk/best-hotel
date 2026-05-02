@@ -35,7 +35,7 @@ function BookingCard({ booking }: { booking: StoredBooking }) {
   return (
     <div
       style={{
-        background: "var(--white, #fdfaf5)",
+        background: "var(--white, var(--white))",
         border: "1px solid var(--cream-border, #e0d8c8)",
         borderRadius: 0,
         overflow: "hidden",
@@ -60,13 +60,13 @@ function BookingCard({ booking }: { booking: StoredBooking }) {
               fontSize: "18px",
               fontWeight: 400,
               fontStyle: "italic",
-              color: "var(--cream, #f5f0e8)",
+              color: "var(--cream, var(--cream))",
               lineHeight: 1.3,
             }}
           >
             {booking.hotelName}
           </h3>
-          <p style={{ fontSize: "12px", color: "var(--gold, #C9A84C)", fontWeight: 500, marginTop: 2 }}>
+          <p style={{ fontSize: "12px", color: "var(--gold, var(--gold))", fontWeight: 500, marginTop: 2 }}>
             {booking.roomName}
           </p>
         </div>
@@ -82,7 +82,7 @@ function BookingCard({ booking }: { booking: StoredBooking }) {
               width: 8,
               height: 8,
               borderRadius: "50%",
-              background: "var(--success, #4a7c59)",
+              background: "var(--success, var(--success))",
             }}
           />
           <span style={{ fontSize: "11px", color: "rgba(245,240,232,0.7)", fontWeight: 500 }}>
@@ -173,9 +173,9 @@ function BookingCard({ booking }: { booking: StoredBooking }) {
               letterSpacing: "0.08em",
               textTransform: "uppercase",
               padding: "4px 10px",
-              background: isPreferred ? "var(--gold-pale, rgba(201,168,76,0.12))" : "var(--cream-deep, #ede7d9)",
-              color: isPreferred ? "var(--gold, #C9A84C)" : "var(--ink-light)",
-              border: isPreferred ? "1px solid var(--gold, #C9A84C)" : "1px solid var(--cream-border)",
+              background: isPreferred ? "var(--gold-pale, rgba(201,168,76,0.12))" : "var(--cream-deep, var(--cream-deep))",
+              color: isPreferred ? "var(--gold, var(--gold))" : "var(--ink-light)",
+              border: isPreferred ? "1px solid var(--gold, var(--gold))" : "1px solid var(--cream-border)",
             }}
           >
             {isPreferred ? "Preferred Rate" : "Standard Rate"}
@@ -194,7 +194,7 @@ function BookingCard({ booking }: { booking: StoredBooking }) {
         >
           <div>
             {booking.totalSaving > 0 && (
-              <p style={{ fontSize: "12px", color: "var(--success, #4a7c59)", fontWeight: 600, marginBottom: 2 }}>
+              <p style={{ fontSize: "12px", color: "var(--success, var(--success))", fontWeight: 600, marginBottom: 2 }}>
                 Saved {formatCurrency(booking.totalSaving, booking.currency)}
               </p>
             )}

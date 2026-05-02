@@ -215,7 +215,7 @@ export default function DestinationSearch({
       border: "none",
       background: "transparent",
       fontSize: "14px",
-      color: isDark ? "var(--luxe-soft-white, #f7f5f2)" : "var(--ink)",
+      color: isDark ? "var(--luxe-soft-white, var(--luxe-soft-white))" : "var(--ink)",
       fontFamily: "var(--font-body)",
       fontWeight: 400 as const,
       width: "100%",
@@ -249,7 +249,7 @@ export default function DestinationSearch({
       letterSpacing: "0.16em",
       textTransform: "uppercase" as const,
       fontWeight: 500,
-      color: isDark ? "var(--luxe-champagne, #c8aa76)" : "var(--ink-light)",
+      color: isDark ? "var(--luxe-champagne, var(--luxe-champagne))" : "var(--ink-light)",
     },
     item: (isActive: boolean) => ({
       display: "flex" as const,
@@ -264,14 +264,14 @@ export default function DestinationSearch({
           ? "rgba(200, 170, 118, 0.14)"
           : "var(--cream)"
         : "transparent",
-      borderLeft: isActive && isDark ? "2px solid var(--luxe-champagne, #c8aa76)" : "2px solid transparent",
+      borderLeft: isActive && isDark ? "2px solid var(--luxe-champagne, var(--luxe-champagne))" : "2px solid transparent",
     }),
     cityName: {
       fontSize: "14px",
       fontFamily: "var(--font-display)",
       fontWeight: 400,
       fontStyle: "italic" as const,
-      color: isDark ? "var(--luxe-soft-white, #f7f5f2)" : "var(--ink)",
+      color: isDark ? "var(--luxe-soft-white, var(--luxe-soft-white))" : "var(--ink)",
       lineHeight: 1.25,
     },
     cityCountry: {
@@ -282,7 +282,7 @@ export default function DestinationSearch({
     hotelName: {
       fontSize: "14px",
       fontWeight: 500,
-      color: isDark ? "var(--luxe-soft-white, #f7f5f2)" : "var(--ink)",
+      color: isDark ? "var(--luxe-soft-white, var(--luxe-soft-white))" : "var(--ink)",
       lineHeight: 1.25,
     },
     hotelLocation: {

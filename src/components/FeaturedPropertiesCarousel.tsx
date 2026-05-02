@@ -134,7 +134,7 @@ export default function FeaturedPropertiesCarousel({
               style={{
                 display: "inline-block",
                 background: "var(--gold)",
-                color: "#1a1710",
+                color: "var(--ink)",
                 fontSize: "9px",
                 fontWeight: 600,
                 letterSpacing: "0.14em",
@@ -164,7 +164,7 @@ export default function FeaturedPropertiesCarousel({
                 fontFamily: "var(--font-display)",
                 fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
                 fontWeight: 400,
-                color: "#fdfaf5",
+                color: "var(--white)",
                 lineHeight: 1.2,
                 marginBottom: "6px",
                 maxWidth: "600px",
@@ -219,7 +219,7 @@ export default function FeaturedPropertiesCarousel({
                       fontSize: "10px",
                       padding: "4px 10px",
                       background: "var(--gold)",
-                      color: "#1a1710",
+                      color: "var(--ink)",
                       fontFamily: "var(--font-mono)",
                       fontWeight: 600,
                     }}
@@ -254,7 +254,7 @@ export default function FeaturedPropertiesCarousel({
                       fontFamily: "var(--font-display)",
                       fontSize: "28px",
                       fontWeight: 500,
-                      color: "#fdfaf5",
+                      color: "var(--white)",
                       lineHeight: 1.1,
                     }}
                   >
@@ -293,7 +293,7 @@ export default function FeaturedPropertiesCarousel({
                     gap: "8px",
                     padding: "10px 24px",
                     background: "var(--gold)",
-                    color: "#1a1710",
+                    color: "var(--ink)",
                     textDecoration: "none",
                     fontSize: "11px",
                     fontWeight: 500,

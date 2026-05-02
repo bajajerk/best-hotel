@@ -99,9 +99,9 @@ function formatReviews(n: number): string {
 // Medal colors for top 3
 // ---------------------------------------------------------------------------
 const MEDAL_COLORS: Record<number, { bg: string; text: string; label: string }> = {
-  1: { bg: "#C9A84C", text: "#fdfaf5", label: "Best Seller" },
-  2: { bg: "#8a8a8a", text: "#fdfaf5", label: "Runner Up" },
-  3: { bg: "#a0714f", text: "#fdfaf5", label: "Top Pick" },
+  1: { bg: "var(--gold)", text: "var(--white)", label: "Best Seller" },
+  2: { bg: "#8a8a8a", text: "var(--white)", label: "Runner Up" },
+  3: { bg: "#a0714f", text: "var(--white)", label: "Top Pick" },
 };
 
 // ---------------------------------------------------------------------------
@@ -178,7 +178,7 @@ function TopSellerCard({ hotel }: { hotel: TopSellerHotel }) {
                 top: "12px",
                 right: "12px",
                 background: "var(--gold)",
-                color: "#1a1710",
+                color: "var(--ink)",
                 fontSize: "12px",
                 fontWeight: 600,
                 padding: "4px 10px",
@@ -195,7 +195,7 @@ function TopSellerCard({ hotel }: { hotel: TopSellerHotel }) {
               position: "absolute",
               bottom: "12px",
               left: "12px",
-              background: "var(--emerald, #10B981)",
+              background: "var(--emerald, var(--emerald))",
               color: "#fff",
               fontSize: "10px",
               fontWeight: 500,
@@ -322,7 +322,7 @@ function TopSellerCard({ hotel }: { hotel: TopSellerHotel }) {
             <div style={{
               fontSize: "11px",
               fontWeight: 500,
-              color: "var(--emerald, #10B981)",
+              color: "var(--emerald, var(--emerald))",
               display: "flex",
               alignItems: "center",
               gap: "5px",

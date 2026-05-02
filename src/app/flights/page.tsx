@@ -381,7 +381,7 @@ export default function FlightsPage() {
       <style>{`
         .flights-page {
           min-height: 100vh;
-          background: #0B1B2B;
+          background: var(--navy);
           padding-top: 72px;
         }
 
@@ -389,12 +389,12 @@ export default function FlightsPage() {
         .tabs-wrap { padding: 20px 16px 0; }
         .tabs { display: inline-flex; background: rgba(255,255,255,0.07); border-radius: 7px; padding: 3px; gap: 2px; }
         .tab { padding: 9px 26px; font-family: var(--font-body); font-size: 13px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(253,250,245,0.5); text-decoration: none; border-radius: 5px; cursor: pointer; transition: all 0.2s; }
-        .tab.act { background: #C9A84C; color: #0B1B2B; }
+        .tab.act { background: var(--gold); color: var(--navy); }
 
         /* ── Trip type ── */
         .trip-type-row { display: flex; gap: 8px; padding: 14px 16px 0; }
         .trip-btn { padding: 7px 20px; border-radius: 100px; border: 1.5px solid rgba(255,255,255,0.15); background: transparent; color: rgba(253,250,245,0.55); font-family: var(--font-body); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .trip-btn.act { background: #C9A84C; border-color: #C9A84C; color: #0B1B2B; font-weight: 700; }
+        .trip-btn.act { background: var(--gold); border-color: var(--gold); color: var(--navy); font-weight: 700; }
 
         /* ── Form card ── */
         .form-area { background: rgba(255,255,255,0.055); border: 1px solid rgba(201,168,76,0.14); border-radius: 12px; margin: 14px 16px 0; overflow: hidden; }
@@ -403,32 +403,32 @@ export default function FlightsPage() {
         .field-row { display: flex; align-items: stretch; }
         .field { padding: 14px 14px; flex: 1; cursor: pointer; transition: background 0.15s; min-width: 0; }
         .field:hover { background: rgba(255,255,255,0.03); }
-        .field.focus { background: rgba(201,168,76,0.06); border-left: 2px solid #C9A84C; }
+        .field.focus { background: rgba(201,168,76,0.06); border-left: 2px solid var(--gold); }
         .field.border-top { border-top: 1px solid rgba(255,255,255,0.06); }
         .field.border-left { border-left: 1px solid rgba(255,255,255,0.06); }
         .fl { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(253,250,245,0.38); margin-bottom: 5px; font-family: var(--font-body); }
-        .fv { font-size: 15px; font-weight: 500; color: #fdfaf5; font-family: var(--font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .fv { font-size: 15px; font-weight: 500; color: var(--white); font-family: var(--font-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .fv.ph { color: rgba(253,250,245,0.28); }
         .fv-hint { font-size: 11px; color: rgba(253,250,245,0.4); margin-top: 2px; font-family: var(--font-body); }
 
         /* ── Swap ── */
         .swap-btn { width: 38px; min-width: 38px; background: transparent; border: none; border-left: 1px solid rgba(255,255,255,0.06); border-right: 1px solid rgba(255,255,255,0.06); color: rgba(201,168,76,0.6); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: color 0.2s, background 0.2s; }
-        .swap-btn:hover { color: #C9A84C; background: rgba(201,168,76,0.07); }
+        .swap-btn:hover { color: var(--gold); background: rgba(201,168,76,0.07); }
 
         /* ── Airport search dropdown ── */
         .airport-drop { background: #0d1e2e; border-top: 1px solid rgba(201,168,76,0.14); max-height: 252px; overflow-y: auto; }
-        .airport-input { width: 100%; padding: 12px 14px; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.07); color: #fdfaf5; font-family: var(--font-body); font-size: 14px; outline: none; caret-color: #C9A84C; }
+        .airport-input { width: 100%; padding: 12px 14px; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.07); color: var(--white); font-family: var(--font-body); font-size: 14px; outline: none; caret-color: var(--gold); }
         .airport-input::placeholder { color: rgba(253,250,245,0.3); }
         .airport-row { display: flex; align-items: center; gap: 12px; padding: 11px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
         .airport-row:hover { background: rgba(255,255,255,0.04); }
-        .airport-code { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #C9A84C; min-width: 34px; }
-        .airport-city { font-size: 14px; color: #fdfaf5; font-weight: 500; font-family: var(--font-body); }
+        .airport-code { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--gold); min-width: 34px; }
+        .airport-city { font-size: 14px; color: var(--white); font-weight: 500; font-family: var(--font-body); }
         .airport-name { font-size: 11px; color: rgba(253,250,245,0.38); font-family: var(--font-body); margin-top: 1px; }
 
         /* ── Dates ── */
         .dates-row { display: grid; grid-template-columns: 1fr; }
         .dates-row.two-col { grid-template-columns: 1fr 1fr; }
-        .date-input { background: transparent; border: none; outline: none; color: #fdfaf5; font-family: var(--font-body); font-size: 15px; font-weight: 500; width: 100%; color-scheme: dark; cursor: pointer; }
+        .date-input { background: transparent; border: none; outline: none; color: var(--white); font-family: var(--font-body); font-size: 15px; font-weight: 500; width: 100%; color-scheme: dark; cursor: pointer; }
         .date-input.ph { color: rgba(253,250,245,0.28); }
 
         /* ── Travellers ── */
@@ -438,21 +438,21 @@ export default function FlightsPage() {
         .pax-pop { background: #0d1e2e; border-top: 1px solid rgba(201,168,76,0.14); padding: 14px 16px 12px; }
         .pax-stepper-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .pax-stepper-row:last-of-type { border-bottom: none; }
-        .pax-stepper-label { font-size: 14px; font-weight: 600; color: #fdfaf5; font-family: var(--font-body); }
+        .pax-stepper-label { font-size: 14px; font-weight: 600; color: var(--white); font-family: var(--font-body); }
         .pax-stepper-hint { font-size: 11px; color: rgba(253,250,245,0.42); font-family: var(--font-body); margin-top: 2px; }
         .pax-stepper-ctrl { display: flex; align-items: center; gap: 12px; }
-        .pax-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #C9A84C; background: transparent; color: #C9A84C; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; transition: background 0.2s, opacity 0.2s; }
+        .pax-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--gold); background: transparent; color: var(--gold); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; transition: background 0.2s, opacity 0.2s; }
         .pax-btn:hover:not(:disabled) { background: rgba(201,168,76,0.12); }
         .pax-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        .pax-num { color: #fdfaf5; font-size: 15px; font-weight: 600; min-width: 18px; text-align: center; font-family: var(--font-mono); }
+        .pax-num { color: var(--white); font-size: 15px; font-weight: 600; min-width: 18px; text-align: center; font-family: var(--font-mono); }
 
         .pax-cabin-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 14px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.05); }
         .pax-cabin-label { font-size: 12px; font-weight: 600; color: rgba(253,250,245,0.65); font-family: var(--font-body); letter-spacing: 0.04em; text-transform: uppercase; }
-        .cabin-select-full { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: #fdfaf5; font-family: var(--font-body); font-size: 13px; padding: 8px 10px; outline: none; cursor: pointer; color-scheme: dark; min-width: 140px; }
+        .cabin-select-full { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: var(--white); font-family: var(--font-body); font-size: 13px; padding: 8px 10px; outline: none; cursor: pointer; color-scheme: dark; min-width: 140px; }
 
         .pax-pop-foot { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
         .pax-foot-meta { font-size: 11px; color: rgba(253,250,245,0.4); font-family: var(--font-body); }
-        .pax-done { background: #C9A84C; color: #0B1B2B; padding: 7px 18px; border-radius: 6px; border: none; font-family: var(--font-body); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: opacity 0.2s; }
+        .pax-done { background: var(--gold); color: var(--navy); padding: 7px 18px; border-radius: 6px; border: none; font-family: var(--font-body); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: opacity 0.2s; }
         .pax-done:hover { opacity: 0.88; }
 
         /* ── Popular ── */
@@ -460,20 +460,20 @@ export default function FlightsPage() {
         .pop-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(253,250,245,0.35); margin-bottom: 10px; font-family: var(--font-body); }
         .pop-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
         .pop-pill { padding: 6px 14px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.11); color: rgba(253,250,245,0.62); font-family: var(--font-body); font-size: 12px; cursor: pointer; transition: all 0.18s; white-space: nowrap; }
-        .pop-pill:hover { border-color: #C9A84C; color: #fdfaf5; background: rgba(201,168,76,0.08); }
+        .pop-pill:hover { border-color: var(--gold); color: var(--white); background: rgba(201,168,76,0.08); }
 
         /* ── Search CTA ── */
-        .search-btn { background: #C9A84C; color: #0B1B2B; padding: 16px; border-radius: 8px; font-family: var(--font-body); font-size: 15px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; text-align: center; cursor: pointer; transition: opacity 0.2s; }
+        .search-btn { background: var(--gold); color: var(--navy); padding: 16px; border-radius: 8px; font-family: var(--font-body); font-size: 15px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; text-align: center; cursor: pointer; transition: opacity 0.2s; }
         .search-btn.disabled { opacity: 0.32; cursor: not-allowed; }
         .search-btn:not(.disabled):active { opacity: 0.85; }
 
         /* ── Sticky bottom ── */
         .sticky { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,24,40,0.97); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid rgba(201,168,76,0.14); display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; padding-bottom: max(13px, env(safe-area-inset-bottom)); z-index: 50; }
         .sticky-l { display: flex; flex-direction: column; gap: 2px; }
-        .sticky-lbl { font-size: 13px; font-weight: 600; color: #fdfaf5; font-family: var(--font-body); letter-spacing: 0.02em; }
+        .sticky-lbl { font-size: 13px; font-weight: 600; color: var(--white); font-family: var(--font-body); letter-spacing: 0.02em; }
         .sticky-sub { font-size: 11px; color: rgba(255,255,255,0.45); font-family: var(--font-body); }
-        .sticky-total { font-size: 18px; font-weight: 700; color: #C9A84C; font-family: var(--font-mono); }
-        .sticky-btn { background: #C9A84C; color: #0B1B2B; padding: 10px 22px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; cursor: pointer; border: none; transition: opacity 0.2s; white-space: nowrap; }
+        .sticky-total { font-size: 18px; font-weight: 700; color: var(--gold); font-family: var(--font-mono); }
+        .sticky-btn { background: var(--gold); color: var(--navy); padding: 10px 22px; border-radius: 6px; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; cursor: pointer; border: none; transition: opacity 0.2s; white-space: nowrap; }
         .sticky-btn:hover { opacity: 0.88; }
       `}</style>
     </>

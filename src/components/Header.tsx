@@ -9,12 +9,12 @@ import type { User } from "firebase/auth";
 
 /* ────────────────────────────────────────────────────────────
    Voyagr.Club — Sticky Navigation Bar
-   72px desktop · 60px mobile · #0B1B2B solid
+   72px desktop · 60px mobile · var(--navy) solid
    ──────────────────────────────────────────────────────────── */
 
-const GOLD = "#C9A84C";
-const NAVY = "#0B1B2B";
-const IVORY = "#fdfaf5";
+const GOLD = "var(--gold)";
+const NAVY = "var(--navy)";
+const IVORY = "var(--white)";
 
 export const NAV_LINKS = [
   { label: "Hotels", href: "/search" },

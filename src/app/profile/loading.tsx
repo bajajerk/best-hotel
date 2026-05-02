@@ -8,7 +8,7 @@ import { LuxeLoader } from "@/components/loaders";
  */
 export default function ProfileLoading() {
   return (
-    <div className="luxe" style={{ minHeight: "100vh", background: "#0c0b0a" }}>
+    <div className="luxe" style={{ minHeight: "100vh", background: "var(--luxe-black)" }}>
       <Header />
       <LuxeLoader />
     </div>

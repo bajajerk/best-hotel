@@ -98,20 +98,20 @@ export default function FlowProgressBar({
                   transition: "all 0.3s",
                   ...(isCompleted
                     ? {
-                        background: "var(--success, #4a7c59)",
+                        background: "var(--success, var(--success))",
                         color: "#fff",
-                        border: "2px solid var(--success, #4a7c59)",
+                        border: "2px solid var(--success, var(--success))",
                       }
                     : isActive
                     ? {
-                        background: "var(--gold, #C9A84C)",
-                        color: "var(--ink, #1a1710)",
-                        border: "2px solid var(--gold, #C9A84C)",
+                        background: "var(--gold, var(--gold))",
+                        color: "var(--ink, var(--ink))",
+                        border: "2px solid var(--gold, var(--gold))",
                         boxShadow: "0 0 0 3px rgba(201,168,76,0.25)",
                       }
                     : {
                         background: "transparent",
-                        color: "var(--ink-light, #7a7465)",
+                        color: "var(--ink-light, var(--ink-light))",
                         border: "2px solid var(--cream-border, #e0d8c8)",
                       }),
                 }}
@@ -142,10 +142,10 @@ export default function FlowProgressBar({
                   letterSpacing: "0.04em",
                   textTransform: "uppercase",
                   color: isCompleted
-                    ? "var(--success, #4a7c59)"
+                    ? "var(--success, var(--success))"
                     : isActive
-                    ? "var(--gold, #C9A84C)"
-                    : "var(--ink-light, #7a7465)",
+                    ? "var(--gold, var(--gold))"
+                    : "var(--ink-light, var(--ink-light))",
                   whiteSpace: "nowrap",
                   transition: "color 0.3s",
                   textDecoration: isClickable ? "none" : "none",
@@ -168,7 +168,7 @@ export default function FlowProgressBar({
                   width: 28,
                   height: 2,
                   background: i < currentIdx
-                    ? "var(--success, #4a7c59)"
+                    ? "var(--success, var(--success))"
                     : "var(--cream-border, #e0d8c8)",
                   transition: "background 0.3s",
                   flexShrink: 0,

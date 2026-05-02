@@ -75,7 +75,7 @@ export default function CompareBar() {
               <span
                 style={{
                   fontSize: 11,
-                  color: "#fdfaf5",
+                  color: "var(--white)",
                   fontFamily: "var(--font-body)",
                   fontWeight: 400,
                   whiteSpace: "nowrap",

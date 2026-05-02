@@ -9,7 +9,7 @@ import { LuxeLoader } from "@/components/loaders";
  */
 export default function HotelLoading() {
   return (
-    <div style={{ minHeight: "100vh", background: "#0c0b0a" }}>
+    <div style={{ minHeight: "100vh", background: "var(--luxe-black)" }}>
       <Header />
       <LuxeLoader />
     </div>

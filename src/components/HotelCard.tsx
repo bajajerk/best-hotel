@@ -106,7 +106,7 @@ function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
                 top: "12px",
                 right: "12px",
                 background: "var(--gold)",
-                color: "#1a1710",
+                color: "var(--ink)",
                 fontSize: "12px",
                 fontWeight: 600,
                 padding: "4px 10px",
@@ -121,7 +121,7 @@ function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
               position: "absolute",
               bottom: "12px",
               left: "12px",
-              background: "var(--emerald, #10B981)",
+              background: "var(--emerald, var(--emerald))",
               color: "#fff",
               fontSize: "10px",
               fontWeight: 500,
@@ -184,7 +184,7 @@ function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
               fontWeight: 600,
               letterSpacing: "0.08em",
               textTransform: "uppercase" as const,
-              color: "var(--emerald, #10B981)",
+              color: "var(--emerald, var(--emerald))",
               marginBottom: "6px",
             }}>
               Members enjoy:
@@ -201,7 +201,7 @@ function HotelCardInner({ hotel }: { hotel: HotelCardData }) {
                     color: "var(--ink-mid)",
                   }}
                 >
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--emerald, #10B981)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--emerald, var(--emerald))" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   {perk}
@@ -316,7 +316,7 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
               position: "absolute",
               top: "12px",
               left: "12px",
-              background: "var(--emerald, #10B981)",
+              background: "var(--emerald, var(--emerald))",
               color: "#fff",
               padding: "6px 14px",
               fontSize: "9px",
@@ -334,7 +334,7 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
                 top: "12px",
                 right: "12px",
                 background: "var(--gold)",
-                color: "#1a1710",
+                color: "var(--ink)",
                 fontSize: "12px",
                 fontWeight: 600,
                 padding: "4px 10px",
@@ -382,7 +382,7 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
               fontWeight: 600,
               letterSpacing: "0.08em",
               textTransform: "uppercase" as const,
-              color: "var(--emerald, #10B981)",
+              color: "var(--emerald, var(--emerald))",
               marginBottom: "6px",
             }}>
               Members enjoy:
@@ -399,7 +399,7 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
                     color: "var(--ink-mid)",
                   }}
                 >
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--emerald, #10B981)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--emerald, var(--emerald))" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   {perk}
@@ -445,7 +445,7 @@ function HotelDealCardInner({ deal }: { deal: HotelDealData }) {
             <div style={{
               fontSize: "11px",
               fontWeight: 500,
-              color: "var(--emerald, #10B981)",
+              color: "var(--emerald, var(--emerald))",
             }}>
               Preferred Access
             </div>
