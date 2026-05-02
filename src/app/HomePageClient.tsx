@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -130,6 +130,26 @@ export default function Home({
   const [heroDestination, setHeroDestination] = useState("");
   const [heroDestError, setHeroDestError] = useState(false);
   const [heroDateOpen, setHeroDateOpen] = useState(false);
+
+  const topCitiesScrollRef = useRef<HTMLDivElement>(null);
+  const topCitiesPausedRef = useRef(false);
+
+  useEffect(() => {
+    const el = topCitiesScrollRef.current;
+    if (!el) return;
+    const id = setInterval(() => {
+      if (topCitiesPausedRef.current) return;
+      const node = topCitiesScrollRef.current;
+      if (!node) return;
+      const max = node.scrollWidth - node.clientWidth - 4;
+      if (node.scrollLeft >= max) {
+        node.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        node.scrollBy({ left: 320, behavior: "smooth" });
+      }
+    }, 4000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (initialCities.length === 0) {
@@ -446,7 +466,14 @@ export default function Home({
           <div style={{ paddingLeft: 24, paddingRight: 0 }}>
             {homeCities.length > 0 ? (
               <div
+                ref={topCitiesScrollRef}
                 className="top-cities-scroll"
+                onMouseEnter={() => (topCitiesPausedRef.current = true)}
+                onMouseLeave={() => (topCitiesPausedRef.current = false)}
+                onTouchStart={() => (topCitiesPausedRef.current = true)}
+                onTouchEnd={() => {
+                  setTimeout(() => (topCitiesPausedRef.current = false), 1200);
+                }}
                 style={{
                   display: "flex",
                   gap: 10,
