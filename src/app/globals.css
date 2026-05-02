@@ -4418,21 +4418,62 @@ body:has(.precision-theme) {
   background: rgba(255, 255, 255, 0.04);
 }
 
-/* ── Top Cities Bento carousel (home page) ── */
-.top-city-tile .top-city-img {
-  transform: scale(1);
-  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.top-city-tile:hover .top-city-img {
-  transform: scale(1.02);
-}
-.top-city-tile:hover .top-city-card-inner {
-  border-color: rgba(200, 170, 118, 0.55) !important;
+/* ── Top Cities — Embla carousel (cinematic motion) ── */
+
+/* Disable all transitions during window resize to prevent jank */
+.resize-no-transitions * {
+  transition: none !important;
+  animation: none !important;
 }
 
-/* Hide scrollbar — desktop carousel */
-.top-cities-scroll::-webkit-scrollbar {
-  display: none;
+/* Embla viewport: clips the scrolling track */
+.top-cities-embla-viewport {
+  overflow: hidden;
+  padding: 8px 0 24px;
+}
+
+/* Embla track: GPU-composited translateX layer */
+.top-cities-embla-track {
+  display: flex;
+  gap: 10px;
+  height: 214px;
+  align-items: stretch;
+  will-change: transform;
+  padding-right: 24px;
+}
+
+/* Individual slides: only scale/opacity/filter from RAF tween — no entrance CSS here */
+.top-cities-embla-slide {
+  flex-shrink: 0;
+  min-width: 0;
+  position: relative;
+  will-change: transform, opacity;
+}
+
+/*
+  Entrance wrapper — isolated from the RAF tween (which targets the slide element).
+  tween sets slide.opacity; wrapper starts at 0.
+  Effective opacity = slide_opacity × wrapper_opacity — no conflicts.
+*/
+.city-slide-anim-wrapper {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 550ms ease,
+    transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* IO adds city-slide--revealed to the slide → triggers wrapper transition */
+.city-slide--revealed .city-slide-anim-wrapper {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Image: base slightly oversized to cover parallax movement */
+.top-city-embla-img {
+  transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Browse All — underline sweep on hover */
@@ -4454,18 +4495,30 @@ body:has(.precision-theme) {
   width: 100%;
 }
 
-/* Mobile: collapse to vertical stack */
+/* Cursor: grab / grabbing during Embla drag */
+.top-cities-embla-viewport {
+  cursor: grab;
+}
+.top-cities-embla-viewport:active {
+  cursor: grabbing;
+}
+
+/* Mobile: single-column stack */
 @media (max-width: 767px) {
-  .top-cities-scroll {
-    flex-direction: column !important;
+  .top-cities-embla-track {
     height: auto !important;
-    overflow-x: visible !important;
-    overflow-y: visible !important;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 24px;
   }
-  .top-city-bento-card {
+  .top-cities-embla-slide {
     flex: none !important;
     width: 100% !important;
     height: 160px !important;
+  }
+  .top-cities-embla-viewport {
+    overflow-x: hidden;
+    padding: 4px 0 16px;
   }
 }
 

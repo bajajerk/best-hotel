@@ -29,6 +29,7 @@ import LuxeDatePicker from "@/components/LuxeDatePicker";
 import { useBooking } from "@/context/BookingContext";
 import { useAuth } from "@/context/AuthContext";
 import { trackCtaClicked } from "@/lib/analytics";
+import TopCitiesCarousel from "@/components/TopCitiesCarousel";
 
 export interface HomePageClientProps {
   initialCities: CuratedCity[];
@@ -84,9 +85,6 @@ function safeImg(u: string | null | undefined): string {
 const CITY_FALLBACK_GRADIENT =
   "linear-gradient(135deg, rgba(200,170,118,0.32) 0%, rgba(20,18,15,0.92) 100%)";
 
-type BentoType = "tall" | "short" | "wide";
-const BENTO_PATTERN: BentoType[] = ["tall", "tall", "short", "short", "wide", "tall"];
-const BENTO_WIDTHS: Record<BentoType, number> = { tall: 155, short: 242, wide: 336 };
 
 export default function Home({
   initialCities,
@@ -131,25 +129,6 @@ export default function Home({
   const [heroDestError, setHeroDestError] = useState(false);
   const [heroDateOpen, setHeroDateOpen] = useState(false);
 
-  const topCitiesScrollRef = useRef<HTMLDivElement>(null);
-  const topCitiesPausedRef = useRef(false);
-
-  useEffect(() => {
-    const el = topCitiesScrollRef.current;
-    if (!el) return;
-    const id = setInterval(() => {
-      if (topCitiesPausedRef.current) return;
-      const node = topCitiesScrollRef.current;
-      if (!node) return;
-      const max = node.scrollWidth - node.clientWidth - 4;
-      if (node.scrollLeft >= max) {
-        node.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        node.scrollBy({ left: 320, behavior: "smooth" });
-      }
-    }, 4000);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     if (initialCities.length === 0) {
@@ -415,196 +394,48 @@ export default function Home({
         </div>
       </motion.section>
 
-      {/* ── Top Cities — Bento carousel ────────────────────────────── */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.6 }}
-        style={{ padding: "28px 0 28px", borderTop: "1px solid var(--luxe-hairline)" }}
-      >
-          <div
-            className="luxe-container"
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              marginBottom: 12,
-              gap: 24,
-              flexWrap: "wrap",
-            }}
-          >
-            <div style={{ maxWidth: 640 }}>
-              <div className="luxe-tech" style={{ marginBottom: 6 }}>
-                Top Cities
-              </div>
-              <h2
-                className="luxe-display"
-                style={{ fontSize: "clamp(22px, 2.2vw, 28px)", marginBottom: 0 }}
-              >
-                India travellers&rsquo; <em>favourites</em>
-              </h2>
+      {/* ── Top Cities — Embla carousel with cinematic motion ───────────── */}
+      <section style={{ padding: "28px 0 28px", borderTop: "1px solid var(--luxe-hairline)" }}>
+        <motion.div
+          className="luxe-container"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            marginBottom: 12,
+            gap: 24,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ maxWidth: 640 }}>
+            <div className="luxe-tech" style={{ marginBottom: 6 }}>
+              Top Cities
             </div>
-            <Link
-              href="/search"
-              className="luxe-tech top-cities-browse-all"
-              style={{ color: "var(--luxe-champagne)" }}
+            <h2
+              className="luxe-display"
+              style={{ fontSize: "clamp(22px, 2.2vw, 28px)", marginBottom: 0 }}
             >
-              Browse All &rarr;
-            </Link>
+              India travellers&rsquo; <em>favourites</em>
+            </h2>
           </div>
+          <Link
+            href="/search"
+            className="luxe-tech top-cities-browse-all"
+            style={{ color: "var(--luxe-champagne)" }}
+          >
+            Browse All &rarr;
+          </Link>
+        </motion.div>
 
-          {/* Overflow wrapper — extend past luxe-container padding so 6th card peeks */}
-          <div style={{ paddingLeft: 24, paddingRight: 0 }}>
-            {homeCities.length > 0 ? (
-              <div
-                ref={topCitiesScrollRef}
-                className="top-cities-scroll"
-                onMouseEnter={() => (topCitiesPausedRef.current = true)}
-                onMouseLeave={() => (topCitiesPausedRef.current = false)}
-                onTouchStart={() => (topCitiesPausedRef.current = true)}
-                onTouchEnd={() => {
-                  setTimeout(() => (topCitiesPausedRef.current = false), 1200);
-                }}
-                style={{
-                  display: "flex",
-                  gap: 10,
-                  overflowX: "auto",
-                  overflowY: "visible",
-                  height: 214,
-                  alignItems: "stretch",
-                  scrollSnapType: "x mandatory",
-                  msOverflowStyle: "none",
-                  scrollbarWidth: "none",
-                  paddingRight: 24,
-                }}
-              >
-                {homeCities.map((c, i) => {
-                  const type = BENTO_PATTERN[i % BENTO_PATTERN.length];
-                  const cardW = BENTO_WIDTHS[type];
-                  return (
-                    <Link
-                      key={c.city_slug}
-                      href={`/city/${c.city_slug}`}
-                      className="top-city-tile top-city-bento-card"
-                      style={{
-                        display: "block",
-                        textDecoration: "none",
-                        color: "inherit",
-                        flex: `0 0 ${cardW}px`,
-                        height: "100%",
-                        scrollSnapAlign: "start",
-                      }}
-                    >
-                      <div
-                        className="top-city-card-inner"
-                        style={{
-                          position: "relative",
-                          width: "100%",
-                          height: "100%",
-                          borderRadius: 12,
-                          overflow: "hidden",
-                          border: "1px solid rgba(200,170,118,0.22)",
-                          background: CITY_FALLBACK_GRADIENT,
-                          boxShadow: "0 1px 0 rgba(255,255,255,0.04) inset",
-                          transition: "border-color 0.28s ease",
-                        }}
-                      >
-                        {c.image_url ? (
-                          <Image
-                            src={safeImg(c.image_url)}
-                            alt={`${c.city_name}, ${c.country}`}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 340px"
-                            className="top-city-img"
-                            style={{ objectFit: "cover" }}
-                          />
-                        ) : null}
-                        {/* Bottom gradient for legibility */}
-                        <div
-                          aria-hidden="true"
-                          style={{
-                            position: "absolute",
-                            inset: 0,
-                            background:
-                              "linear-gradient(180deg, rgba(0,0,0,0) 38%, rgba(0,0,0,0.76) 100%)",
-                            pointerEvents: "none",
-                          }}
-                        />
-                        {/* Bottom text block: country + city + stays pill */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            left: 10,
-                            right: 10,
-                            bottom: 10,
-                            color: "var(--luxe-soft-white)",
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontFamily: "var(--font-mono, monospace)",
-                              fontSize: 9,
-                              letterSpacing: "0.18em",
-                              textTransform: "uppercase",
-                              color: "rgba(247,245,242,0.6)",
-                              marginBottom: 3,
-                            }}
-                          >
-                            {c.country}
-                          </div>
-                          <div
-                            style={{
-                              fontFamily: "var(--font-display)",
-                              fontSize: 18,
-                              fontWeight: 500,
-                              letterSpacing: "-0.015em",
-                              lineHeight: 1.15,
-                              marginBottom: 7,
-                            }}
-                          >
-                            {c.city_name}
-                          </div>
-                          {/* Frosted-glass stays chip */}
-                          <div
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              padding: "3px 8px",
-                              borderRadius: 9999,
-                              background: "rgba(12,11,10,0.42)",
-                              backdropFilter: "blur(8px)",
-                              WebkitBackdropFilter: "blur(8px)",
-                              border: "1px solid rgba(200,170,118,0.18)",
-                              fontFamily: "var(--font-mono, monospace)",
-                              fontSize: 9,
-                              letterSpacing: "0.12em",
-                              textTransform: "uppercase",
-                              color: "rgba(247,245,242,0.72)",
-                            }}
-                          >
-                            {c.hotel_count} stays
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <div
-                style={{
-                  color: "var(--luxe-soft-white-50)",
-                  fontSize: 13,
-                  paddingTop: 24,
-                  paddingBottom: 24,
-                }}
-              >
-                Curating featured cities&hellip;
-              </div>
-            )}
-          </div>
-      </motion.section>
+        {/* Embla-powered carousel — extends past container padding */}
+        <div style={{ paddingLeft: 24, paddingRight: 0 }}>
+          <TopCitiesCarousel items={homeCities} />
+        </div>
+      </section>
 
       {/* ── Editor's Picks — single row of top-rated stays ──────────────── */}
       <motion.section
