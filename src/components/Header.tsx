@@ -9,12 +9,18 @@ import type { User } from "firebase/auth";
 
 /* ────────────────────────────────────────────────────────────
    Voyagr.Club — Sticky Navigation Bar
-   72px desktop · 60px mobile · var(--navy) solid
+   72px desktop · 60px mobile · #0B1B2B solid
+
+   NOTE: These three constants are deliberately literal hex, NOT
+   var(--*), because the header is a fixed brand asset rendered
+   above pages that scope-remap design tokens (e.g. .precision-theme
+   on home flips --white to a dark ink, which would render header
+   text invisible on the navy bar). Don't var-ify these.
    ──────────────────────────────────────────────────────────── */
 
-const GOLD = "var(--gold)";
-const NAVY = "var(--navy)";
-const IVORY = "var(--white)";
+const GOLD = "#C9A84C";
+const NAVY = "#0B1B2B";
+const IVORY = "#fdfaf5";
 
 export const NAV_LINKS = [
   { label: "Hotels", href: "/search" },
