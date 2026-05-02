@@ -84,6 +84,10 @@ function safeImg(u: string | null | undefined): string {
 const CITY_FALLBACK_GRADIENT =
   "linear-gradient(135deg, rgba(200,170,118,0.32) 0%, rgba(20,18,15,0.92) 100%)";
 
+type BentoType = "tall" | "short" | "wide";
+const BENTO_PATTERN: BentoType[] = ["tall", "tall", "short", "short", "wide", "tall"];
+const BENTO_WIDTHS: Record<BentoType, number> = { tall: 155, short: 242, wide: 336 };
+
 export default function Home({
   initialCities,
   initialFeatured,
@@ -392,7 +396,7 @@ export default function Home({
           </div>
         </div>
 
-        {/* ── Top Cities — admin-curated grid ──────────────────────────── */}
+        {/* ── Top Cities — Bento carousel ────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -422,7 +426,7 @@ export default function Home({
               </h2>
               <p
                 style={{
-                  color: "var(--luxe-soft-white-70)",
+                  color: "rgba(247,245,242,0.85)",
                   fontSize: 14,
                   lineHeight: 1.65,
                   margin: 0,
@@ -433,123 +437,142 @@ export default function Home({
             </div>
             <Link
               href="/search"
-              className="luxe-tech"
+              className="luxe-tech top-cities-browse-all"
               style={{ color: "var(--luxe-champagne)" }}
             >
               Browse All &rarr;
             </Link>
           </div>
 
-          <div className="luxe-container">
+          {/* Overflow wrapper — extend past luxe-container padding so 6th card peeks */}
+          <div style={{ paddingLeft: 24, paddingRight: 0 }}>
             {homeCities.length > 0 ? (
               <div
+                className="top-cities-scroll"
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                  gap: 16,
+                  display: "flex",
+                  gap: 10,
+                  overflowX: "auto",
+                  overflowY: "visible",
+                  height: 214,
+                  alignItems: "stretch",
+                  scrollSnapType: "x mandatory",
+                  msOverflowStyle: "none",
+                  scrollbarWidth: "none",
+                  paddingRight: 24,
                 }}
               >
-                {homeCities.map((c) => (
-                  <Link
-                    key={c.city_slug}
-                    href={`/city/${c.city_slug}`}
-                    className="top-city-tile"
-                    style={{
-                      display: "block",
-                      textDecoration: "none",
-                      color: "inherit",
-                    }}
-                  >
-                    <div
+                {homeCities.map((c, i) => {
+                  const type = BENTO_PATTERN[i % BENTO_PATTERN.length];
+                  const cardW = BENTO_WIDTHS[type];
+                  return (
+                    <Link
+                      key={c.city_slug}
+                      href={`/city/${c.city_slug}`}
+                      className="top-city-tile top-city-bento-card"
                       style={{
-                        position: "relative",
-                        width: "100%",
-                        aspectRatio: "4 / 5",
-                        borderRadius: 14,
-                        overflow: "hidden",
-                        border: "1px solid rgba(200,170,118,0.22)",
-                        background: CITY_FALLBACK_GRADIENT,
-                        boxShadow: "0 1px 0 rgba(255,255,255,0.04) inset",
+                        display: "block",
+                        textDecoration: "none",
+                        color: "inherit",
+                        flex: `0 0 ${cardW}px`,
+                        height: "100%",
+                        scrollSnapAlign: "start",
                       }}
                     >
-                      {c.image_url ? (
-                        <Image
-                          src={safeImg(c.image_url)}
-                          alt={`${c.city_name}, ${c.country}`}
-                          fill
-                          sizes="(max-width: 768px) 50vw, 25vw"
-                          className="top-city-img"
-                          style={{ objectFit: "cover" }}
+                      <div
+                        className="top-city-card-inner"
+                        style={{
+                          position: "relative",
+                          width: "100%",
+                          height: "100%",
+                          borderRadius: 12,
+                          overflow: "hidden",
+                          border: "1px solid rgba(200,170,118,0.22)",
+                          background: CITY_FALLBACK_GRADIENT,
+                          boxShadow: "0 1px 0 rgba(255,255,255,0.04) inset",
+                          transition: "border-color 0.28s ease",
+                        }}
+                      >
+                        {c.image_url ? (
+                          <Image
+                            src={safeImg(c.image_url)}
+                            alt={`${c.city_name}, ${c.country}`}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 340px"
+                            className="top-city-img"
+                            style={{ objectFit: "cover" }}
+                          />
+                        ) : null}
+                        {/* Bottom gradient for legibility */}
+                        <div
+                          aria-hidden="true"
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            background:
+                              "linear-gradient(180deg, rgba(0,0,0,0) 38%, rgba(0,0,0,0.76) 100%)",
+                            pointerEvents: "none",
+                          }}
                         />
-                      ) : null}
-                      {/* Bottom gradient for legibility */}
-                      <div
-                        aria-hidden="true"
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          background:
-                            "linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,0.72) 100%)",
-                          pointerEvents: "none",
-                        }}
-                      />
-                      {/* Hotel-count chip */}
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 12,
-                          left: 12,
-                          padding: "4px 10px",
-                          borderRadius: 9999,
-                          background: "rgba(12,11,10,0.65)",
-                          backdropFilter: "blur(6px)",
-                          border: "1px solid rgba(200,170,118,0.28)",
-                          fontFamily: "var(--font-mono, monospace)",
-                          fontSize: 10,
-                          letterSpacing: "0.14em",
-                          textTransform: "uppercase",
-                          color: "var(--luxe-champagne)",
-                        }}
-                      >
-                        {c.hotel_count} stays
-                      </div>
-                      {/* Title block */}
-                      <div
-                        style={{
-                          position: "absolute",
-                          left: 14,
-                          right: 14,
-                          bottom: 14,
-                          color: "var(--luxe-soft-white)",
-                        }}
-                      >
+                        {/* Bottom text block: country + city + stays pill */}
                         <div
                           style={{
-                            fontFamily: "var(--font-mono, monospace)",
-                            fontSize: 10,
-                            letterSpacing: "0.18em",
-                            textTransform: "uppercase",
-                            color: "var(--luxe-soft-white-70)",
-                            marginBottom: 6,
+                            position: "absolute",
+                            left: 10,
+                            right: 10,
+                            bottom: 10,
+                            color: "var(--luxe-soft-white)",
                           }}
                         >
-                          {c.country}
-                        </div>
-                        <div
-                          style={{
-                            fontFamily: "var(--font-display)",
-                            fontSize: 22,
-                            fontWeight: 500,
-                            letterSpacing: "-0.015em",
-                            lineHeight: 1.15,
-                          }}
-                        >
-                          {c.city_name}
+                          <div
+                            style={{
+                              fontFamily: "var(--font-mono, monospace)",
+                              fontSize: 9,
+                              letterSpacing: "0.18em",
+                              textTransform: "uppercase",
+                              color: "rgba(247,245,242,0.6)",
+                              marginBottom: 3,
+                            }}
+                          >
+                            {c.country}
+                          </div>
+                          <div
+                            style={{
+                              fontFamily: "var(--font-display)",
+                              fontSize: 18,
+                              fontWeight: 500,
+                              letterSpacing: "-0.015em",
+                              lineHeight: 1.15,
+                              marginBottom: 7,
+                            }}
+                          >
+                            {c.city_name}
+                          </div>
+                          {/* Frosted-glass stays chip */}
+                          <div
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              padding: "3px 8px",
+                              borderRadius: 9999,
+                              background: "rgba(12,11,10,0.42)",
+                              backdropFilter: "blur(8px)",
+                              WebkitBackdropFilter: "blur(8px)",
+                              border: "1px solid rgba(200,170,118,0.18)",
+                              fontFamily: "var(--font-mono, monospace)",
+                              fontSize: 9,
+                              letterSpacing: "0.12em",
+                              textTransform: "uppercase",
+                              color: "rgba(247,245,242,0.72)",
+                            }}
+                          >
+                            {c.hotel_count} stays
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
             ) : (
               <div
