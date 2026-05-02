@@ -257,8 +257,9 @@ export default function Home({
         transition={{ duration: 0.6 }}
         className="relative"
         style={{
-          paddingTop: 96,
-          paddingBottom: 32,
+          paddingTop: 80,
+          paddingBottom: 40,
+          minHeight: "calc(100vh - 72px)",
           background: `linear-gradient(180deg, rgba(12,11,10,0.85) 0%, rgba(12,11,10,0.96) 80%), url(${HERO_BG}) center/cover no-repeat fixed`,
         }}
       >
@@ -269,10 +270,10 @@ export default function Home({
           <h1
             className="luxe-display"
             style={{
-              fontSize: "clamp(40px, 5vw, 64px)",
+              fontSize: "clamp(36px, 4vw, 56px)",
               lineHeight: 1.05,
               maxWidth: 820,
-              marginBottom: 16,
+              marginBottom: 12,
               color: "var(--luxe-soft-white)",
             }}
           >
@@ -284,10 +285,10 @@ export default function Home({
               color: "var(--luxe-soft-white-70)",
               fontSize: 15,
               lineHeight: 1.6,
-              marginBottom: 24,
+              marginBottom: 16,
             }}
           >
-            Private Luxury Hotel Rates &amp; VIP Perks &mdash; Reserved for VoyagrClub Members
+            Members-only pricing, upgrades and concierge &mdash; at the world&rsquo;s best hotels.
           </p>
 
           {/* Search bar — glass capsule */}
@@ -310,7 +311,7 @@ export default function Home({
               pointerEvents: "auto",
             }}
           >
-            <div style={{ padding: "10px 18px" }}>
+            <div style={{ padding: "7px 14px" }}>
               <div className="luxe-tech" style={{ marginBottom: 4 }}>
                 Destination
               </div>
@@ -335,7 +336,7 @@ export default function Home({
               type="button"
               onClick={() => setHeroDateOpen(true)}
               style={{
-                padding: "10px 18px",
+                padding: "7px 14px",
                 borderLeft: "1px solid rgba(255,255,255,0.08)",
                 cursor: "pointer",
                 background: "transparent",
@@ -362,7 +363,7 @@ export default function Home({
               type="button"
               onClick={() => setHeroDateOpen(true)}
               style={{
-                padding: "10px 18px",
+                padding: "7px 14px",
                 borderLeft: "1px solid rgba(255,255,255,0.08)",
                 cursor: "pointer",
                 background: "transparent",
@@ -397,7 +398,7 @@ export default function Home({
             <button
               onClick={handleHeroSearch}
               className="luxe-btn-primary"
-              style={{ margin: 4, padding: "12px 22px" }}
+              style={{ margin: 4, padding: "10px 18px" }}
               aria-label="Search"
             >
               Search
@@ -413,45 +414,37 @@ export default function Home({
             </span>
           </div>
         </div>
+      </motion.section>
 
-        {/* ── Top Cities — Bento carousel ────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          style={{ marginTop: 44 }}
-        >
+      {/* ── Top Cities — Bento carousel ────────────────────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.6 }}
+        style={{ padding: "40px 0 28px", borderTop: "1px solid var(--luxe-hairline)" }}
+      >
           <div
             className="luxe-container"
             style={{
               display: "flex",
               alignItems: "flex-end",
               justifyContent: "space-between",
-              marginBottom: 18,
+              marginBottom: 12,
               gap: 24,
               flexWrap: "wrap",
             }}
           >
             <div style={{ maxWidth: 640 }}>
-              <div className="luxe-tech" style={{ marginBottom: 8 }}>
+              <div className="luxe-tech" style={{ marginBottom: 6 }}>
                 Top Cities
               </div>
               <h2
                 className="luxe-display"
-                style={{ fontSize: "clamp(26px, 2.8vw, 36px)", marginBottom: 8 }}
+                style={{ fontSize: "clamp(22px, 2.2vw, 28px)", marginBottom: 0 }}
               >
                 India travellers&rsquo; <em>favourites</em>
               </h2>
-              <p
-                style={{
-                  color: "rgba(247,245,242,0.85)",
-                  fontSize: 14,
-                  lineHeight: 1.65,
-                  margin: 0,
-                }}
-              >
-                The cities our members keep returning to &mdash; quietly curated.
-              </p>
             </div>
             <Link
               href="/search"
@@ -612,7 +605,6 @@ export default function Home({
               </div>
             )}
           </div>
-        </motion.div>
       </motion.section>
 
       {/* ── Editor's Picks — single row of top-rated stays ──────────────── */}
@@ -622,7 +614,7 @@ export default function Home({
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.6 }}
         style={{
-          padding: "64px 0 48px",
+          padding: "48px 0 32px",
           borderTop: "1px solid var(--luxe-hairline)",
         }}
       >
@@ -632,18 +624,18 @@ export default function Home({
               display: "flex",
               alignItems: "flex-end",
               justifyContent: "space-between",
-              marginBottom: 24,
+              marginBottom: 16,
               gap: 24,
               flexWrap: "wrap",
             }}
           >
             <div style={{ maxWidth: 640 }}>
-              <div className="luxe-tech" style={{ marginBottom: 8 }}>
+              <div className="luxe-tech" style={{ marginBottom: 6 }}>
                 Editor&rsquo;s Picks
               </div>
               <h2
                 className="luxe-display"
-                style={{ fontSize: "clamp(26px, 2.8vw, 36px)", marginBottom: 8 }}
+                style={{ fontSize: "clamp(22px, 2.2vw, 28px)", marginBottom: 0 }}
               >
                 Stays our concierge <em>keeps revisiting</em>
               </h2>
@@ -720,16 +712,6 @@ export default function Home({
                   >
                     {h.name}
                   </div>
-                  {h.rating_average != null ? (
-                    <div
-                      style={{
-                        fontSize: 12.5,
-                        color: "var(--luxe-soft-white-70)",
-                      }}
-                    >
-                      {h.rating_average.toFixed(1)}/10
-                    </div>
-                  ) : null}
                 </Link>
               ))}
             </div>
@@ -796,21 +778,6 @@ export default function Home({
                   >
                     {h.hotel_name}
                   </div>
-                  {h.rating_average ? (
-                    <div
-                      style={{
-                        fontSize: 12.5,
-                        color: "var(--luxe-soft-white-70)",
-                      }}
-                    >
-                      {h.rating_average.toFixed(1)}/10
-                      {h.star_rating ? (
-                        <span style={{ marginLeft: 8, color: "var(--luxe-champagne)" }}>
-                          {"★".repeat(Math.round(h.star_rating))}
-                        </span>
-                      ) : null}
-                    </div>
-                  ) : null}
                 </Link>
               ))}
             </div>
@@ -835,7 +802,7 @@ export default function Home({
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.6 }}
-        style={{ padding: "56px 0 48px" }}
+        style={{ padding: "40px 0 28px" }}
       >
         <div className="luxe-container">
           <div
@@ -843,16 +810,16 @@ export default function Home({
               display: "flex",
               alignItems: "flex-end",
               justifyContent: "space-between",
-              marginBottom: 28,
+              marginBottom: 16,
               gap: 24,
               flexWrap: "wrap",
             }}
           >
             <div>
-              <div className="luxe-tech" style={{ marginBottom: 8 }}>
+              <div className="luxe-tech" style={{ marginBottom: 6 }}>
                 The Membership
               </div>
-              <h2 className="luxe-display" style={{ fontSize: "clamp(28px, 3vw, 40px)" }}>
+              <h2 className="luxe-display" style={{ fontSize: "clamp(22px, 2.4vw, 32px)" }}>
                 A more rewarding way to <em>travel</em>
               </h2>
             </div>
@@ -930,30 +897,19 @@ export default function Home({
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.6 }}
-        style={{ padding: "80px 0 64px" }}
+        style={{ padding: "40px 0 28px" }}
       >
         <div className="luxe-container">
-          <div style={{ maxWidth: 720, marginBottom: 40 }}>
-            <div className="luxe-tech" style={{ marginBottom: 10 }}>
+          <div style={{ maxWidth: 720, marginBottom: 20 }}>
+            <div className="luxe-tech" style={{ marginBottom: 6 }}>
               The Difference
             </div>
             <h2
               className="luxe-display"
-              style={{ fontSize: "clamp(28px, 3.2vw, 44px)", marginBottom: 14 }}
+              style={{ fontSize: "clamp(22px, 2.6vw, 36px)", marginBottom: 0 }}
             >
               Why members <em>stay</em> with us
             </h2>
-            <p
-              style={{
-                color: "var(--luxe-soft-white-70)",
-                fontSize: 15,
-                lineHeight: 1.7,
-              }}
-            >
-              Six small things that quietly add up to a different way of
-              travelling — preferred access, real concierge care, and perks
-              that aren&rsquo;t advertised anywhere else.
-            </p>
           </div>
 
           <div
@@ -1049,7 +1005,7 @@ export default function Home({
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.6 }}
         style={{
-          padding: "80px 0 64px",
+          padding: "48px 0 32px",
           borderTop: "1px solid var(--luxe-hairline)",
         }}
       >
@@ -1059,31 +1015,21 @@ export default function Home({
               display: "flex",
               alignItems: "flex-end",
               justifyContent: "space-between",
-              marginBottom: 36,
+              marginBottom: 20,
               gap: 24,
               flexWrap: "wrap",
             }}
           >
             <div style={{ maxWidth: 640 }}>
-              <div className="luxe-tech" style={{ marginBottom: 10 }}>
+              <div className="luxe-tech" style={{ marginBottom: 6 }}>
                 Preferred Hotels
               </div>
               <h2
                 className="luxe-display"
-                style={{ fontSize: "clamp(28px, 3.2vw, 44px)", marginBottom: 12 }}
+                style={{ fontSize: "clamp(22px, 2.6vw, 36px)", marginBottom: 0 }}
               >
                 Stays we&rsquo;d <em>book ourselves</em>
               </h2>
-              <p
-                style={{
-                  color: "var(--luxe-soft-white-70)",
-                  fontSize: 15,
-                  lineHeight: 1.7,
-                }}
-              >
-                Quietly negotiated perks at properties our concierge revisits
-                &mdash; for members, on every stay.
-              </p>
             </div>
           </div>
 
@@ -1357,18 +1303,18 @@ export default function Home({
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.6 }}
         style={{
-          padding: "80px 0 64px",
+          padding: "40px 0 28px",
           borderTop: "1px solid var(--luxe-hairline)",
         }}
       >
         <div className="luxe-container">
-          <div style={{ maxWidth: 640, marginBottom: 36 }}>
-            <div className="luxe-tech" style={{ marginBottom: 10 }}>
+          <div style={{ maxWidth: 640, marginBottom: 20 }}>
+            <div className="luxe-tech" style={{ marginBottom: 6 }}>
               In Their Words
             </div>
             <h2
               className="luxe-display"
-              style={{ fontSize: "clamp(28px, 3.2vw, 44px)", marginBottom: 12 }}
+              style={{ fontSize: "clamp(22px, 2.6vw, 36px)", marginBottom: 0 }}
             >
               Travellers who <em>noticed the details</em>
             </h2>
@@ -1472,31 +1418,21 @@ export default function Home({
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.6 }}
         style={{
-          padding: "80px 0 64px",
+          padding: "40px 0 28px",
           borderTop: "1px solid var(--luxe-hairline)",
         }}
       >
         <div className="luxe-container">
-          <div style={{ maxWidth: 640, marginBottom: 36 }}>
-            <div className="luxe-tech" style={{ marginBottom: 10 }}>
+          <div style={{ maxWidth: 640, marginBottom: 20 }}>
+            <div className="luxe-tech" style={{ marginBottom: 6 }}>
               Travel by Season
             </div>
             <h2
               className="luxe-display"
-              style={{ fontSize: "clamp(28px, 3.2vw, 44px)", marginBottom: 12 }}
+              style={{ fontSize: "clamp(22px, 2.6vw, 36px)", marginBottom: 0 }}
             >
               When to go, <em>where to go</em>
             </h2>
-            <p
-              style={{
-                color: "var(--luxe-soft-white-70)",
-                fontSize: 15,
-                lineHeight: 1.7,
-              }}
-            >
-              A short almanac of where the weather is kind and the rooms are
-              quiet. Tell our concierge a season — we&rsquo;ll do the rest.
-            </p>
           </div>
 
           <div
@@ -1597,7 +1533,7 @@ export default function Home({
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.6 }}
         style={{
-          padding: "80px 0 64px",
+          padding: "40px 0 28px",
           borderTop: "1px solid var(--luxe-hairline)",
         }}
       >
@@ -1606,17 +1542,17 @@ export default function Home({
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-              gap: 56,
+              gap: 40,
               alignItems: "start",
             }}
           >
             <div>
-              <div className="luxe-tech" style={{ marginBottom: 10 }}>
+              <div className="luxe-tech" style={{ marginBottom: 6 }}>
                 About Voyagr Club
               </div>
               <h2
                 className="luxe-display"
-                style={{ fontSize: "clamp(28px, 3.2vw, 44px)", marginBottom: 18 }}
+                style={{ fontSize: "clamp(22px, 2.6vw, 36px)", marginBottom: 12 }}
               >
                 Built on a <em>simple idea</em>
               </h2>
@@ -1669,18 +1605,18 @@ export default function Home({
                   key={s.label}
                   style={{
                     background: "var(--luxe-black)",
-                    padding: "28px 24px",
+                    padding: "20px 16px",
                   }}
                 >
                   <div
                     style={{
                       fontFamily: "var(--font-display)",
-                      fontSize: 32,
+                      fontSize: 28,
                       fontWeight: 500,
                       color: "var(--luxe-soft-white)",
                       letterSpacing: "-0.02em",
                       lineHeight: 1,
-                      marginBottom: 10,
+                      marginBottom: 8,
                     }}
                   >
                     {s.num}
@@ -1702,7 +1638,7 @@ export default function Home({
         style={{
           borderTop: "1px solid var(--luxe-hairline)",
           borderBottom: "1px solid var(--luxe-hairline)",
-          padding: "40px 0",
+          padding: "28px 0",
         }}
       >
         <div
@@ -1748,33 +1684,29 @@ export default function Home({
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        style={{ padding: "64px 0" }}
+        style={{
+          padding: "36px 0",
+          borderTop: "1px solid var(--luxe-hairline)",
+        }}
       >
-        <div className="luxe-container" style={{ textAlign: "center", maxWidth: 720 }}>
-          <div className="luxe-tech" style={{ marginBottom: 12 }}>
-            Your Journey Starts Here
-          </div>
+        <div
+          className="luxe-container"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 24,
+            flexWrap: "wrap",
+          }}
+        >
           <h2
             className="luxe-display"
-            style={{ fontSize: "clamp(28px, 3.4vw, 44px)", marginBottom: 14 }}
+            style={{ fontSize: "clamp(18px, 2vw, 26px)", margin: 0 }}
           >
             Let us craft your next{" "}
             <em style={{ color: "var(--luxe-champagne)" }}>unforgettable stay</em>
           </h2>
-          <p
-            style={{
-              color: "var(--luxe-soft-white-70)",
-              fontSize: 15,
-              lineHeight: 1.7,
-              maxWidth: 560,
-              margin: "0 auto 28px",
-            }}
-          >
-            Tell us where you&rsquo;re headed. We&rsquo;ll handle the rest &mdash;
-            from curating handpicked options with exclusive perks to confirming
-            within minutes over WhatsApp.
-          </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <a
               href="https://wa.me/919876543210?text=Hi%2C%20I%27d%20like%20to%20plan%20a%20trip"
               className="luxe-btn-gold"

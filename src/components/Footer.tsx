@@ -43,7 +43,7 @@ export default function Footer() {
       style={{
         background: "var(--ink)",
         color: "var(--cream)",
-        padding: "80px 60px 40px",
+        padding: "48px 60px 32px",
       }}
     >
       <div
@@ -60,7 +60,7 @@ export default function Footer() {
             display: "grid",
             gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr",
             gap: "48px",
-            marginBottom: "64px",
+            marginBottom: "40px",
           }}
         >
           {/* Brand column */}
