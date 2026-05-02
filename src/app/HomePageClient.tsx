@@ -257,9 +257,8 @@ export default function Home({
         transition={{ duration: 0.6 }}
         className="relative"
         style={{
-          paddingTop: 80,
-          paddingBottom: 40,
-          minHeight: "calc(100vh - 72px)",
+          paddingTop: 120,
+          paddingBottom: 80,
           background: `linear-gradient(180deg, rgba(12,11,10,0.85) 0%, rgba(12,11,10,0.96) 80%), url(${HERO_BG}) center/cover no-repeat fixed`,
         }}
       >
@@ -422,7 +421,7 @@ export default function Home({
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6 }}
-        style={{ padding: "40px 0 28px", borderTop: "1px solid var(--luxe-hairline)" }}
+        style={{ padding: "28px 0 28px", borderTop: "1px solid var(--luxe-hairline)" }}
       >
           <div
             className="luxe-container"
