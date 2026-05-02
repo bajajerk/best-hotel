@@ -251,10 +251,8 @@ export default function Home({
               color: "var(--luxe-soft-white)",
             }}
           >
-            Hotels you{" "}
-            <em style={{ color: "var(--luxe-champagne)" }}>know</em>.<br />
-            Rates they{" "}
-            <span className="luxe-text-gradient">don&rsquo;t show</span>.
+            Private Luxury Hotel Rates &amp; VIP Perks —{" "}
+            <span className="luxe-text-gradient">Reserved for VoyagrClub Members</span>
           </h1>
           <p
             style={{
