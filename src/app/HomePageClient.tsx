@@ -267,7 +267,7 @@ export default function Home({
               marginBottom: 24,
             }}
           >
-            Members-only pricing, upgrades and concierge &mdash; at the world&rsquo;s best hotels.
+            Private Luxury Hotel Rates &amp; VIP Perks &mdash; Reserved for VoyagrClub Members
           </p>
 
           {/* Search bar — glass capsule */}
