@@ -99,9 +99,9 @@ const DateBar = forwardRef<DateBarHandle, DateBarProps>(function DateBar(
       fontSize: 14,
       fontWeight: filled ? 500 : 400,
       color: filled ? "var(--ink)" : "var(--ink-light)",
-      whiteSpace: "nowrap",
       overflow: "hidden",
       textOverflow: "ellipsis",
+      minWidth: 0,
     });
 
     return (
@@ -128,7 +128,7 @@ const DateBar = forwardRef<DateBarHandle, DateBarProps>(function DateBar(
           <div style={labelStyle}>Check-out</div>
           <div style={valueStyle(!!checkOut)}>{formatDate(checkOut, "Add date")}</div>
         </button>
-        <div className="usc-cell" style={{ flex: 1, minWidth: 0, padding: "6px 10px" }}>
+        <div className="usc-cell" style={{ flex: 1, minWidth: 0, padding: "10px 16px" }}>
           <GuestRoomPicker variant={variant} compact />
         </div>
 

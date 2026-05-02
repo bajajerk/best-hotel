@@ -1570,6 +1570,7 @@ export default function HotelPage() {
 
           {datesSelected && (
             <div
+              className="hotel-tab-dates"
               style={{
                 marginLeft: "auto",
                 display: "flex",
@@ -2749,13 +2750,15 @@ export default function HotelPage() {
 
       {/* ═══════════════════ Sticky Bottom Bar — preserved ═══════════════════ */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50"
+        className="hotel-bottom-bar fixed bottom-0 left-0 right-0"
         style={{
           background: "rgba(8,7,6,0.94)",
           backdropFilter: "blur(18px)",
           WebkitBackdropFilter: "blur(18px)",
           borderTop: "1px solid var(--luxe-champagne-line)",
           padding: "0 24px",
+          paddingBottom: "env(safe-area-inset-bottom, 0)",
+          zIndex: 105,
         }}
       >
         <div

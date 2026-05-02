@@ -250,7 +250,7 @@ export default function GuestDetailsPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
             gap: 14,
           }}
         >
@@ -414,6 +414,7 @@ export default function GuestDetailsPage() {
 
       {/* Sticky bottom bar */}
       <div
+        className="book-bottom-bar"
         style={{
           position: "fixed",
           bottom: 0,
@@ -424,6 +425,7 @@ export default function GuestDetailsPage() {
           WebkitBackdropFilter: "blur(18px) saturate(120%)",
           borderTop: `1px solid ${SURFACE_BORDER}`,
           padding: "14px 16px",
+          paddingBottom: "calc(14px + env(safe-area-inset-bottom, 0))",
           zIndex: 110,
         }}
       >

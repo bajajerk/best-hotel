@@ -398,6 +398,7 @@ export default function ReviewBookingPage() {
 
       {/* Sticky bottom bar */}
       <div
+        className="book-bottom-bar"
         style={{
           position: "fixed",
           bottom: 0,
@@ -408,6 +409,7 @@ export default function ReviewBookingPage() {
           WebkitBackdropFilter: "blur(18px) saturate(120%)",
           borderTop: "1px solid rgba(255,255,255,0.08)",
           padding: "14px 16px",
+          paddingBottom: "calc(14px + env(safe-area-inset-bottom, 0))",
           zIndex: 110,
         }}
       >

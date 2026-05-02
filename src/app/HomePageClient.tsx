@@ -276,7 +276,7 @@ export default function Home({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className={`luxe-glass${heroDestError ? " hero-search--flash" : ""}`}
+            className={`luxe-glass home-hero-search${heroDestError ? " hero-search--flash" : ""}`}
             style={{
               borderRadius: 9999,
               padding: 6,

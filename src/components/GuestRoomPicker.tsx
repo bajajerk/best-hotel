@@ -28,8 +28,8 @@ function CounterButton({
       disabled={disabled}
       className="cursor-pointer"
       style={{
-        width: 28,
-        height: 28,
+        width: 36,
+        height: 36,
         borderRadius: 8,
         border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}`,
         background: disabled
@@ -85,25 +85,26 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      {/* Trigger */}
+      {/* Trigger — borderless when compact (parent .usc-cell already has chrome) */}
       <div
         onClick={() => setOpen(!open)}
         style={{
-          background: bgCard,
-          border: `1px solid ${borderColor}`,
-          borderRadius: compact ? 10 : 12,
-          padding: compact ? "8px 12px" : "12px 14px",
+          background: compact ? "transparent" : bgCard,
+          border: compact ? "none" : `1px solid ${borderColor}`,
+          borderRadius: compact ? 0 : 12,
+          padding: compact ? 0 : "12px 14px",
           cursor: "pointer",
         }}
       >
         <div
           style={{
             fontFamily: compact ? "var(--font-body, sans-serif)" : "var(--font-dm-mono)",
-            fontSize: 9,
-            letterSpacing: compact ? 1 : 1.2,
+            fontSize: compact ? 10 : 9,
+            letterSpacing: compact ? "0.08em" : 1.2,
             textTransform: "uppercase",
-            color: labelColor,
-            marginBottom: compact ? 2 : 4,
+            fontWeight: compact ? 600 : 400,
+            color: compact ? "var(--ink-light, #7a7465)" : labelColor,
+            marginBottom: compact ? 4 : 4,
           }}
         >
           GUESTS
@@ -111,15 +112,18 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
         <div
           style={{
             fontFamily: compact ? "var(--font-body, sans-serif)" : "var(--font-dm-sans)",
-            fontSize: compact ? 13 : 14,
-            fontWeight: 400,
-            color: valueColor,
+            fontSize: compact ? 14 : 14,
+            fontWeight: compact ? 500 : 400,
+            color: compact ? "var(--ink, #1a1710)" : valueColor,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            minWidth: 0,
           }}
         >
-          <span>{guestSummary}</span>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
+            {guestSummary}
+          </span>
           <svg
             width="10" height="6" viewBox="0 0 10 6" fill="none"
             style={{
@@ -129,7 +133,7 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
               marginLeft: 8,
             }}
           >
-            <path d="M1 1L5 5L9 1" stroke={labelColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M1 1L5 5L9 1" stroke={compact ? "var(--ink-light, #7a7465)" : labelColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       </div>

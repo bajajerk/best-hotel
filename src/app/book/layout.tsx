@@ -34,6 +34,7 @@ function StepIndicator() {
 
   return (
     <div
+      className="book-step-indicator"
       style={{
         display: "flex",
         alignItems: "center",
@@ -66,6 +67,7 @@ function StepIndicator() {
           >
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 60 }}>
               <div
+                className="book-step-dot"
                 style={{
                   width: 30,
                   height: 30,
@@ -92,6 +94,7 @@ function StepIndicator() {
                 )}
               </div>
               <span
+                className={`book-step-label${isActive ? " is-active" : ""}`}
                 style={{
                   fontFamily: "var(--font-body)",
                   fontSize: 10,
@@ -145,7 +148,7 @@ export default function BookLayout({ children }: { children: ReactNode }) {
         <StepIndicator />
       </div>
 
-      <main style={{ maxWidth: 880, margin: "0 auto", padding: "32px 16px 140px" }}>
+      <main className="book-shell-main" style={{ maxWidth: 880, margin: "0 auto", padding: "32px 16px 140px" }}>
         {children}
       </main>
     </div>

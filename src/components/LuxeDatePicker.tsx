@@ -289,6 +289,18 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
+  // Track whether we're rendering into a phone-sized viewport so we can
+  // switch to a fullscreen-sheet layout instead of the desktop popover.
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 639px)");
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const closePanel = useCallback(() => {
     if (isControlled) onClose?.();
     else setInternalOpen(false);
@@ -343,7 +355,8 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
 
   /* ─── month-grid memos ─── */
   const today = useMemo(() => todayIso(), []);
-  const showTwoMonths = (monthsToShow ?? (mode === "range" ? 2 : 1)) === 2;
+  const showTwoMonths =
+    (monthsToShow ?? (mode === "range" ? 2 : 1)) === 2 && !isMobile;
 
   const m1 = useMemo(
     () => ({ year: baseDate.getFullYear(), month: baseDate.getMonth() }),
@@ -515,7 +528,7 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
   /* ────────────────────────────────────────────────────────────────────── */
 
   const renderMonth = (year: number, month: number, weeks: DayCell[][]) => (
-    <div style={{ flex: 1, minWidth: 240 }}>
+    <div style={{ flex: 1, minWidth: isMobile ? 0 : 240, width: isMobile ? "100%" : undefined }}>
       {/* Month name — Playfair italic with champagne underline */}
       <div
         style={{
@@ -747,16 +760,22 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
         background: panelBg,
         backdropFilter: "blur(24px) saturate(140%)",
         WebkitBackdropFilter: "blur(24px) saturate(140%)",
-        border: `1px solid ${panelBorder}`,
-        borderRadius: 18,
-        boxShadow:
-          variant === "dark"
+        border: isMobile ? "none" : `1px solid ${panelBorder}`,
+        borderRadius: isMobile ? 0 : 18,
+        boxShadow: isMobile
+          ? "none"
+          : variant === "dark"
             ? "0 24px 64px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.35)"
             : "0 24px 64px rgba(20,18,15,0.18), 0 4px 12px rgba(20,18,15,0.08)",
-        padding: 22,
+        padding: isMobile ? "18px 16px calc(20px + env(safe-area-inset-bottom, 0))" : 22,
         color: panelText,
-        width: "min(720px, calc(100vw - 24px))",
+        width: isMobile ? "100vw" : "min(720px, calc(100vw - 24px))",
         maxWidth: "100vw",
+        height: isMobile ? "100vh" : undefined,
+        maxHeight: isMobile ? "100vh" : undefined,
+        overflowY: isMobile ? "auto" : undefined,
+        display: isMobile ? "flex" : undefined,
+        flexDirection: isMobile ? "column" : undefined,
       }}
     >
       {/* Eyebrow + nav */}
@@ -808,9 +827,11 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
         transition={{ duration: prefersReducedMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
         style={{
           display: "flex",
-          gap: 28,
+          gap: isMobile ? 0 : 28,
           flexWrap: "wrap",
           justifyContent: "center",
+          flex: isMobile ? 1 : undefined,
+          minHeight: 0,
         }}
       >
         {renderMonth(m1.year, m1.month, weeks1)}
@@ -960,9 +981,9 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
               inset: 0,
               zIndex: 9999,
               display: "flex",
-              alignItems: "center",
+              alignItems: isMobile ? "stretch" : "center",
               justifyContent: "center",
-              padding: 12,
+              padding: isMobile ? 0 : 12,
               pointerEvents: "none",
             }}
           >
@@ -981,7 +1002,15 @@ export default function LuxeDatePicker(props: LuxeDatePickerProps) {
               }}
               aria-hidden
             />
-            <div style={{ position: "relative", pointerEvents: "auto", maxWidth: "100%" }}>
+            <div
+              style={{
+                position: "relative",
+                pointerEvents: "auto",
+                maxWidth: "100%",
+                width: isMobile ? "100%" : undefined,
+                display: isMobile ? "flex" : undefined,
+              }}
+            >
               {panel}
             </div>
           </div>

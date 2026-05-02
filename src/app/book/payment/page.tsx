@@ -507,6 +507,7 @@ export default function PaymentPage() {
 
       {/* Sticky bottom bar */}
       <div
+        className="book-bottom-bar"
         style={{
           position: "fixed",
           bottom: 0,
@@ -517,6 +518,7 @@ export default function PaymentPage() {
           WebkitBackdropFilter: "blur(18px) saturate(120%)",
           borderTop: `1px solid ${SURFACE_BORDER}`,
           padding: "12px 16px",
+          paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0))",
           zIndex: 110,
         }}
       >

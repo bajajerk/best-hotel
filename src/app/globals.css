@@ -5151,3 +5151,135 @@ body:has(.precision-theme) {
   }
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Mobile QA pass — single consolidated block of overrides for the issues
+   surfaced in the May audit (search, hotel detail, booking flow, home).
+   Everything here lives at ≤767px / ≤639px breakpoints.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Search hotel card — when the desktop 200/1fr/220 grid collapses to a single
+   column on mobile (handled elsewhere), the right "price" column keeps a
+   left border + dark gradient that look wrong stacked. Strip them. */
+@media (max-width: 767px) {
+  .search-hotel-card > div:last-child {
+    border-left: none !important;
+    border-top: 1px solid var(--cream-border);
+    align-items: flex-start !important;
+    background: transparent !important;
+  }
+}
+
+/* Hotel detail page — the rates section uses an explicit
+   "minmax(0,1fr) 380px" grid that reserves a 380px gutter for an aside
+   that's `display:none` on <lg. Collapse the grid to a single column
+   below the same breakpoint. The editorial overview grid is similar. */
+@media (max-width: 1023px) {
+  .hotel-rates-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 24px !important;
+  }
+}
+@media (max-width: 767px) {
+  .hotel-overview-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  /* Sticky tab bar dates pill is too long to fit beside the tabs at <640px */
+  .hotel-tab-dates {
+    display: none !important;
+  }
+}
+
+/* Home hero search row — desktop 4-column "1.4fr 1fr 1fr auto" pill at 375px
+   crushes everything to ~110px each. Stack with hairlines. */
+@media (max-width: 767px) {
+  .home-hero-search {
+    grid-template-columns: 1fr !important;
+    border-radius: 18px !important;
+    padding: 10px !important;
+    gap: 6px !important;
+  }
+  .home-hero-search > button,
+  .home-hero-search > div {
+    border-left: none !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+  .home-hero-search > div:first-child,
+  .home-hero-search > button:first-child {
+    border-top: none !important;
+  }
+}
+
+/* /book/* step indicator — "Review · Guest Details · Payment · Confirmation"
+   is too wide on mobile. Compress: shrink dots, drop non-active labels,
+   show only the active step's label so the strip fits comfortably at 360px. */
+@media (max-width: 480px) {
+  .book-step-indicator {
+    gap: 4px !important;
+    padding: 14px 12px 10px !important;
+    max-width: 100% !important;
+  }
+  .book-step-indicator .book-step-dot {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 11px !important;
+  }
+  .book-step-indicator .book-step-label {
+    display: none;
+  }
+  .book-step-indicator .book-step-label.is-active {
+    display: inline;
+  }
+}
+
+/* DestinationSearch dropdown — full-bleed sheet on mobile so it isn't
+   trapped inside the narrow `.usc-cell--destination` cell. */
+@media (max-width: 640px) {
+  .usc-cell--destination [role="listbox"],
+  .destination-search-popover {
+    position: fixed !important;
+    left: 8px !important;
+    right: 8px !important;
+    top: 84px !important;
+    width: auto !important;
+    max-height: calc(100vh - 100px) !important;
+    border-radius: 12px !important;
+    z-index: 200;
+  }
+  /* Provide a tap-state since hover doesn't fire on touch — items
+     should flash on press so the user knows their tap registered. */
+  .usc-cell--destination [role="listbox"] [role="option"]:active,
+  .destination-search-popover [role="option"]:active {
+    background: rgba(0, 0, 0, 0.06) !important;
+  }
+}
+
+/* Mobile tab bar — when a page already has its own bottom CTA bar, hide
+   the global tab bar to avoid two stacked bars eating the bottom 110px. */
+@media (max-width: 639px) {
+  body:has(.book-bottom-bar) .mobile-tab-bar,
+  body:has(.hotel-bottom-bar) .mobile-tab-bar {
+    display: none !important;
+  }
+}
+
+/* Booking shell — bump bottom padding so the sticky CTA can't cover content
+   on the payment page (which has a two-line bar). */
+@media (max-width: 767px) {
+  .book-shell-main {
+    padding-bottom: 200px !important;
+  }
+}
+
+/* Header — at 360px the logo + Sign In + hamburger get jammed. Tighten. */
+@media (max-width: 380px) {
+  .voyagr-nav-inner {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  .header-signin-mobile {
+    padding: 6px 10px !important;
+    font-size: 10px !important;
+  }
+}
+
