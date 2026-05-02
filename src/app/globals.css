@@ -5395,3 +5395,280 @@ body:has(.precision-theme) {
   }
 }
 
+/* ─── Editor's Picks Bento Carousel (ep-*) ───────────────────────────────── */
+
+.ep-wrapper { position: relative; }
+
+/* Show desktop layout on tablet+, mobile layout only on small screens */
+.ep-mobile { display: none; }
+
+@media (max-width: 767px) {
+  .ep-desktop { display: none; }
+  .ep-mobile  { display: block; }
+}
+
+/* ── Slides stack: all slides absolutely positioned, active one on top ── */
+.ep-slides-container {
+  position: relative;
+  /* Desktop height: responsive between 360px and 480px */
+  height: clamp(360px, 38vw, 480px);
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.ep-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.02);
+  transition: opacity 600ms ease-out, transform 600ms ease-out;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ep-slide--active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+  z-index: 1;
+}
+
+/* ── Bento grid — desktop (>1023px) ── */
+.ep-bento-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 16px;
+  height: 100%;
+}
+
+.ep-tile--1 { grid-column: 1;     grid-row: 1 / span 2; }
+.ep-tile--2 { grid-column: 2;     grid-row: 1; }
+.ep-tile--3 { grid-column: 3;     grid-row: 1; }
+.ep-tile--4 { grid-column: 2;     grid-row: 2; }
+.ep-tile--5 { grid-column: 3;     grid-row: 2; }
+
+/* ── Tablet: hero full-width top row, 2×2 below ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .ep-slides-container {
+    height: 580px;
+  }
+  .ep-bento-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 220px 1fr 1fr;
+  }
+  .ep-tile--1 { grid-column: 1 / span 2; grid-row: 1; }
+  .ep-tile--2 { grid-column: 1; grid-row: 2; }
+  .ep-tile--3 { grid-column: 2; grid-row: 2; }
+  .ep-tile--4 { grid-column: 1; grid-row: 3; }
+  .ep-tile--5 { grid-column: 2; grid-row: 3; }
+}
+
+/* ── Individual tile ── */
+.ep-tile {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  background: linear-gradient(135deg, rgba(200,170,118,0.32) 0%, rgba(20,18,15,0.92) 100%);
+  border: 1px solid rgba(200,170,118,0.15);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transform: scale(1);
+  transition: transform 400ms ease;
+}
+
+.ep-tile:hover { transform: scale(1.015); }
+
+/* Image wrapper — clips the zoom so it stays inside the tile */
+.ep-tile-img-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* next/image renders a span[overflow:hidden] around the img — make it
+   transparent to overflow so the zoom effect is clipped at .ep-tile-img-wrap */
+.ep-tile-img-wrap > span {
+  overflow: visible !important;
+}
+
+.ep-tile-img {
+  transform: scale(1);
+  transition: transform 600ms ease !important;
+}
+
+.ep-tile:hover .ep-tile-img { transform: scale(1.05) !important; }
+
+/* Bottom gradient scrim */
+.ep-tile-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.70) 100%);
+  pointer-events: none;
+}
+
+/* Text overlay — counterscaled to remain at original size when tile scales */
+.ep-tile-text {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  transform: scale(1);
+  transform-origin: bottom left;
+  transition: transform 400ms ease;
+}
+
+.ep-tile:hover .ep-tile-text { transform: scale(0.985); }
+
+/* City · Country label */
+.ep-tile-location {
+  font-family: var(--font-sans, Inter, ui-sans-serif, sans-serif);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-style: normal;
+  color: #C9A961;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+/* Hotel name */
+.ep-tile-name {
+  font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ep-tile-name--hero { font-size: 22px; }
+
+/* ── Progress bars ── */
+.ep-progress-bars {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  align-items: center;
+}
+
+.ep-progress-bar {
+  width: 60px;
+  height: 2px;
+  background: rgba(255,255,255,0.14);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.ep-progress-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 0%;
+  background: #C9A961;
+  border-radius: 1px;
+}
+
+.ep-progress-fill--run {
+  animation: ep-fill-progress 4s linear forwards;
+}
+
+@keyframes ep-fill-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+/* ── Arrow buttons (prefers-reduced-motion fallback) ── */
+.ep-arrows {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ep-arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(200,170,118,0.28);
+  color: #C9A961;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 200ms ease;
+}
+
+.ep-arrow:hover { background: rgba(200,170,118,0.14); }
+
+/* ── Mobile: full-width scroll-snap, one card per view ── */
+.ep-mobile-scroll {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  border-radius: 12px;
+}
+
+.ep-mobile-scroll::-webkit-scrollbar { display: none; }
+
+.ep-mobile-card {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  background: linear-gradient(135deg, rgba(200,170,118,0.32) 0%, rgba(20,18,15,0.92) 100%);
+  border: 1px solid rgba(200,170,118,0.15);
+}
+
+/* Allow the Next.js image span to overflow so the image fills correctly */
+.ep-mobile-card > div > span {
+  overflow: visible !important;
+}
+
+.ep-mobile-text {
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+}
+
+/* ── Progress dots (mobile) ── */
+.ep-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  padding: 0 4px;
+}
+
+.ep-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.20);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 300ms ease;
+}
+
+.ep-dot--active { background: #C9A961; }
+

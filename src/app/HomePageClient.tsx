@@ -30,6 +30,7 @@ import { useBooking } from "@/context/BookingContext";
 import { useAuth } from "@/context/AuthContext";
 import { trackCtaClicked } from "@/lib/analytics";
 import TopCitiesCarousel from "@/components/TopCitiesCarousel";
+import EditorsBentoCarousel, { type BentoHotel } from "@/components/EditorsBentoCarousel";
 
 export interface HomePageClientProps {
   initialCities: CuratedCity[];
@@ -182,6 +183,25 @@ export default function Home({
     8
   );
   const useCurated = curatedEditorsPicks.length > 0;
+
+  // Normalise hotel data into the unified BentoHotel shape for the carousel
+  const bentoHotels: BentoHotel[] = useCurated
+    ? curatedEditorsPicks.map((h) => ({
+        id: h.id,
+        name: h.name,
+        city: h.city_name,
+        country: h.country,
+        imageUrl: safeImg(h.image_url),
+        href: hotelUrl(h),
+      }))
+    : fallbackEditorsPicks.map((h) => ({
+        id: h.id,
+        name: h.hotel_name,
+        city: h.city_name,
+        country: h.country,
+        imageUrl: safeImg(h.photo1 || h.photo2),
+        href: hotelUrl(h),
+      }));
 
   function handleHeroSearch() {
     const q = heroDestination.trim();
@@ -437,7 +457,7 @@ export default function Home({
         </div>
       </section>
 
-      {/* ── Editor's Picks — single row of top-rated stays ──────────────── */}
+      {/* ── Editor's Picks — auto-rotating bento carousel ───────────────── */}
       <motion.section
         initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -449,17 +469,18 @@ export default function Home({
         }}
       >
         <div className="luxe-container">
+          {/* Header row: eyebrow + headline on the left, "See More →" aligned to baseline on the right */}
           <div
             style={{
               display: "flex",
-              alignItems: "flex-end",
+              alignItems: "baseline",
               justifyContent: "space-between",
-              marginBottom: 16,
+              marginBottom: 20,
               gap: 24,
               flexWrap: "wrap",
             }}
           >
-            <div style={{ maxWidth: 640 }}>
+            <div>
               <div className="luxe-tech" style={{ marginBottom: 6 }}>
                 Editor&rsquo;s Picks
               </div>
@@ -473,145 +494,14 @@ export default function Home({
             <Link
               href="/search"
               className="luxe-tech"
-              style={{ color: "var(--luxe-champagne)" }}
+              style={{ color: "var(--luxe-champagne)", whiteSpace: "nowrap" }}
             >
               See More &rarr;
             </Link>
           </div>
 
-          {useCurated ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                gap: 16,
-              }}
-            >
-              {curatedEditorsPicks.map((h) => (
-                <Link
-                  key={h.id}
-                  href={hotelUrl(h)}
-                  style={{
-                    display: "block",
-                    textDecoration: "none",
-                    color: "inherit",
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "relative",
-                      width: "100%",
-                      aspectRatio: "4 / 3",
-                      borderRadius: 14,
-                      overflow: "hidden",
-                      border: "1px solid rgba(200,170,118,0.18)",
-                      background: CITY_FALLBACK_GRADIENT,
-                      marginBottom: 12,
-                    }}
-                  >
-                    <Image
-                      src={safeImg(h.image_url)}
-                      alt={h.name}
-                      fill
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                      style={{ objectFit: "cover" }}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-mono, monospace)",
-                      fontSize: 10,
-                      letterSpacing: "0.18em",
-                      textTransform: "uppercase",
-                      color: "var(--luxe-soft-white-50)",
-                      marginBottom: 4,
-                    }}
-                  >
-                    {h.city_name} &middot; {h.country}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: 17,
-                      fontWeight: 500,
-                      color: "var(--luxe-soft-white)",
-                      letterSpacing: "-0.01em",
-                      lineHeight: 1.25,
-                      marginBottom: 4,
-                    }}
-                  >
-                    {h.name}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : fallbackEditorsPicks.length > 0 ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                gap: 16,
-              }}
-            >
-              {fallbackEditorsPicks.map((h) => (
-                <Link
-                  key={h.id}
-                  href={hotelUrl(h)}
-                  style={{
-                    display: "block",
-                    textDecoration: "none",
-                    color: "inherit",
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "relative",
-                      width: "100%",
-                      aspectRatio: "4 / 3",
-                      borderRadius: 14,
-                      overflow: "hidden",
-                      border: "1px solid rgba(200,170,118,0.18)",
-                      background: CITY_FALLBACK_GRADIENT,
-                      marginBottom: 12,
-                    }}
-                  >
-                    <Image
-                      src={safeImg(h.photo1 || h.photo2)}
-                      alt={h.hotel_name}
-                      fill
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                      style={{ objectFit: "cover" }}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-mono, monospace)",
-                      fontSize: 10,
-                      letterSpacing: "0.18em",
-                      textTransform: "uppercase",
-                      color: "var(--luxe-soft-white-50)",
-                      marginBottom: 4,
-                    }}
-                  >
-                    {h.city_name} &middot; {h.country}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: 17,
-                      fontWeight: 500,
-                      color: "var(--luxe-soft-white)",
-                      letterSpacing: "-0.01em",
-                      lineHeight: 1.25,
-                      marginBottom: 4,
-                    }}
-                  >
-                    {h.hotel_name}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
+          {/* Bento carousel — shows loading message only when no data yet */}
+          {bentoHotels.length === 0 ? (
             <div
               style={{
                 color: "var(--luxe-soft-white-50)",
@@ -622,6 +512,8 @@ export default function Home({
             >
               Curating editor&rsquo;s picks&hellip;
             </div>
+          ) : (
+            <EditorsBentoCarousel hotels={bentoHotels} />
           )}
         </div>
       </motion.section>
