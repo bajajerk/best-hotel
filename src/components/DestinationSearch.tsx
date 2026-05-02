@@ -224,19 +224,24 @@ export default function DestinationSearch({
     },
     // Solid dark glass panel — readable over any backdrop, with champagne hairline
     // border so the dropdown reads as part of the luxe system, not a generic OS popover.
+    //
+    // Light-variant note: using `var(--white)` here was visually identical to the
+    // cream search card and the cream page bg — the dropdown read as translucent
+    // because all three layers were near-equal. Pinned to opaque pure white +
+    // a stronger ink-tinted shadow + champagne hairline so it pops off the card.
     dropdown: {
       position: "absolute" as const,
-      top: "calc(100% + 6px)",
+      top: "calc(100% + 8px)",
       left: 0,
       right: 0,
-      background: isDark ? "rgba(20, 18, 15, 0.96)" : "var(--white)",
+      background: isDark ? "rgba(20, 18, 15, 0.98)" : "#ffffff",
       backdropFilter: isDark ? "blur(24px) saturate(140%)" : undefined,
       WebkitBackdropFilter: isDark ? "blur(24px) saturate(140%)" : undefined,
-      border: `1px solid ${isDark ? "rgba(200, 170, 118, 0.18)" : "var(--cream-border)"}`,
+      border: `1px solid ${isDark ? "rgba(200, 170, 118, 0.18)" : "rgba(200, 170, 118, 0.35)"}`,
       borderRadius: "12px",
       boxShadow: isDark
         ? "0 24px 64px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35)"
-        : "0 12px 48px rgba(26, 23, 16, 0.12)",
+        : "0 24px 64px rgba(26, 23, 16, 0.18), 0 6px 16px rgba(26, 23, 16, 0.10)",
       zIndex: 1000,
       maxHeight: "440px",
       overflowY: "auto" as const,
