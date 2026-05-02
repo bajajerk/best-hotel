@@ -20,7 +20,7 @@ import type {
   HomeFeaturedHotel,
   PreferredHotel,
 } from "@/lib/api";
-import { SAMPLE_CITIES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
+import { SAMPLE_CITIES, SAMPLE_HOME_CITIES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import { hotelUrl } from "@/lib/urls";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -153,8 +153,8 @@ export default function Home({
     }
     if (initialHomeCities.length === 0) {
       fetchHomeFeaturedCities()
-        .then(setHomeCities)
-        .catch(() => {});
+        .then((rows) => setHomeCities(rows.length > 0 ? rows : SAMPLE_HOME_CITIES))
+        .catch(() => setHomeCities(SAMPLE_HOME_CITIES));
     }
     if (initialEditorsPicks.length === 0) {
       fetchHomeFeaturedHotels()

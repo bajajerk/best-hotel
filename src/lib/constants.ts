@@ -1,4 +1,4 @@
-import { CuratedCity } from './api';
+import { CuratedCity, HomeFeaturedCity } from './api';
 
 // ---------------------------------------------------------------------------
 // PostHog Configuration
@@ -102,6 +102,7 @@ export const CITY_IMAGES: Record<string, string> = {
   hanoi: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&q=80',
   'ho-chi-minh-city': 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&q=80',
   osaka: 'https://images.unsplash.com/photo-1590559899731-a382839e5549?w=800&q=80',
+  bangalore: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=800&q=80',
 };
 
 export const FALLBACK_CITY_IMAGE =
@@ -166,4 +167,25 @@ export const SAMPLE_CITIES: CuratedCity[] = [
   { city_slug: 'hanoi', city_name: 'Hanoi', country: 'Vietnam', country_code: 'VN', city_id: null, continent: 'Asia', tagline: 'Old-quarter charm and pho perfection', image_url: CITY_IMAGES['hanoi'], hotel_count: 0, display_order: 48 },
   { city_slug: 'ho-chi-minh-city', city_name: 'Ho Chi Minh City', country: 'Vietnam', country_code: 'VN', city_id: null, continent: 'Asia', tagline: 'Motorbike energy and French-colonial grace', image_url: CITY_IMAGES['ho-chi-minh-city'], hotel_count: 0, display_order: 49 },
   { city_slug: 'osaka', city_name: 'Osaka', country: 'Japan', country_code: 'JP', city_id: null, continent: 'Asia', tagline: "Japan's kitchen with a comedic soul", image_url: CITY_IMAGES['osaka'], hotel_count: 0, display_order: 50 },
+];
+
+// ---------------------------------------------------------------------------
+// Sample home-featured cities — static fallback for the TOP CITIES carousel
+// when the admin curation API is unavailable or returns no rows.
+// Matches the HomeFeaturedCity shape used by TopCitiesCarousel.
+// ---------------------------------------------------------------------------
+
+export const SAMPLE_HOME_CITIES: HomeFeaturedCity[] = [
+  { city_slug: 'mumbai',    city_name: 'Mumbai',    country: 'India',                image_url: CITY_IMAGES['mumbai'],    tagline: 'Bollywood beats and ocean breezes',      hotel_count: 0, home_display_order: 1  },
+  { city_slug: 'delhi',     city_name: 'Delhi',     country: 'India',                image_url: CITY_IMAGES['delhi'],     tagline: 'Mughal grandeur meets modern India',     hotel_count: 0, home_display_order: 2  },
+  { city_slug: 'goa',       city_name: 'Goa',       country: 'India',                image_url: CITY_IMAGES['goa'],       tagline: 'Beach shacks, sunsets, and Portuguese flair', hotel_count: 0, home_display_order: 3  },
+  { city_slug: 'bangalore', city_name: 'Bangalore', country: 'India',                image_url: CITY_IMAGES['bangalore'], tagline: 'Garden city of startups and gardens',    hotel_count: 0, home_display_order: 4  },
+  { city_slug: 'bali',      city_name: 'Bali',      country: 'Indonesia',            image_url: CITY_IMAGES['bali'],      tagline: 'Island of gods, surf, and serenity',     hotel_count: 0, home_display_order: 5  },
+  { city_slug: 'dubai',     city_name: 'Dubai',     country: 'United Arab Emirates', image_url: CITY_IMAGES['dubai'],     tagline: 'Desert oasis of luxury and ambition',    hotel_count: 0, home_display_order: 6  },
+  { city_slug: 'maldives',  city_name: 'Maldives',  country: 'Maldives',             image_url: CITY_IMAGES['maldives'],  tagline: 'Gateway to overwater paradise',          hotel_count: 0, home_display_order: 7  },
+  { city_slug: 'singapore', city_name: 'Singapore', country: 'Singapore',            image_url: CITY_IMAGES['singapore'], tagline: 'Garden city where East meets West',       hotel_count: 0, home_display_order: 8  },
+  { city_slug: 'bangkok',   city_name: 'Bangkok',   country: 'Thailand',             image_url: CITY_IMAGES['bangkok'],   tagline: 'Street food capital meets temple serenity', hotel_count: 0, home_display_order: 9  },
+  { city_slug: 'london',    city_name: 'London',    country: 'United Kingdom',       image_url: CITY_IMAGES['london'],    tagline: 'Royal heritage and cutting-edge cool',   hotel_count: 0, home_display_order: 10 },
+  { city_slug: 'paris',     city_name: 'Paris',     country: 'France',               image_url: CITY_IMAGES['paris'],     tagline: 'The eternal city of love and lights',    hotel_count: 0, home_display_order: 11 },
+  { city_slug: 'tokyo',     city_name: 'Tokyo',     country: 'Japan',                image_url: CITY_IMAGES['tokyo'],     tagline: 'Where ancient tradition meets neon future', hotel_count: 0, home_display_order: 12 },
 ];

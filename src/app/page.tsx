@@ -12,7 +12,7 @@ import type {
   HomeFeaturedHotel,
   PreferredHotel,
 } from "@/lib/api";
-import { SAMPLE_CITIES } from "@/lib/constants";
+import { SAMPLE_CITIES, SAMPLE_HOME_CITIES } from "@/lib/constants";
 import { SITE_NAME, SITE_URL, DEFAULT_DESCRIPTION } from "@/lib/seo";
 import Home from "./HomePageClient";
 
@@ -46,9 +46,9 @@ async function getHomeData(): Promise<{
         }))
       ),
       Promise.race([fetchFeaturedAll(), timeout(8000)]).catch(() => null),
-      Promise.race([fetchHomeFeaturedCities(), timeout(8000)]).catch(
-        () => [] as HomeFeaturedCity[]
-      ),
+      Promise.race([fetchHomeFeaturedCities(), timeout(8000)])
+        .then((rows) => (rows.length > 0 ? rows : SAMPLE_HOME_CITIES))
+        .catch(() => SAMPLE_HOME_CITIES),
       Promise.race([fetchHomeFeaturedHotels(), timeout(8000)]).catch(
         () => [] as HomeFeaturedHotel[]
       ),
