@@ -1318,7 +1318,7 @@ export default function Home({
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
         style={{
-          padding: "36px 0",
+          padding: "36px 0 24px",
           borderTop: "1px solid var(--luxe-hairline)",
         }}
       >

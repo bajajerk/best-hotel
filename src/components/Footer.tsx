@@ -3,13 +3,10 @@
 import Link from "next/link";
 
 const FOOTER_DESTINATIONS = [
-  { label: "Bangkok", href: "/city/bangkok" },
   { label: "Dubai", href: "/city/dubai" },
   { label: "Paris", href: "/city/paris" },
   { label: "Tokyo", href: "/city/tokyo" },
   { label: "Bali", href: "/city/bali" },
-  { label: "London", href: "/city/london" },
-  { label: "Singapore", href: "/city/singapore" },
   { label: "Maldives", href: "/city/maldives" },
 ];
 
@@ -59,8 +56,9 @@ export default function Footer() {
           style={{
             display: "grid",
             gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr",
-            gap: "48px",
-            marginBottom: "40px",
+            columnGap: "32px",
+            rowGap: "32px",
+            marginBottom: "32px",
           }}
         >
           {/* Brand column */}
@@ -80,8 +78,8 @@ export default function Footer() {
               style={{
                 fontSize: "13px",
                 color: "rgba(245, 240, 232, 0.55)",
-                lineHeight: 1.8,
-                marginTop: "20px",
+                lineHeight: 1.5,
+                marginTop: "12px",
                 maxWidth: "280px",
               }}
             >
@@ -179,12 +177,12 @@ export default function Footer() {
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
                 color: "var(--gold)",
-                marginBottom: "20px",
+                marginBottom: "16px",
               }}
             >
               Top Destinations
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {FOOTER_DESTINATIONS.map((link) => (
                 <Link
                   key={link.label}
@@ -218,12 +216,12 @@ export default function Footer() {
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
                 color: "var(--gold)",
-                marginBottom: "20px",
+                marginBottom: "16px",
               }}
             >
               About Us
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {FOOTER_ABOUT.map((link) => (
                 <Link
                   key={link.label}
@@ -257,12 +255,12 @@ export default function Footer() {
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
                 color: "var(--gold)",
-                marginBottom: "20px",
+                marginBottom: "16px",
               }}
             >
               Categories
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {FOOTER_CATEGORIES.map((link) => (
                 <Link
                   key={link.label}
@@ -296,12 +294,12 @@ export default function Footer() {
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
                 color: "var(--gold)",
-                marginBottom: "20px",
+                marginBottom: "16px",
               }}
             >
               Support
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {FOOTER_SUPPORT.map((link) => {
                 const Tag = link.external ? "a" : Link;
                 const extraProps = link.external
@@ -338,8 +336,9 @@ export default function Footer() {
         <div
           className="footer-bottom"
           style={{
-            borderTop: "1px solid rgba(245, 240, 232, 0.1)",
-            paddingTop: "24px",
+            borderTop: "1px solid rgba(245, 240, 232, 0.08)",
+            paddingTop: "16px",
+            paddingBottom: "16px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
