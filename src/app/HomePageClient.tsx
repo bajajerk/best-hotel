@@ -439,7 +439,7 @@ export default function Home({
               className="luxe-display"
               style={{ fontSize: "clamp(22px, 2.2vw, 28px)", marginBottom: 0 }}
             >
-              India travellers&rsquo; <em>favourites</em>
+              Loved by <em>Indian Travellers</em>
             </h2>
           </div>
           <Link
