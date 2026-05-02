@@ -29,8 +29,9 @@ import LuxeDatePicker from "@/components/LuxeDatePicker";
 import { useBooking } from "@/context/BookingContext";
 import { useAuth } from "@/context/AuthContext";
 import { trackCtaClicked } from "@/lib/analytics";
-import TopCitiesCarousel from "@/components/TopCitiesCarousel";
+import TopCitiesBento from "@/components/TopCitiesBento";
 import EditorsBentoCarousel, { type BentoHotel } from "@/components/EditorsBentoCarousel";
+import PreferredHotelsCarousel from "@/components/PreferredHotelsCarousel";
 
 export interface HomePageClientProps {
   initialCities: CuratedCity[];
@@ -83,9 +84,6 @@ function safeImg(u: string | null | undefined): string {
 }
 
 // Tasteful champagne→charcoal gradient used when a city/hotel has no image_url.
-const CITY_FALLBACK_GRADIENT =
-  "linear-gradient(135deg, rgba(200,170,118,0.32) 0%, rgba(20,18,15,0.92) 100%)";
-
 
 export default function Home({
   initialCities,
@@ -451,9 +449,9 @@ export default function Home({
           </Link>
         </motion.div>
 
-        {/* Embla-powered carousel — extends past container padding */}
-        <div style={{ paddingLeft: 24, paddingRight: 0 }}>
-          <TopCitiesCarousel items={homeCities} />
+        {/* Adaptive bento grid — visible immediately, no IO-gated animation */}
+        <div style={{ paddingLeft: 24, paddingRight: 24 }}>
+          <TopCitiesBento items={homeCities} />
         </div>
       </section>
 
@@ -667,167 +665,7 @@ export default function Home({
           </div>
 
           {preferredHotels.length > 0 ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-                gap: 18,
-              }}
-            >
-              {preferredHotels.map((h) => (
-                <Link
-                  key={h.id}
-                  href={hotelUrl(h)}
-                  className="preferred-tile"
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    textDecoration: "none",
-                    color: "inherit",
-                    borderRadius: 14,
-                    overflow: "hidden",
-                    border: "1px solid var(--luxe-hairline)",
-                    background: "var(--luxe-card-bg, rgba(20,18,15,0.4))",
-                    transition:
-                      "transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease",
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "relative",
-                      width: "100%",
-                      aspectRatio: "4 / 3",
-                      overflow: "hidden",
-                      background: CITY_FALLBACK_GRADIENT,
-                    }}
-                  >
-                    <Image
-                      src={safeImg(h.image_url)}
-                      alt={h.name}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="preferred-tile-img"
-                      style={{
-                        objectFit: "cover",
-                        transition: "transform 360ms ease",
-                      }}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      padding: 20,
-                      display: "flex",
-                      flexDirection: "column",
-                      flex: 1,
-                      gap: 10,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                      }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          width: 5,
-                          height: 5,
-                          borderRadius: "50%",
-                          background: "var(--luxe-champagne)",
-                          display: "inline-block",
-                        }}
-                      />
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono, monospace)",
-                          fontSize: 10,
-                          letterSpacing: "0.18em",
-                          textTransform: "uppercase",
-                          color: "var(--luxe-soft-white-50)",
-                        }}
-                      >
-                        {h.city_name}
-                      </span>
-                    </div>
-                    {h.tagline ? (
-                      <div
-                        style={{
-                          fontFamily: "var(--font-display)",
-                          fontStyle: "italic",
-                          fontSize: 14,
-                          color: "var(--luxe-champagne)",
-                          letterSpacing: "-0.005em",
-                          opacity: 0.92,
-                        }}
-                      >
-                        {h.tagline}
-                      </div>
-                    ) : null}
-                    <div
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontSize: 22,
-                        fontWeight: 500,
-                        color: "var(--luxe-soft-white)",
-                        lineHeight: 1.22,
-                        letterSpacing: "-0.015em",
-                      }}
-                    >
-                      {h.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: "var(--luxe-soft-white-50)",
-                        letterSpacing: "0.02em",
-                      }}
-                    >
-                      {h.country}
-                    </div>
-                    {h.benefits && h.benefits.length > 0 ? (
-                      <div
-                        style={{
-                          marginTop: "auto",
-                          paddingTop: 14,
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: 6,
-                        }}
-                      >
-                        {h.benefits.slice(0, 5).map((b, i) => (
-                          <span
-                            key={`${h.id}-b-${i}`}
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 6,
-                              padding: "5px 10px",
-                              borderRadius: 999,
-                              fontSize: 11.5,
-                              lineHeight: 1.2,
-                              color: "var(--luxe-champagne)",
-                              background: "rgba(200,170,118,0.10)",
-                              border: "1px solid rgba(200,170,118,0.28)",
-                              letterSpacing: "0.005em",
-                            }}
-                          >
-                            <span
-                              aria-hidden="true"
-                              style={{ fontSize: 10, lineHeight: 1 }}
-                            >
-                              ★
-                            </span>
-                            {b}
-                          </span>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <PreferredHotelsCarousel hotels={preferredHotels} />
           ) : (
             <div
               style={{
@@ -917,16 +755,6 @@ export default function Home({
           )}
         </div>
 
-        <style jsx>{`
-          .preferred-tile:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
-            border-color: rgba(200, 170, 118, 0.35);
-          }
-          .preferred-tile:hover :global(.preferred-tile-img) {
-            transform: scale(1.04);
-          }
-        `}</style>
       </motion.section>
 
       {/* ── Testimonials ─────────────────────────────────────────────────── */}
