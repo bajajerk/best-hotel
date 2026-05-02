@@ -243,33 +243,31 @@ export default function Home({
         }}
       >
         <div className="luxe-container" style={{ paddingTop: 8 }}>
-          <div className="luxe-tech" style={{ marginBottom: 18 }}>
-            Voyagr Club &middot; Est. Mumbai
+          <div className="luxe-tech" style={{ marginBottom: 8, fontSize: 10 }}>
+            Voyagr Club
           </div>
           <h1
             className="luxe-display"
             style={{
-              fontSize: "clamp(40px, 6vw, 84px)",
-              maxWidth: 920,
-              marginBottom: 18,
+              fontSize: "clamp(40px, 5vw, 64px)",
+              lineHeight: 1.05,
+              maxWidth: 820,
+              marginBottom: 16,
               color: "var(--luxe-soft-white)",
             }}
           >
-            Private Luxury Hotel Rates &amp; VIP Perks —{" "}
-            <span className="luxe-text-gradient">Reserved for VoyagrClub Members</span>
+            Hotel rates your travel agent can&rsquo;t get you.
           </h1>
           <p
             style={{
-              maxWidth: 560,
+              maxWidth: 620,
               color: "var(--luxe-soft-white-70)",
               fontSize: 15,
-              lineHeight: 1.7,
-              marginBottom: 28,
+              lineHeight: 1.6,
+              marginBottom: 24,
             }}
           >
-            Access exclusive member-only pricing at premium hotels worldwide.
-            Enjoy curated recommendations, upgrades, and a dedicated concierge
-            &mdash; all with a seamless booking experience.
+            Members-only pricing, upgrades and concierge &mdash; at the world&rsquo;s best hotels.
           </p>
 
           {/* Search bar — glass capsule */}
