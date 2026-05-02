@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -14,15 +14,12 @@ import type { BatchRatesResponse } from "@/lib/api";
 import { hotelUrl } from "@/lib/urls";
 import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import { useBooking } from "@/context/BookingContext";
-import { trackSearch, trackSearchFilterApplied } from "@/lib/analytics";
+import { trackSearch } from "@/lib/analytics";
 import Header from "@/components/Header";
 import DateBar, { DateBarHandle } from "@/components/DateBar";
 import DestinationSearch from "@/components/DestinationSearch";
 import RegionFilterTabs from "@/components/RegionFilterTabs";
 import SearchResultsSkeleton from "@/components/skeletons/SearchResultsSkeleton";
-import { LuxeSkeleton } from "@/components/skeletons";
-
-const SearchMapView = lazy(() => import("@/components/SearchMapView"));
 
 const FALLBACK_IMAGE = FALLBACK_CITY_IMAGE;
 
@@ -98,11 +95,6 @@ interface HotelResult {
 }
 
 // ---------------------------------------------------------------------------
-// View mode
-// ---------------------------------------------------------------------------
-type ViewMode = "list" | "map";
-
-// ---------------------------------------------------------------------------
 // Recent searches (localStorage)
 // ---------------------------------------------------------------------------
 const RECENT_SEARCHES_KEY = "voyagr_recent_searches";
@@ -168,31 +160,6 @@ function formatDateRange(checkIn?: string, checkOut?: string): string {
   }
   return `${month(a)} ${a.getDate()} \u2013 ${month(b)} ${b.getDate()}`;
 }
-
-// ---------------------------------------------------------------------------
-// Star rating filter options
-// ---------------------------------------------------------------------------
-const STAR_FILTERS = [
-  { label: "All Stars", value: 0 },
-  { label: "3+", value: 3 },
-  { label: "4+", value: 4 },
-  { label: "5", value: 5 },
-];
-
-// ---------------------------------------------------------------------------
-// Sort options — extended with rating, reviews, price
-// ---------------------------------------------------------------------------
-type SortOption = "relevance" | "name_asc" | "name_desc" | "stars_desc" | "rating_desc" | "reviews_desc" | "price_asc" | "price_desc";
-const SORT_OPTIONS: { label: string; value: SortOption }[] = [
-  { label: "Relevance", value: "relevance" },
-  { label: "Guest Rating", value: "rating_desc" },
-  { label: "Most Reviewed", value: "reviews_desc" },
-  { label: "Price: Low to High", value: "price_asc" },
-  { label: "Price: High to Low", value: "price_desc" },
-  { label: "Stars: High to Low", value: "stars_desc" },
-  { label: "Name A–Z", value: "name_asc" },
-  { label: "Name Z–A", value: "name_desc" },
-];
 
 // ---------------------------------------------------------------------------
 // Pill strip + pill subcomponents
@@ -547,11 +514,7 @@ export default function SearchPage() {
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
-  const [starFilter, setStarFilter] = useState(0);
   const [regionFilter, setRegionFilter] = useState<string>("All");
-  const [sortBy, setSortBy] = useState<SortOption>("relevance");
-  const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dateBarRef = useRef<DateBarHandle | null>(null);
 
@@ -661,7 +624,7 @@ export default function SearchPage() {
         query: q,
         result_count: resp.count,
         source: 'search_page',
-        filters: { star_rating: starFilter, sort_by: sortBy, region: regionFilter },
+        filters: { region: regionFilter },
       });
     } catch {
       setHotelResults([]);
@@ -670,7 +633,7 @@ export default function SearchPage() {
     } finally {
       setSearching(false);
     }
-  }, [starFilter, sortBy, regionFilter, checkIn, checkOut, perPage]);
+  }, [regionFilter, checkIn, checkOut, perPage]);
 
   const handleRecentClick = (term: string) => {
     setQuery(term);
@@ -752,39 +715,13 @@ export default function SearchPage() {
   const getName = (h: HotelResult): string => h.name || h.hotel_name || "";
   const getCity = (h: HotelResult): string => h.city_name || h.city || "";
 
-  // Apply star filter + region filter + sort to hotel results
-  const filteredHotels = livePricedResults
-    .filter((h) => {
-      if (starFilter > 0) {
-        if (starFilter === 5 && h.star_rating !== 5) return false;
-        if (starFilter !== 5 && (h.star_rating || 0) < starFilter) return false;
-      }
-      if (regionFilter !== "All") {
+  // Apply region filter (still driven by the trending-destinations region tabs).
+  const filteredHotels = regionFilter === "All"
+    ? livePricedResults
+    : livePricedResults.filter((h) => {
         const continent = cityToContinentMap[getCity(h).toLowerCase()];
-        if (continent && continent !== regionFilter) return false;
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "name_asc":
-          return getName(a).localeCompare(getName(b));
-        case "name_desc":
-          return getName(b).localeCompare(getName(a));
-        case "stars_desc":
-          return (b.star_rating || 0) - (a.star_rating || 0);
-        case "rating_desc":
-          return (b.rating_average || 0) - (a.rating_average || 0);
-        case "reviews_desc":
-          return (b.number_of_reviews || 0) - (a.number_of_reviews || 0);
-        case "price_asc":
-          return (a.rates_from || Infinity) - (b.rates_from || Infinity);
-        case "price_desc":
-          return (b.rates_from || 0) - (a.rates_from || 0);
-        default:
-          return 0;
-      }
-    });
+        return !continent || continent === regionFilter;
+      });
 
   // Hotel results are the primary count surfaced in the toolbar; matching cities
   // are relocated below the results as a curated scroller and counted separately.
@@ -996,7 +933,7 @@ export default function SearchPage() {
       {/* ── Results area ── */}
       <section className="search-results-section" style={{ padding: "60px 60px 100px", maxWidth: "1400px", margin: "0 auto" }}>
 
-        {/* Results toolbar — filters + sort (only when we have results) */}
+        {/* Results count */}
         {hasSearched && (regionFilteredCities.length > 0 || hotelResults.length > 0) && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -1004,239 +941,15 @@ export default function SearchPage() {
             transition={{ duration: 0.3 }}
             style={{ marginBottom: "32px" }}
           >
-            {/* Results count + toggle */}
-            <div className="search-toolbar" style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: "12px",
-              marginBottom: "16px",
+            <span style={{
+              fontSize: "13px",
+              color: "var(--ink)",
+              fontWeight: 500,
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <span style={{
-                  fontSize: "13px",
-                  color: "var(--ink)",
-                  fontWeight: 500,
-                }}>
-                  {(totalCount > 0 ? totalCount : totalResults).toLocaleString()}{" "}
-                  {(totalCount > 0 ? totalCount : totalResults) === 1 ? "hotel" : "hotels"}{" "}
-                  for &ldquo;{query.trim()}&rdquo;
-                </span>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                {/* View mode toggle */}
-                <div style={{
-                  display: "flex",
-                  border: "1px solid var(--cream-border)",
-                  overflow: "hidden",
-                }}>
-                  <button
-                    onClick={() => { setViewMode("list"); trackSearchFilterApplied({ filter_type: 'view_mode', filter_value: 'list', result_count: hotelResults.length }); }}
-                    aria-label="List view"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "5px",
-                      padding: "8px 14px",
-                      fontSize: "12px",
-                      fontWeight: 500,
-                      letterSpacing: "0.06em",
-                      border: "none",
-                      background: viewMode === "list" ? "var(--ink)" : "transparent",
-                      color: viewMode === "list" ? "var(--cream)" : "var(--ink-mid)",
-                      cursor: "pointer",
-                      fontFamily: "var(--font-body)",
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="8" y1="6" x2="21" y2="6" />
-                      <line x1="8" y1="12" x2="21" y2="12" />
-                      <line x1="8" y1="18" x2="21" y2="18" />
-                      <line x1="3" y1="6" x2="3.01" y2="6" />
-                      <line x1="3" y1="12" x2="3.01" y2="12" />
-                      <line x1="3" y1="18" x2="3.01" y2="18" />
-                    </svg>
-                    List
-                  </button>
-                  <button
-                    onClick={() => { setViewMode("map"); trackSearchFilterApplied({ filter_type: 'view_mode', filter_value: 'map', result_count: hotelResults.length }); }}
-                    aria-label="Map view"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "5px",
-                      padding: "8px 14px",
-                      fontSize: "12px",
-                      fontWeight: 500,
-                      letterSpacing: "0.06em",
-                      border: "none",
-                      borderLeft: "1px solid var(--cream-border)",
-                      background: viewMode === "map" ? "var(--ink)" : "transparent",
-                      color: viewMode === "map" ? "var(--cream)" : "var(--ink-mid)",
-                      cursor: "pointer",
-                      fontFamily: "var(--font-body)",
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
-                      <line x1="8" y1="2" x2="8" y2="18" />
-                      <line x1="16" y1="6" x2="16" y2="22" />
-                    </svg>
-                    Map
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "8px 16px",
-                    fontSize: "12px",
-                    fontWeight: 500,
-                    letterSpacing: "0.06em",
-                    border: showFilters ? "1px solid var(--gold)" : "1px solid var(--cream-border)",
-                    background: showFilters ? "var(--gold)" : "transparent",
-                    color: showFilters ? "#1a1710" : "var(--ink-mid)",
-                    cursor: "pointer",
-                    fontFamily: "var(--font-body)",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="4" y1="6" x2="20" y2="6" />
-                    <line x1="8" y1="12" x2="20" y2="12" />
-                    <line x1="12" y1="18" x2="20" y2="18" />
-                  </svg>
-                  Filters
-                  {(starFilter > 0 || regionFilter !== "All") && (
-                    <span style={{
-                      width: "6px",
-                      height: "6px",
-                      borderRadius: "50%",
-                      background: showFilters ? "#1a1710" : "var(--gold)",
-                    }} />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Expanded filter bar */}
-            <AnimatePresence>
-              {showFilters && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.25 }}
-                  style={{ overflow: "hidden" }}
-                >
-                  <div className="search-filters" style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "16px",
-                    padding: "20px 24px",
-                    background: "var(--white)",
-                    border: "1px solid var(--cream-border)",
-                    marginBottom: "8px",
-                  }}>
-                    {/* Region filter tabs */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ fontSize: "11px", color: "var(--ink-light)", letterSpacing: "0.06em", fontWeight: 500, whiteSpace: "nowrap" }}>
-                        REGION
-                      </span>
-                      <RegionFilterTabs
-                        active={regionFilter}
-                        onChange={(v: string) => { setRegionFilter(v); trackSearchFilterApplied({ filter_type: 'region', filter_value: v, result_count: hotelResults.length }); }}
-                        variant="pills"
-                      />
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "24px" }}>
-                    {/* Star rating filter */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ fontSize: "11px", color: "var(--ink-light)", letterSpacing: "0.06em", fontWeight: 500 }}>
-                        STARS
-                      </span>
-                      <div style={{ display: "flex", gap: "4px" }}>
-                        {STAR_FILTERS.map((sf) => (
-                          <button
-                            key={sf.value}
-                            onClick={() => { setStarFilter(sf.value); trackSearchFilterApplied({ filter_type: 'star_rating', filter_value: sf.value, result_count: hotelResults.length }); }}
-                            style={{
-                              padding: "6px 14px",
-                              fontSize: "12px",
-                              border: "1px solid",
-                              borderColor: starFilter === sf.value ? "var(--gold)" : "var(--cream-border)",
-                              background: starFilter === sf.value ? "var(--gold)" : "transparent",
-                              color: starFilter === sf.value ? "#1a1710" : "var(--ink-mid)",
-                              cursor: "pointer",
-                              fontFamily: "var(--font-body)",
-                              transition: "all 0.2s",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "4px",
-                            }}
-                          >
-                            {sf.value > 0 && <span style={{ color: starFilter === sf.value ? "#1a1710" : "var(--gold)", fontSize: "11px" }}>★</span>}
-                            {sf.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Sort */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ fontSize: "11px", color: "var(--ink-light)", letterSpacing: "0.06em", fontWeight: 500 }}>
-                        SORT
-                      </span>
-                      <select
-                        value={sortBy}
-                        onChange={(e) => { const v = e.target.value as SortOption; setSortBy(v); trackSearchFilterApplied({ filter_type: 'sort_by', filter_value: v, result_count: hotelResults.length }); }}
-                        style={{
-                          padding: "6px 12px",
-                          fontSize: "12px",
-                          border: "1px solid var(--cream-border)",
-                          background: "var(--cream)",
-                          color: "var(--ink)",
-                          cursor: "pointer",
-                          fontFamily: "var(--font-body)",
-                          outline: "none",
-                        }}
-                      >
-                        {SORT_OPTIONS.map((so) => (
-                          <option key={so.value} value={so.value}>{so.label}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Clear filters */}
-                    {(starFilter > 0 || sortBy !== "relevance" || regionFilter !== "All") && (
-                      <button
-                        onClick={() => { setStarFilter(0); setSortBy("relevance"); setRegionFilter("All"); }}
-                        style={{
-                          fontSize: "11px",
-                          color: "var(--gold)",
-                          background: "transparent",
-                          border: "none",
-                          cursor: "pointer",
-                          fontFamily: "var(--font-body)",
-                          textDecoration: "underline",
-                        }}
-                      >
-                        Clear filters
-                      </button>
-                    )}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+              {(totalCount > 0 ? totalCount : totalResults).toLocaleString()}{" "}
+              {(totalCount > 0 ? totalCount : totalResults) === 1 ? "hotel" : "hotels"}{" "}
+              for &ldquo;{query.trim()}&rdquo;
+            </span>
           </motion.div>
         )}
 
@@ -1247,57 +960,7 @@ export default function SearchPage() {
           </div>
         )}
 
-        {!searching && hasSearched && filteredHotels.length > 0 && viewMode === "map" && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "24px" }}>
-              <div className="type-eyebrow">
-                Hotels on Map
-              </div>
-              <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>
-                {filteredHotels.length} result{filteredHotels.length !== 1 ? "s" : ""}
-              </span>
-            </div>
-            <Suspense fallback={
-              <div
-                aria-busy="true"
-                style={{
-                  position: "relative",
-                  height: 600,
-                  border: "1px solid var(--cream-border)",
-                  overflow: "hidden",
-                }}
-              >
-                <LuxeSkeleton width="100%" height="100%" radius={0} />
-                <span className="sr-only">Loading map…</span>
-              </div>
-            }>
-              <SearchMapView
-                hotels={filteredHotels.map((h) => ({
-                  // Phase E — search endpoint now returns master `id` /
-                  // `short_id` / `slug` directly. SearchMapView's link
-                  // builder uses these to emit canonical pretty URLs.
-                  id: String(h.id ?? h.hotel_id ?? ""),
-                  master_id: String(h.id ?? h.hotel_id ?? ""),
-                  slug: h.slug ?? null,
-                  short_id: h.short_id ?? null,
-                  hotel_name: getName(h),
-                  city: getCity(h),
-                  country: h.country || "",
-                  star_rating: h.star_rating,
-                  photo1: h.image_url ?? h.photo1 ?? null,
-                  latitude: h.latitude,
-                  longitude: h.longitude,
-                }))}
-              />
-            </Suspense>
-          </motion.div>
-        )}
-
-        {!searching && hasSearched && filteredHotels.length > 0 && viewMode === "list" && (
+        {!searching && hasSearched && filteredHotels.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1608,10 +1271,6 @@ export default function SearchPage() {
               })}
             </div>
 
-            {/* Pagination — only meaningful when no client-side filter is
-                trimming the page below the API page-size, otherwise the
-                page numbers describe the unfiltered universe. We still
-                show it because the user can clear filters and resume.  */}
             <Pagination
               page={page}
               totalPages={totalPages}
@@ -1716,33 +1375,6 @@ export default function SearchPage() {
                 </Link>
               ))}
             </div>
-          </motion.div>
-        )}
-
-        {/* No results after filtering */}
-        {!searching && hasSearched && hotelResults.length > 0 && filteredHotels.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            style={{ textAlign: "center", padding: "60px 0" }}
-          >
-            <p style={{ fontSize: "14px", color: "var(--ink-light)", marginBottom: "12px" }}>
-              No hotels match your current filters.
-            </p>
-            <button
-              onClick={() => { setStarFilter(0); setSortBy("relevance"); setRegionFilter("All"); }}
-              style={{
-                fontSize: "13px",
-                color: "var(--gold)",
-                background: "transparent",
-                border: "1px solid var(--gold)",
-                padding: "10px 24px",
-                cursor: "pointer",
-                fontFamily: "var(--font-body)",
-              }}
-            >
-              Clear filters
-            </button>
           </motion.div>
         )}
 
