@@ -1129,21 +1129,6 @@ export default function CityPage() {
         }}
       >
         <div className="luxe-container">
-          <div style={{ marginBottom: 24 }}>
-            <div className="luxe-tech" style={{ marginBottom: 10 }}>
-              All Stays
-            </div>
-            <h2
-              className="luxe-display"
-              style={{
-                fontSize: "clamp(26px, 2.8vw, 36px)",
-                marginBottom: 6,
-              }}
-            >
-              Hotels in <em>{displayName}</em>
-            </h2>
-          </div>
-
           {/* Filter pill row */}
           <div
             style={{
