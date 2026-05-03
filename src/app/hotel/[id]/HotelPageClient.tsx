@@ -173,6 +173,19 @@ function formatDateLabel(iso: string): string {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
+// Hotel meal-plan jargon → luxe-friendly copy. Keep the original label in
+// parentheses so power users still recognise the term.
+function formatMealBasis(raw?: string): string {
+  const mb = (raw || "").trim();
+  if (!mb) return "Room Only";
+  const lower = mb.toLowerCase();
+  if (lower === "half board") return "Breakfast & Dinner (Half Board)";
+  if (lower === "full board") return "All Meals Included (Full Board)";
+  if (lower === "all inclusive") return "All Inclusive";
+  if (lower === "bed and breakfast" || lower === "bed & breakfast") return "Breakfast";
+  return mb;
+}
+
 /* ────────────────────────── Filters ────────────────────────── */
 
 type MealPlanFilter = "all" | "room-only" | "breakfast" | "half-board" | "full-board";
@@ -337,8 +350,8 @@ function RateFilterBar({
     all: "Meal Plan",
     "room-only": "Room Only",
     breakfast: "With Breakfast",
-    "half-board": "Half Board",
-    "full-board": "Full Board",
+    "half-board": "Breakfast & Dinner (Half Board)",
+    "full-board": "All Meals Included (Full Board)",
   };
 
   return (
@@ -389,8 +402,8 @@ function RateFilterBar({
             <option value="all">All Meal Plans</option>
             <option value="room-only">Room Only</option>
             <option value="breakfast">With Breakfast</option>
-            <option value="half-board">Half Board</option>
-            <option value="full-board">Full Board</option>
+            <option value="half-board">Breakfast & Dinner (Half Board)</option>
+            <option value="full-board">All Meals Included (Full Board)</option>
           </select>
         </FilterPillShell>
       </div>
@@ -662,7 +675,7 @@ function RateCard({
               fontWeight: 600,
             }}
           >
-            {plan.meal_basis || "Room Only"}
+            {formatMealBasis(plan.meal_basis)}
           </p>
         </div>
         {isSelected && (
@@ -2448,7 +2461,7 @@ export default function HotelPage() {
                           fontFamily: "var(--font-mono)",
                         }}
                       >
-                        {selectedPlan.meal_basis || "Room Only"}
+                        {formatMealBasis(selectedPlan.meal_basis)}
                       </p>
 
                       <div className="flex items-baseline justify-between mb-2">
@@ -2949,7 +2962,7 @@ export default function HotelPage() {
             </p>
             {selectedPlan ? (
               <p style={{ fontSize: 11.5, color: "var(--luxe-champagne)", marginTop: 3, letterSpacing: "0.04em" }}>
-                {selectedPlan.meal_basis || "Room Only"} &middot; Total {formatPrice(sidebarTotal, selectedPlan.currency)} ({nights} night{nights > 1 ? "s" : ""})
+                {formatMealBasis(selectedPlan.meal_basis)} &middot; Total {formatPrice(sidebarTotal, selectedPlan.currency)} ({nights} night{nights > 1 ? "s" : ""})
               </p>
             ) : lowestFromRate != null && rates ? (
               <p style={{ fontSize: 11.5, color: "var(--luxe-champagne)", marginTop: 3, letterSpacing: "0.04em" }}>
@@ -2995,7 +3008,7 @@ export default function HotelPage() {
           onClose={() => setUnlockModalOpen(false)}
           hotelId={hotel.id}
           hotelName={hotel.hotel_name}
-          roomName={`${selectedPlan.room_name} • ${selectedPlan.meal_basis || "Room Only"}`}
+          roomName={`${selectedPlan.room_name} • ${formatMealBasis(selectedPlan.meal_basis)}`}
           rateType={selectedPlan.refundable ? "preferred" : "standard"}
           checkIn={booking.checkIn}
           checkOut={booking.checkOut}
