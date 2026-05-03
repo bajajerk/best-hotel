@@ -1285,6 +1285,29 @@ main {
   outline-offset: 2px;
 }
 
+/* ── Footer colour hardening — defeats .luxe a { color: inherit } specificity override ──
+   .luxe a has specificity 0,1,1 which beats .footer-link (0,1,0). Using !important on
+   the element-scoped rules guarantees footer links stay navy regardless of wrapper scope. */
+footer a,
+footer a:link,
+footer a:visited {
+  color: #0A1A3F !important;
+  opacity: 0.8;
+  text-decoration: none;
+}
+footer a:hover,
+footer a:focus {
+  color: #0A1A3F !important;
+  opacity: 1;
+}
+footer p,
+footer span,
+footer h2,
+footer h3,
+footer h4 {
+  color: #0A1A3F !important;
+}
+
 /* ── Price range slider ── */
 .price-range-input::-webkit-slider-thumb {
   -webkit-appearance: none;
