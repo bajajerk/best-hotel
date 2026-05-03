@@ -757,121 +757,6 @@ export default function Home({
 
       </motion.section>
 
-      {/* ── Testimonials ─────────────────────────────────────────────────── */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.6 }}
-        style={{
-          padding: "40px 0 28px",
-          borderTop: "1px solid var(--luxe-hairline)",
-        }}
-      >
-        <div className="luxe-container">
-          <div style={{ maxWidth: 640, marginBottom: 20 }}>
-            <div className="luxe-tech" style={{ marginBottom: 6 }}>
-              In Their Words
-            </div>
-            <h2
-              className="luxe-display"
-              style={{ fontSize: "clamp(22px, 2.6vw, 36px)", marginBottom: 0 }}
-            >
-              Travellers who <em>noticed the details</em>
-            </h2>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: 16,
-            }}
-          >
-            {[
-              {
-                quote:
-                  "The perks and personal touch made our anniversary trip truly unforgettable. From the room upgrade to the late checkout, every detail was taken care of.",
-                name: "Priya Mehta",
-                city: "Mumbai",
-              },
-              {
-                quote:
-                  "We planned our honeymoon across three cities. The exclusive perks through Voyagr Club — spa credits, welcome drinks, early check-in — turned every stay into a celebration.",
-                name: "Arjun & Kavya",
-                city: "Bangalore",
-              },
-              {
-                quote:
-                  "What sets Voyagr apart is the human concierge. One WhatsApp message and everything was arranged — upgrades, restaurant reservations, even a surprise for my wife's birthday.",
-                name: "Rahul Sharma",
-                city: "Delhi",
-              },
-            ].map((t) => (
-              <figure
-                key={t.name}
-                className="luxe-card"
-                style={{
-                  margin: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 18,
-                }}
-              >
-                <div
-                  aria-hidden="true"
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: 56,
-                    lineHeight: 0.6,
-                    color: "var(--luxe-champagne)",
-                    opacity: 0.5,
-                    height: 26,
-                  }}
-                >
-                  &ldquo;
-                </div>
-                <blockquote
-                  style={{
-                    margin: 0,
-                    fontFamily: "var(--font-display)",
-                    fontStyle: "italic",
-                    fontSize: 17,
-                    lineHeight: 1.55,
-                    color: "var(--luxe-soft-white)",
-                    fontWeight: 400,
-                    letterSpacing: "-0.005em",
-                  }}
-                >
-                  {t.quote}
-                </blockquote>
-                <figcaption
-                  style={{
-                    marginTop: "auto",
-                    paddingTop: 12,
-                    borderTop: "1px solid var(--luxe-hairline)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "var(--luxe-soft-white)",
-                      letterSpacing: "0.01em",
-                    }}
-                  >
-                    {t.name}
-                  </div>
-                  <div className="luxe-tech luxe-tech-soft" style={{ marginTop: 4 }}>
-                    {t.city}
-                  </div>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      </motion.section>
-
       {/* ── Travel by Season — 4-up grid ─────────────────────────────────── */}
       <motion.section
         initial={{ opacity: 0, y: 10 }}
@@ -885,9 +770,6 @@ export default function Home({
       >
         <div className="luxe-container">
           <div style={{ maxWidth: 640, marginBottom: 20 }}>
-            <div className="luxe-tech" style={{ marginBottom: 6 }}>
-              Travel by Season
-            </div>
             <h2
               className="luxe-display"
               style={{ fontSize: "clamp(22px, 2.6vw, 36px)", marginBottom: 0 }}
@@ -929,7 +811,7 @@ export default function Home({
                 glyph: "✿",
               },
             ].map((s) => (
-              <div key={s.season} className="luxe-card">
+              <div key={s.season} className="luxe-card" style={{ paddingTop: 24, paddingBottom: 24 }}>
                 <div
                   aria-hidden="true"
                   style={{
@@ -987,155 +869,101 @@ export default function Home({
         </div>
       </motion.section>
 
-      {/* ── About Voyagr Club — narrative + stat strip ───────────────────── */}
+      {/* ── Voice + Proof ─────────────────────────────────────────────────── */}
       <motion.section
         initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.6 }}
-        style={{
-          padding: "40px 0 28px",
-          borderTop: "1px solid var(--luxe-hairline)",
-        }}
+        className="vp-section"
+        style={{ borderTop: "1px solid var(--luxe-hairline)" }}
       >
-        <div className="luxe-container">
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-              gap: 40,
-              alignItems: "start",
-            }}
-          >
-            <div>
-              <div className="luxe-tech" style={{ marginBottom: 6 }}>
-                About Voyagr Club
-              </div>
-              <h2
-                className="luxe-display"
-                style={{ fontSize: "clamp(22px, 2.6vw, 36px)", marginBottom: 12 }}
-              >
-                Built on a <em>simple idea</em>
-              </h2>
-              <p
-                style={{
-                  color: "var(--luxe-soft-white-70)",
-                  fontSize: 15.5,
-                  lineHeight: 1.75,
-                  marginBottom: 16,
-                }}
-              >
-                Voyagr Club was built on a simple idea — luxury travel should
-                come with extraordinary experiences. We partner directly with
-                the world&rsquo;s finest hotels to offer our members preferred
-                access, exclusive perks, and a personal concierge who makes
-                every trip unforgettable.
-              </p>
-              <p
-                style={{
-                  color: "var(--luxe-soft-white-70)",
-                  fontSize: 15.5,
-                  lineHeight: 1.75,
-                }}
-              >
-                Our curated selection spans 50+ cities worldwide — from the
-                beaches of Bali to the streets of Paris — handpicked to ensure
-                quality and unforgettable experiences for every type of
-                traveller.
-              </p>
-            </div>
-
+        <div className="luxe-container vp-grid" style={{ maxWidth: 1200 }}>
+          {/* Left 60%: pull-quote */}
+          <div className="vp-quote-col">
             <div
+              aria-hidden="true"
               style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 1,
-                background: "var(--luxe-hairline)",
-                border: "1px solid var(--luxe-hairline)",
-                borderRadius: 20,
-                overflow: "hidden",
+                fontFamily: "var(--font-display)",
+                fontSize: 60,
+                lineHeight: 0.7,
+                color: "#C9A961",
+                opacity: 0.4,
+                marginBottom: 8,
+                userSelect: "none",
               }}
             >
-              {[
-                { num: "50+", label: "Cities Worldwide" },
-                { num: "10,000+", label: "Hotels Listed" },
-                { num: "Free", label: "Membership" },
-                { num: "24/7", label: "WhatsApp Concierge" },
-              ].map((s) => (
+              &ldquo;
+            </div>
+            <blockquote
+              className="vp-quote-text"
+              style={{
+                margin: 0,
+                fontFamily: "var(--font-display)",
+                fontStyle: "italic",
+                lineHeight: 1.3,
+                color: "#f7f5f2",
+                fontWeight: 400,
+                maxWidth: 520,
+              }}
+            >
+              One WhatsApp message. Upgrades, reservations, even a birthday
+              surprise &mdash; all arranged.
+            </blockquote>
+            <p
+              style={{
+                marginTop: 20,
+                fontSize: 12,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.6)",
+                fontStyle: "normal",
+              }}
+            >
+              &mdash;&nbsp;Rahul Sharma&nbsp;&nbsp;&middot;&nbsp;&nbsp;Delhi
+            </p>
+          </div>
+
+          {/* Right 40%: three stacked stats */}
+          <div className="vp-stats-col">
+            {[
+              { num: "1,500+", label: "Partner hotels" },
+              { num: "50+", label: "Cities" },
+              { num: "24/7", label: "WhatsApp concierge" },
+            ].map((s, i) => (
+              <div key={s.label} style={{ marginTop: i === 0 ? 0 : 32 }}>
                 <div
-                  key={s.label}
+                  className="vp-stat-number"
                   style={{
-                    background: "var(--luxe-black)",
-                    padding: "20px 16px",
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 400,
+                    lineHeight: 1,
+                    color: "#f7f5f2",
                   }}
                 >
-                  <div
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: 28,
-                      fontWeight: 500,
-                      color: "var(--luxe-soft-white)",
-                      letterSpacing: "-0.02em",
-                      lineHeight: 1,
-                      marginBottom: 8,
-                    }}
-                  >
-                    {s.num}
-                  </div>
-                  <div className="luxe-tech luxe-tech-soft">{s.label}</div>
+                  {s.num}
                 </div>
-              ))}
-            </div>
+                <div
+                  style={{
+                    width: 40,
+                    height: 1,
+                    background: "#C9A961",
+                    margin: "8px 0",
+                  }}
+                />
+                <div
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.55)",
+                  }}
+                >
+                  {s.label}
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      </motion.section>
-
-      {/* ── Trust strip ───────────────────────────────────────────────────── */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        style={{
-          borderTop: "1px solid var(--luxe-hairline)",
-          borderBottom: "1px solid var(--luxe-hairline)",
-          padding: "28px 0",
-        }}
-      >
-        <div
-          className="luxe-container"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 24,
-          }}
-        >
-          {[
-            { num: "1,500+", label: "Partner Hotels" },
-            { num: "50+", label: "Cities Worldwide" },
-            { num: "24/7", label: "WhatsApp Concierge" },
-            { num: "Free", label: "Membership" },
-          ].map((s) => (
-            <div key={s.label} style={{ flex: "1 1 160px", minWidth: 160 }}>
-              <div
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: 32,
-                  fontWeight: 500,
-                  color: "var(--luxe-soft-white)",
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1,
-                }}
-              >
-                {s.num}
-              </div>
-              <div className="luxe-tech luxe-tech-soft" style={{ marginTop: 8 }}>
-                {s.label}
-              </div>
-            </div>
-          ))}
         </div>
       </motion.section>
 

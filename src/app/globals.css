@@ -4406,6 +4406,50 @@ body:has(.precision-theme) {
   background: var(--luxe-champagne-soft);
 }
 
+/* ── Voice + Proof two-column band ── */
+.vp-section {
+  padding: 96px 0;
+}
+.vp-grid {
+  display: grid;
+  grid-template-columns: 60fr 40fr;
+  gap: 64px;
+  align-items: center;
+}
+.vp-quote-text {
+  font-size: 32px;
+}
+.vp-stat-number {
+  font-size: 56px;
+}
+@media (min-width: 768px) and (max-width: 1024px) {
+  .vp-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+  .vp-quote-text {
+    font-size: 26px;
+  }
+  .vp-stat-number {
+    font-size: 44px;
+  }
+}
+@media (max-width: 767px) {
+  .vp-section {
+    padding: 56px 0;
+  }
+  .vp-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .vp-quote-text {
+    font-size: 24px;
+  }
+  .vp-stat-number {
+    font-size: 40px;
+  }
+}
+
 /* ── Card surface (for content cards on dark pages) ── */
 .luxe-card {
   background: rgba(255, 255, 255, 0.025);
