@@ -1,0 +1,30 @@
+{
+  "stripPhrases": [
+    "pamper yourself",
+    "make yourself at home",
+    "featured amenities include",
+    "you can take advantage of",
+    "take advantage of",
+    "quench your thirst",
+    "stay in and",
+    "treat yourself to",
+    "indulge in",
+    "enjoy [a-z]+ cuisine",
+    "this (?:edwardian|colonial|family-friendly|charming) hotel",
+    "for extended visits or whenever required",
+    "during leisurely days and evenings"
+  ],
+  "trailingConnectives": ["with", "in", "and"],
+  "sentenceDropPatterns": {
+    "surchargeTerm": "\\(surcharge\\)",
+    "imperativeVerbs": ["Make", "Enjoy", "Take", "Pamper", "Treat", "Indulge"],
+    "serviceSubjects": ["dry cleaning", "laundry", "housekeeping"],
+    "genericAmenities": [
+      "wifi", "wi-fi", "internet", "parking", "pool", "gym",
+      "restaurant", "bar", "breakfast", "spa", "lounge", "concierge",
+      "room service", "air conditioning", "television", "minibar",
+      "fitness", "business center"
+    ],
+    "maxGenericAmenities": 3
+  }
+}
