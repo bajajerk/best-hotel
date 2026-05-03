@@ -1250,6 +1250,41 @@ main {
   }
 }
 
+/* ── Footer navigation links — animated underline on hover (Aesop/Aman style) ── */
+.footer-link,
+.footer-legal-link {
+  position: relative;
+  text-decoration: none;
+  transition: color 0.2s;
+  display: inline-block;
+}
+.footer-link::after,
+.footer-legal-link::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: #0A1A3F;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+.footer-link { color: rgba(10, 26, 63, 0.80); }
+.footer-legal-link { color: rgba(10, 26, 63, 0.70); }
+.footer-link:hover,
+.footer-legal-link:hover { color: #0A1A3F; }
+.footer-link:hover::after,
+.footer-legal-link:hover::after { transform: scaleX(1); }
+.footer-link:visited { color: rgba(10, 26, 63, 0.80); }
+.footer-legal-link:visited { color: rgba(10, 26, 63, 0.70); }
+.footer-link:focus-visible,
+.footer-legal-link:focus-visible {
+  outline: 2px solid rgba(10, 26, 63, 0.40);
+  outline-offset: 2px;
+}
+
 /* ── Price range slider ── */
 .price-range-input::-webkit-slider-thumb {
   -webkit-appearance: none;

@@ -36,15 +36,15 @@ const FOOTER_SUPPORT = [
 // Hardcoded hex values — never use --ink/--cream/--white tokens here because
 // the .luxe scope flips those tokens, which would invert footer colours.
 const C = {
-  bg: "#f5f0e8",
-  brand: "#1a1a1a",
+  bg: "#FAF7F2",
+  brand: "#0A1A3F",
   gold: "#C9A961",
-  desc: "#4a4a4a",
-  heading: "#1a1a1a",
-  link: "#2a2a2a",
-  muted: "#6a6a6a",
-  divider: "rgba(26, 26, 26, 0.1)",
-  iconBorder: "rgba(26, 26, 26, 0.15)",
+  desc: "rgba(10, 26, 63, 0.70)",
+  heading: "#0A1A3F",
+  muted: "rgba(10, 26, 63, 0.60)",
+  divider: "rgba(10, 26, 63, 0.10)",
+  iconBorder: "rgba(10, 26, 63, 0.15)",
+  iconColor: "rgba(10, 26, 63, 0.70)",
 } as const;
 
 export default function Footer() {
@@ -56,6 +56,7 @@ export default function Footer() {
         background: C.bg,
         color: C.brand,
         padding: "48px 60px 32px",
+        borderTop: `1px solid ${C.divider}`,
       }}
     >
       <div
@@ -87,7 +88,7 @@ export default function Footer() {
                   letterSpacing: "0.08em",
                 }}
               >
-                <span style={{ color: C.gold }}>V</span>oyagr Club
+                Voyagr <span style={{ color: C.gold }}>Club</span>
               </span>
             </Link>
             <p
@@ -123,7 +124,7 @@ export default function Footer() {
                   alignItems: "center",
                   justifyContent: "center",
                   transition: "all 0.2s",
-                  color: C.desc,
+                  color: C.iconColor,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = C.gold;
@@ -131,7 +132,7 @@ export default function Footer() {
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.borderColor = C.iconBorder;
-                  e.currentTarget.style.color = C.desc;
+                  e.currentTarget.style.color = C.iconColor;
                 }}
                 aria-label="WhatsApp"
               >
@@ -154,7 +155,7 @@ export default function Footer() {
                   alignItems: "center",
                   justifyContent: "center",
                   transition: "all 0.2s",
-                  color: C.desc,
+                  color: C.iconColor,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = C.gold;
@@ -162,7 +163,7 @@ export default function Footer() {
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.borderColor = C.iconBorder;
-                  e.currentTarget.style.color = C.desc;
+                  e.currentTarget.style.color = C.iconColor;
                 }}
                 aria-label="Email"
               >
@@ -203,18 +204,8 @@ export default function Footer() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  style={{
-                    fontSize: "13px",
-                    color: C.link,
-                    textDecoration: "none",
-                    transition: "color 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.target as HTMLAnchorElement).style.color = C.gold;
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.target as HTMLAnchorElement).style.color = C.link;
-                  }}
+                  className="footer-link"
+                  style={{ fontSize: "13px" }}
                 >
                   {link.label}
                 </Link>
@@ -242,18 +233,8 @@ export default function Footer() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  style={{
-                    fontSize: "13px",
-                    color: C.link,
-                    textDecoration: "none",
-                    transition: "color 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.target as HTMLAnchorElement).style.color = C.gold;
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.target as HTMLAnchorElement).style.color = C.link;
-                  }}
+                  className="footer-link"
+                  style={{ fontSize: "13px" }}
                 >
                   {link.label}
                 </Link>
@@ -281,18 +262,8 @@ export default function Footer() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  style={{
-                    fontSize: "13px",
-                    color: C.link,
-                    textDecoration: "none",
-                    transition: "color 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.target as HTMLAnchorElement).style.color = C.gold;
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.target as HTMLAnchorElement).style.color = C.link;
-                  }}
+                  className="footer-link"
+                  style={{ fontSize: "13px" }}
                 >
                   {link.label}
                 </Link>
@@ -325,19 +296,9 @@ export default function Footer() {
                   <Tag
                     key={link.label}
                     href={link.href}
+                    className="footer-link"
+                    style={{ fontSize: "13px" }}
                     {...(extraProps as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
-                    style={{
-                      fontSize: "13px",
-                      color: C.link,
-                      textDecoration: "none",
-                      transition: "color 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.target as HTMLElement).style.color = C.gold;
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.target as HTMLElement).style.color = C.link;
-                    }}
                   >
                     {link.label}
                   </Tag>
@@ -381,18 +342,10 @@ export default function Footer() {
             <a
               href="/privacy-policy"
               data-testid="footer-legal"
+              className="footer-legal-link"
               style={{
                 fontSize: "11px",
-                color: C.muted,
                 letterSpacing: "0.04em",
-                textDecoration: "none",
-                transition: "color 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = C.brand;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = C.muted;
               }}
             >
               Privacy Policy
@@ -400,18 +353,10 @@ export default function Footer() {
             <a
               href="/terms"
               data-testid="footer-legal"
+              className="footer-legal-link"
               style={{
                 fontSize: "11px",
-                color: C.muted,
                 letterSpacing: "0.04em",
-                textDecoration: "none",
-                transition: "color 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = C.brand;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = C.muted;
               }}
             >
               Terms of Service
