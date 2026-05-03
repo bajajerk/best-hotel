@@ -33,13 +33,28 @@ const FOOTER_SUPPORT = [
   { label: "FAQs", href: "/#how-it-works" },
 ];
 
+// Hardcoded hex values — never use --ink/--cream/--white tokens here because
+// the .luxe scope flips those tokens, which would invert footer colours.
+const C = {
+  bg: "#f5f0e8",
+  brand: "#1a1a1a",
+  gold: "#C9A961",
+  desc: "#4a4a4a",
+  heading: "#1a1a1a",
+  link: "#2a2a2a",
+  muted: "#6a6a6a",
+  divider: "rgba(26, 26, 26, 0.1)",
+  iconBorder: "rgba(26, 26, 26, 0.15)",
+} as const;
+
 export default function Footer() {
   return (
     <footer
       className="site-footer"
+      data-testid="site-footer"
       style={{
-        background: "var(--ink)",
-        color: "var(--cream)",
+        background: C.bg,
+        color: C.brand,
         padding: "48px 60px 32px",
       }}
     >
@@ -50,7 +65,7 @@ export default function Footer() {
           margin: "0 auto",
         }}
       >
-        {/* Top section — 4-column grid */}
+        {/* Top section — 5-column grid */}
         <div
           className="footer-grid"
           style={{
@@ -66,18 +81,20 @@ export default function Footer() {
             <Link href="/" style={{ textDecoration: "none" }}>
               <span
                 className="type-logo"
+                data-testid="footer-brand"
                 style={{
-                  color: "var(--cream)",
+                  color: C.brand,
                   letterSpacing: "0.08em",
                 }}
               >
-                <span style={{ color: "var(--gold)" }}>V</span>oyagr Club
+                <span style={{ color: C.gold }}>V</span>oyagr Club
               </span>
             </Link>
             <p
+              data-testid="footer-desc"
               style={{
                 fontSize: "13px",
-                color: "rgba(245, 240, 232, 0.55)",
+                color: C.desc,
                 lineHeight: 1.5,
                 marginTop: "12px",
                 maxWidth: "280px",
@@ -101,21 +118,20 @@ export default function Footer() {
                 style={{
                   width: "36px",
                   height: "36px",
-                  border: "1px solid rgba(245, 240, 232, 0.15)",
+                  border: `1px solid ${C.iconBorder}`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   transition: "all 0.2s",
-                  color: "rgba(245, 240, 232, 0.55)",
+                  color: C.desc,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "var(--gold)";
-                  e.currentTarget.style.color = "var(--gold)";
+                  e.currentTarget.style.borderColor = C.gold;
+                  e.currentTarget.style.color = C.gold;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor =
-                    "rgba(245, 240, 232, 0.15)";
-                  e.currentTarget.style.color = "rgba(245, 240, 232, 0.55)";
+                  e.currentTarget.style.borderColor = C.iconBorder;
+                  e.currentTarget.style.color = C.desc;
                 }}
                 aria-label="WhatsApp"
               >
@@ -133,21 +149,20 @@ export default function Footer() {
                 style={{
                   width: "36px",
                   height: "36px",
-                  border: "1px solid rgba(245, 240, 232, 0.15)",
+                  border: `1px solid ${C.iconBorder}`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   transition: "all 0.2s",
-                  color: "rgba(245, 240, 232, 0.55)",
+                  color: C.desc,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "var(--gold)";
-                  e.currentTarget.style.color = "var(--gold)";
+                  e.currentTarget.style.borderColor = C.gold;
+                  e.currentTarget.style.color = C.gold;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor =
-                    "rgba(245, 240, 232, 0.15)";
-                  e.currentTarget.style.color = "rgba(245, 240, 232, 0.55)";
+                  e.currentTarget.style.borderColor = C.iconBorder;
+                  e.currentTarget.style.color = C.desc;
                 }}
                 aria-label="Email"
               >
@@ -171,12 +186,13 @@ export default function Footer() {
           {/* Destinations column */}
           <div>
             <div
+              data-testid="footer-heading"
               style={{
                 fontSize: "11px",
                 fontWeight: 500,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                color: "var(--gold)",
+                color: C.heading,
                 marginBottom: "16px",
               }}
             >
@@ -189,16 +205,15 @@ export default function Footer() {
                   href={link.href}
                   style={{
                     fontSize: "13px",
-                    color: "rgba(245, 240, 232, 0.55)",
+                    color: C.link,
                     textDecoration: "none",
                     transition: "color 0.2s",
                   }}
                   onMouseEnter={(e) => {
-                    (e.target as HTMLAnchorElement).style.color = "var(--cream)";
+                    (e.target as HTMLAnchorElement).style.color = C.gold;
                   }}
                   onMouseLeave={(e) => {
-                    (e.target as HTMLAnchorElement).style.color =
-                      "rgba(245, 240, 232, 0.55)";
+                    (e.target as HTMLAnchorElement).style.color = C.link;
                   }}
                 >
                   {link.label}
@@ -210,12 +225,13 @@ export default function Footer() {
           {/* About Us column */}
           <div>
             <div
+              data-testid="footer-heading"
               style={{
                 fontSize: "11px",
                 fontWeight: 500,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                color: "var(--gold)",
+                color: C.heading,
                 marginBottom: "16px",
               }}
             >
@@ -228,16 +244,15 @@ export default function Footer() {
                   href={link.href}
                   style={{
                     fontSize: "13px",
-                    color: "rgba(245, 240, 232, 0.55)",
+                    color: C.link,
                     textDecoration: "none",
                     transition: "color 0.2s",
                   }}
                   onMouseEnter={(e) => {
-                    (e.target as HTMLAnchorElement).style.color = "var(--cream)";
+                    (e.target as HTMLAnchorElement).style.color = C.gold;
                   }}
                   onMouseLeave={(e) => {
-                    (e.target as HTMLAnchorElement).style.color =
-                      "rgba(245, 240, 232, 0.55)";
+                    (e.target as HTMLAnchorElement).style.color = C.link;
                   }}
                 >
                   {link.label}
@@ -249,12 +264,13 @@ export default function Footer() {
           {/* Categories column */}
           <div>
             <div
+              data-testid="footer-heading"
               style={{
                 fontSize: "11px",
                 fontWeight: 500,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                color: "var(--gold)",
+                color: C.heading,
                 marginBottom: "16px",
               }}
             >
@@ -267,16 +283,15 @@ export default function Footer() {
                   href={link.href}
                   style={{
                     fontSize: "13px",
-                    color: "rgba(245, 240, 232, 0.55)",
+                    color: C.link,
                     textDecoration: "none",
                     transition: "color 0.2s",
                   }}
                   onMouseEnter={(e) => {
-                    (e.target as HTMLAnchorElement).style.color = "var(--cream)";
+                    (e.target as HTMLAnchorElement).style.color = C.gold;
                   }}
                   onMouseLeave={(e) => {
-                    (e.target as HTMLAnchorElement).style.color =
-                      "rgba(245, 240, 232, 0.55)";
+                    (e.target as HTMLAnchorElement).style.color = C.link;
                   }}
                 >
                   {link.label}
@@ -288,12 +303,13 @@ export default function Footer() {
           {/* Support column */}
           <div>
             <div
+              data-testid="footer-heading"
               style={{
                 fontSize: "11px",
                 fontWeight: 500,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                color: "var(--gold)",
+                color: C.heading,
                 marginBottom: "16px",
               }}
             >
@@ -312,16 +328,15 @@ export default function Footer() {
                     {...(extraProps as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
                     style={{
                       fontSize: "13px",
-                      color: "rgba(245, 240, 232, 0.55)",
+                      color: C.link,
                       textDecoration: "none",
                       transition: "color 0.2s",
                     }}
                     onMouseEnter={(e) => {
-                      (e.target as HTMLElement).style.color = "var(--cream)";
+                      (e.target as HTMLElement).style.color = C.gold;
                     }}
                     onMouseLeave={(e) => {
-                      (e.target as HTMLElement).style.color =
-                        "rgba(245, 240, 232, 0.55)";
+                      (e.target as HTMLElement).style.color = C.link;
                     }}
                   >
                     {link.label}
@@ -336,7 +351,7 @@ export default function Footer() {
         <div
           className="footer-bottom"
           style={{
-            borderTop: "1px solid rgba(245, 240, 232, 0.08)",
+            borderTop: `1px solid ${C.divider}`,
             paddingTop: "16px",
             paddingBottom: "16px",
             display: "flex",
@@ -347,10 +362,11 @@ export default function Footer() {
           }}
         >
           <p
+            data-testid="footer-copyright"
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: "11px",
-              color: "rgba(245, 240, 232, 0.35)",
+              color: C.muted,
               letterSpacing: "0.05em",
             }}
           >
@@ -364,22 +380,38 @@ export default function Footer() {
           >
             <a
               href="/privacy-policy"
+              data-testid="footer-legal"
               style={{
                 fontSize: "11px",
-                color: "rgba(245, 240, 232, 0.35)",
+                color: C.muted,
                 letterSpacing: "0.04em",
                 textDecoration: "none",
+                transition: "color 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = C.brand;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = C.muted;
               }}
             >
               Privacy Policy
             </a>
             <a
               href="/terms"
+              data-testid="footer-legal"
               style={{
                 fontSize: "11px",
-                color: "rgba(245, 240, 232, 0.35)",
+                color: C.muted,
                 letterSpacing: "0.04em",
                 textDecoration: "none",
+                transition: "color 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = C.brand;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = C.muted;
               }}
             >
               Terms of Service
