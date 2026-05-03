@@ -177,6 +177,12 @@ export interface HotelDetail {
   yearrenovated: number | null;
   checkin: string | null;
   checkout: string | null;
+  /** Editorial overlay fields — populated by the editorial team via the admin.
+   *  All nullable; absent when the hotel has no editorial coverage yet. */
+  editorial_headline: string | null;
+  editorial_intro: string | null;
+  neighbourhood: string | null;
+  concierge_note: string | null;
 }
 
 /** Fetch full hotel detail by id (URL path token — accepts short_id, master
