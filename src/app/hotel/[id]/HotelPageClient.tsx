@@ -1233,20 +1233,6 @@ export default function HotelPage() {
     ? Math.min(...rates.rates.map((r) => r.total_price / Math.max(nights, 1)))
     : null;
 
-  /* Editorial header block */
-  const editorialHeadline = hotel.editorial_headline || hotel.hotel_name;
-  const firstSentenceOf = (text: string | null | undefined): string | null => {
-    if (!text) return null;
-    const plain = text.replace(/<[^>]*>/g, "").trim();
-    const match = plain.match(/[^.!?]+[.!?]+/);
-    return match ? match[0].trim() : plain;
-  };
-  const locationSentence = firstSentenceOf(hotel.location);
-  const amenitiesSentence = firstSentenceOf(hotel.amenities);
-  const fallbackParts = [locationSentence, amenitiesSentence].filter(Boolean).join(" ");
-  const editorialIntroFallback = fallbackParts ? sanitizeOtaProse(fallbackParts) : null;
-  const editorialIntro = hotel.editorial_intro ?? editorialIntroFallback;
-
   /* Bento gallery slots (first 5) */
   const bentoPhotos = photos.slice(0, 5);
 
@@ -1634,38 +1620,11 @@ export default function HotelPage() {
                 className="luxe-display"
                 style={{
                   fontSize: "clamp(32px, 4vw, 52px)",
-                  marginBottom: 24,
+                  marginBottom: 0,
                 }}
               >
                 A property our concierge <em>keeps revisiting</em>
               </h2>
-              <p
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: 28,
-                  lineHeight: "32px",
-                  fontStyle: "italic",
-                  fontWeight: 400,
-                  color: "#f5f1e8",
-                  margin: 0,
-                  marginBottom: editorialIntro ? 16 : 0,
-                }}
-              >
-                {editorialHeadline}
-              </p>
-              {editorialIntro && (
-                <p
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: 16,
-                    lineHeight: "26px",
-                    color: "rgba(255,255,255,0.75)",
-                    margin: 0,
-                  }}
-                >
-                  {editorialIntro}
-                </p>
-              )}
             </div>
 
             <HotelFactGrid
