@@ -6,18 +6,22 @@
 //  Visual language mirrors the homepage (see HomePageClient.tsx). The whole
 //  page is rendered inside a `<div className="luxe">` wrapper, which remaps the
 //  legacy `var(--cream)` / `var(--ink)` / `var(--gold)` / `var(--white)` design
-//  tokens to the dark-luxe palette via `globals.css` (.luxe scope, ~ line 4362).
-//  This means the existing inline styles auto-translate to dark luxe — and
-//  shared components like <HotelResultCard /> render natively on dark.
+//  tokens to the dark-luxe palette via `globals.css` (.luxe scope).
 //
-//  CRITICAL: every filter & sort interaction is preserved exactly as it was.
-//  All state (priceMin/Max, filterMin/Max, minStars, sortBy, *Open) and all
-//  derivation (rankedAll → rankedFiltered → sortedRanked → hotels) lives on
-//  this single client component, so no refactor can accidentally split state.
-//  We only restyled the JSX. See the "Filter logic" comment block in CityPage().
+//  Layout (top → bottom):
+//    1. Hero with city image
+//    2. Sticky search summary bar
+//    3. "Why <city>" editorial guide (admin-curated, optional)
+//    4. Editor's-pick carousel (curatedPicks, derived from curated hotels)
+//    5. <HotelGrid> — the canonical listing of ALL hotels in this city
+//       (paginated /api/hotels/search results; filter/sort UI lives there).
+//    6. Concierge CTA strip
+//
+//  The legacy on-page filter UI (price/star/sort popovers + bottom sheet)
+//  was removed once HotelGrid became the source of truth for the listing.
 // =============================================================================
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -31,14 +35,13 @@ import {
 } from "@/lib/api";
 import type { BatchRatesResponse, CityGuide } from "@/lib/api";
 import { hotelUrl } from "@/lib/urls";
-import { rankHotels, sortRankedHotels, type SortStrategy } from "@/lib/ranking";
+import { rankHotels } from "@/lib/ranking";
 import { useBooking } from "@/context/BookingContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { trackCityViewed } from "@/lib/analytics";
 import DateBar from "@/components/DateBar";
 import GuestRoomPicker from "@/components/GuestRoomPicker";
-import HotelResultCard from "@/components/HotelResultCard";
 import HotelGrid from "@/components/HotelGrid";
 import { CITY_IMAGES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import { conciergeWhatsappLink } from "@/lib/concierge";
@@ -51,21 +54,6 @@ type Category = "singles" | "couples" | "families";
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-function formatCurrency(amount: number, currency?: string | null): string {
-  const symbols: Record<string, string> = {
-    USD: "$", EUR: "€", GBP: "£", INR: "₹",
-    JPY: "¥", AUD: "A$", SGD: "S$", THB: "฿",
-    AED: "AED ", MYR: "RM ", IDR: "Rp ", KRW: "₩",
-  };
-  const sym = currency ? (symbols[currency.toUpperCase()] || `${currency} `) : "$";
-  const rounded = Math.round(amount);
-  const formatted =
-    currency?.toUpperCase() === "INR"
-      ? rounded.toLocaleString("en-IN")
-      : rounded.toLocaleString("en-US");
-  return `${sym}${formatted}`;
-}
-
 function slugToName(s: string): string {
   return s
     .split("-")
@@ -88,61 +76,6 @@ function safeImg(u: string | null | undefined): string {
 
 const CITY_FALLBACK_GRADIENT =
   "linear-gradient(135deg, rgba(200,170,118,0.32) 0%, rgba(20,18,15,0.92) 100%)";
-
-// ---------------------------------------------------------------------------
-// Skeleton — Card shimmer (dark variant)
-// ---------------------------------------------------------------------------
-function CardSkeletonMobile() {
-  return (
-    <div
-      style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid var(--luxe-hairline)",
-        borderRadius: 14,
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          height: 200,
-          width: "100%",
-          background:
-            "linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%)",
-          backgroundSize: "200% 100%",
-          animation: "shimmer 1.6s linear infinite",
-        }}
-      />
-      <div style={{ padding: 16 }}>
-        <div
-          style={{
-            height: 18,
-            width: "70%",
-            marginBottom: 8,
-            background: "rgba(255,255,255,0.06)",
-            borderRadius: 4,
-          }}
-        />
-        <div
-          style={{
-            height: 12,
-            width: "40%",
-            marginBottom: 16,
-            background: "rgba(255,255,255,0.06)",
-            borderRadius: 4,
-          }}
-        />
-        <div
-          style={{
-            height: 28,
-            width: "50%",
-            background: "rgba(255,255,255,0.06)",
-            borderRadius: 4,
-          }}
-        />
-      </div>
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Search Summary Bar — sticky, dark luxe glass
@@ -410,52 +343,6 @@ function SearchEditModal({
 }
 
 // ---------------------------------------------------------------------------
-// FilterPill — dark luxe glass pill, champagne-active
-// ---------------------------------------------------------------------------
-function FilterPill({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "9px 16px",
-        fontSize: 12,
-        fontWeight: 500,
-        letterSpacing: "0.04em",
-        fontFamily: "var(--font-body)",
-        border: `1px solid ${
-          active ? "var(--luxe-champagne)" : "var(--luxe-hairline-strong)"
-        }`,
-        borderRadius: 999,
-        background: active
-          ? "var(--luxe-champagne-soft)"
-          : "rgba(255,255,255,0.03)",
-        color: active ? "var(--luxe-champagne)" : "var(--luxe-soft-white-70)",
-        cursor: "pointer",
-        whiteSpace: "nowrap",
-        transition: "all 0.15s",
-      }}
-    >
-      {label}
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="6 9 12 15 18 9" />
-      </svg>
-    </button>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Floating Map Button (dark luxe)
 // ---------------------------------------------------------------------------
 function FloatingMapButton({ destination }: { destination: string }) {
@@ -526,37 +413,13 @@ export default function CityPage() {
   const [batchRates, setBatchRates] = useState<BatchRatesResponse | null>(null);
   const [cityGuide, setCityGuide] = useState<CityGuide | null>(null);
 
-  // ── FILTER STATE ────────────────────────────────────────────────────────
-  // DO NOT MOVE OR DUPLICATE THESE — every filter interaction depends on them
-  // living on this single component. See `rankedFiltered` derivation below.
-  const [priceMin, setPriceMin] = useState(0);
-  const [priceMax, setPriceMax] = useState(0);
-  const [filterMin, setFilterMin] = useState(0);
-  const [filterMax, setFilterMax] = useState(0);
-  const [sortBy, setSortBy] = useState<SortStrategy>("rating_desc");
-  const [minStars, setMinStars] = useState<number>(0);
-
   const [searchOpen, setSearchOpen] = useState(false);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [sortOpen, setSortOpen] = useState(false);
-  const [priceOpen, setPriceOpen] = useState(false);
-  const sortRef = useRef<HTMLDivElement>(null);
-  const priceRef = useRef<HTMLDivElement>(null);
 
   // ── "All hotels in {City}" grid ────────────────────────────────────────
-  // Component-local pagination — no URL sync (curated section above stays
-  // the canonical landing experience; deep-linking page 5 of the all-hotels
-  // section isn't worth the SEO complexity).
+  // Component-local pagination — no URL sync. Filtering/sorting now lives
+  // inside <HotelGrid>; the legacy on-page filter UI was removed once the
+  // grid below the editor's-pick carousel became the canonical listing.
   const [allHotelsPage, setAllHotelsPage] = useState(1);
-
-  const citySortOptions: { label: string; value: SortStrategy }[] = [
-    // "Saving: Highest" intentionally removed — savings curation now lives in
-    // the admin tool. Default sort is now Rating: Highest.
-    { label: "Rating: Highest", value: "rating_desc" },
-    { label: "Recommended", value: "recommended" },
-    { label: "Price: Low to High", value: "price_asc" },
-    { label: "Price: High to Low", value: "price_desc" },
-  ];
 
   useEffect(() => {
     fetchCityCurations(slug)
@@ -622,44 +485,6 @@ export default function CityPage() {
     };
   }, [curations, checkIn, checkOut, totalAdults, totalChildren]);
 
-  useEffect(() => {
-    const allHotels = [
-      ...curations.couples,
-      ...curations.singles,
-      ...curations.families,
-    ];
-    const prices = allHotels
-      .map((h) => h.rates_from)
-      .filter((p): p is number => p !== null && p > 0);
-    if (prices.length > 0) {
-      const min = Math.floor(Math.min(...prices));
-      const max = Math.ceil(Math.max(...prices));
-      setPriceMin(min);
-      setPriceMax(max);
-      setFilterMin(min);
-      setFilterMax(max);
-    } else {
-      setPriceMin(0);
-      setPriceMax(0);
-      setFilterMin(0);
-      setFilterMax(0);
-    }
-  }, [curations]);
-
-  // Close popovers on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
-        setSortOpen(false);
-      }
-      if (priceRef.current && !priceRef.current.contains(e.target as Node)) {
-        setPriceOpen(false);
-      }
-    }
-    if (sortOpen || priceOpen) document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [sortOpen, priceOpen]);
-
   const rawAllHotels = Array.from(
     new Map(
       [...curations.couples, ...curations.singles, ...curations.families].map(
@@ -685,29 +510,12 @@ export default function CityPage() {
         .filter((h) => batchRates.results[h.id])
     : rawAllHotels;
 
-  // ── Filter logic — DO NOT TOUCH ────────────────────────────────────────
-  // `rankedFiltered` honours minStars + filterMin/Max. `sortRankedHotels`
-  // honours `sortBy`. Both are pure derivations of the state above.
+  // `rankedAll` is the rating-ranked list of curated hotels; only used to
+  // build `curatedPicks` for the editor's-pick carousel below. The on-page
+  // filter/sort UI was removed once <HotelGrid> became the canonical list.
   const rankedAll = rankHotels(allHotels);
-  const rankedFiltered = rankedAll.filter((r) => {
-    if (minStars > 0) {
-      if (!r.hotel.star_rating || r.hotel.star_rating < minStars) return false;
-    }
-    if (priceMin === 0 && priceMax === 0) return true;
-    if (!r.hotel.rates_from) return true;
-    return r.hotel.rates_from >= filterMin && r.hotel.rates_from <= filterMax;
-  });
-  const sortedRanked = sortRankedHotels(rankedFiltered, sortBy);
-  const hotels = sortedRanked.map((r) => r.hotel);
 
   const displayName = cityName || slugToName(slug);
-  const isPriceFilterActive =
-    priceMax > priceMin && (filterMin > priceMin || filterMax < priceMax);
-  const isStarFilterActive = minStars > 0;
-  const currency = allHotels.find((h) => h.rates_currency)?.rates_currency || null;
-
-  const currentSortLabel =
-    citySortOptions.find((o) => o.value === sortBy)?.label || "Rating: Highest";
 
   // Hero image — prefer admin-curated `image_url` from the curations endpoint,
   // fall back to legacy hardcoded CITY_IMAGES, then to the global fallback.
@@ -1116,387 +924,16 @@ export default function CityPage() {
         </motion.section>
       )}
 
-      {/* ================================================================
-          6. ALL HOTELS — filter pills, results grid
-          The whole filter UI sits inside this section. State preserved
-          exactly from the previous implementation; only the JSX skin was
-          re-themed to dark luxe.
-          ================================================================ */}
-      <section
-        id="hotels"
-        style={{
-          padding: "56px 0 120px",
-        }}
-      >
-        <div className="luxe-container">
-          {/* Filter pill row */}
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              flexWrap: "nowrap",
-              overflowX: "auto",
-              marginBottom: 14,
-              paddingBottom: 4,
-            }}
-            className="city-pill-row no-scrollbar"
-          >
-            <FilterPill
-              label="Filter"
-              active={isStarFilterActive}
-              onClick={() => setFilterOpen(true)}
-            />
-            <div ref={sortRef} style={{ position: "relative" }}>
-              <FilterPill
-                label={currentSortLabel}
-                active
-                onClick={() => { setSortOpen((v) => !v); setPriceOpen(false); }}
-              />
-              <AnimatePresence>
-                {sortOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.15 }}
-                    style={{
-                      position: "absolute",
-                      top: "calc(100% + 6px)",
-                      left: 0,
-                      zIndex: 50,
-                      background: "var(--luxe-black-2)",
-                      border: "1px solid var(--luxe-hairline-strong)",
-                      borderRadius: 12,
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-                      minWidth: 220,
-                      padding: 6,
-                    }}
-                  >
-                    {citySortOptions.map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => { setSortBy(opt.value); setSortOpen(false); }}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          width: "100%",
-                          padding: "9px 12px",
-                          fontSize: 13,
-                          fontFamily: "var(--font-body)",
-                          color:
-                            sortBy === opt.value
-                              ? "var(--luxe-champagne)"
-                              : "var(--luxe-soft-white-70)",
-                          fontWeight: sortBy === opt.value ? 500 : 400,
-                          background:
-                            sortBy === opt.value
-                              ? "var(--luxe-champagne-soft)"
-                              : "transparent",
-                          border: "none",
-                          borderRadius: 8,
-                          cursor: "pointer",
-                          textAlign: "left",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (sortBy !== opt.value) {
-                            (e.currentTarget as HTMLButtonElement).style.background =
-                              "rgba(200,170,118,0.08)";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (sortBy !== opt.value) {
-                            (e.currentTarget as HTMLButtonElement).style.background =
-                              "transparent";
-                          }
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: "50%",
-                            background:
-                              sortBy === opt.value
-                                ? "var(--luxe-champagne)"
-                                : "transparent",
-                            border:
-                              sortBy === opt.value
-                                ? "none"
-                                : "1px solid var(--luxe-hairline-strong)",
-                            flexShrink: 0,
-                          }}
-                        />
-                        {opt.label}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <div ref={priceRef} style={{ position: "relative" }}>
-              <FilterPill
-                label={
-                  isPriceFilterActive
-                    ? `Price: ${formatCurrency(filterMin, currency)}–${formatCurrency(filterMax, currency)}`
-                    : "Price"
-                }
-                active={isPriceFilterActive}
-                onClick={() => { setPriceOpen((v) => !v); setSortOpen(false); }}
-              />
-              <AnimatePresence>
-                {priceOpen && priceMax > priceMin && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.15 }}
-                    style={{
-                      position: "absolute",
-                      top: "calc(100% + 6px)",
-                      left: 0,
-                      zIndex: 50,
-                      background: "var(--luxe-black-2)",
-                      border: "1px solid var(--luxe-hairline-strong)",
-                      borderRadius: 12,
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-                      width: 300,
-                      padding: 18,
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                      <span className="luxe-tech">Price range</span>
-                      {isPriceFilterActive && (
-                        <button
-                          onClick={() => { setFilterMin(priceMin); setFilterMax(priceMax); }}
-                          style={{
-                            fontSize: 11,
-                            color: "var(--luxe-champagne)",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            fontFamily: "var(--font-body)",
-                            fontWeight: 500,
-                          }}
-                        >
-                          Reset
-                        </button>
-                      )}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 14 }}>
-                      <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 500, color: "var(--luxe-soft-white)" }}>
-                        {formatCurrency(filterMin, currency)}
-                      </span>
-                      <span style={{ fontSize: 12, color: "var(--luxe-soft-white-50)" }}>—</span>
-                      <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 500, color: "var(--luxe-soft-white)" }}>
-                        {formatCurrency(filterMax, currency)}
-                      </span>
-                    </div>
-                    <div style={{ position: "relative", height: 32, marginBottom: 4 }}>
-                      <div style={{ position: "absolute", top: 14, left: 0, right: 0, height: 4, background: "var(--luxe-hairline-strong)", borderRadius: 2 }} />
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 14,
-                          left: `${((filterMin - priceMin) / (priceMax - priceMin)) * 100}%`,
-                          right: `${100 - ((filterMax - priceMin) / (priceMax - priceMin)) * 100}%`,
-                          height: 4,
-                          background: "var(--luxe-champagne)",
-                          borderRadius: 2,
-                        }}
-                      />
-                      <input
-                        type="range"
-                        min={priceMin}
-                        max={priceMax}
-                        value={filterMin}
-                        onChange={(e) => {
-                          const v = Number(e.target.value);
-                          if (v <= filterMax) setFilterMin(v);
-                        }}
-                        style={{
-                          position: "absolute",
-                          top: 4,
-                          left: 0,
-                          width: "100%",
-                          height: 24,
-                          WebkitAppearance: "none",
-                          appearance: "none" as never,
-                          background: "transparent",
-                          pointerEvents: "none",
-                          zIndex: 3,
-                        }}
-                        className="price-range-input"
-                      />
-                      <input
-                        type="range"
-                        min={priceMin}
-                        max={priceMax}
-                        value={filterMax}
-                        onChange={(e) => {
-                          const v = Number(e.target.value);
-                          if (v >= filterMin) setFilterMax(v);
-                        }}
-                        style={{
-                          position: "absolute",
-                          top: 4,
-                          left: 0,
-                          width: "100%",
-                          height: 24,
-                          WebkitAppearance: "none",
-                          appearance: "none" as never,
-                          background: "transparent",
-                          pointerEvents: "none",
-                          zIndex: 4,
-                        }}
-                        className="price-range-input"
-                      />
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 10, color: "var(--luxe-soft-white-50)" }}>{formatCurrency(priceMin, currency)}</span>
-                      <span style={{ fontSize: 10, color: "var(--luxe-soft-white-50)" }}>{formatCurrency(priceMax, currency)}</span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* Result count */}
-          {!loading && (
-            <p
-              style={{
-                fontSize: 11,
-                fontFamily: "var(--font-mono, monospace)",
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: "var(--luxe-soft-white-50)",
-                marginBottom: 20,
-              }}
-            >
-              {hotels.length} {hotels.length === 1 ? "hotel" : "hotels"} in {displayName}
-            </p>
-          )}
-
-          {/* Hotel cards */}
-          {loading ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <CardSkeletonMobile key={i} />
-              ))}
-            </div>
-          ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key="hotels"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              >
-                {hotels.length > 0 ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    {hotels.map((hotel, i) => {
-                      const rate = batchRates?.results[hotel.id];
-                      return (
-                        <HotelResultCard
-                          key={hotel.id}
-                          hotel={hotel}
-                          index={i}
-                          liveMrp={rate?.mrp ?? null}
-                          liveSavingsPct={rate?.savings_pct ?? null}
-                        />
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    style={{ textAlign: "center", paddingTop: 60, paddingBottom: 60 }}
-                  >
-                    {isPriceFilterActive || isStarFilterActive ? (
-                      <>
-                        <p
-                          style={{
-                            fontFamily: "var(--font-display)",
-                            fontSize: 24,
-                            fontStyle: "italic",
-                            fontWeight: 300,
-                            color: "var(--luxe-soft-white)",
-                            marginBottom: 12,
-                          }}
-                        >
-                          No matches
-                        </p>
-                        <p style={{ fontSize: 14, color: "var(--luxe-soft-white-70)", marginBottom: 20 }}>
-                          Try widening your filters.
-                        </p>
-                        <button
-                          onClick={() => { setFilterMin(priceMin); setFilterMax(priceMax); setMinStars(0); }}
-                          className="luxe-btn-secondary"
-                        >
-                          Clear filters
-                        </button>
-                      </>
-                    ) : fetchError ? (
-                      <>
-                        <p
-                          style={{
-                            fontFamily: "var(--font-display)",
-                            fontSize: 24,
-                            fontStyle: "italic",
-                            fontWeight: 300,
-                            color: "var(--luxe-soft-white)",
-                            marginBottom: 12,
-                          }}
-                        >
-                          Unable to load hotels
-                        </p>
-                        <p style={{ fontSize: 14, color: "var(--luxe-soft-white-70)", marginBottom: 20 }}>
-                          Something went wrong while loading stays for {displayName}. Please try again.
-                        </p>
-                        <button onClick={() => window.location.reload()} className="luxe-btn-secondary">
-                          Try again
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <p
-                          style={{
-                            fontFamily: "var(--font-display)",
-                            fontSize: 24,
-                            fontStyle: "italic",
-                            fontWeight: 300,
-                            color: "var(--luxe-soft-white)",
-                            marginBottom: 12,
-                          }}
-                        >
-                          Coming soon
-                        </p>
-                        <p style={{ fontSize: 14, color: "var(--luxe-soft-white-70)" }}>
-                          We are preparing stays in {displayName}.
-                        </p>
-                      </>
-                    )}
-                  </motion.div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          )}
-        </div>
-      </section>
 
       {/* ================================================================
-          5b. ALL HOTELS IN {CITY} — full backend index, paginated. The
-          curated section above shows ~20 editorial picks; this surfaces
-          the long tail (often hundreds more) so the city page is
-          actually a city page, not just an editor's micro-list.
-          excludeIds drops anything already shown above.
+          5b. ALL HOTELS IN {CITY} — full backend index, paginated.
+          excludeIds drops the editor's-pick rows shown in the carousel
+          above so the same hotel never appears twice. This is the
+          jump-target for the hero "See member rates" CTA — id="hotels".
           ================================================================ */}
       {!loading && !fetchError && (
         <section
+          id="hotels"
           style={{
             padding: "40px 24px 80px",
             borderTop: "1px solid var(--luxe-hairline)",
@@ -1540,141 +977,6 @@ export default function CityPage() {
         </section>
       )}
 
-      {/* ════════ Filter bottom sheet (mobile) — dark luxe ════════ */}
-      <AnimatePresence>
-        {filterOpen && (
-          <motion.div
-            key="filter-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setFilterOpen(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(8,7,6,0.7)",
-              backdropFilter: "blur(6px)",
-              WebkitBackdropFilter: "blur(6px)",
-              zIndex: 1100,
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "center",
-            }}
-          >
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "tween", duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: "var(--luxe-black-2)",
-                borderTopLeftRadius: 20,
-                borderTopRightRadius: 20,
-                border: "1px solid var(--luxe-hairline)",
-                borderBottom: "none",
-                width: "100%",
-                maxWidth: 560,
-                maxHeight: "80vh",
-                overflowY: "auto",
-                padding: "20px 20px 28px",
-                boxShadow: "0 -10px 40px rgba(0,0,0,0.5)",
-                color: "var(--luxe-soft-white)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-                <span className="luxe-tech">Filters</span>
-                <button
-                  onClick={() => setFilterOpen(false)}
-                  aria-label="Close"
-                  style={{
-                    border: "none",
-                    background: "transparent",
-                    cursor: "pointer",
-                    color: "var(--luxe-soft-white-70)",
-                    padding: 6,
-                    display: "inline-flex",
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-
-              <div
-                style={{
-                  marginBottom: 22,
-                  paddingBottom: 22,
-                  borderBottom: "1px solid var(--luxe-champagne-line)",
-                }}
-              >
-                <span className="luxe-tech" style={{ display: "block", marginBottom: 12 }}>
-                  Star rating
-                </span>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {[0, 3, 4, 5].map((stars) => (
-                    <button
-                      key={stars}
-                      onClick={() => setMinStars(stars)}
-                      style={{
-                        padding: "9px 14px",
-                        fontSize: 12,
-                        fontWeight: 500,
-                        fontFamily: "var(--font-body)",
-                        border: `1px solid ${
-                          minStars === stars
-                            ? "var(--luxe-champagne)"
-                            : "var(--luxe-hairline-strong)"
-                        }`,
-                        borderRadius: 999,
-                        background:
-                          minStars === stars
-                            ? "var(--luxe-champagne-soft)"
-                            : "rgba(255,255,255,0.03)",
-                        color:
-                          minStars === stars
-                            ? "var(--luxe-champagne)"
-                            : "var(--luxe-soft-white-70)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {stars === 0 ? "Any" : `${stars}★ & up`}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ marginBottom: 22 }}>
-                <span className="luxe-tech" style={{ display: "block", marginBottom: 6 }}>
-                  Amenities · Property type
-                </span>
-                <p style={{ fontSize: 12, color: "var(--luxe-soft-white-50)", fontFamily: "var(--font-body)" }}>
-                  More filters coming soon.
-                </p>
-              </div>
-
-              <div style={{ display: "flex", gap: 10 }}>
-                <button
-                  onClick={() => { setMinStars(0); setFilterMin(priceMin); setFilterMax(priceMax); }}
-                  className="luxe-btn-secondary"
-                  style={{ flex: 1 }}
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={() => setFilterOpen(false)}
-                  className="luxe-btn-gold"
-                  style={{ flex: 1 }}
-                >
-                  Show {hotels.length}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Search edit modal */}
       <SearchEditModal
