@@ -60,6 +60,11 @@ export interface HotelGridResult {
   image_url?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  /** TripJack property classifier — Hotel / Resort / Villa / Apartment / Hostel. */
+  property_type?: string | null;
+  /** Live rate-plan flags merged from /api/hotels/rates/batch. */
+  has_refundable?: boolean;
+  has_breakfast?: boolean;
   // Legacy aliases (older /search responses).
   hotel_id?: number | string;
   hotel_name?: string;
@@ -283,6 +288,76 @@ function Pagination({
 }
 
 // ---------------------------------------------------------------------------
+// Property-type normalizer. TripJack sends mixed-case freeform strings
+// ("Hotel", "Apart-Hotel", "Bed and Breakfast", "Backpackers Hostel", etc.).
+// We canonicalize to the 5 user-facing buckets used in the filter strip;
+// anything outside the buckets returns null (won't appear as a chip).
+// ---------------------------------------------------------------------------
+const PROPERTY_BUCKETS = ["Hotel", "Resort", "Villa", "Apartment", "Hostel"] as const;
+type PropertyBucket = (typeof PROPERTY_BUCKETS)[number];
+
+function normalizePropertyType(t: string | null | undefined): PropertyBucket | null {
+  if (!t) return null;
+  const s = t.toLowerCase();
+  if (s.includes("resort")) return "Resort";
+  if (s.includes("villa")) return "Villa";
+  if (s.includes("apart")) return "Apartment";
+  if (s.includes("hostel") || s.includes("backpack")) return "Hostel";
+  if (s.includes("hotel") || s.includes("inn") || s.includes("lodge") || s.includes("bed")) {
+    return "Hotel";
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// FilterChip — pill primitive used by the strip below. Theme-token-driven so
+// it auto-adapts under .luxe (dark) on the city page.
+// ---------------------------------------------------------------------------
+function FilterChip({
+  label,
+  active,
+  onClick,
+  disabled = false,
+}: {
+  label: React.ReactNode;
+  active: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        padding: "8px 14px",
+        fontSize: 12,
+        fontWeight: 500,
+        fontFamily: "var(--font-body)",
+        letterSpacing: "0.02em",
+        whiteSpace: "nowrap",
+        border: `1px solid ${active ? "var(--gold)" : "var(--cream-border)"}`,
+        borderRadius: 999,
+        background: active ? "var(--gold)" : "var(--white)",
+        color: active ? "var(--ink)" : disabled ? "var(--ink-light)" : "var(--ink)",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.5 : 1,
+        transition: "border-color 0.18s, background 0.18s, color 0.18s",
+        flexShrink: 0,
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled && !active) e.currentTarget.style.borderColor = "var(--gold)";
+      }}
+      onMouseLeave={(e) => {
+        if (!disabled && !active) e.currentTarget.style.borderColor = "var(--cream-border)";
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // HotelGrid (controlled — parent owns `page` state and URL sync)
 // ---------------------------------------------------------------------------
 export interface HotelGridProps {
@@ -332,6 +407,25 @@ export default function HotelGrid({
   const [hasFetched, setHasFetched] = useState(false);
   const [batchRates, setBatchRates] = useState<BatchRatesResponse | null>(null);
   const [batchRatesLoading, setBatchRatesLoading] = useState(false);
+
+  // ── Filter state ────────────────────────────────────────────────────
+  // All client-side, applied on top of the current page's results. The
+  // backend search endpoint doesn't take filter params yet, so a "5★"
+  // filter on page 1 won't pull 5★ hotels from page 5 — that's by design
+  // for now (see KNOWLEDGE.md, search-filter-scope note).
+  const [minStars, setMinStars] = useState<number>(0);
+  const [propertyFilter, setPropertyFilter] = useState<PropertyBucket | null>(null);
+  const [freeCancelOnly, setFreeCancelOnly] = useState(false);
+  const [breakfastOnly, setBreakfastOnly] = useState(false);
+
+  // Reset filters when query or page changes — otherwise a 4★ filter on
+  // Bangkok page 1 silently carries to Mumbai page 1 and confuses the user.
+  useEffect(() => {
+    setMinStars(0);
+    setPropertyFilter(null);
+    setFreeCancelOnly(false);
+    setBreakfastOnly(false);
+  }, [query, page]);
 
   // Fetch search results whenever query/page/perPage changes.
   useEffect(() => {
@@ -408,7 +502,7 @@ export default function HotelGrid({
     return () => { cancelled = true; };
   }, [hotelResults, checkIn, checkOut, totalAdults, totalChildren, roomsCount]);
 
-  // Merge live rates into rows.
+  // Merge live rates + rate-plan flags into rows.
   const livePricedResults = useMemo<HotelGridResult[]>(() => {
     if (!batchRates || !batchRates.results) return hotelResults;
     return hotelResults.map((h) => {
@@ -420,12 +514,16 @@ export default function HotelGrid({
         ...h,
         rates_from: fromPrice,
         rates_currency: r.currency ?? h.rates_currency ?? "INR",
+        has_refundable: r.has_refundable ?? h.has_refundable,
+        has_breakfast: r.has_breakfast ?? h.has_breakfast,
       };
     });
   }, [hotelResults, batchRates]);
 
-  // Apply de-dupe + region filter.
-  const visibleHotels = useMemo<HotelGridResult[]>(() => {
+  // baseRows = page results after de-dupe + region filter (parent-driven
+  // constraints), but BEFORE user filter chips. Used for both visibleHotels
+  // and the property-bucket chip set.
+  const baseRows = useMemo<HotelGridResult[]>(() => {
     let rows = livePricedResults;
     if (excludeIds && excludeIds.size > 0) {
       rows = rows.filter((h) => {
@@ -441,6 +539,47 @@ export default function HotelGrid({
     }
     return rows;
   }, [livePricedResults, excludeIds, regionFilter, cityToContinentMap]);
+
+  // visibleHotels = baseRows + user filter chips.
+  const visibleHotels = useMemo<HotelGridResult[]>(() => {
+    let rows = baseRows;
+    if (minStars > 0) {
+      rows = rows.filter((h) => (h.star_rating ?? 0) >= minStars);
+    }
+    if (propertyFilter) {
+      rows = rows.filter(
+        (h) => normalizePropertyType(h.property_type) === propertyFilter,
+      );
+    }
+    if (freeCancelOnly) {
+      rows = rows.filter((h) => h.has_refundable === true);
+    }
+    if (breakfastOnly) {
+      rows = rows.filter((h) => h.has_breakfast === true);
+    }
+    return rows;
+  }, [baseRows, minStars, propertyFilter, freeCancelOnly, breakfastOnly]);
+
+  // Property-type chips are derived from baseRows — only show buckets
+  // that have at least one hotel before user filters apply, so toggling
+  // the property filter is always reversible.
+  const propertyBucketsOnPage = useMemo<PropertyBucket[]>(() => {
+    const present = new Set<PropertyBucket>();
+    for (const h of baseRows) {
+      const b = normalizePropertyType(h.property_type);
+      if (b) present.add(b);
+    }
+    return PROPERTY_BUCKETS.filter((b) => present.has(b));
+  }, [baseRows]);
+
+  const filtersActive =
+    minStars > 0 || propertyFilter !== null || freeCancelOnly || breakfastOnly;
+  const clearFilters = () => {
+    setMinStars(0);
+    setPropertyFilter(null);
+    setFreeCancelOnly(false);
+    setBreakfastOnly(false);
+  };
 
   // Tell the parent about counts so it can render its own toolbar copy.
   useEffect(() => {
@@ -458,11 +597,133 @@ export default function HotelGrid({
     );
   }
 
-  if (hasFetched && visibleHotels.length === 0) {
+  // Server returned 0 results for this query/page — defer to the parent's
+  // empty state (search page renders "No results found" with a CTA).
+  if (hasFetched && baseRows.length === 0) {
     return <>{emptyState ?? null}</>;
   }
 
   if (!hasFetched) return null;
+
+  // ── Filter strip ───────────────────────────────────────────────────
+  const filterStrip = (
+    <div
+      className="hotel-grid-filters"
+      style={{
+        display: "flex",
+        gap: 8,
+        flexWrap: "wrap",
+        alignItems: "center",
+        marginBottom: 18,
+      }}
+    >
+      <span
+        style={{
+          fontSize: 10,
+          color: "var(--ink-light)",
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          fontWeight: 600,
+          fontFamily: "var(--font-body)",
+          marginRight: 4,
+        }}
+      >
+        Stars
+      </span>
+      {[0, 3, 4, 5].map((s) => (
+        <FilterChip
+          key={`star-${s}`}
+          label={s === 0 ? "Any" : s === 5 ? "5★" : `${s}+ ★`}
+          active={minStars === s}
+          onClick={() => setMinStars(s)}
+        />
+      ))}
+
+      {propertyBucketsOnPage.length > 0 && (
+        <>
+          <span
+            style={{
+              fontSize: 10,
+              color: "var(--ink-light)",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              fontWeight: 600,
+              fontFamily: "var(--font-body)",
+              margin: "0 4px 0 12px",
+            }}
+          >
+            Type
+          </span>
+          <FilterChip
+            label="All"
+            active={propertyFilter === null}
+            onClick={() => setPropertyFilter(null)}
+          />
+          {propertyBucketsOnPage.map((bucket) => (
+            <FilterChip
+              key={bucket}
+              label={bucket}
+              active={propertyFilter === bucket}
+              onClick={() =>
+                setPropertyFilter(propertyFilter === bucket ? null : bucket)
+              }
+            />
+          ))}
+        </>
+      )}
+
+      <span
+        style={{
+          fontSize: 10,
+          color: "var(--ink-light)",
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          fontWeight: 600,
+          fontFamily: "var(--font-body)",
+          margin: "0 4px 0 12px",
+        }}
+      >
+        Perks
+      </span>
+      <FilterChip
+        label={
+          batchRatesLoading && !batchRates ? "Free cancel · loading…" : "Free cancellation"
+        }
+        active={freeCancelOnly}
+        disabled={batchRatesLoading && !batchRates}
+        onClick={() => setFreeCancelOnly((v) => !v)}
+      />
+      <FilterChip
+        label={
+          batchRatesLoading && !batchRates ? "Breakfast · loading…" : "Breakfast included"
+        }
+        active={breakfastOnly}
+        disabled={batchRatesLoading && !batchRates}
+        onClick={() => setBreakfastOnly((v) => !v)}
+      />
+
+      {filtersActive && (
+        <button
+          type="button"
+          onClick={clearFilters}
+          style={{
+            fontSize: 11,
+            color: "var(--gold)",
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "var(--font-body)",
+            fontWeight: 600,
+            letterSpacing: "0.04em",
+            padding: "4px 8px",
+            marginLeft: 4,
+          }}
+        >
+          Clear ×
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <motion.div
@@ -476,7 +737,7 @@ export default function HotelGrid({
             display: "flex",
             alignItems: "baseline",
             justifyContent: "space-between",
-            marginBottom: 24,
+            marginBottom: 16,
             gap: 16,
             flexWrap: "wrap",
           }}
@@ -489,6 +750,44 @@ export default function HotelGrid({
                 : `${visibleHotels.length} result${visibleHotels.length !== 1 ? "s" : ""}`}
             </span>
           )}
+        </div>
+      )}
+
+      {filterStrip}
+
+      {/* Filtered to nothing on this page — give the user an out instead of
+          a silent empty grid (server still has results, just none here). */}
+      {visibleHotels.length === 0 && (
+        <div
+          style={{
+            padding: "40px 20px",
+            textAlign: "center",
+            border: "1px dashed var(--cream-border)",
+            borderRadius: 10,
+            color: "var(--ink-light)",
+            fontFamily: "var(--font-body)",
+            fontSize: 13,
+            marginBottom: 24,
+          }}
+        >
+          No hotels on this page match your filters.{" "}
+          <button
+            type="button"
+            onClick={clearFilters}
+            style={{
+              color: "var(--gold)",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontFamily: "var(--font-body)",
+              padding: 0,
+              fontSize: 13,
+            }}
+          >
+            Clear filters
+          </button>
+          {totalPages > 1 && " or try another page."}
         </div>
       )}
 

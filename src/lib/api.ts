@@ -917,6 +917,10 @@ export type BatchRate = {
   currency?: string | null;
   mrp: { agoda_rate: number; currency: string } | null;
   savings_pct: number | null;
+  /** True when at least one rate plan is refundable (has a free-cancel window). */
+  has_refundable?: boolean;
+  /** True when meal_basis on any rate plan includes breakfast / half-board / full-board. */
+  has_breakfast?: boolean;
 };
 
 export type BatchRatesResponse = {
