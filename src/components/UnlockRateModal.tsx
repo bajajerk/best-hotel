@@ -340,7 +340,7 @@ function Field({
 
 function TrustStrip() {
   const items: Array<{ icon: React.ReactNode; label: string }> = [
-    { icon: Icons.lock(13), label: "No payment now" },
+    { icon: Icons.lock(13), label: "Member rates" },
     { icon: Icons.clock(13), label: "15-min concierge response" },
     { icon: Icons.whatsapp(13), label: "Confirmation on WhatsApp" },
   ];
