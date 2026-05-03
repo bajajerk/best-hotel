@@ -39,6 +39,7 @@ import { useBooking } from "@/context/BookingContext";
 import { useAuth } from "@/context/AuthContext";
 import { fetchHotelRates, type RatePlan, type RatesResponse } from "@/lib/api";
 import { conciergeWhatsappLink } from "@/lib/concierge";
+import { TRUST_BAR_ITEMS, TRUST_BAR_ITEMS_MOBILE } from "@/constants/trust";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -599,14 +600,14 @@ function RateCardSkeleton() {
 
 function TrustStrip() {
   const sharedStyle: React.CSSProperties = {
-    gap: "10px 22px",
+    gap: "12px 16px",
     fontFamily: "var(--font-body)",
     fontSize: 12.5,
     color: "var(--luxe-champagne)",
     letterSpacing: "0.04em",
   };
 
-  function renderItems(items: string[]) {
+  function renderItems(items: readonly string[]) {
     return items.map((item, i) => (
       <span key={item} style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
         <span aria-hidden style={{ fontSize: 10, opacity: 0.85 }}>★</span>
@@ -618,8 +619,8 @@ function TrustStrip() {
     ));
   }
 
-  const mobileItems = ["Free cancellation", "Member rates", "Instant confirmation"];
-  const fullItems = ["Free cancellation", "Member rates", "No hidden fees", "Instant confirmation", "Secure checkout"];
+  const mobileItems = TRUST_BAR_ITEMS_MOBILE;
+  const fullItems = TRUST_BAR_ITEMS;
 
   return (
     <>

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useBookingFlow } from "@/context/BookingFlowContext";
 import { fetchHotelDetail } from "@/lib/api";
+import { TRUST_BAR_ITEMS, TRUST_BAR_ITEMS_MOBILE } from "@/constants/trust";
 
 const GOLD = "var(--luxe-champagne)";
 const SURFACE = "rgba(255,255,255,0.04)";
@@ -385,15 +386,33 @@ export default function ReviewBookingPage() {
       {/* Trust line */}
       <div
         style={{
-          textAlign: "center",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "12px 16px",
+          justifyContent: "center",
           fontFamily: "var(--font-body)",
           fontSize: "var(--text-body-sm)",
           color: TEXT_SOFT,
           margin: "12px 0 24px",
-          lineHeight: 1.6,
         }}
       >
-        Free cancellation · Member rates · No hidden fees · Instant confirmation · Secure checkout
+        {/* Mobile: hide items 4–5 to avoid 1-item orphan */}
+        {TRUST_BAR_ITEMS_MOBILE.map((item, i) => (
+          <span key={item} className="sm:hidden" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            {item}
+            {i < TRUST_BAR_ITEMS_MOBILE.length - 1 && (
+              <span aria-hidden style={{ marginLeft: 6, opacity: 0.5 }}>·</span>
+            )}
+          </span>
+        ))}
+        {TRUST_BAR_ITEMS.map((item, i) => (
+          <span key={item} className="hidden sm:inline-flex" style={{ alignItems: "center", gap: 6 }}>
+            {item}
+            {i < TRUST_BAR_ITEMS.length - 1 && (
+              <span aria-hidden style={{ marginLeft: 6, opacity: 0.5 }}>·</span>
+            )}
+          </span>
+        ))}
       </div>
 
       {/* Sticky bottom bar */}
