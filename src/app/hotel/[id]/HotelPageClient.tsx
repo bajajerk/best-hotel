@@ -103,7 +103,8 @@ interface HotelDetail {
   location?: string | null;
   amenities?: string | null;
   /* TripJack structured description — keys: rooms, dining, amenities, location,
-     attractions, business_amenities, headline, spoken_languages, onsite_payments. */
+     attractions, business_amenities, headline, spoken_languages, onsite_payments.
+     `raw` is a single editorial block when the source string wasn't structured JSON. */
   tj_description?: {
     rooms?: string;
     dining?: string;
@@ -114,6 +115,7 @@ interface HotelDetail {
     headline?: string;
     spoken_languages?: string;
     onsite_payments?: string;
+    raw?: string;
   } | null;
   /* Fact grid fields — new structured API fields, all optional */
   airport_iata?: string | null;
@@ -994,6 +996,8 @@ export default function HotelPage() {
     if (hotel.editorial_intro) return hotel.editorial_intro;
     // Prefer TripJack's structured location prose — factual, named, concise.
     if (hotel.tj_description?.location) return hotel.tj_description.location;
+    // Hotels with non-JSON descriptions get the raw block as a fallback intro.
+    if (hotel.tj_description?.raw) return hotel.tj_description.raw;
     const loc = firstSentence(hotel.location);
     const amen = firstSentence(hotel.amenities);
     const combined = [loc, amen].filter(Boolean).join(" ");
