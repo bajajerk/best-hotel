@@ -1,5 +1,4 @@
-import fs from "fs";
-import path from "path";
+import blocklist from "../../config/ota-blocklist.json";
 
 export interface OtaBlocklistConfig {
   stripPhrases: string[];
@@ -14,8 +13,7 @@ export interface OtaBlocklistConfig {
 }
 
 export function loadBlocklist(): OtaBlocklistConfig {
-  const configPath = path.join(process.cwd(), "config", "ota-blocklist.json");
-  return JSON.parse(fs.readFileSync(configPath, "utf-8")) as OtaBlocklistConfig;
+  return blocklist as OtaBlocklistConfig;
 }
 
 function escapeRegex(s: string): string {
