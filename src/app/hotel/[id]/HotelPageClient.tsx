@@ -41,6 +41,7 @@ import { fetchHotelRates, type RatePlan, type RatesResponse } from "@/lib/api";
 import { conciergeWhatsappLink } from "@/lib/concierge";
 import { TRUST_BAR_ITEMS, TRUST_BAR_ITEMS_MOBILE } from "@/constants/trust";
 import { sanitizeOtaProse } from "@/lib/sanitizeOtaProse";
+import HotelFactGrid from "@/components/HotelFactGrid";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -102,9 +103,21 @@ interface HotelDetail {
   /* Editorial overlay fields — populated by CMS team, nullable */
   editorial_headline?: string | null;
   editorial_intro?: string | null;
+  neighbourhood?: string | null;
   /* Raw OTA prose fields used for fallback intro derivation */
   location?: string | null;
   amenities?: string | null;
+  /* Fact grid fields — new structured API fields, all optional */
+  airport_iata?: string | null;
+  airport_distance_min?: number | null;
+  attraction_nearest?: string | null;
+  rooms_description?: string | null;
+  restaurants_count?: number | null;
+  room_service_24h?: boolean | null;
+  signature_restaurant?: string | null;
+  parking_type?: string | null;
+  shuttle_type?: string | null;
+  languages?: string[] | null;
 }
 
 /* ────────────────────────── Helpers ────────────────────────── */
@@ -1671,6 +1684,23 @@ export default function HotelPage() {
                 </p>
               )}
             </div>
+
+            <HotelFactGrid
+              neighbourhood={hotel.neighbourhood}
+              city={hotel.city}
+              airport_iata={hotel.airport_iata}
+              airport_distance_min={hotel.airport_distance_min}
+              attraction_nearest={hotel.attraction_nearest}
+              numberrooms={hotel.numberrooms}
+              rooms_description={hotel.rooms_description}
+              restaurants_count={hotel.restaurants_count}
+              room_service_24h={hotel.room_service_24h}
+              signature_restaurant={hotel.signature_restaurant}
+              amenities={hotel.amenities}
+              parking_type={hotel.parking_type}
+              shuttle_type={hotel.shuttle_type}
+              languages={hotel.languages}
+            />
 
             {overviewPlain ? (
               <div
