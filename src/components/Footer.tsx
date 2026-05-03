@@ -37,14 +37,14 @@ const FOOTER_SUPPORT = [
 // the .luxe scope flips those tokens, which would invert footer colours.
 const C = {
   bg: "#FAF7F2",
-  brand: "#0A1A3F",
+  brand: "#1a3a5c",
   gold: "#C9A961",
-  desc: "rgba(10, 26, 63, 0.70)",
-  heading: "#0A1A3F",
-  muted: "rgba(10, 26, 63, 0.60)",
-  divider: "rgba(10, 26, 63, 0.10)",
-  iconBorder: "rgba(10, 26, 63, 0.15)",
-  iconColor: "rgba(10, 26, 63, 0.70)",
+  desc: "#1a3a5c",
+  heading: "#1a3a5c",
+  muted: "#1a3a5c",
+  divider: "rgba(26, 58, 92, 0.10)",
+  iconBorder: "rgba(26, 58, 92, 0.15)",
+  iconColor: "#1a3a5c",
 } as const;
 
 export default function Footer() {
@@ -88,7 +88,7 @@ export default function Footer() {
                   letterSpacing: "0.08em",
                 }}
               >
-                Voyagr <span style={{ color: C.gold }}>Club</span>
+                Voyagr Club
               </span>
             </Link>
             <p

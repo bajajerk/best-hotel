@@ -1266,22 +1266,22 @@ main {
   left: 0;
   width: 100%;
   height: 1px;
-  background-color: #0A1A3F;
+  background-color: #C9A961;
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.2s ease;
 }
-.footer-link { color: rgba(10, 26, 63, 0.80); }
-.footer-legal-link { color: rgba(10, 26, 63, 0.70); }
+.footer-link { color: #1a3a5c; }
+.footer-legal-link { color: #1a3a5c; }
 .footer-link:hover,
-.footer-legal-link:hover { color: #0A1A3F; }
+.footer-legal-link:hover { color: #C9A961; }
 .footer-link:hover::after,
 .footer-legal-link:hover::after { transform: scaleX(1); }
-.footer-link:visited { color: rgba(10, 26, 63, 0.80); }
-.footer-legal-link:visited { color: rgba(10, 26, 63, 0.70); }
+.footer-link:visited { color: #1a3a5c; }
+.footer-legal-link:visited { color: #1a3a5c; }
 .footer-link:focus-visible,
 .footer-legal-link:focus-visible {
-  outline: 2px solid rgba(10, 26, 63, 0.40);
+  outline: 2px solid rgba(26, 58, 92, 0.40);
   outline-offset: 2px;
 }
 
@@ -1291,21 +1291,19 @@ main {
 footer a,
 footer a:link,
 footer a:visited {
-  color: #0A1A3F !important;
-  opacity: 0.8;
+  color: #1a3a5c !important;
   text-decoration: none;
 }
 footer a:hover,
 footer a:focus {
-  color: #0A1A3F !important;
-  opacity: 1;
+  color: #C9A961 !important;
 }
 footer p,
 footer span,
 footer h2,
 footer h3,
 footer h4 {
-  color: #0A1A3F !important;
+  color: #1a3a5c !important;
 }
 
 /* ── Price range slider ── */
