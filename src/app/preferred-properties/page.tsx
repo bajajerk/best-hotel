@@ -17,7 +17,7 @@ const benefitBadges = [
   {
     emoji: "🍳",
     title: "Breakfast included",
-    description: "Daily breakfast for two, every morning.",
+    description: "Breakfast for two, every morning.",
   },
   {
     emoji: "⬆️",
