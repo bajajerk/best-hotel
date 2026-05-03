@@ -2023,7 +2023,7 @@ export default function HotelPage() {
             trailingTitle="rate"
             description={
               datesSelected
-                ? "Negotiated directly with the hotel. No payment now — concierge confirms within 15 minutes."
+                ? "Negotiated directly with the hotel."
                 : "Choose your dates to unlock live, member-only pricing."
             }
           />
