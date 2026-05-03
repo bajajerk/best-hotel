@@ -47,11 +47,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 /* ────────────────────────── Types ────────────────────────── */
 
-interface NearbyLandmark {
-  name: string;
-  distance_km: number;
-}
-
 type GalleryCategory =
   | "Hotel View"
   | "Guest Rooms"
@@ -99,10 +94,10 @@ interface HotelDetail {
   rating_service?: number | null;
   rating_location?: number | null;
   photo_categories?: Partial<Record<GalleryCategory, string[]>> | null;
-  nearby?: NearbyLandmark[] | null;
   /* Editorial overlay fields — populated by CMS team, nullable */
   editorial_headline?: string | null;
   editorial_intro?: string | null;
+  concierge_note?: string | null;
   neighbourhood?: string | null;
   /* Raw OTA prose fields used for fallback intro derivation */
   location?: string | null;
@@ -753,9 +748,6 @@ export default function HotelPage() {
   /* Unlock Rate modal */
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
 
-  /* Overview expanded state (show first 3 sentences by default) */
-  const [overviewExpanded, setOverviewExpanded] = useState(false);
-
   /* Login gate modal (SELECT button on a rate card, user not signed in) */
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [pendingOptionId, setPendingOptionId] = useState<string | null>(null);
@@ -1241,15 +1233,6 @@ export default function HotelPage() {
     ? Math.min(...rates.rates.map((r) => r.total_price / Math.max(nights, 1)))
     : null;
 
-  /* Editorial overview parts */
-  const overviewPlain = hotel.overview ? hotel.overview.replace(/<[^>]*>/g, "").trim() : "";
-  const sentenceMatches = overviewPlain.match(/[^.!?]+[.!?]+(\s|$)/g);
-  const sentences = sentenceMatches ? sentenceMatches.map((s) => s.trim()) : [overviewPlain];
-  const overviewHasMore = sentences.length > 3;
-  const overviewLeadFirst = sentences[0] || "";
-  const overviewLeadRest = sentences.slice(1, 3).join(" ");
-  const overviewExtra = sentences.slice(3).join(" ");
-
   /* Editorial header block */
   const editorialHeadline = hotel.editorial_headline || hotel.hotel_name;
   const firstSentenceOf = (text: string | null | undefined): string | null => {
@@ -1702,122 +1685,74 @@ export default function HotelPage() {
               languages={hotel.languages}
             />
 
-            {overviewPlain ? (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "minmax(0, 1.6fr) minmax(0, 1fr)",
-                  gap: 48,
-                }}
-                className="hotel-overview-grid"
-              >
-                {/* Lead column — big italic first sentence */}
-                <div>
-                  <p
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "clamp(22px, 2.4vw, 30px)",
-                      fontWeight: 300,
-                      fontStyle: "italic",
-                      color: "var(--luxe-soft-white)",
-                      lineHeight: 1.4,
-                      letterSpacing: "-0.01em",
-                      marginBottom: 24,
-                      borderLeft: "1px solid var(--luxe-champagne-line)",
-                      paddingLeft: 24,
-                    }}
-                  >
-                    {overviewLeadFirst || hotel.hotel_name}
-                  </p>
-                  {overviewLeadRest && (
-                    <p
-                      style={{
-                        fontSize: 15,
-                        color: "var(--luxe-soft-white-70)",
-                        lineHeight: 1.85,
-                        paddingLeft: 25,
-                        marginBottom: 14,
-                      }}
-                    >
-                      {overviewLeadRest}
-                    </p>
-                  )}
-                  {overviewExpanded && overviewExtra && (
-                    <p
-                      style={{
-                        fontSize: 15,
-                        color: "var(--luxe-soft-white-70)",
-                        lineHeight: 1.85,
-                        paddingLeft: 25,
-                        marginBottom: 14,
-                      }}
-                    >
-                      {overviewExtra}
-                    </p>
-                  )}
-                  {overviewHasMore && (
-                    <button
-                      onClick={() => setOverviewExpanded((v) => !v)}
-                      style={{
-                        marginLeft: 25,
-                        background: "none",
-                        border: "none",
-                        padding: 0,
-                        color: "var(--luxe-champagne)",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        fontFamily: "var(--font-body)",
-                        fontSize: 13,
-                        letterSpacing: "0.04em",
-                      }}
-                    >
-                      {overviewExpanded ? "Read less" : "Read more →"}
-                    </button>
-                  )}
-                </div>
+            {hotel.concierge_note && (
+              <div style={{ marginTop: 40 }}>
+                <p
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 500,
+                    fontSize: 11,
+                    lineHeight: "14px",
+                    fontVariant: "small-caps",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.18em",
+                    color: "#C9A961",
+                    marginBottom: 10,
+                  }}
+                >
+                  Why our concierge loves it
+                </p>
+                <p
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontStyle: "italic",
+                    fontSize: 17,
+                    lineHeight: "26px",
+                    color: "rgba(255,255,255,0.85)",
+                    margin: 0,
+                  }}
+                >
+                  {hotel.concierge_note}
+                </p>
+              </div>
+            )}
 
-                {/* Stay facts — luxe glass card list */}
-                <div>
-                  <div
-                    className="luxe-card"
-                    style={{
-                      padding: 24,
-                      borderRadius: 14,
-                    }}
-                  >
-                    <div className="luxe-tech" style={{ marginBottom: 16 }}>
-                      The Particulars
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                      {hotel.checkin && (
-                        <FactRow label="Check-in" value={hotel.checkin} />
-                      )}
-                      {hotel.checkout && (
-                        <FactRow label="Check-out" value={hotel.checkout} />
-                      )}
-                      {hotel.numberrooms && (
-                        <FactRow label="Rooms & Suites" value={String(hotel.numberrooms)} />
-                      )}
-                      {hotel.yearrenovated && (
-                        <FactRow label="Last Renovated" value={String(hotel.yearrenovated)} />
-                      )}
-                      {hotel.yearopened && (
-                        <FactRow label="Year Opened" value={String(hotel.yearopened)} />
-                      )}
-                      {hotel.accommodation_type && (
-                        <FactRow label="Type" value={hotel.accommodation_type} />
-                      )}
-                      {hotel.brand_name && !hotel.chain_name && (
-                        <FactRow label="Brand" value={hotel.brand_name} />
-                      )}
-                    </div>
-                  </div>
+            {(hotel.checkin || hotel.checkout || hotel.numberrooms || hotel.yearrenovated || hotel.yearopened || hotel.accommodation_type || (hotel.brand_name && !hotel.chain_name)) && (
+              <div
+                className="luxe-card"
+                style={{
+                  padding: 24,
+                  borderRadius: 14,
+                  maxWidth: 480,
+                }}
+              >
+                <div className="luxe-tech" style={{ marginBottom: 16 }}>
+                  The Particulars
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {hotel.checkin && (
+                    <FactRow label="Check-in" value={hotel.checkin} />
+                  )}
+                  {hotel.checkout && (
+                    <FactRow label="Check-out" value={hotel.checkout} />
+                  )}
+                  {hotel.numberrooms && (
+                    <FactRow label="Rooms & Suites" value={String(hotel.numberrooms)} />
+                  )}
+                  {hotel.yearrenovated && (
+                    <FactRow label="Last Renovated" value={String(hotel.yearrenovated)} />
+                  )}
+                  {hotel.yearopened && (
+                    <FactRow label="Year Opened" value={String(hotel.yearopened)} />
+                  )}
+                  {hotel.accommodation_type && (
+                    <FactRow label="Type" value={hotel.accommodation_type} />
+                  )}
+                  {hotel.brand_name && !hotel.chain_name && (
+                    <FactRow label="Brand" value={hotel.brand_name} />
+                  )}
                 </div>
               </div>
-            ) : (
-              <p style={{ color: "var(--luxe-soft-white-70)", fontSize: 14 }}>
-                Editorial coming soon for this property.
-              </p>
             )}
           </div>
         </div>
@@ -2456,7 +2391,7 @@ export default function HotelPage() {
                 className="hotel-location-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: hotel.nearby && hotel.nearby.length > 0 ? "minmax(0, 1.6fr) minmax(0, 1fr)" : "minmax(0, 1fr)",
+                  gridTemplateColumns: "minmax(0, 1fr)",
                   gap: 24,
                 }}
               >
@@ -2483,40 +2418,6 @@ export default function HotelPage() {
                     referrerPolicy="no-referrer-when-downgrade"
                   />
                 </div>
-
-                {hotel.nearby && hotel.nearby.length > 0 && (
-                  <div className="luxe-card" style={{ padding: 24, borderRadius: 14 }}>
-                    <div className="luxe-tech" style={{ marginBottom: 14 }}>
-                      What&rsquo;s nearby
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                      {hotel.nearby.slice(0, 6).map((item, i, arr) => (
-                        <div
-                          key={`${item.name}-${i}`}
-                          className="flex items-center justify-between"
-                          style={{
-                            padding: "12px 0",
-                            borderBottom: i < arr.length - 1 ? "1px solid var(--luxe-hairline)" : "none",
-                            fontSize: 14,
-                            fontFamily: "var(--font-body)",
-                          }}
-                        >
-                          <span style={{ color: "var(--luxe-soft-white)" }}>{item.name}</span>
-                          <span
-                            style={{
-                              color: "var(--luxe-champagne)",
-                              fontFamily: "var(--font-mono)",
-                              fontSize: 12,
-                              letterSpacing: "0.04em",
-                            }}
-                          >
-                            {item.distance_km.toFixed(1)} km
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </section>
