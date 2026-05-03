@@ -1677,7 +1677,7 @@ export default function HotelPage() {
             />
 
             {hotel.concierge_note && (
-              <div style={{ marginTop: 40 }}>
+              <div>
                 <p
                   style={{
                     fontFamily: "var(--font-body)",
@@ -1688,10 +1688,10 @@ export default function HotelPage() {
                     textTransform: "uppercase",
                     letterSpacing: "0.18em",
                     color: "#C9A961",
-                    marginBottom: 10,
+                    margin: "32px 0 12px",
                   }}
                 >
-                  Why our concierge loves it
+                  WHY OUR CONCIERGE LOVES IT
                 </p>
                 <p
                   style={{

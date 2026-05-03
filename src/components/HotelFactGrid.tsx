@@ -32,6 +32,16 @@ const WELLNESS_KEYWORDS: [string, string][] = [
   ["yoga", "Yoga"],
 ];
 
+const ROOMS_WHITELIST: string[] = [
+  "Memory foam",
+  "Egyptian cotton",
+  "Rainfall shower",
+  "Soaking tub",
+  "Minibar",
+  "Balcony",
+  "Ocean view",
+];
+
 function parseWellness(amenities: string | null | undefined): string {
   if (!amenities) return DASH;
   const lower = amenities.toLowerCase();
@@ -44,13 +54,12 @@ function parseWellness(amenities: string | null | undefined): string {
 
 function parseRoomsFeatures(description: string | null | undefined): [string | null, string | null] {
   if (!description) return [null, null];
-  const parts = description
-    .replace(/<[^>]*>/g, "")
-    .trim()
-    .split(/[,;]/)
-    .map(s => s.trim())
-    .filter(Boolean);
-  return [parts[0] ?? null, parts[1] ?? null];
+  const lower = description.toLowerCase();
+  const found: string[] = [];
+  for (const label of ROOMS_WHITELIST) {
+    if (lower.includes(label.toLowerCase()) && found.length < 2) found.push(label);
+  }
+  return [found[0] ?? null, found[1] ?? null];
 }
 
 // ── Icon components — monoline, 1.5px stroke, #C9A961, 18×18 ──
