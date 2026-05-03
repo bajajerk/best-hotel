@@ -102,6 +102,19 @@ interface HotelDetail {
   /* Raw OTA prose fields used for fallback intro derivation */
   location?: string | null;
   amenities?: string | null;
+  /* TripJack structured description — keys: rooms, dining, amenities, location,
+     attractions, business_amenities, headline, spoken_languages, onsite_payments. */
+  tj_description?: {
+    rooms?: string;
+    dining?: string;
+    amenities?: string;
+    location?: string;
+    attractions?: string;
+    business_amenities?: string;
+    headline?: string;
+    spoken_languages?: string;
+    onsite_payments?: string;
+  } | null;
   /* Fact grid fields — new structured API fields, all optional */
   airport_iata?: string | null;
   airport_distance_min?: number | null;
@@ -979,6 +992,8 @@ export default function HotelPage() {
   const editorialIntro = useMemo<string | null>(() => {
     if (!hotel) return null;
     if (hotel.editorial_intro) return hotel.editorial_intro;
+    // Prefer TripJack's structured location prose — factual, named, concise.
+    if (hotel.tj_description?.location) return hotel.tj_description.location;
     const loc = firstSentence(hotel.location);
     const amen = firstSentence(hotel.amenities);
     const combined = [loc, amen].filter(Boolean).join(" ");
@@ -1675,6 +1690,54 @@ export default function HotelPage() {
               shuttle_type={hotel.shuttle_type}
               languages={hotel.languages}
             />
+
+            {hotel.tj_description && (
+              hotel.tj_description.rooms ||
+              hotel.tj_description.dining ||
+              hotel.tj_description.amenities ||
+              hotel.tj_description.business_amenities
+            ) && (
+              <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 28 }}>
+                {[
+                  { key: "rooms", label: "The Rooms" },
+                  { key: "dining", label: "Dining" },
+                  { key: "amenities", label: "Amenities & Recreation" },
+                  { key: "business_amenities", label: "For Business" },
+                ].map(({ key, label }) => {
+                  const text = hotel.tj_description?.[key as keyof NonNullable<typeof hotel.tj_description>];
+                  if (!text) return null;
+                  return (
+                    <div key={key}>
+                      <p
+                        style={{
+                          fontFamily: "var(--font-body)",
+                          fontWeight: 500,
+                          fontSize: 11,
+                          lineHeight: "14px",
+                          letterSpacing: "0.18em",
+                          textTransform: "uppercase",
+                          color: "#C9A961",
+                          margin: "0 0 10px",
+                        }}
+                      >
+                        {label}
+                      </p>
+                      <p
+                        style={{
+                          fontFamily: "var(--font-body)",
+                          fontSize: 15,
+                          lineHeight: "25px",
+                          color: "rgba(255,255,255,0.78)",
+                          margin: 0,
+                        }}
+                      >
+                        {text}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {hotel.concierge_note && (
               <div>
