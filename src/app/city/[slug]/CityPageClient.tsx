@@ -39,6 +39,7 @@ import { trackCityViewed } from "@/lib/analytics";
 import DateBar from "@/components/DateBar";
 import GuestRoomPicker from "@/components/GuestRoomPicker";
 import HotelResultCard from "@/components/HotelResultCard";
+import HotelGrid from "@/components/HotelGrid";
 import { CITY_IMAGES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import { conciergeWhatsappLink } from "@/lib/concierge";
 
@@ -541,6 +542,12 @@ export default function CityPage() {
   const [priceOpen, setPriceOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
   const priceRef = useRef<HTMLDivElement>(null);
+
+  // ── "All hotels in {City}" grid ────────────────────────────────────────
+  // Component-local pagination — no URL sync (curated section above stays
+  // the canonical landing experience; deep-linking page 5 of the all-hotels
+  // section isn't worth the SEO complexity).
+  const [allHotelsPage, setAllHotelsPage] = useState(1);
 
   const citySortOptions: { label: string; value: SortStrategy }[] = [
     // "Saving: Highest" intentionally removed — savings curation now lives in
@@ -1495,6 +1502,58 @@ export default function CityPage() {
           )}
         </div>
       </section>
+
+      {/* ================================================================
+          5b. ALL HOTELS IN {CITY} — full backend index, paginated. The
+          curated section above shows ~20 editorial picks; this surfaces
+          the long tail (often hundreds more) so the city page is
+          actually a city page, not just an editor's micro-list.
+          excludeIds drops anything already shown above.
+          ================================================================ */}
+      {!loading && !fetchError && (
+        <section
+          style={{
+            padding: "40px 24px 80px",
+            borderTop: "1px solid var(--luxe-hairline)",
+          }}
+          className="md:!px-[60px]"
+        >
+          <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+            <div style={{ marginBottom: 24 }}>
+              <div className="luxe-tech" style={{ marginBottom: 8 }}>
+                More stays
+              </div>
+              <h2
+                className="luxe-display"
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "clamp(28px, 3.4vw, 44px)",
+                  fontStyle: "italic",
+                  fontWeight: 300,
+                  color: "var(--luxe-soft-white)",
+                  margin: 0,
+                  lineHeight: 1.1,
+                }}
+              >
+                All hotels in {displayName}
+              </h2>
+            </div>
+            <HotelGrid
+              query={displayName}
+              page={allHotelsPage}
+              perPage={20}
+              onPageChange={(n) => {
+                setAllHotelsPage(n);
+                if (typeof window !== "undefined") {
+                  window.scrollTo({ top: window.scrollY, behavior: "auto" });
+                }
+              }}
+              excludeIds={new Set(rawAllHotels.map((h) => String(h.id)))}
+              showResultCount={false}
+            />
+          </div>
+        </section>
+      )}
 
       {/* ════════ Filter bottom sheet (mobile) — dark luxe ════════ */}
       <AnimatePresence>

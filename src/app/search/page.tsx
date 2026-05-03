@@ -5,21 +5,17 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  searchHotelsPaginated,
   fetchCuratedCities,
-  fetchBatchRates,
   CuratedCity,
 } from "@/lib/api";
-import type { BatchRatesResponse } from "@/lib/api";
-import { hotelUrl } from "@/lib/urls";
 import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE } from "@/lib/constants";
-import { useBooking } from "@/context/BookingContext";
 import { trackSearch } from "@/lib/analytics";
 import Header from "@/components/Header";
 import DateBar, { DateBarHandle } from "@/components/DateBar";
 import DestinationSearch from "@/components/DestinationSearch";
 import RegionFilterTabs from "@/components/RegionFilterTabs";
-import SearchResultsSkeleton from "@/components/skeletons/SearchResultsSkeleton";
+import HotelGrid from "@/components/HotelGrid";
+import { useBooking } from "@/context/BookingContext";
 
 const FALLBACK_IMAGE = FALLBACK_CITY_IMAGE;
 
@@ -56,43 +52,7 @@ const INDIA_SEARCHES = [
   { label: "Rishikesh", slug: "rishikesh" },
 ];
 
-// ---------------------------------------------------------------------------
-// Search result type
-//
-// Phase E: backend `/api/hotels/search` now returns canonical hotels_master
-// rows with `id` (master UUID), `short_id`, `slug`, `name`, `city_name`,
-// `country`, `star_rating`, `image_url`. The legacy numeric Agoda
-// `hotel_id` / `hotel_name` / `city` / `photo1` fields are GONE — we keep
-// them as optional aliases for resilience but read the new names first.
-//
-// Bug fix (search-cards-empty): the inline render was reading the legacy
-// names exclusively, so every card rendered "" / null / null → 30 blank
-// "5★ India / Call for rates" tiles.
-// ---------------------------------------------------------------------------
-interface HotelResult {
-  // Phase E canonical fields (backend source of truth).
-  id?: string;
-  short_id?: string | null;
-  slug?: string | null;
-  name?: string;
-  city_name?: string;
-  country?: string;
-  country_code?: string;
-  star_rating: number | null;
-  rating_average?: number | null;
-  number_of_reviews?: number | null;
-  rates_from?: number | null;
-  rates_currency?: string | null;
-  image_url?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  // Legacy aliases — kept optional for any caller still emitting the
-  // old shape. Renderer reads canonical first, falls back to these.
-  hotel_id?: number | string;
-  hotel_name?: string;
-  city?: string;
-  photo1?: string | null;
-}
+// Hotel result rows + the row card + pagination now live in HotelGrid.
 
 // ---------------------------------------------------------------------------
 // Recent searches (localStorage)
@@ -261,227 +221,6 @@ function DestinationPill({ href, label }: { href: string; label: string }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Pagination pill (single-button primitive used by the Pagination control
-// below). Hoisted out of Pagination so React's static-components rule is
-// satisfied — keeps key/ref reconciliation fast across re-renders.
-// ---------------------------------------------------------------------------
-function PaginationPill({
-  children,
-  onClick,
-  disabled = false,
-  active = false,
-  ariaLabel,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  active?: boolean;
-  ariaLabel?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={ariaLabel}
-      aria-current={active ? "page" : undefined}
-      style={{
-        minWidth: 36,
-        height: 36,
-        padding: "0 12px",
-        border: `1px solid ${active ? "var(--gold)" : "var(--cream-border)"}`,
-        background: active ? "var(--gold)" : "var(--white)",
-        color: active ? "var(--ink)" : (disabled ? "var(--ink-light)" : "var(--ink)"),
-        fontFamily: "var(--font-body)",
-        fontSize: 13,
-        fontWeight: active ? 600 : 500,
-        letterSpacing: "0.02em",
-        borderRadius: 999,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.45 : 1,
-        transition: "border-color 0.18s, background 0.18s, color 0.18s",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-      onMouseEnter={(e) => {
-        if (!disabled && !active) {
-          e.currentTarget.style.borderColor = "var(--gold)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!disabled && !active) {
-          e.currentTarget.style.borderColor = "var(--cream-border)";
-        }
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Pagination control — luxe pills, champagne when active, hairline border.
-// Renders `1 2 … current ± 2 … total_pages` on desktop, `Prev / N of M / Next`
-// on mobile (driven via CSS so SSR markup stays the same).
-// ---------------------------------------------------------------------------
-function Pagination({
-  page,
-  totalPages,
-  totalCount,
-  perPage,
-  onChange,
-}: {
-  page: number;
-  totalPages: number;
-  totalCount: number;
-  perPage: number;
-  onChange: (newPage: number) => void;
-}) {
-  if (totalPages <= 1) return null;
-
-  // Build a compact list of page numbers to render: first, last, current ± 2,
-  // with "..." gaps between non-contiguous ranges.
-  const SIBLINGS = 1;
-  const set = new Set<number>([1, totalPages, page]);
-  for (let i = 1; i <= SIBLINGS; i++) {
-    if (page - i >= 1) set.add(page - i);
-    if (page + i <= totalPages) set.add(page + i);
-  }
-  // Always show 2 around the start/end so "1 2 … 12" looks balanced.
-  set.add(2); set.add(totalPages - 1);
-  const pages = Array.from(set).filter((n) => n >= 1 && n <= totalPages).sort((a, b) => a - b);
-
-  const items: (number | "ellipsis")[] = [];
-  for (let i = 0; i < pages.length; i++) {
-    if (i > 0 && pages[i] - pages[i - 1] > 1) items.push("ellipsis");
-    items.push(pages[i]);
-  }
-
-  const firstOnPage = (page - 1) * perPage + 1;
-  const lastOnPage = Math.min(page * perPage, totalCount);
-
-  return (
-    <nav
-      aria-label="Search results pagination"
-      className="search-pagination"
-      style={{
-        marginTop: 32,
-        paddingTop: 24,
-        borderTop: "1px solid var(--cream-border)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 12,
-      }}
-    >
-      {/* Desktop: full pill row */}
-      <div
-        className="search-pagination-desktop"
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 6,
-        }}
-      >
-        <PaginationPill
-          onClick={() => page > 1 && onChange(page - 1)}
-          disabled={page === 1}
-          ariaLabel="Previous page"
-        >
-          &larr; Prev
-        </PaginationPill>
-        {items.map((it, idx) =>
-          it === "ellipsis" ? (
-            <span
-              key={`gap-${idx}`}
-              style={{
-                color: "var(--ink-light)",
-                fontSize: 13,
-                padding: "0 4px",
-                userSelect: "none",
-              }}
-            >
-              &hellip;
-            </span>
-          ) : (
-            <PaginationPill
-              key={it}
-              active={it === page}
-              onClick={() => it !== page && onChange(it)}
-              ariaLabel={`Page ${it}`}
-            >
-              {it}
-            </PaginationPill>
-          ),
-        )}
-        <PaginationPill
-          onClick={() => page < totalPages && onChange(page + 1)}
-          disabled={page === totalPages}
-          ariaLabel="Next page"
-        >
-          Next &rarr;
-        </PaginationPill>
-      </div>
-
-      {/* Mobile: just Prev / N of M / Next — hidden on desktop via CSS */}
-      <div
-        className="search-pagination-mobile"
-        style={{
-          display: "none",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-        }}
-      >
-        <PaginationPill
-          onClick={() => page > 1 && onChange(page - 1)}
-          disabled={page === 1}
-          ariaLabel="Previous page"
-        >
-          &larr; Prev
-        </PaginationPill>
-        <span
-          style={{
-            fontSize: 13,
-            color: "var(--ink-mid)",
-            fontFamily: "var(--font-body)",
-            minWidth: 100,
-            textAlign: "center",
-          }}
-        >
-          Page {page} of {totalPages}
-        </span>
-        <PaginationPill
-          onClick={() => page < totalPages && onChange(page + 1)}
-          disabled={page === totalPages}
-          ariaLabel="Next page"
-        >
-          Next &rarr;
-        </PaginationPill>
-      </div>
-
-      {/* "Showing X–Y of Z" subtle line */}
-      {totalCount > 0 && (
-        <span
-          style={{
-            fontSize: 12,
-            color: "var(--ink-light)",
-            fontFamily: "var(--font-body)",
-            letterSpacing: "0.02em",
-          }}
-        >
-          Showing {firstOnPage.toLocaleString()}&ndash;{lastOnPage.toLocaleString()}
-          {" of "}
-          {totalCount.toLocaleString()}
-        </span>
-      )}
-    </nav>
-  );
-}
 
 // ============================================================================
 // Search Page
@@ -500,19 +239,18 @@ export default function SearchPage() {
     return Number.isFinite(p) && p >= 1 && p <= 50 ? p : 20;
   })();
 
-  const { checkIn, checkOut, totalAdults, totalChildren, rooms } = useBooking();
-  const roomsCount = rooms.length;
+  const { checkIn, checkOut } = useBooking();
   const [query, setQuery] = useState(initialQuery);
   const [cities, setCities] = useState<CuratedCity[]>([]);
-  const [hotelResults, setHotelResults] = useState<HotelResult[]>([]);
   const [page, setPage] = useState<number>(initialPage);
   const [perPage] = useState<number>(initialPerPage);
-  const [totalCount, setTotalCount] = useState<number>(0);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [batchRates, setBatchRates] = useState<BatchRatesResponse | null>(null);
-  const [batchRatesLoading, setBatchRatesLoading] = useState(false);
-  const [searching, setSearching] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  // Result counts surfaced by HotelGrid via onResults — used only for the
+  // toolbar copy on this page. The list itself is owned by HotelGrid.
+  const [resultInfo, setResultInfo] = useState<{ totalCount: number; visibleCount: number }>({
+    totalCount: 0,
+    visibleCount: 0,
+  });
+  const [hasSearched, setHasSearched] = useState<boolean>(!!initialQuery);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [regionFilter, setRegionFilter] = useState<string>("All");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -539,113 +277,59 @@ export default function SearchPage() {
     setRecentSearches(getRecentSearches());
   }, []);
 
-  // Re-run search whenever the query or page changes. We keep this in a
-  // single effect so deep links like `/search?q=Mumbai&page=3` work on
-  // first paint, and clicking the pagination control just bumps `page`
-  // and the same effect re-fetches.
-  useEffect(() => {
-    if (initialQuery) {
-      performSearch(initialQuery, { page });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  // Search is now driven entirely by `query`/`page`/`perPage` — HotelGrid
+  // owns the fetch + batch-rates effect. We just persist the recent search,
+  // update the URL, and bump `hasSearched`.
+  const commitQuery = useCallback(
+    (q: string, options?: { persist?: boolean }) => {
+      const trimmed = q.trim();
+      if (!trimmed) {
+        setQuery("");
+        setHasSearched(false);
+        setResultInfo({ totalCount: 0, visibleCount: 0 });
+        return;
+      }
+      setQuery(trimmed);
+      setPage(1);
+      setHasSearched(true);
+      if (options?.persist) {
+        addRecentSearch(trimmed, checkIn, checkOut);
+        setRecentSearches(getRecentSearches());
+      }
+      const params = new URLSearchParams();
+      params.set("q", trimmed);
+      router.replace(`/search?${params.toString()}`);
+    },
+    [checkIn, checkOut, router],
+  );
 
-  // Batch-fetch live rates for the *current page* of search results.
-  // P0 RULE: rates are NEVER cached client-side either — `fetchBatchRates`
-  // sends `cache: 'no-store'`. Each page change kicks off a fresh batch.
-  // We don't block the list render on this — prices fade in as they arrive
-  // (10-30s for 20 hotels). On error, fall through to "Call for rates".
-  useEffect(() => {
-    if (!hotelResults.length || !checkIn || !checkOut) {
-      setBatchRates(null);
-      setBatchRatesLoading(false);
-      return;
-    }
-    const masterIds = hotelResults
-      .map((h) => (h.id ? String(h.id) : null))
-      .filter((x): x is string => !!x);
-    if (!masterIds.length) {
-      setBatchRates(null);
-      setBatchRatesLoading(false);
-      return;
-    }
-    let cancelled = false;
-    setBatchRatesLoading(true);
-    setBatchRates(null);
-    fetchBatchRates(
-      masterIds,
-      checkIn,
-      checkOut,
-      Math.max(totalAdults, 1),
-      Math.max(totalChildren, 0),
-      Math.max(roomsCount, 1),
-    )
-      .then((resp) => {
-        if (cancelled) return;
-        setBatchRates(resp);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        // Quiet failure — cards fall back to "Call for rates" automatically.
-        setBatchRates(null);
-      })
-      .finally(() => {
-        if (cancelled) return;
-        setBatchRatesLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [hotelResults, checkIn, checkOut, totalAdults, totalChildren, roomsCount]);
+  const handleGridResults = useCallback(
+    ({ totalCount, visibleCount }: { totalCount: number; visibleCount: number; query: string }) => {
+      setResultInfo({ totalCount, visibleCount });
+    },
+    [],
+  );
 
-  const performSearch = useCallback(async (
-    q: string,
-    options?: { persist?: boolean; page?: number },
-  ) => {
-    if (!q.trim()) {
-      setHotelResults([]);
-      setTotalCount(0);
-      setTotalPages(1);
-      setHasSearched(false);
-      return;
-    }
-
-    const reqPage = Math.max(options?.page ?? 1, 1);
-    setSearching(true);
-    setHasSearched(true);
-    if (options?.persist) {
-      addRecentSearch(q, checkIn, checkOut);
-      setRecentSearches(getRecentSearches());
-    }
-    try {
-      const resp = await searchHotelsPaginated<HotelResult>(q, reqPage, perPage);
-      setHotelResults(resp.hotels || []);
-      setTotalCount(resp.count);
-      setTotalPages(Math.max(resp.total_pages, 1));
+  const handleGridSearch = useCallback(
+    (info: { query: string; page: number; resultCount: number }) => {
       trackSearch({
-        query: q,
-        result_count: resp.count,
-        source: 'search_page',
+        query: info.query,
+        result_count: info.resultCount,
+        source: "search_page",
         filters: { region: regionFilter },
       });
-    } catch {
-      setHotelResults([]);
-      setTotalCount(0);
-      setTotalPages(1);
-    } finally {
-      setSearching(false);
-    }
-  }, [regionFilter, checkIn, checkOut, perPage]);
+    },
+    [regionFilter],
+  );
 
   const handleRecentClick = (term: string) => {
-    setQuery(term);
-    setPage(1);
-    performSearch(term, { persist: true, page: 1 });
-    router.replace(`/search?q=${encodeURIComponent(term)}`);
+    commitQuery(term, { persist: true });
   };
 
   // Pagination handler — bump page state, replace URL with the new page
   // (so deep links work and back-button paginates), and smooth-scroll the
   // results into view so the user lands at the top of the freshly-rendered
-  // list. The page-change effect (above) re-runs `performSearch`.
+  // list. HotelGrid re-fetches on the new page automatically.
   const handlePageChange = useCallback((newPage: number) => {
     if (newPage === page) return;
     setPage(newPage);
@@ -689,43 +373,9 @@ export default function SearchPage() {
     ? matchingCities
     : matchingCities.filter((c) => c.continent === regionFilter);
 
-  // Merge live batch rates into each hotel — replace the static `rates_from`
-  // (which the search endpoint no longer emits anyway) with the freshly
-  // fetched live price keyed by master UUID. Hotels without a returned rate
-  // keep null and render "Call for rates" / "Calculating live rates…" based
-  // on `batchRatesLoading`.
-  const livePricedResults = useMemo<HotelResult[]>(() => {
-    if (!batchRates || !batchRates.results) return hotelResults;
-    return hotelResults.map((h) => {
-      const key = h.id ? String(h.id) : "";
-      const r = key ? batchRates.results[key] : undefined;
-      if (!r) return h;
-      const fromPrice = typeof r.from_price === "number" ? r.from_price : null;
-      return {
-        ...h,
-        rates_from: fromPrice,
-        rates_currency: r.currency ?? h.rates_currency ?? "INR",
-      };
-    });
-  }, [hotelResults, batchRates]);
-
-  // Phase E field-name shims: the search endpoint emits `name`/`city_name`/
-  // `image_url` but a few code paths still expect the legacy aliases. These
-  // helpers read canonical first, fall back to legacy.
-  const getName = (h: HotelResult): string => h.name || h.hotel_name || "";
-  const getCity = (h: HotelResult): string => h.city_name || h.city || "";
-
-  // Apply region filter (still driven by the trending-destinations region tabs).
-  const filteredHotels = regionFilter === "All"
-    ? livePricedResults
-    : livePricedResults.filter((h) => {
-        const continent = cityToContinentMap[getCity(h).toLowerCase()];
-        return !continent || continent === regionFilter;
-      });
-
-  // Hotel results are the primary count surfaced in the toolbar; matching cities
-  // are relocated below the results as a curated scroller and counted separately.
-  const totalResults = filteredHotels.length;
+  // Hotel results — counts surface from HotelGrid via onResults / handleGridResults.
+  const totalCount = resultInfo.totalCount;
+  const totalResults = resultInfo.visibleCount;
 
   return (
     <div className="luxe" style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
@@ -789,17 +439,13 @@ export default function SearchPage() {
                       setQuery(val);
                       if (debounceRef.current) clearTimeout(debounceRef.current);
                       debounceRef.current = setTimeout(() => {
-                        // New query -> reset to page 1.
-                        setPage(1);
-                        performSearch(val, { page: 1 });
+                        commitQuery(val);
                       }, 400);
                     }}
                     onSelect={(_type, _value, label) => {
                       const filled = label ?? _value;
-                      setQuery(filled);
                       if (debounceRef.current) clearTimeout(debounceRef.current);
-                      setPage(1);
-                      performSearch(filled, { persist: true, page: 1 });
+                      commitQuery(filled, { persist: true });
                       requestAnimationFrame(() => dateBarRef.current?.openCheckIn());
                     }}
                   />
@@ -816,11 +462,7 @@ export default function SearchPage() {
                 onClick={() => {
                   if (!query.trim()) return;
                   if (debounceRef.current) clearTimeout(debounceRef.current);
-                  setPage(1);
-                  performSearch(query, { persist: true, page: 1 });
-                  const params = new URLSearchParams();
-                  params.set("q", query.trim());
-                  router.replace(`/search?${params.toString()}`);
+                  commitQuery(query, { persist: true });
                 }}
                 disabled={!query.trim()}
                 style={{
@@ -934,7 +576,7 @@ export default function SearchPage() {
       <section className="search-results-section" style={{ padding: "60px 60px 100px", maxWidth: "1400px", margin: "0 auto" }}>
 
         {/* Results count */}
-        {hasSearched && (regionFilteredCities.length > 0 || hotelResults.length > 0) && (
+        {hasSearched && (regionFilteredCities.length > 0 || totalResults > 0) && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -953,336 +595,23 @@ export default function SearchPage() {
           </motion.div>
         )}
 
-        {/* Hotel results — luxe shimmer while results stream in */}
-        {searching && (
-          <div style={{ padding: "8px 0 24px" }}>
-            <SearchResultsSkeleton count={8} />
-          </div>
-        )}
-
-        {!searching && hasSearched && filteredHotels.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "24px" }}>
-              <div className="type-eyebrow">
-                Hotels Found
-              </div>
-              <span style={{ fontSize: "12px", color: "var(--ink-light)" }}>
-                {totalCount > filteredHotels.length
-                  ? `${filteredHotels.length} of ${totalCount.toLocaleString()} result${totalCount !== 1 ? "s" : ""}`
-                  : `${filteredHotels.length} result${filteredHotels.length !== 1 ? "s" : ""}`}
-              </span>
-            </div>
-
-            <div className="search-hotel-list" style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {filteredHotels.map((hotel, i) => {
-                // Phase E field-name resolution — backend now returns
-                // `name` / `city_name` / `image_url` / `id` / `short_id` /
-                // `slug`. Read those first, fall back to legacy aliases.
-                const displayName = getName(hotel) || "Hotel";
-                const displayCity = getCity(hotel);
-                const displayCountry = hotel.country || "";
-                const photoSrc = hotel.image_url ?? hotel.photo1 ?? null;
-                // Stable React key — prefer the master id, then short_id,
-                // then slug, then legacy hotel_id, then index. Empty
-                // strings would collide so guard with `|| i`.
-                const cardKey =
-                  String(hotel.id || hotel.short_id || hotel.slug || hotel.hotel_id || `idx-${i}`);
-
-                // Member rate vs. MRP (×1.25 heuristic until search is migrated to live rates)
-                const marketRate = hotel.rates_from ? Math.round(hotel.rates_from * 1.25) : null;
-                const savePct = hotel.rates_from && marketRate
-                  ? Math.round(((marketRate - hotel.rates_from) / marketRate) * 100)
-                  : null;
-                const sym = hotel.rates_currency === "INR" ? "₹" : "$";
-                const formatPrice = (n: number) =>
-                  hotel.rates_currency === "INR"
-                    ? `${sym}${n.toLocaleString("en-IN")}`
-                    : `${sym}${n.toLocaleString("en-US")}`;
-
-                return (
-                  <motion.div
-                    key={cardKey}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, delay: i * 0.03 }}
-                  >
-                    <Link
-                      href={hotelUrl({
-                        slug: hotel.slug ?? null,
-                        short_id: hotel.short_id ?? null,
-                        id: (hotel.id as string | undefined) ?? (hotel.hotel_id != null ? String(hotel.hotel_id) : null),
-                      })}
-                      style={{ textDecoration: "none", display: "block" }}
-                    >
-                      <div
-                        className="card-hover search-hotel-card"
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "200px 1fr 220px",
-                          background: "var(--white)",
-                          border: "1px solid var(--cream-border)",
-                          borderRadius: 10,
-                          overflow: "hidden",
-                          cursor: "pointer",
-                          minHeight: 152,
-                        }}
-                      >
-                        {/* Image — left rail */}
-                        <div className="search-hotel-card-img" style={{ height: 152, overflow: "hidden", position: "relative" }}>
-                          <img
-                            className="card-img"
-                            src={photoSrc ? safeImageSrc(photoSrc.startsWith("http") ? photoSrc : `https://photos.hotelbeds.com/giata/${photoSrc}`) : FALLBACK_IMAGE}
-                            alt={displayName}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                              display: "block",
-                              filter: "saturate(0.9)",
-                              transition: "transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
-                            }}
-                            loading="lazy"
-                            onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
-                          />
-                          {savePct != null && savePct > 0 && (
-                            <div style={{
-                              position: "absolute",
-                              top: 10,
-                              left: 10,
-                              background: "var(--gold)",
-                              color: "var(--ink)",
-                              padding: "3px 9px",
-                              fontSize: 10,
-                              fontWeight: 600,
-                              letterSpacing: "0.08em",
-                              textTransform: "uppercase",
-                              fontFamily: "var(--font-body)",
-                              borderRadius: 2,
-                            }}>
-                              Member · {savePct}% off
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Center column — name, stars, location, amenity badges */}
-                        <div className="search-hotel-card-content" style={{
-                          padding: "16px 20px",
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "center",
-                          gap: 6,
-                          minWidth: 0,
-                        }}>
-                          {/* Star row */}
-                          {hotel.star_rating && hotel.star_rating > 0 && (
-                            <div style={{
-                              color: "var(--gold)",
-                              fontSize: 11,
-                              letterSpacing: "1.5px",
-                              lineHeight: 1,
-                            }}>
-                              {"★".repeat(hotel.star_rating)}
-                            </div>
-                          )}
-                          {/* Hotel name — Playfair, ~18px */}
-                          <h3 style={{
-                            fontFamily: "var(--font-display)",
-                            fontStyle: "italic",
-                            fontSize: 18,
-                            fontWeight: 500,
-                            color: "var(--ink)",
-                            margin: 0,
-                            lineHeight: 1.25,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}>
-                            {displayName}
-                          </h3>
-                          {/* Location chip */}
-                          <div style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 5,
-                            fontSize: 12,
-                            color: "var(--ink-light)",
-                            letterSpacing: "0.02em",
-                          }}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                              <circle cx="12" cy="10" r="3" />
-                            </svg>
-                            {displayCity}{displayCountry ? `, ${displayCountry}` : ""}
-                          </div>
-                          {/* Amenity / proof badges (rating, reviews, "All inclusive") */}
-                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
-                            {/* Hide the numeric rating chip when it's just an
-                                echo of star_rating (TripJack has no review
-                                ratings; backend mirrors star into rating_average,
-                                producing redundant "5.0" pills next to ★★★★★).
-                                Only show this chip if the score is genuinely
-                                review-derived AND on the 0–10 scale. */}
-                            {hotel.rating_average != null
-                              && hotel.rating_average > 0
-                              && hotel.rating_average !== hotel.star_rating
-                              && hotel.rating_average > 5 && (
-                              <span style={{
-                                fontSize: 10,
-                                padding: "3px 8px",
-                                background: hotel.rating_average >= 8.5 ? "var(--gold-pale, rgba(201,168,76,0.15))" : "var(--cream)",
-                                color: hotel.rating_average >= 8.5 ? "var(--gold)" : "var(--ink-mid)",
-                                border: "1px solid var(--cream-border)",
-                                fontWeight: 600,
-                                borderRadius: 2,
-                                letterSpacing: "0.02em",
-                              }}>
-                                {hotel.rating_average.toFixed(1)}
-                                {hotel.number_of_reviews ? ` · ${hotel.number_of_reviews.toLocaleString()} reviews` : ""}
-                              </span>
-                            )}
-                            <span style={{
-                              fontSize: 10,
-                              padding: "3px 8px",
-                              background: "var(--cream)",
-                              color: "var(--success)",
-                              border: "1px solid var(--cream-border)",
-                              borderRadius: 2,
-                              letterSpacing: "0.02em",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 4,
-                            }}>
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                                <polyline points="22 4 12 14.01 9 11.01" />
-                              </svg>
-                              Free cancellation
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Right column — price + CTA */}
-                        <div style={{
-                          padding: "16px 20px",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-end",
-                          justifyContent: "center",
-                          gap: 4,
-                          borderLeft: "1px solid var(--cream-border)",
-                          background: "linear-gradient(180deg, transparent 0%, rgba(201,168,76,0.04) 100%)",
-                        }}>
-                          {hotel.rates_from != null && hotel.rates_from > 0 ? (
-                            <>
-                              <span style={{
-                                fontSize: 10,
-                                color: "var(--ink-light)",
-                                letterSpacing: "0.06em",
-                                textTransform: "uppercase",
-                                fontFamily: "var(--font-body)",
-                              }}>
-                                from
-                              </span>
-                              {marketRate && marketRate > hotel.rates_from && (
-                                <span style={{
-                                  fontSize: 12,
-                                  color: "var(--ink-light)",
-                                  textDecoration: "line-through",
-                                  lineHeight: 1,
-                                }}>
-                                  {formatPrice(marketRate)}
-                                </span>
-                              )}
-                              <span style={{
-                                fontFamily: "var(--font-display)",
-                                fontSize: 24,
-                                fontWeight: 500,
-                                color: "var(--ink)",
-                                lineHeight: 1.1,
-                              }}>
-                                {formatPrice(Math.round(hotel.rates_from))}
-                              </span>
-                              <span style={{
-                                fontSize: 10,
-                                color: "var(--ink-light)",
-                                letterSpacing: "0.04em",
-                              }}>
-                                per night · taxes incl.
-                              </span>
-                            </>
-                          ) : batchRatesLoading ? (
-                            <span style={{
-                              fontSize: 11,
-                              color: "var(--ink-light)",
-                              letterSpacing: "0.06em",
-                              textTransform: "uppercase",
-                              fontWeight: 500,
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 6,
-                            }}>
-                              <span
-                                aria-hidden
-                                style={{
-                                  width: 10,
-                                  height: 10,
-                                  borderRadius: "50%",
-                                  border: "1.5px solid var(--cream-border)",
-                                  borderTopColor: "var(--gold)",
-                                  animation: "voyagr-spin 0.8s linear infinite",
-                                }}
-                              />
-                              Calculating&hellip;
-                            </span>
-                          ) : (
-                            <span style={{
-                              fontSize: 11,
-                              color: "var(--gold)",
-                              letterSpacing: "0.08em",
-                              textTransform: "uppercase",
-                              fontWeight: 500,
-                            }}>
-                              Call for rates
-                            </span>
-                          )}
-                          <span style={{
-                            marginTop: 8,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 4,
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: "var(--gold)",
-                            fontFamily: "var(--font-body)",
-                            letterSpacing: "0.04em",
-                            whiteSpace: "nowrap",
-                          }}>
-                            View rates &rarr;
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              totalCount={totalCount}
-              perPage={perPage}
-              onChange={handlePageChange}
-            />
-          </motion.div>
+        {/* ── Hotel results — paginated cards + live batch-rates (HotelGrid) ── */}
+        {hasSearched && (
+          <HotelGrid
+            query={query.trim()}
+            page={page}
+            perPage={perPage}
+            onPageChange={handlePageChange}
+            regionFilter={regionFilter}
+            cityToContinentMap={cityToContinentMap}
+            heading={<div className="type-eyebrow">Hotels Found</div>}
+            onResults={handleGridResults}
+            onSearch={handleGridSearch}
+          />
         )}
 
         {/* ── Curated favourites in {city} — small horizontal scroller below results ── */}
-        {!searching && hasSearched && filteredHotels.length > 0 && regionFilteredCities.length > 0 && (
+        {hasSearched && totalResults > 0 && regionFilteredCities.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1378,7 +707,7 @@ export default function SearchPage() {
           </motion.div>
         )}
 
-        {!searching && hasSearched && filteredHotels.length === 0 && regionFilteredCities.length === 0 && (
+        {hasSearched && totalResults === 0 && regionFilteredCities.length === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
