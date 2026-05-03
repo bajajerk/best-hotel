@@ -40,6 +40,7 @@ import { useAuth } from "@/context/AuthContext";
 import { fetchHotelRates, type RatePlan, type RatesResponse } from "@/lib/api";
 import { conciergeWhatsappLink } from "@/lib/concierge";
 import { TRUST_BAR_ITEMS, TRUST_BAR_ITEMS_MOBILE } from "@/constants/trust";
+import { sanitizeOtaProse } from "@/lib/sanitizeOtaProse";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -98,6 +99,12 @@ interface HotelDetail {
   rating_location?: number | null;
   photo_categories?: Partial<Record<GalleryCategory, string[]>> | null;
   nearby?: NearbyLandmark[] | null;
+  /* Editorial overlay fields — populated by CMS team, nullable */
+  editorial_headline?: string | null;
+  editorial_intro?: string | null;
+  /* Raw OTA prose fields used for fallback intro derivation */
+  location?: string | null;
+  amenities?: string | null;
 }
 
 /* ────────────────────────── Helpers ────────────────────────── */
@@ -1230,6 +1237,20 @@ export default function HotelPage() {
   const overviewLeadRest = sentences.slice(1, 3).join(" ");
   const overviewExtra = sentences.slice(3).join(" ");
 
+  /* Editorial header block */
+  const editorialHeadline = hotel.editorial_headline || hotel.hotel_name;
+  const firstSentenceOf = (text: string | null | undefined): string | null => {
+    if (!text) return null;
+    const plain = text.replace(/<[^>]*>/g, "").trim();
+    const match = plain.match(/[^.!?]+[.!?]+/);
+    return match ? match[0].trim() : plain;
+  };
+  const locationSentence = firstSentenceOf(hotel.location);
+  const amenitiesSentence = firstSentenceOf(hotel.amenities);
+  const fallbackParts = [locationSentence, amenitiesSentence].filter(Boolean).join(" ");
+  const editorialIntroFallback = fallbackParts ? sanitizeOtaProse(fallbackParts) : null;
+  const editorialIntro = hotel.editorial_intro ?? editorialIntroFallback;
+
   /* Bento gallery slots (first 5) */
   const bentoPhotos = photos.slice(0, 5);
 
@@ -1622,6 +1643,33 @@ export default function HotelPage() {
               >
                 A property our concierge <em>keeps revisiting</em>
               </h2>
+              <p
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: 28,
+                  lineHeight: "32px",
+                  fontStyle: "italic",
+                  fontWeight: 400,
+                  color: "#f5f1e8",
+                  margin: 0,
+                  marginBottom: editorialIntro ? 16 : 0,
+                }}
+              >
+                {editorialHeadline}
+              </p>
+              {editorialIntro && (
+                <p
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: 16,
+                    lineHeight: "26px",
+                    color: "rgba(255,255,255,0.75)",
+                    margin: 0,
+                  }}
+                >
+                  {editorialIntro}
+                </p>
+              )}
             </div>
 
             {overviewPlain ? (
