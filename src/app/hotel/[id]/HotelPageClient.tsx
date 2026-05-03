@@ -41,6 +41,7 @@ import { fetchHotelRates, type RatePlan, type RatesResponse } from "@/lib/api";
 import { conciergeWhatsappLink } from "@/lib/concierge";
 import { TRUST_BAR_ITEMS, TRUST_BAR_ITEMS_MOBILE } from "@/constants/trust";
 import { sanitizeOtaProse } from "@/lib/sanitizeOtaProse";
+import { groupRatePlans, type RoomCategory } from "@/lib/roomCategories";
 import HotelFactGrid from "@/components/HotelFactGrid";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
@@ -393,6 +394,165 @@ function RateFilterBar({
           </select>
         </FilterPillShell>
       </div>
+    </div>
+  );
+}
+
+/* ────────────────────────── Room Category Card ────────────────────────── */
+
+function RoomCategoryCard({
+  category,
+  photoUrl,
+  isExpanded,
+  onToggle,
+  planCount,
+  variantsPreview,
+  children,
+}: {
+  category: RoomCategory;
+  photoUrl: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  planCount: number;
+  variantsPreview: string[];
+  nights: number;
+  children?: React.ReactNode;
+}) {
+  const cheapest = formatPrice(category.cheapestPrice, category.currency);
+  const cheapestRefundable = category.cheapestRefundablePrice
+    ? formatPrice(category.cheapestRefundablePrice, category.currency)
+    : null;
+  return (
+    <div
+      className="luxe-card"
+      style={{
+        borderRadius: 14,
+        overflow: "hidden",
+        border: isExpanded ? "1px solid #C9A961" : undefined,
+        transition: "border-color 200ms ease",
+      }}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isExpanded}
+        style={{
+          all: "unset",
+          cursor: "pointer",
+          display: "grid",
+          gridTemplateColumns: "minmax(120px, 160px) 1fr",
+          gap: 18,
+          width: "100%",
+          padding: 14,
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            aspectRatio: "4 / 3",
+            borderRadius: 8,
+            overflow: "hidden",
+            backgroundColor: "rgba(255,255,255,0.05)",
+            backgroundImage: `url(${photoUrl})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
+          <p
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 10,
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              color: "#C9A961",
+              margin: 0,
+            }}
+          >
+            {category.name}
+          </p>
+          {variantsPreview.length > 0 && (
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 13,
+                lineHeight: "20px",
+                color: "var(--luxe-soft-white-70)",
+                margin: 0,
+              }}
+            >
+              {variantsPreview.join(" · ")}
+              {category.variants.length > variantsPreview.length
+                ? ` · +${category.variants.length - variantsPreview.length} more`
+                : ""}
+            </p>
+          )}
+          <p
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 10,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "var(--luxe-soft-white-50)",
+              margin: 0,
+            }}
+          >
+            {planCount} rate plan{planCount !== 1 ? "s" : ""}
+            {cheapestRefundable && cheapestRefundable !== cheapest
+              ? " · refundable available"
+              : ""}
+          </p>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              marginTop: "auto",
+              paddingTop: 6,
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  letterSpacing: "0.16em",
+                  textTransform: "uppercase",
+                  color: "var(--luxe-soft-white-50)",
+                  marginRight: 8,
+                }}
+              >
+                From
+              </span>
+              <span
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontStyle: "italic",
+                  fontSize: 22,
+                  color: "var(--luxe-soft-white)",
+                }}
+              >
+                {cheapest}
+              </span>
+            </div>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: "#C9A961",
+              }}
+            >
+              {isExpanded ? "Hide rates ↑" : "View rates ↓"}
+            </span>
+          </div>
+        </div>
+      </button>
+      {children && <div style={{ padding: "0 14px 14px" }}>{children}</div>}
     </div>
   );
 }
@@ -762,6 +922,9 @@ export default function HotelPage() {
   const [highlightedOptionId, setHighlightedOptionId] = useState<string | null>(null);
   const rateCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  /* Which room category is currently expanded (null = all collapsed) */
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+
   /* Filter bar state */
   const [filterFreeCancellation, setFilterFreeCancellation] = useState(false);
   const [filterMealPlan, setFilterMealPlan] = useState<MealPlanFilter>("all");
@@ -990,6 +1153,11 @@ export default function HotelPage() {
     if (!rates || !selectedOptionId) return null;
     return rates.rates.find((p) => p.option_id === selectedOptionId) || null;
   }, [rates, selectedOptionId]);
+
+  const categories = useMemo<RoomCategory[]>(
+    () => groupRatePlans(filteredRates),
+    [filteredRates]
+  );
 
   const editorialIntro = useMemo<string | null>(() => {
     if (!hotel) return null;
@@ -2143,27 +2311,54 @@ export default function HotelPage() {
                           marginBottom: 14,
                         }}
                       >
-                        {filteredRates.length} option{filteredRates.length !== 1 ? "s" : ""}
+                        {categories.length} room type{categories.length !== 1 ? "s" : ""}
+                        {filteredRates.length > categories.length ? ` · ${filteredRates.length} rate plans` : ""}
                         {rates.nights > 0 ? ` · ${rates.nights} night${rates.nights > 1 ? "s" : ""}` : ""}
                       </p>
                       <div className="flex flex-col gap-3">
-                        {filteredRates.map((plan) => (
-                          <RateCard
-                            key={plan.option_id}
-                            plan={plan}
-                            nights={rates.nights || nights}
-                            mrpRate={mrpRate}
-                            mrpCurrency={mrpCurrency}
-                            savingsPct={savingsPct}
-                            isSelected={selectedOptionId === plan.option_id}
-                            isHighlighted={highlightedOptionId === plan.option_id}
-                            cardRef={(el) => { rateCardRefs.current[plan.option_id] = el; }}
-                            onSelect={() =>
-                              setSelectedOptionId(selectedOptionId === plan.option_id ? null : plan.option_id)
-                            }
-                            onProceed={() => handlePlanSelectCTA(plan)}
-                          />
-                        ))}
+                        {categories.map((category, idx) => {
+                          const isExpanded = expandedCategory === category.name;
+                          const photo = [hotel.photo1, hotel.photo2, hotel.photo3, hotel.photo4]
+                            .filter((p): p is string => Boolean(p))[idx % 4] || hotel.photo1 || FALLBACK_IMG;
+                          const planCount = category.plans.length;
+                          const variantsPreview = category.variants.slice(0, 3);
+                          return (
+                            <RoomCategoryCard
+                              key={category.name}
+                              category={category}
+                              photoUrl={safePhotoUrl(photo)}
+                              isExpanded={isExpanded}
+                              onToggle={() =>
+                                setExpandedCategory(isExpanded ? null : category.name)
+                              }
+                              planCount={planCount}
+                              variantsPreview={variantsPreview}
+                              nights={rates.nights || nights}
+                            >
+                              {isExpanded && (
+                                <div className="flex flex-col gap-3" style={{ marginTop: 16 }}>
+                                  {category.plans.map((plan) => (
+                                    <RateCard
+                                      key={plan.option_id}
+                                      plan={plan}
+                                      nights={rates.nights || nights}
+                                      mrpRate={mrpRate}
+                                      mrpCurrency={mrpCurrency}
+                                      savingsPct={savingsPct}
+                                      isSelected={selectedOptionId === plan.option_id}
+                                      isHighlighted={highlightedOptionId === plan.option_id}
+                                      cardRef={(el) => { rateCardRefs.current[plan.option_id] = el; }}
+                                      onSelect={() =>
+                                        setSelectedOptionId(selectedOptionId === plan.option_id ? null : plan.option_id)
+                                      }
+                                      onProceed={() => handlePlanSelectCTA(plan)}
+                                    />
+                                  ))}
+                                </div>
+                              )}
+                            </RoomCategoryCard>
+                          );
+                        })}
                       </div>
                     </>
                   )}
