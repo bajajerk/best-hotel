@@ -130,6 +130,12 @@ function formatInr(amount: number): string {
   return `₹${Math.round(amount).toLocaleString("en-IN")}`;
 }
 
+function firstSentence(text: string | null | undefined): string {
+  if (!text) return "";
+  const idx = text.search(/[.!?]/);
+  return idx === -1 ? text.trim() : text.slice(0, idx + 1).trim();
+}
+
 function formatPrice(amount: number, currency: string): string {
   const code = (currency || "INR").toUpperCase();
   if (code === "INR") return formatInr(amount);
@@ -970,6 +976,15 @@ export default function HotelPage() {
     return rates.rates.find((p) => p.option_id === selectedOptionId) || null;
   }, [rates, selectedOptionId]);
 
+  const editorialIntro = useMemo<string | null>(() => {
+    if (!hotel) return null;
+    if (hotel.editorial_intro) return hotel.editorial_intro;
+    const loc = firstSentence(hotel.location);
+    const amen = firstSentence(hotel.amenities);
+    const combined = [loc, amen].filter(Boolean).join(" ");
+    return combined ? sanitizeOtaProse(combined) : null;
+  }, [hotel]);
+
   const mrpRate = rates?.mrp?.agoda_rate ?? null;
   const mrpCurrency = rates?.mrp?.currency ?? null;
   const savingsPct = rates?.savings_pct ?? null;
@@ -1617,14 +1632,31 @@ export default function HotelPage() {
                 The Stay
               </div>
               <h2
-                className="luxe-display"
                 style={{
-                  fontSize: "clamp(32px, 4vw, 52px)",
-                  marginBottom: 0,
+                  fontFamily: "var(--font-display)",
+                  fontStyle: "italic",
+                  fontWeight: "normal",
+                  fontSize: 26,
+                  lineHeight: "30px",
+                  color: "#f5f1e8",
+                  margin: "0 0 16px",
                 }}
               >
-                A property our concierge <em>keeps revisiting</em>
+                {hotel.editorial_headline ?? hotel.hotel_name}
               </h2>
+              {editorialIntro && (
+                <p
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: 16,
+                    lineHeight: "26px",
+                    color: "rgba(255,255,255,0.78)",
+                    margin: "0 0 32px",
+                  }}
+                >
+                  {editorialIntro}
+                </p>
+              )}
             </div>
 
             <HotelFactGrid
