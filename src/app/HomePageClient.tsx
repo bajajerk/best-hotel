@@ -881,67 +881,92 @@ export default function Home({
         <div className="luxe-container vp-grid" style={{ maxWidth: 1200 }}>
           {/* Left 60%: pull-quote */}
           <div className="vp-quote-col">
-            <div
-              aria-hidden="true"
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: 60,
-                lineHeight: 0.7,
-                color: "#C9A961",
-                opacity: 0.4,
-                marginBottom: 8,
-                userSelect: "none",
-              }}
-            >
-              &ldquo;
+            <div style={{ position: "relative" }}>
+              <span
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  top: -28,
+                  left: -8,
+                  fontFamily: "Georgia, 'Cormorant Garamond', serif",
+                  fontSize: 96,
+                  lineHeight: 1,
+                  color: "#C9A961",
+                  opacity: 0.35,
+                  userSelect: "none",
+                  pointerEvents: "none",
+                }}
+              >
+                &ldquo;
+              </span>
+              <blockquote
+                className="vp-quote-text"
+                style={{
+                  margin: 0,
+                  fontFamily: "var(--font-display)",
+                  fontStyle: "italic",
+                  lineHeight: 1.35,
+                  color: "#f5f1e8",
+                  fontWeight: 400,
+                  maxWidth: 520,
+                }}
+              >
+                One WhatsApp message. Upgrades, reservations, even a birthday
+                surprise — all arranged.
+              </blockquote>
             </div>
-            <blockquote
-              className="vp-quote-text"
-              style={{
-                margin: 0,
-                fontFamily: "var(--font-display)",
-                fontStyle: "italic",
-                lineHeight: 1.3,
-                color: "#f7f5f2",
-                fontWeight: 400,
-                maxWidth: 520,
-              }}
-            >
-              One WhatsApp message. Upgrades, reservations, even a birthday
-              surprise &mdash; all arranged.
-            </blockquote>
             <p
               style={{
                 marginTop: 20,
-                fontSize: 12,
-                letterSpacing: "0.15em",
+                fontSize: 11,
+                letterSpacing: "0.18em",
                 textTransform: "uppercase",
-                color: "rgba(255,255,255,0.6)",
+                color: "rgba(255,255,255,0.55)",
                 fontStyle: "normal",
+                fontFamily: "Inter, system-ui, sans-serif",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
               }}
             >
-              &mdash;&nbsp;Rahul Sharma&nbsp;&nbsp;&middot;&nbsp;&nbsp;Delhi
+              <span
+                style={{
+                  display: "inline-block",
+                  width: 28,
+                  height: 1,
+                  background: "#C9A961",
+                  flexShrink: 0,
+                }}
+              />
+              Rahul Sharma&nbsp;&nbsp;&middot;&nbsp;&nbsp;Delhi
             </p>
           </div>
 
           {/* Right 40%: three stacked stats */}
-          <div className="vp-stats-col">
+          <div className="vp-stats-col" style={{ display: "flex", flexDirection: "column", gap: 28 }}>
             {[
-              { num: "1,500+", label: "Partner hotels" },
-              { num: "50+", label: "Cities" },
-              { num: "24/7", label: "WhatsApp concierge" },
+              { base: "1,500", accent: "+", label: "Partner hotels" },
+              { base: "50", accent: "+", label: "Cities" },
+              { base: "24", accent: "/7", label: "WhatsApp concierge" },
             ].map((s, i) => (
-              <div key={s.label} style={{ marginTop: i === 0 ? 0 : 32 }}>
+              <div
+                key={s.label}
+                style={{
+                  paddingBottom: i < 2 ? 24 : 0,
+                  borderBottom: i < 2 ? "1px solid rgba(201,169,97,0.18)" : "none",
+                }}
+              >
                 <div
                   className="vp-stat-number"
                   style={{
                     fontFamily: "var(--font-display)",
                     fontWeight: 400,
                     lineHeight: 1,
-                    color: "#f7f5f2",
+                    color: "#f5f1e8",
                   }}
                 >
-                  {s.num}
+                  {s.base}
+                  <span style={{ color: "#C9A961" }}>{s.accent}</span>
                 </div>
                 <div
                   style={{
@@ -957,6 +982,7 @@ export default function Home({
                     letterSpacing: "0.18em",
                     textTransform: "uppercase",
                     color: "rgba(255,255,255,0.55)",
+                    fontFamily: "Inter, system-ui, sans-serif",
                   }}
                 >
                   {s.label}
