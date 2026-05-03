@@ -607,33 +607,38 @@ function RateCardSkeleton() {
 /* ────────────────────────── Trust Strip (champagne) ────────────────────────── */
 
 function TrustStrip() {
-  const items = [
-    "Free cancellation",
-    "No payment now",
-    "Concierge confirmation in 15 min",
-    "Member rates · live pricing",
-  ];
+  const sharedStyle: React.CSSProperties = {
+    gap: "10px 22px",
+    fontFamily: "var(--font-body)",
+    fontSize: 12.5,
+    color: "var(--luxe-champagne)",
+    letterSpacing: "0.04em",
+  };
+
+  function renderItems(items: string[]) {
+    return items.map((item, i) => (
+      <span key={item} style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+        <span aria-hidden style={{ fontSize: 10, opacity: 0.85 }}>★</span>
+        <span style={{ color: "var(--luxe-soft-white-70)" }}>{item}</span>
+        {i < items.length - 1 && (
+          <span aria-hidden style={{ color: "var(--luxe-hairline-strong)", marginLeft: 22, opacity: 0.6 }}>·</span>
+        )}
+      </span>
+    ));
+  }
+
+  const mobileItems = ["Free cancellation", "Member rates", "Instant confirmation"];
+  const fullItems = ["Free cancellation", "Member rates", "No hidden fees", "Instant confirmation", "Secure checkout"];
+
   return (
-    <div
-      className="flex flex-wrap items-center justify-center"
-      style={{
-        gap: "10px 22px",
-        fontFamily: "var(--font-body)",
-        fontSize: 12.5,
-        color: "var(--luxe-champagne)",
-        letterSpacing: "0.04em",
-      }}
-    >
-      {items.map((item, i) => (
-        <span key={item} style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-          <span aria-hidden style={{ fontSize: 10, opacity: 0.85 }}>★</span>
-          <span style={{ color: "var(--luxe-soft-white-70)" }}>{item}</span>
-          {i < items.length - 1 && (
-            <span aria-hidden style={{ color: "var(--luxe-hairline-strong)", marginLeft: 22, opacity: 0.6 }}>·</span>
-          )}
-        </span>
-      ))}
-    </div>
+    <>
+      <div className="flex flex-wrap items-center justify-center sm:hidden" style={sharedStyle}>
+        {renderItems(mobileItems)}
+      </div>
+      <div className="hidden sm:flex flex-wrap items-center justify-center" style={sharedStyle}>
+        {renderItems(fullItems)}
+      </div>
+    </>
   );
 }
 

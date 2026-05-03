@@ -393,7 +393,7 @@ export default function ReviewBookingPage() {
           lineHeight: 1.6,
         }}
       >
-        No payment now · Concierge confirms within 15 min · Free cancellation if applicable
+        Free cancellation · Member rates · No hidden fees · Instant confirmation · Secure checkout
       </div>
 
       {/* Sticky bottom bar */}
