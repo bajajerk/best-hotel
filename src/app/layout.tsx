@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import "@/styles/booking-tokens.css";
 import Providers from "@/components/Providers";
 import CompareBar from "@/components/CompareBar";
 import SiteSignInStickyBar from "@/components/SiteSignInStickyBar";
