@@ -88,7 +88,7 @@ function formatDateShort(iso: string): string {
    stay. Kept in-component because they describe the brand promise rather
    than per-rate data. */
 const DEFAULT_BENEFITS = [
-  "Breakfast for two",
+  "Daily breakfast for two",
   "$100 hotel credit",
   "Room upgrade subject to availability",
   "4 PM late checkout",
