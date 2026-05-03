@@ -3507,19 +3507,6 @@ body:has(.precision-theme) {
   color: var(--pl-ivory);
 }
 
-/* "MEMBER BENEFITS" / section-header label helper that guarantees the
-   mono 10px / 0.5em spec regardless of which parent theme is active. */
-.pl-section-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.5em;
-  text-transform: uppercase;
-  color: var(--pl-gold);
-  line-height: 1.2;
-  display: inline-block;
-  margin-bottom: 14px;
-}
-
 /* ── Precision-theme edge-case section overrides ──
    Several sections hard-code legacy dark bg via var(--ink) or a
    literal navy hex. Those get forced back to ink-black + ivory text

@@ -88,14 +88,6 @@ function safeImg(u: string | null | undefined): string {
 const CITY_FALLBACK_GRADIENT =
   "linear-gradient(135deg, rgba(200,170,118,0.32) 0%, rgba(20,18,15,0.92) 100%)";
 
-const MEMBER_BENEFITS = [
-  "3rd night complimentary",
-  "$100 USD hotel credit",
-  "Daily breakfast for two",
-  "4pm late checkout",
-  "Room upgrade",
-];
-
 // ---------------------------------------------------------------------------
 // Skeleton — Card shimmer (dark variant)
 // ---------------------------------------------------------------------------
@@ -1116,77 +1108,6 @@ export default function CityPage() {
           </div>
         </motion.section>
       )}
-
-      {/* ================================================================
-          5. MEMBER BENEFITS CHIP STRIP
-          ================================================================ */}
-      <motion.section
-        initial={{ opacity: 0, y: 8 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.5 }}
-        style={{
-          padding: "56px 0 48px",
-          borderBottom: "1px solid var(--luxe-hairline)",
-        }}
-      >
-        <div className="luxe-container">
-          <div className="luxe-tech" style={{ marginBottom: 12 }}>
-            Member Benefits
-          </div>
-          <h3
-            className="luxe-display"
-            style={{
-              fontSize: "clamp(22px, 2.4vw, 30px)",
-              marginBottom: 22,
-              maxWidth: 640,
-            }}
-          >
-            Quietly negotiated <em>perks</em>, on every stay
-          </h3>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 10,
-              marginBottom: 14,
-            }}
-          >
-            {MEMBER_BENEFITS.map((b) => (
-              <span
-                key={b}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "10px 16px",
-                  borderRadius: 999,
-                  background: "var(--luxe-champagne-soft)",
-                  border: "1px solid var(--luxe-champagne-line)",
-                  color: "var(--luxe-champagne)",
-                  fontSize: 12.5,
-                  fontWeight: 500,
-                  letterSpacing: "0.02em",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                <span aria-hidden style={{ fontSize: 11, opacity: 0.85 }}>★</span>
-                {b}
-              </span>
-            ))}
-          </div>
-          <p
-            style={{
-              fontSize: 12,
-              color: "var(--luxe-soft-white-50)",
-              fontFamily: "var(--font-body)",
-              letterSpacing: "0.04em",
-            }}
-          >
-            Across our preferred properties · admin-curated
-          </p>
-        </div>
-      </motion.section>
 
       {/* ================================================================
           6. ALL HOTELS — filter pills, results grid

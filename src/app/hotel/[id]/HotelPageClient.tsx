@@ -135,15 +135,6 @@ function formatDateLabel(iso: string): string {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-/* Member benefits — same vocabulary as HomePageClient + CityPageClient */
-const MEMBER_BENEFITS: { label: string; icon: string }[] = [
-  { label: "Preferred member rate", icon: "★" },
-  { label: "Daily breakfast for two", icon: "★" },
-  { label: "Room upgrade (subject to availability)", icon: "★" },
-  { label: "4pm late checkout", icon: "★" },
-  { label: "Concierge confirmation in 15 min", icon: "★" },
-];
-
 /* ────────────────────────── Filters ────────────────────────── */
 
 type MealPlanFilter = "all" | "room-only" | "breakfast" | "half-board" | "full-board";
@@ -1936,71 +1927,6 @@ export default function HotelPage() {
               ))}
             </div>
           )}
-        </div>
-      </section>
-
-      {/* ═══════════════════ 6. MEMBER BENEFITS CHIP STRIP ═══════════════════ */}
-      <section
-        style={{
-          padding: "48px 24px 56px",
-          borderTop: "1px solid var(--luxe-hairline)",
-        }}
-      >
-        <div className="luxe-container" style={{ padding: 0 }}>
-          <div className="luxe-tech" style={{ marginBottom: 12 }}>
-            Member Benefits
-          </div>
-          <h3
-            className="luxe-display"
-            style={{
-              fontSize: "clamp(22px, 2.4vw, 30px)",
-              marginBottom: 22,
-              maxWidth: 720,
-            }}
-          >
-            Quietly negotiated <em>perks</em>, on every stay
-          </h3>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 10,
-              marginBottom: 14,
-            }}
-          >
-            {MEMBER_BENEFITS.map((b) => (
-              <span
-                key={b.label}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "10px 16px",
-                  borderRadius: 999,
-                  background: "var(--luxe-champagne-soft)",
-                  border: "1px solid var(--luxe-champagne-line)",
-                  color: "var(--luxe-champagne)",
-                  fontSize: 12.5,
-                  fontWeight: 500,
-                  letterSpacing: "0.01em",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                <span aria-hidden style={{ fontSize: 11, opacity: 0.85 }}>{b.icon}</span>
-                {b.label}
-              </span>
-            ))}
-          </div>
-          <p
-            style={{
-              fontSize: 12,
-              color: "var(--luxe-soft-white-50)",
-              fontFamily: "var(--font-body)",
-              letterSpacing: "0.04em",
-            }}
-          >
-            Subject to availability · admin-curated for preferred properties
-          </p>
         </div>
       </section>
 
