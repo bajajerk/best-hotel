@@ -6120,3 +6120,22 @@ body:has(.precision-theme) {
   background: var(--luxe-card-bg, rgba(20, 18, 15, 0.4));
 }
 
+/* Preferred Rates — perks grid */
+.perks-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 768px) {
+  .perks-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .perks-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

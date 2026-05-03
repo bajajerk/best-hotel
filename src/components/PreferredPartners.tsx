@@ -214,18 +214,6 @@ export default function PreferredPartners() {
     >
       {/* Section header */}
       <div style={{ textAlign: "center", marginBottom: "40px" }}>
-        <p
-          style={{
-            fontSize: "11px",
-            fontWeight: 500,
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            color: "var(--gold)",
-            marginBottom: "12px",
-          }}
-        >
-          Our Network
-        </p>
         <h2
           className="type-display-3"
           style={{
@@ -238,17 +226,14 @@ export default function PreferredPartners() {
           Preferred Partners
         </h2>
         <p
-          className="type-body-lg"
           style={{
-            color: "var(--ink-light)",
-            maxWidth: "600px",
+            fontSize: "13px",
+            color: "rgba(255,255,255,0.5)",
             margin: "0 auto",
-            lineHeight: 1.7,
+            textAlign: "center",
           }}
         >
-          Alliances, brands &amp; iconic properties — our curated network of
-          partners where Voyagr Club members enjoy exclusive rates and elevated
-          experiences.
+          Our curated network.
         </p>
       </div>
 
