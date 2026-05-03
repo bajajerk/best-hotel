@@ -1,0 +1,90 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Booking Flow design tokens — CSS custom property layer.
+
+   Values mirror src/lib/design-tokens/booking-flow.ts. Token names use the
+   `--bf-*` prefix to avoid colliding with the legacy cream theme (`--cream`,
+   `--ink`) and the `.luxe` dark scope already in globals.css.
+
+   Default theme is dark (the booking-flow brand). Light theme is flag-gated
+   via `[data-bf-theme="light"]` and intended for v2 rollout.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root,
+[data-bf-theme="dark"] {
+  /* Background */
+  --bf-color-bg-primary:       #0a0a0a;
+  --bf-color-bg-surface:       #0d0d0d;
+  --bf-color-bg-surface-soft:  rgba(255, 255, 255, 0.025);
+  --bf-color-bg-overlay:       rgba(10, 10, 10, 0.95);
+
+  /* Text */
+  --bf-color-text-primary:     #f5f1e8;
+  --bf-color-text-muted:       rgba(255, 255, 255, 0.7);
+  --bf-color-text-soft:        rgba(255, 255, 255, 0.55);
+  --bf-color-text-faint:       rgba(255, 255, 255, 0.4);
+
+  /* Accent (champagne amber) */
+  --bf-color-accent:           #C9A961;
+  --bf-color-accent-soft:      rgba(201, 169, 97, 0.15);
+  --bf-color-accent-line:      rgba(201, 169, 97, 0.18);
+
+  /* Status */
+  --bf-color-success:          #8fc295;
+  --bf-color-warning:          #d4a373;
+  --bf-color-danger:           #c98686;
+
+  /* Border */
+  --bf-color-border-soft:      rgba(255, 255, 255, 0.06);
+  --bf-color-border-default:   rgba(255, 255, 255, 0.12);
+  --bf-color-border-emphasis:  rgba(255, 255, 255, 0.2);
+
+  /* Fonts */
+  --bf-font-serif: "Cormorant Garamond", Georgia, serif;
+  --bf-font-sans: -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+
+  /* Spacing */
+  --bf-space-1:  4px;
+  --bf-space-2:  8px;
+  --bf-space-3:  12px;
+  --bf-space-4:  14px;
+  --bf-space-5:  16px;
+  --bf-space-6:  20px;
+  --bf-space-7:  24px;
+  --bf-space-8:  32px;
+  --bf-space-10: 40px;
+  --bf-space-12: 48px;
+
+  /* Radius */
+  --bf-radius-sm:   6px;
+  --bf-radius-md:   10px;
+  --bf-radius-lg:   14px;
+  --bf-radius-xl:   18px;
+  --bf-radius-pill: 999px;
+}
+
+/* ── v2 light theme — flag-gated. Set data-bf-theme="light" on <html> or any
+      ancestor of a booking-flow surface to flip. Same token names, inverted
+      contrast. Not enabled by default. ── */
+[data-bf-theme="light"] {
+  --bf-color-bg-primary:       #fafaf7;
+  --bf-color-bg-surface:       #ffffff;
+  --bf-color-bg-surface-soft:  rgba(10, 10, 10, 0.025);
+  --bf-color-bg-overlay:       rgba(250, 250, 247, 0.95);
+
+  --bf-color-text-primary:     #1a1710;
+  --bf-color-text-muted:       rgba(26, 23, 16, 0.72);
+  --bf-color-text-soft:        rgba(26, 23, 16, 0.55);
+  --bf-color-text-faint:       rgba(26, 23, 16, 0.4);
+
+  --bf-color-accent:           #9d7f3d;
+  --bf-color-accent-soft:      rgba(157, 127, 61, 0.12);
+  --bf-color-accent-line:      rgba(157, 127, 61, 0.22);
+
+  --bf-color-success:          #3f7c54;
+  --bf-color-warning:          #a26a2c;
+  --bf-color-danger:           #9c4a4a;
+
+  --bf-color-border-soft:      rgba(10, 10, 10, 0.06);
+  --bf-color-border-default:   rgba(10, 10, 10, 0.12);
+  --bf-color-border-emphasis:  rgba(10, 10, 10, 0.2);
+}
