@@ -4123,6 +4123,15 @@ body:has(.precision-theme) {
   --luxe-hairline-strong: rgba(255, 255, 255, 0.12);
   --luxe-glass-bg: rgba(255, 255, 255, 0.03);
   --luxe-glass-border: rgba(255, 255, 255, 0.06);
+
+  /* Surface + state tokens added for the luxe auth/drawer redesign.
+     Reference these directly — do NOT route auth surfaces through the
+     legacy --white / --cream remap, which was the source of the
+     "translucent ghost card" bug (see /login + MobileNav rewrite). */
+  --luxe-input-bg: #100e0c;                          /* solid input fill, slightly darker than --luxe-black-2 */
+  --luxe-error: #d66c5c;                             /* error text + focused-error border */
+  --luxe-error-soft: rgba(214, 108, 92, 0.12);       /* error pill background */
+  --luxe-scrim: rgba(8, 7, 6, 0.72);                 /* drawer/modal backdrop — replaces the too-thin rgba(0,0,0,0.4) */
 }
 
 /* Global selection accent */
@@ -6144,6 +6153,279 @@ body:has(.precision-theme) {
   .hotel-fact-grid {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+}
+
+
+/* =============================================================================
+   /login + MobileNav drawer — luxe redesign
+   These selectors carry the hover / focus / responsive behavior that inline
+   styles can't express. Tokens come from :root (--luxe-*); do NOT pull these
+   surfaces back through the legacy --cream / --white remap (that was the v1
+   "ghost card" bug). See the design spec in commit history for rationale.
+   ========================================================================== */
+
+/* ── /login page ── */
+.luxe-login-page input:focus,
+.luxe-login-page input:focus-visible {
+  outline: none;
+}
+.luxe-login-page :focus-visible {
+  outline: 2px solid var(--luxe-champagne);
+  outline-offset: 2px;
+}
+
+/* Phone-row + OTP-row focus state — promote the wrapping row, not the input */
+.luxe-login-page input[type="tel"]:focus ~ *,
+.luxe-login-page input[type="tel"]:focus,
+.luxe-login-page input[inputmode="numeric"]:focus,
+.luxe-login-page input[inputmode="numeric"]:focus ~ * {
+  /* No-op — actual styling lives on the parent below via :focus-within. */
+}
+.luxe-login-page > div > div > div > div:has(input:focus-within),
+.luxe-login-page form > div > div:has(input:focus) {
+  /* fallback: do nothing if :has not supported; primary path below */
+}
+
+.luxe-login-page form input:focus + *,
+.luxe-login-page form input:focus,
+.luxe-login-page form > div > div:focus-within {
+  /* placeholder for potential future row animations */
+}
+
+/* Promote the field row when its child input is focused — the design calls
+   for the row's border to flip champagne and an outer ring to fade in. */
+.luxe-login-page form > div > div:has(input:focus) {
+  border-color: var(--luxe-champagne) !important;
+  box-shadow: 0 0 0 3px rgba(200, 170, 118, 0.18) !important;
+}
+
+/* Hover state on the primary CTA — champagne brightness lift */
+.luxe-login-page button[id="send-otp-btn"]:hover:not(:disabled),
+.luxe-login-page form button:not([id="send-otp-btn"]):not(:disabled):hover {
+  background: var(--luxe-champagne) !important;
+  filter: brightness(1.06);
+}
+.luxe-login-page form button:not(:disabled):active {
+  transform: scale(0.99);
+  filter: brightness(0.96);
+}
+
+/* Google button hover */
+.luxe-login-page button[type="button"]:not([id]):not(:disabled):hover {
+  /* not specific enough — override via direct hover below */
+}
+
+/* Mobile (≤480px) — tighten card + hide the brand mark above so the card
+   becomes the page on small viewports. */
+@media (max-width: 480px) {
+  .luxe-login-page {
+    padding: 24px 16px !important;
+  }
+  .luxe-login-mark {
+    display: none !important;
+  }
+  .luxe-login-mono {
+    font-size: 8px !important;
+    margin-top: 24px !important;
+  }
+}
+
+/* Very short viewports (landscape phone) */
+@media (max-height: 640px) {
+  .luxe-login-page {
+    justify-content: flex-start !important;
+    padding-top: 24px !important;
+  }
+  .luxe-login-mark,
+  .luxe-login-mono {
+    display: none !important;
+  }
+}
+
+/* ── MobileNav drawer ── */
+.luxe-drawer-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 24px;
+  min-height: 56px;
+  border-top: 1px solid var(--luxe-hairline);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--luxe-soft-white);
+  background: transparent;
+  border-left: 2px solid transparent;
+  border-right: none;
+  border-bottom: none;
+  transition: background 200ms ease-out, color 180ms ease-out, border-left-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  width: 100%;
+  text-align: left;
+}
+.luxe-drawer-row:first-child {
+  border-top: none;
+}
+.luxe-drawer-row:hover {
+  background: var(--luxe-black-3);
+}
+.luxe-drawer-row.is-active {
+  background: var(--luxe-champagne-soft);
+  border-left-color: var(--luxe-champagne);
+  padding-left: 22px; /* compensate so the label doesn't shift on activation */
+}
+.luxe-drawer-row.is-active .luxe-drawer-label {
+  color: var(--luxe-champagne);
+}
+.luxe-drawer-row.is-active .luxe-drawer-icon {
+  color: var(--luxe-champagne);
+}
+.luxe-drawer-row:focus-visible {
+  outline: 2px solid var(--luxe-champagne);
+  outline-offset: -2px;
+}
+
+.luxe-drawer-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--luxe-soft-white-50);
+  flex-shrink: 0;
+  font-variation-settings: 'wght' 300;
+  transition: color 180ms ease-out;
+}
+.luxe-drawer-row:hover .luxe-drawer-icon {
+  color: var(--luxe-soft-white);
+}
+
+.luxe-drawer-label {
+  font-family: var(--font-display), 'Playfair Display', Georgia, serif;
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--luxe-soft-white);
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+}
+
+.luxe-drawer-sub {
+  font-family: var(--font-body), 'Manrope', system-ui, sans-serif;
+  font-size: 12px;
+  color: var(--luxe-soft-white-50);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.luxe-drawer-badge {
+  font-family: var(--font-mono), 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--luxe-champagne);
+  background: transparent;
+  border: 1px solid var(--luxe-champagne-line);
+  padding: 3px 7px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.luxe-drawer-section-label {
+  font-family: var(--font-mono), 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--luxe-soft-white-50);
+  padding: 24px 24px 8px;
+}
+
+.luxe-drawer-row--small {
+  min-height: 44px;
+  padding: 10px 24px;
+  border-top: none;
+}
+.luxe-drawer-row--small .luxe-drawer-label {
+  font-family: var(--font-body), 'Manrope', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--luxe-soft-white-70);
+  letter-spacing: 0;
+}
+.luxe-drawer-row--small .luxe-drawer-icon {
+  font-size: 18px;
+}
+.luxe-drawer-row--small:hover {
+  background: var(--luxe-black-3);
+}
+.luxe-drawer-row--small:hover .luxe-drawer-label {
+  color: var(--luxe-soft-white);
+}
+
+/* Reduced motion — kill page-level transitions; keep color crossfades short */
+@media (prefers-reduced-motion: reduce) {
+  .luxe-login-page *,
+  .mobile-menu *,
+  .luxe-drawer-row,
+  .luxe-drawer-icon {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 80ms !important;
+  }
+}
+
+
+/* MobileNav drawer — interactive class hover/focus states */
+.luxe-drawer-close:hover,
+.luxe-drawer-close:focus-visible {
+  border-color: var(--luxe-champagne);
+  color: var(--luxe-champagne);
+  outline: none;
+}
+
+.luxe-drawer-signin:hover,
+.luxe-drawer-signin:focus-visible,
+.luxe-drawer-concierge:hover,
+.luxe-drawer-concierge:focus-visible {
+  background: var(--luxe-champagne-soft);
+  outline: none;
+}
+
+.luxe-drawer-cta:hover,
+.luxe-drawer-cta:focus-visible {
+  filter: brightness(1.06);
+  outline: none;
+}
+.luxe-drawer-cta:active {
+  filter: brightness(0.96);
+  transform: scale(0.99);
+}
+
+.luxe-drawer-legal:hover,
+.luxe-drawer-legal:focus-visible {
+  color: var(--luxe-soft-white);
+  outline: none;
+}
+
+/* Tablet drawer width bump (≥600px) */
+@media (min-width: 600px) {
+  .mobile-menu {
+    width: 400px !important;
+    max-width: 400px !important;
+  }
+}
+@media (min-width: 1024px) {
+  .mobile-menu {
+    width: 420px !important;
+    max-width: 420px !important;
+  }
+}
+
+/* Tighten /login card on mobile per spec */
+@media (max-width: 480px) {
+  .luxe-login-page > div[style*="--luxe-black-2"] {
+    padding: 36px 24px !important;
   }
 }
 
