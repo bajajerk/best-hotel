@@ -30,6 +30,7 @@ import { trackCtaClicked } from "@/lib/analytics";
 import TopCitiesMobileCarousel from "@/components/TopCitiesMobileCarousel";
 import EditorsBentoCarousel, { type BentoHotel } from "@/components/EditorsBentoCarousel";
 import PreferredHotelsCarousel from "@/components/PreferredHotelsCarousel";
+import WhyMembersAccordion from "@/components/WhyMembersAccordion";
 
 export interface HomePageClientProps {
   initialCities: CuratedCity[];
@@ -464,112 +465,8 @@ export default function Home({
         </div>
       </motion.section>
 
-      {/* ── The Voyagr Club Difference — 5-up grid ───────────────────────── */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.6 }}
-        style={{ padding: "40px 0 28px" }}
-      >
-        <div className="luxe-container">
-          <div style={{ maxWidth: 720, marginBottom: 20 }}>
-            <div className="luxe-tech" style={{ marginBottom: 6 }}>
-              The Difference
-            </div>
-            <h2
-              className="luxe-display"
-              style={{ fontSize: "clamp(22px, 2.6vw, 36px)", marginBottom: 10 }}
-            >
-              Why members <em>stay</em> with us
-            </h2>
-            <p
-              style={{
-                fontSize: 14,
-                color: "var(--luxe-soft-white-70)",
-                lineHeight: 1.6,
-                margin: 0,
-              }}
-            >
-              Five small things that quietly add up to a different way of travelling.
-            </p>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(5, 1fr)",
-              gap: 16,
-            }}
-            className="why-members-grid"
-          >
-            {[
-              {
-                num: "01",
-                title: "Preferred Access",
-                desc: "Curated luxury hotels with member-only privileges.",
-              },
-              {
-                num: "02",
-                title: "Human Concierge",
-                desc: "Real concierge on WhatsApp, 24/7.",
-              },
-              {
-                num: "03",
-                title: "Handpicked Perks",
-                desc: "Upgrades, spa credits, breakfast, late checkout — on every stay.",
-              },
-              {
-                num: "04",
-                title: "Verified Properties",
-                desc: "Personally vetted for service, cleanliness, and guest experience.",
-              },
-              {
-                num: "05",
-                title: "Flexible Support",
-                desc: "Changes, special requests, anything — handled.",
-              },
-            ].map((d) => (
-              <div key={d.num} className="luxe-card">
-                <div
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: 28,
-                    color: "var(--luxe-champagne)",
-                    opacity: 0.55,
-                    lineHeight: 1,
-                    marginBottom: 14,
-                  }}
-                >
-                  {d.num}
-                </div>
-                <div
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: 19,
-                    fontWeight: 500,
-                    color: "var(--luxe-soft-white)",
-                    lineHeight: 1.25,
-                    letterSpacing: "-0.01em",
-                    marginBottom: 10,
-                  }}
-                >
-                  {d.title}
-                </div>
-                <div
-                  style={{
-                    fontSize: 13.5,
-                    color: "var(--luxe-soft-white-70)",
-                    lineHeight: 1.65,
-                  }}
-                >
-                  {d.desc}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
+      {/* ── The Difference — mobile-first accordion (Voyagr Club spec) ───── */}
+      <WhyMembersAccordion />
 
       {/* ── Preferred Hotels — admin-curated stays with member benefits ─── */}
       {/* Sourced from GET /api/curations/preferred-hotels (admin-curated,
