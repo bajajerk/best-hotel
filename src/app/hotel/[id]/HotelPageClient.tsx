@@ -902,6 +902,120 @@ function SectionHead({
   );
 }
 
+/* ────────────────────────── Collapsible body text ────────────────────────── */
+//
+// Clamps a long paragraph to 4 lines with a gold "Read more ↓" link and a
+// fade-to-#0a0a0a overlay at the bottom. Each instance manages its own state,
+// so expanding one block does not affect siblings. When collapsing, the page
+// smoothly scrolls back to the section label (or `scrollTargetRef` when the
+// label lives outside the wrapper, e.g. the editorial intro under "The Stay").
+
+function CollapsibleText({
+  label,
+  text,
+  bodyStyle,
+  scrollMarginTop = 140,
+  scrollTargetRef,
+}: {
+  label?: React.ReactNode;
+  text: string;
+  bodyStyle?: React.CSSProperties;
+  scrollMarginTop?: number;
+  scrollTargetRef?: React.RefObject<HTMLElement | null>;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el) return;
+    // Re-measure when collapsed: scrollHeight > clientHeight means clamped overflow.
+    if (!isExpanded) {
+      setIsOverflowing(el.scrollHeight > el.clientHeight + 1);
+    }
+  }, [text, isExpanded]);
+
+  const toggle = () => {
+    const next = !isExpanded;
+    setIsExpanded(next);
+    if (!next) {
+      requestAnimationFrame(() => {
+        const target = scrollTargetRef?.current ?? wrapperRef.current;
+        target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  };
+
+  const showLink = isOverflowing || isExpanded;
+
+  return (
+    <div ref={wrapperRef} style={{ scrollMarginTop }}>
+      {label}
+      <div style={{ position: "relative" }}>
+        <p
+          ref={textRef}
+          style={{
+            ...bodyStyle,
+            ...(isExpanded
+              ? {}
+              : {
+                  display: "-webkit-box",
+                  WebkitLineClamp: 4,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }),
+          }}
+        >
+          {text}
+        </p>
+        {!isExpanded && isOverflowing && (
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 48,
+              pointerEvents: "none",
+              background: "linear-gradient(to bottom, transparent 40%, #0a0a0a 100%)",
+            }}
+          />
+        )}
+      </div>
+      {showLink && (
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={toggle}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              toggle();
+            }
+          }}
+          style={{
+            display: "inline-block",
+            cursor: "pointer",
+            marginTop: 8,
+            fontFamily: "Montserrat, var(--font-body), system-ui, sans-serif",
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: "1.5px",
+            textTransform: "uppercase",
+            color: "#c9a96e",
+            userSelect: "none",
+          }}
+        >
+          {isExpanded ? "Read less ↑" : "Read more ↓"}
+        </span>
+      )}
+    </div>
+  );
+}
+
 /* ────────────────────────── Main Page ────────────────────────── */
 
 export default function HotelPage() {
@@ -1845,17 +1959,19 @@ export default function HotelPage() {
                 {hotel.editorial_headline ?? hotel.hotel_name}
               </h2>
               {editorialIntro && (
-                <p
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: 16,
-                    lineHeight: "26px",
-                    color: "rgba(255,255,255,0.78)",
-                    margin: "0 0 32px",
-                  }}
-                >
-                  {editorialIntro}
-                </p>
+                <div style={{ marginBottom: 32 }}>
+                  <CollapsibleText
+                    text={editorialIntro}
+                    scrollTargetRef={stayRef}
+                    bodyStyle={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: 16,
+                      lineHeight: "26px",
+                      color: "rgba(255,255,255,0.78)",
+                      margin: 0,
+                    }}
+                  />
+                </div>
               )}
             </div>
 
@@ -1892,33 +2008,33 @@ export default function HotelPage() {
                   const text = hotel.tj_description?.[key as keyof NonNullable<typeof hotel.tj_description>];
                   if (!text) return null;
                   return (
-                    <div key={key}>
-                      <p
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          fontWeight: 500,
-                          fontSize: 11,
-                          lineHeight: "14px",
-                          letterSpacing: "0.18em",
-                          textTransform: "uppercase",
-                          color: "#C9A961",
-                          margin: "0 0 10px",
-                        }}
-                      >
-                        {label}
-                      </p>
-                      <p
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          fontSize: 15,
-                          lineHeight: "25px",
-                          color: "rgba(255,255,255,0.78)",
-                          margin: 0,
-                        }}
-                      >
-                        {text}
-                      </p>
-                    </div>
+                    <CollapsibleText
+                      key={key}
+                      label={
+                        <p
+                          style={{
+                            fontFamily: "var(--font-body)",
+                            fontWeight: 500,
+                            fontSize: 11,
+                            lineHeight: "14px",
+                            letterSpacing: "0.18em",
+                            textTransform: "uppercase",
+                            color: "#C9A961",
+                            margin: "0 0 10px",
+                          }}
+                        >
+                          {label}
+                        </p>
+                      }
+                      text={text}
+                      bodyStyle={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: 15,
+                        lineHeight: "25px",
+                        color: "rgba(255,255,255,0.78)",
+                        margin: 0,
+                      }}
+                    />
                   );
                 })}
               </div>
