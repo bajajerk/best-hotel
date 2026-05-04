@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useBooking } from "@/context/BookingContext";
 
 type StarValue = "Any" | "3+" | "4+" | "5";
 type SortValue = "Recommended" | "Price: Low" | "Price: High" | "Rating";
@@ -152,10 +153,6 @@ function starsToNumber(s: StarValue): number {
   if (s === "4+") return 4;
   if (s === "3+") return 3;
   return 0;
-}
-
-function formatPrice(n: number): string {
-  return "₹" + n.toLocaleString("en-IN");
 }
 
 export default function VoyagrFilterResults() {
@@ -674,6 +671,14 @@ export default function VoyagrFilterResults() {
 // Hotel result card
 // ---------------------------------------------------------------------------
 function HotelResultCard({ hotel }: { hotel: Hotel }) {
+  const { nights } = useBooking();
+  const memberPrice = hotel.pricePerNight;
+  // 20% off — matches the existing "Member · 20% off" image badge
+  const originalPrice = Math.round(memberPrice / 0.8);
+  const showStrikethrough = originalPrice > memberPrice;
+  const totalPrice = memberPrice * nights;
+  const formatINR = (n: number) => "₹" + n.toLocaleString("en-IN");
+
   return (
     <article
       style={{
@@ -769,54 +774,125 @@ function HotelResultCard({ hotel }: { hotel: Hotel }) {
           {hotel.breakfast && <MetaPill>Breakfast</MetaPill>}
         </div>
 
-        <div
-          style={{
-            marginTop: 16,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span
-              style={{
-                fontFamily: FONT_DISPLAY,
-                fontSize: 22,
-                color: "#fff",
-                lineHeight: 1,
-                fontWeight: 300,
-              }}
-            >
-              {formatPrice(hotel.pricePerNight)}
-            </span>
-            <span
-              style={{
-                fontFamily: FONT_LABEL,
-                fontSize: 9,
-                color: "rgba(255,255,255,0.35)",
-              }}
-            >
-              /night
-            </span>
-          </div>
-          <button
+        <div style={{ marginTop: 16 }}>
+          {/* FROM label */}
+          <div
             style={{
-              border: "1px solid #c9a96e",
-              color: "#c9a96e",
               fontFamily: FONT_LABEL,
               fontSize: 9,
               fontWeight: 600,
-              letterSpacing: 1,
+              letterSpacing: 2,
               textTransform: "uppercase",
-              borderRadius: 100,
-              padding: "9px 18px",
-              background: "transparent",
+              color: "rgba(255,255,255,0.4)",
+            }}
+          >
+            From
+          </div>
+
+          {/* Strikethrough original price — only when nights >= 1 and discount exists */}
+          {nights >= 1 && showStrikethrough && (
+            <div
+              style={{
+                fontFamily: FONT_LABEL,
+                fontSize: 13,
+                color: "rgba(255,255,255,0.35)",
+                textDecoration: "line-through",
+                marginTop: 4,
+              }}
+            >
+              {formatINR(originalPrice)}
+            </div>
+          )}
+
+          {/* Member price (large) */}
+          <div
+            style={{
+              fontFamily: FONT_DISPLAY,
+              fontSize: 36,
+              fontWeight: 300,
+              color: "#fff",
+              lineHeight: 1.05,
+              marginTop: 2,
+            }}
+          >
+            {formatINR(memberPrice)}
+          </div>
+
+          {/* Per night · taxes incl. */}
+          <div
+            style={{
+              fontFamily: FONT_LABEL,
+              fontSize: 10,
+              fontWeight: 300,
+              color: "rgba(255,255,255,0.4)",
+              marginTop: 4,
+            }}
+          >
+            per night &middot; taxes incl.
+          </div>
+
+          {/* Multi-night total */}
+          {nights > 1 && (
+            <>
+              <div
+                style={{
+                  borderTop: "1px solid rgba(255,255,255,0.08)",
+                  margin: "14px 0",
+                }}
+              />
+              <div
+                style={{
+                  fontFamily: FONT_LABEL,
+                  fontSize: 9,
+                  fontWeight: 600,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.4)",
+                }}
+              >
+                Total for {nights} {nights === 1 ? "night" : "nights"}
+              </div>
+              <div
+                style={{
+                  fontFamily: FONT_DISPLAY,
+                  fontSize: 28,
+                  fontWeight: 300,
+                  color: "#fff",
+                  lineHeight: 1.05,
+                  marginTop: 2,
+                }}
+              >
+                {formatINR(totalPrice)}
+              </div>
+              <div
+                style={{
+                  fontFamily: FONT_LABEL,
+                  fontSize: 10,
+                  fontWeight: 300,
+                  color: "rgba(255,255,255,0.4)",
+                  marginTop: 4,
+                }}
+              >
+                taxes incl.
+              </div>
+            </>
+          )}
+
+          {/* View rates */}
+          <div
+            style={{
+              marginTop: 14,
+              fontFamily: FONT_LABEL,
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+              color: "#c9a96e",
               cursor: "pointer",
             }}
           >
-            View Stay
-          </button>
+            View rates &rarr;
+          </div>
         </div>
       </div>
     </article>
