@@ -1,18 +1,16 @@
 import {
   fetchCuratedCities,
   fetchFeaturedAll,
-  fetchHomeFeaturedCities,
   fetchHomeFeaturedHotels,
   fetchPreferredHotels,
   CuratedCity,
 } from "@/lib/api";
 import type {
   FeaturedResponse,
-  HomeFeaturedCity,
   HomeFeaturedHotel,
   PreferredHotel,
 } from "@/lib/api";
-import { SAMPLE_CITIES, SAMPLE_HOME_CITIES } from "@/lib/constants";
+import { SAMPLE_CITIES } from "@/lib/constants";
 import { SITE_NAME, SITE_URL, DEFAULT_DESCRIPTION } from "@/lib/seo";
 import Home from "./HomePageClient";
 
@@ -26,7 +24,6 @@ export const dynamic = "force-dynamic";
 async function getHomeData(): Promise<{
   cities: CuratedCity[];
   featured: FeaturedResponse | null;
-  homeCities: HomeFeaturedCity[];
   editorsPicks: HomeFeaturedHotel[];
   preferredHotels: PreferredHotel[];
 }> {
@@ -35,7 +32,7 @@ async function getHomeData(): Promise<{
       setTimeout(() => reject(new Error("timeout")), ms)
     );
 
-  const [cities, featured, homeCities, editorsPicks, preferredHotels] =
+  const [cities, featured, editorsPicks, preferredHotels] =
     await Promise.all([
       Promise.race([fetchCuratedCities(), timeout(8000)]).catch(() =>
         SAMPLE_CITIES.map((c, i) => ({
@@ -46,9 +43,6 @@ async function getHomeData(): Promise<{
         }))
       ),
       Promise.race([fetchFeaturedAll(), timeout(8000)]).catch(() => null),
-      Promise.race([fetchHomeFeaturedCities(), timeout(8000)])
-        .then((rows) => (rows.length > 0 ? rows : SAMPLE_HOME_CITIES))
-        .catch(() => SAMPLE_HOME_CITIES),
       Promise.race([fetchHomeFeaturedHotels(), timeout(8000)]).catch(
         () => [] as HomeFeaturedHotel[]
       ),
@@ -57,7 +51,7 @@ async function getHomeData(): Promise<{
       ),
     ]);
 
-  return { cities, featured, homeCities, editorsPicks, preferredHotels };
+  return { cities, featured, editorsPicks, preferredHotels };
 }
 
 // ---------------------------------------------------------------------------
@@ -65,7 +59,7 @@ async function getHomeData(): Promise<{
 // ---------------------------------------------------------------------------
 
 export default async function HomePage() {
-  const { cities, featured, homeCities, editorsPicks, preferredHotels } =
+  const { cities, featured, editorsPicks, preferredHotels } =
     await getHomeData();
 
   // Flatten featured hotels for SEO content
@@ -89,7 +83,6 @@ export default async function HomePage() {
       <Home
         initialCities={cities}
         initialFeatured={featured}
-        initialHomeCities={homeCities}
         initialEditorsPicks={editorsPicks}
         initialPreferredHotels={preferredHotels}
       />

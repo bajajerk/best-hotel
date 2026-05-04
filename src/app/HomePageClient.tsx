@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import {
   fetchCuratedCities,
   fetchFeaturedAll,
-  fetchHomeFeaturedCities,
   fetchHomeFeaturedHotels,
   fetchPreferredHotels,
   CuratedCity,
@@ -16,11 +15,10 @@ import {
 } from "@/lib/api";
 import type {
   FeaturedResponse,
-  HomeFeaturedCity,
   HomeFeaturedHotel,
   PreferredHotel,
 } from "@/lib/api";
-import { SAMPLE_CITIES, SAMPLE_HOME_CITIES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
+import { SAMPLE_CITIES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import { hotelUrl } from "@/lib/urls";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -29,14 +27,13 @@ import LuxeDatePicker from "@/components/LuxeDatePicker";
 import { useBooking } from "@/context/BookingContext";
 import { useAuth } from "@/context/AuthContext";
 import { trackCtaClicked } from "@/lib/analytics";
-import TopCitiesBento from "@/components/TopCitiesBento";
+import TopCitiesMobileCarousel from "@/components/TopCitiesMobileCarousel";
 import EditorsBentoCarousel, { type BentoHotel } from "@/components/EditorsBentoCarousel";
 import PreferredHotelsCarousel from "@/components/PreferredHotelsCarousel";
 
 export interface HomePageClientProps {
   initialCities: CuratedCity[];
   initialFeatured: FeaturedResponse | null;
-  initialHomeCities: HomeFeaturedCity[];
   initialEditorsPicks: HomeFeaturedHotel[];
   initialPreferredHotels: PreferredHotel[];
 }
@@ -88,7 +85,6 @@ function safeImg(u: string | null | undefined): string {
 export default function Home({
   initialCities,
   initialFeatured,
-  initialHomeCities,
   initialEditorsPicks,
   initialPreferredHotels,
 }: HomePageClientProps) {
@@ -110,8 +106,6 @@ export default function Home({
   const [featured, setFeatured] = useState<FeaturedResponse | null>(
     initialFeatured
   );
-  const [homeCities, setHomeCities] =
-    useState<HomeFeaturedCity[]>(initialHomeCities);
   // Admin-curated `home_featured_hotels` rows. SSR-prefetched in `page.tsx`,
   // hydrated client-side if SSR was empty (matches the cities pattern).
   const [curatedEditorsPicks, setCuratedEditorsPicks] =
@@ -149,11 +143,6 @@ export default function Home({
         .then((d) => d && setFeatured(d))
         .catch(() => {});
     }
-    if (initialHomeCities.length === 0) {
-      fetchHomeFeaturedCities()
-        .then((rows) => setHomeCities(rows.length > 0 ? rows : SAMPLE_HOME_CITIES))
-        .catch(() => setHomeCities(SAMPLE_HOME_CITIES));
-    }
     if (initialEditorsPicks.length === 0) {
       fetchHomeFeaturedHotels()
         .then(setCuratedEditorsPicks)
@@ -167,7 +156,6 @@ export default function Home({
   }, [
     initialCities.length,
     initialFeatured,
-    initialHomeCities.length,
     initialEditorsPicks.length,
     initialPreferredHotels.length,
   ]);
@@ -412,48 +400,8 @@ export default function Home({
         </div>
       </motion.section>
 
-      {/* ── Top Cities — Embla carousel with cinematic motion ───────────── */}
-      <section style={{ padding: "28px 0 28px", borderTop: "1px solid var(--luxe-hairline)" }}>
-        <motion.div
-          className="luxe-container"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.15 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          style={{
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            marginBottom: 12,
-            gap: 24,
-            flexWrap: "wrap",
-          }}
-        >
-          <div style={{ maxWidth: 640 }}>
-            <div className="luxe-tech" style={{ marginBottom: 6 }}>
-              Top Cities
-            </div>
-            <h2
-              className="luxe-display"
-              style={{ fontSize: "clamp(22px, 2.2vw, 28px)", marginBottom: 0 }}
-            >
-              Loved by <em>Indian Travellers</em>
-            </h2>
-          </div>
-          <Link
-            href="/search"
-            className="luxe-tech top-cities-browse-all"
-            style={{ color: "var(--luxe-champagne)" }}
-          >
-            Browse All &rarr;
-          </Link>
-        </motion.div>
-
-        {/* Adaptive bento grid — visible immediately, no IO-gated animation */}
-        <div style={{ paddingLeft: 24, paddingRight: 24 }}>
-          <TopCitiesBento items={homeCities} />
-        </div>
-      </section>
+      {/* ── Top Cities — mobile-first horizontal carousel ───────────────── */}
+      <TopCitiesMobileCarousel />
 
       {/* ── Editor's Picks — auto-rotating bento carousel ───────────────── */}
       <motion.section
