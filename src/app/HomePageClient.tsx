@@ -31,6 +31,7 @@ import TopCitiesMobileCarousel from "@/components/TopCitiesMobileCarousel";
 import EditorsBentoCarousel, { type BentoHotel } from "@/components/EditorsBentoCarousel";
 import PreferredHotelsCarousel from "@/components/PreferredHotelsCarousel";
 import WhyMembersAccordion from "@/components/WhyMembersAccordion";
+import SeasonalAccordion from "@/components/SeasonalAccordion";
 
 export interface HomePageClientProps {
   initialCities: CuratedCity[];
@@ -602,117 +603,8 @@ export default function Home({
 
       </motion.section>
 
-      {/* ── Travel by Season — 4-up grid ─────────────────────────────────── */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.6 }}
-        style={{
-          padding: "40px 0 28px",
-          borderTop: "1px solid var(--luxe-hairline)",
-        }}
-      >
-        <div className="luxe-container">
-          <div style={{ maxWidth: 640, marginBottom: 20 }}>
-            <h2
-              className="luxe-display"
-              style={{ fontSize: "clamp(22px, 2.6vw, 36px)", marginBottom: 0 }}
-            >
-              When to go, <em>where to go</em>
-            </h2>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: 16,
-            }}
-          >
-            {[
-              {
-                season: "Summer",
-                months: "Jun – Aug",
-                cities: ["Santorini", "Bali", "Cape Town"],
-                glyph: "☀",
-              },
-              {
-                season: "Autumn",
-                months: "Sep – Nov",
-                cities: ["Kyoto", "Prague", "Budapest"],
-                glyph: "⚘",
-              },
-              {
-                season: "Winter",
-                months: "Dec – Feb",
-                cities: ["Dubai", "Maldives", "Vienna"],
-                glyph: "❄",
-              },
-              {
-                season: "Spring",
-                months: "Mar – May",
-                cities: ["Tokyo", "Amsterdam", "Lisbon"],
-                glyph: "✿",
-              },
-            ].map((s) => (
-              <div key={s.season} className="luxe-card" style={{ paddingTop: 24, paddingBottom: 24 }}>
-                <div
-                  aria-hidden="true"
-                  style={{
-                    fontSize: 22,
-                    color: "var(--luxe-champagne)",
-                    opacity: 0.7,
-                    lineHeight: 1,
-                    marginBottom: 16,
-                  }}
-                >
-                  {s.glyph}
-                </div>
-                <div className="luxe-tech" style={{ marginBottom: 8 }}>
-                  {s.months}
-                </div>
-                <div
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: 24,
-                    fontWeight: 500,
-                    color: "var(--luxe-soft-white)",
-                    lineHeight: 1.15,
-                    letterSpacing: "-0.015em",
-                    marginBottom: 16,
-                  }}
-                >
-                  {s.season}
-                </div>
-                <ul
-                  style={{
-                    listStyle: "none",
-                    padding: 0,
-                    margin: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 6,
-                  }}
-                >
-                  {s.cities.map((c) => (
-                    <li
-                      key={c}
-                      style={{
-                        fontSize: 13.5,
-                        color: "var(--luxe-soft-white-70)",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {c}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
+      {/* ── Travel Calendar — mobile-first seasonal accordion ──────────────── */}
+      <SeasonalAccordion />
 
       {/* ── Voice + Proof ─────────────────────────────────────────────────── */}
       <motion.section
