@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCompare } from "@/context/CompareContext";
 
@@ -18,8 +18,12 @@ function sanitizePhoto(url: string | null): string {
 export default function CompareBar() {
   const { hotels, remove, clear } = useCompare();
   const router = useRouter();
+  const pathname = usePathname();
 
   if (hotels.length === 0) return null;
+  // Auth surfaces stay clean — no sticky compare-tray clutter on the
+  // centered login card or the post-signup onboarding flow.
+  if (pathname === "/login" || pathname?.startsWith("/onboarding")) return null;
 
   return (
     <AnimatePresence>

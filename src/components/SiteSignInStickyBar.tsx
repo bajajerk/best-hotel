@@ -14,6 +14,9 @@ export default function SiteSignInStickyBar() {
   // Flight booking pages have their own sticky CTA (Continue / Confirm & Pay).
   // Hide the sign-in upsell so the two don't stack on mobile.
   if (pathname?.startsWith("/flights/")) return null;
+  // Don't pitch "sign in" on the sign-in / onboarding flow itself — the
+  // user is already there. The bar would read as duplicated chrome.
+  if (pathname === "/login" || pathname?.startsWith("/onboarding")) return null;
   if (loading || user) return null;
 
   const openModal = () => {
