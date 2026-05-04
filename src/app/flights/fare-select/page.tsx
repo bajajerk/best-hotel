@@ -57,14 +57,18 @@ function FareCard({
       </div>
 
       <div className="fare-feats">
-        <div className="feat">
-          <span className="feat-ico">🧳</span>
-          <span>{fare.checkinBaggage || "—"} check-in</span>
-        </div>
-        <div className="feat">
-          <span className="feat-ico">🎒</span>
-          <span>{fare.cabinBaggage || "—"} cabin</span>
-        </div>
+        {fare.checkinBaggage && (
+          <div className="feat">
+            <span className="feat-ico">🧳</span>
+            <span>{fare.checkinBaggage} check-in</span>
+          </div>
+        )}
+        {fare.cabinBaggage && (
+          <div className="feat">
+            <span className="feat-ico">🎒</span>
+            <span>{fare.cabinBaggage} cabin</span>
+          </div>
+        )}
         <div className="feat">
           <span className="feat-ico">{fare.mealIncluded ? "🍽" : "✕"}</span>
           <span>{fare.mealIncluded ? "Meal included" : "No meal"}</span>

@@ -40,12 +40,12 @@ function formatCurrency(amount: number, currency?: string | null): string {
 }
 
 function starLabel(count: number | null): string {
-  if (!count || count <= 0) return "—";
+  if (!count || count <= 0) return "";
   return `${count}-star`;
 }
 
 function ratingLabel(avg: number | null): string {
-  if (!avg || avg <= 0) return "—";
+  if (!avg || avg <= 0) return "";
   if (avg >= 9) return "Exceptional";
   if (avg >= 8) return "Excellent";
   if (avg >= 7) return "Very Good";
@@ -144,6 +144,15 @@ export default function ComparePage() {
   const highestRating = Math.max(...ratings);
   const reviews = hotels.map((h) => h.number_of_reviews ?? 0);
   const mostReviews = Math.max(...reviews);
+
+  // Hide rows where no hotel has data for that field
+  const anyStarRating = hotels.some((h) => h.star_rating != null && h.star_rating > 0);
+  const anyGuestRating = hotels.some((h) => h.rating_average != null && h.rating_average > 0);
+  const anyReviews = hotels.some((h) => h.number_of_reviews != null && h.number_of_reviews > 0);
+  const anyLocation = hotels.some(
+    (h) => h.addressline1 || h.city_name || h.country
+  );
+  const anyRates = hotels.some((h) => h.rates_from);
 
   // All unique amenities across all hotels
   const allAmenityKeys = new Set<string>();
@@ -312,107 +321,109 @@ export default function ComparePage() {
           </div>
 
           {/* ── Comparison Rows ── */}
-          <CompareRow label="Star Rating" hotels={hotels}>
-            {(hotel) => (
-              <span style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--ink)" }}>
-                {hotel.star_rating && hotel.star_rating > 0 ? (
-                  <>
+          {anyStarRating && (
+            <CompareRow label="Star Rating" hotels={hotels}>
+              {(hotel) =>
+                hotel.star_rating && hotel.star_rating > 0 ? (
+                  <span style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--ink)" }}>
                     <span style={{ color: "var(--gold)", letterSpacing: 2 }}>
                       {"★".repeat(Math.round(hotel.star_rating))}
                     </span>
                     <span style={{ marginLeft: 6, fontSize: 12, color: "var(--ink-light)" }}>
                       {starLabel(hotel.star_rating)}
                     </span>
-                  </>
-                ) : (
-                  <span style={{ color: "var(--ink-light)" }}>—</span>
-                )}
-              </span>
-            )}
-          </CompareRow>
+                  </span>
+                ) : null
+              }
+            </CompareRow>
+          )}
 
-          <CompareRow label="Guest Rating" hotels={hotels}>
-            {(hotel) => {
-              const isBest =
-                hotel.rating_average !== null &&
-                hotel.rating_average === highestRating &&
-                highestRating > 0;
-              return (
-                <div>
-                  {hotel.rating_average && hotel.rating_average > 0 ? (
-                    <>
-                      <span
-                        style={{
-                          display: "inline-block",
-                          padding: "3px 10px",
-                          background: isBest ? "var(--gold-pale)" : "var(--cream)",
-                          color: isBest ? "var(--gold)" : "var(--ink)",
-                          fontFamily: "var(--font-mono)",
-                          fontSize: 14,
-                          fontWeight: 500,
-                          border: isBest
-                            ? "1px solid var(--gold)"
-                            : "1px solid var(--cream-border)",
-                        }}
-                      >
-                        {hotel.rating_average.toFixed(1)}
-                      </span>
-                      <span
-                        style={{
-                          marginLeft: 8,
-                          fontSize: 12,
-                          color: "var(--ink-light)",
-                          fontFamily: "var(--font-body)",
-                        }}
-                      >
-                        {ratingLabel(hotel.rating_average)}
-                      </span>
-                    </>
-                  ) : (
-                    <span style={{ color: "var(--ink-light)", fontSize: 13 }}>—</span>
-                  )}
-                </div>
-              );
-            }}
-          </CompareRow>
+          {anyGuestRating && (
+            <CompareRow label="Guest Rating" hotels={hotels}>
+              {(hotel) => {
+                const isBest =
+                  hotel.rating_average !== null &&
+                  hotel.rating_average === highestRating &&
+                  highestRating > 0;
+                if (!hotel.rating_average || hotel.rating_average <= 0) return null;
+                return (
+                  <div>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "3px 10px",
+                        background: isBest ? "var(--gold-pale)" : "var(--cream)",
+                        color: isBest ? "var(--gold)" : "var(--ink)",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        border: isBest
+                          ? "1px solid var(--gold)"
+                          : "1px solid var(--cream-border)",
+                      }}
+                    >
+                      {hotel.rating_average.toFixed(1)}
+                    </span>
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        fontSize: 12,
+                        color: "var(--ink-light)",
+                        fontFamily: "var(--font-body)",
+                      }}
+                    >
+                      {ratingLabel(hotel.rating_average)}
+                    </span>
+                  </div>
+                );
+              }}
+            </CompareRow>
+          )}
 
-          <CompareRow label="Reviews" hotels={hotels}>
-            {(hotel) => {
-              const isBest =
-                hotel.number_of_reviews !== null &&
-                hotel.number_of_reviews === mostReviews &&
-                mostReviews > 0;
-              return (
-                <span
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: 13,
-                    color: "var(--ink)",
-                    fontWeight: isBest ? 500 : 400,
-                  }}
-                >
-                  {hotel.number_of_reviews && hotel.number_of_reviews > 0
-                    ? hotel.number_of_reviews.toLocaleString()
-                    : "—"}
-                </span>
-              );
-            }}
-          </CompareRow>
+          {anyReviews && (
+            <CompareRow label="Reviews" hotels={hotels}>
+              {(hotel) => {
+                if (!hotel.number_of_reviews || hotel.number_of_reviews <= 0) return null;
+                const isBest =
+                  hotel.number_of_reviews === mostReviews && mostReviews > 0;
+                return (
+                  <span
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: 13,
+                      color: "var(--ink)",
+                      fontWeight: isBest ? 500 : 400,
+                    }}
+                  >
+                    {hotel.number_of_reviews.toLocaleString()}
+                  </span>
+                );
+              }}
+            </CompareRow>
+          )}
 
-          <CompareRow label="Location" hotels={hotels}>
-            {(hotel) => (
-              <span
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: 13,
-                  color: "var(--ink-mid)",
-                  lineHeight: 1.5,
-                }}
-              >
-                {hotel.addressline1 || `${hotel.city_name}, ${hotel.country}`}
-              </span>
-            )}
-          </CompareRow>
+          {anyLocation && (
+            <CompareRow label="Location" hotels={hotels}>
+              {(hotel) => {
+                const location =
+                  hotel.addressline1 ||
+                  [hotel.city_name, hotel.country].filter(Boolean).join(", ");
+                if (!location) return null;
+                return (
+                  <span
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: 13,
+                      color: "var(--ink-mid)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {location}
+                  </span>
+                );
+              }}
+            </CompareRow>
+          )}
 
           <CompareRow label="Voyagr Rate" hotels={hotels} highlight>
             {(hotel) => {
@@ -497,27 +508,29 @@ export default function ComparePage() {
             }}
           </CompareRow>
 
-          <CompareRow label="Savings" hotels={hotels}>
-            {(hotel) => {
-              if (!hotel.rates_from) return <span style={{ color: "var(--ink-light)", fontSize: 13 }}>—</span>;
-              const marketRate = Math.round(hotel.rates_from * 1.25);
-              const savePercent = Math.round(
-                ((marketRate - hotel.rates_from) / marketRate) * 100
-              );
-              return (
-                <span
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: "var(--success)",
-                  }}
-                >
-                  Save {savePercent}%
-                </span>
-              );
-            }}
-          </CompareRow>
+          {anyRates && (
+            <CompareRow label="Savings" hotels={hotels}>
+              {(hotel) => {
+                if (!hotel.rates_from) return null;
+                const marketRate = Math.round(hotel.rates_from * 1.25);
+                const savePercent = Math.round(
+                  ((marketRate - hotel.rates_from) / marketRate) * 100
+                );
+                return (
+                  <span
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "var(--success)",
+                    }}
+                  >
+                    Save {savePercent}%
+                  </span>
+                );
+              }}
+            </CompareRow>
+          )}
 
           {/* ── Amenities ── */}
           {amenityKeyList.length > 0 && (

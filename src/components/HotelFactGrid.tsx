@@ -19,7 +19,6 @@ export interface HotelFactGridData {
   languages?: string[] | null;
 }
 
-const DASH = "—";
 const GOLD = "#C9A961";
 
 const WELLNESS_KEYWORDS: [string, string][] = [
@@ -42,14 +41,14 @@ const ROOMS_WHITELIST: string[] = [
   "Ocean view",
 ];
 
-function parseWellness(amenities: string | null | undefined): string {
-  if (!amenities) return DASH;
+function parseWellness(amenities: string | null | undefined): string | null {
+  if (!amenities) return null;
   const lower = amenities.toLowerCase();
   const found: string[] = [];
   for (const [kw, label] of WELLNESS_KEYWORDS) {
     if (lower.includes(kw) && found.length < 4) found.push(label);
   }
-  return found.length ? found.join(", ") : DASH;
+  return found.length ? found.join(", ") : null;
 }
 
 function parseRoomsFeatures(description: string | null | undefined): [string | null, string | null] {
@@ -160,6 +159,8 @@ interface FactColumnProps {
 }
 
 function FactColumn({ icon, label, lines }: FactColumnProps) {
+  const visibleLines = lines.filter((l): l is string => Boolean(l)).slice(0, 3);
+  if (visibleLines.length === 0) return null;
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
@@ -167,8 +168,8 @@ function FactColumn({ icon, label, lines }: FactColumnProps) {
         <span style={labelStyle}>{label}</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        {lines.slice(0, 3).map((line, i) => (
-          <p key={i} style={bodyStyle}>{line || DASH}</p>
+        {visibleLines.map((line, i) => (
+          <p key={i} style={bodyStyle}>{line}</p>
         ))}
       </div>
     </div>
@@ -193,7 +194,7 @@ export default function HotelFactGrid({
   shuttle_type,
   languages,
 }: HotelFactGridData) {
-  const locationLabel = neighbourhood || city || DASH;
+  const locationLabel = neighbourhood || city || null;
   const airportLine =
     airport_distance_min != null && airport_iata
       ? `${airport_distance_min} min from ${airport_iata}`
@@ -210,6 +211,20 @@ export default function HotelFactGrid({
   const languagesLine =
     languages && languages.length ? languages.slice(0, 2).join(", ") : null;
 
+  const columns = [
+    { icon: <PinIcon />, label: "Location", lines: [locationLabel, airportLine, attraction_nearest] },
+    { icon: <BedIcon />, label: "Rooms", lines: [roomsLine, roomsFeature1, roomsFeature2] },
+    { icon: <UtensilsIcon />, label: "Dining", lines: [diningLine, roomServiceLine, signature_restaurant] },
+    { icon: <SpaIcon />, label: "Wellness", lines: [wellnessLine] },
+    { icon: <InfoIcon />, label: "Practical", lines: [parking_type, shuttle_type, languagesLine] },
+  ];
+
+  const visibleColumns = columns.filter(
+    (col) => col.lines.some((l) => Boolean(l))
+  );
+
+  if (visibleColumns.length === 0) return null;
+
   return (
     <div
       className="hotel-fact-grid"
@@ -219,31 +234,9 @@ export default function HotelFactGrid({
         padding: "24px 0",
       }}
     >
-      <FactColumn
-        icon={<PinIcon />}
-        label="Location"
-        lines={[locationLabel, airportLine, attraction_nearest]}
-      />
-      <FactColumn
-        icon={<BedIcon />}
-        label="Rooms"
-        lines={[roomsLine, roomsFeature1, roomsFeature2]}
-      />
-      <FactColumn
-        icon={<UtensilsIcon />}
-        label="Dining"
-        lines={[diningLine, roomServiceLine, signature_restaurant]}
-      />
-      <FactColumn
-        icon={<SpaIcon />}
-        label="Wellness"
-        lines={[wellnessLine]}
-      />
-      <FactColumn
-        icon={<InfoIcon />}
-        label="Practical"
-        lines={[parking_type, shuttle_type, languagesLine]}
-      />
+      {visibleColumns.map((col) => (
+        <FactColumn key={col.label} icon={col.icon} label={col.label} lines={col.lines} />
+      ))}
     </div>
   );
 }
