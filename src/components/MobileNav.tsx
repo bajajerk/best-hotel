@@ -145,10 +145,17 @@ export default function MobileNav() {
     return pathname.startsWith(href);
   }
 
-  /* Overlay + Drawer rendered via portal to escape header stacking context */
+  /* Overlay + Drawer rendered via portal to escape header stacking context.
+     Wrapped in `.luxe` with display:contents so the dark-theme design
+     tokens (--cream/--ink/--white/--gold) cascade into the drawer's
+     inline styles — the portal target is document.body, which sits
+     OUTSIDE any page-level `.luxe` wrapper, so without this scope the
+     drawer would render in light theme even on a dark page.
+     `display: contents` keeps the wrapper inert (no box, no min-height,
+     no background) so the existing fixed-position layout is unchanged. */
   const overlay = mounted
     ? createPortal(
-        <>
+        <div className="luxe" style={{ display: "contents" }}>
           {/* ── Dark backdrop overlay — covers the area left of the drawer,
                 tapping it closes the drawer. Full-screen underneath so it
                 still covers the 25% gap regardless of drawer max-width cap. ── */}
@@ -647,7 +654,7 @@ export default function MobileNav() {
           </Link>
         </div>
       </div>
-        </>,
+        </div>,
         document.body
       )
     : null;

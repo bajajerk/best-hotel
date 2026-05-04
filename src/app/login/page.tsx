@@ -95,7 +95,7 @@ export default function LoginPage() {
 
   if (loading) {
     return (
-      <div style={styles.page}>
+      <div className="luxe" style={styles.page}>
         <div style={styles.card}>
           <div style={styles.spinner} />
         </div>
@@ -104,7 +104,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={styles.page}>
+    <div className="luxe" style={styles.page}>
       <div style={styles.card}>
         {/* Invisible reCAPTCHA target — always mounted so Firebase's iframe
             survives form-state changes (phone <-> OTP <-> change number). */}
