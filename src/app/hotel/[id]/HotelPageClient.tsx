@@ -3082,7 +3082,9 @@ export default function HotelPage() {
               </p>
             ) : lowestFromRate != null && rates ? (
               <p style={{ fontSize: 11.5, color: "var(--luxe-champagne)", marginTop: 3, letterSpacing: "0.04em" }}>
-                From {formatPrice(lowestFromRate, rates.rates[0].currency)}/night
+                {nights > 1
+                  ? `From ${formatPrice(lowestFromRate, rates.rates[0].currency)}/night · Total ${formatPrice(lowestFromRate * nights, rates.rates[0].currency)} (${nights} nights)`
+                  : `From ${formatPrice(lowestFromRate, rates.rates[0].currency)}/night`}
               </p>
             ) : datesSelected ? (
               <div style={{ marginTop: 6 }}>

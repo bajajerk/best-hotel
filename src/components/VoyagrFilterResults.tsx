@@ -28,6 +28,7 @@ import {
   trackResultClicked,
   trackSortChanged,
 } from "@/lib/analytics";
+import PriceBlock from "@/components/PriceBlock";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -343,6 +344,7 @@ export default function VoyagrFilterResults() {
 
   return (
     <div
+      className="luxe"
       style={{
         background: "#0a0a0a",
         minHeight: "100vh",
@@ -1213,9 +1215,6 @@ function HotelResultCard({
   const { nights } = useBookingContext();
   const memberPrice = hotel.memberRate;
   const originalPrice = hotel.originalRate;
-  const showStrikethrough = originalPrice > memberPrice;
-  const totalPrice = memberPrice * nights;
-  const showTotalBlock = nights > 1;
 
   const [imgState, setImgState] = useState<"loading" | "loaded" | "error">("loading");
 
@@ -1364,92 +1363,13 @@ function HotelResultCard({
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              fontFamily: FONT_LABEL,
-              fontSize: 8,
-              fontWeight: 600,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              color: "rgba(255,255,255,0.35)",
-            }}
-          >
-            From
-          </div>
-
-          {showStrikethrough && (
-            <div
-              style={{
-                fontFamily: FONT_LABEL,
-                fontSize: 12,
-                color: "rgba(255,255,255,0.3)",
-                textDecoration: "line-through",
-                marginTop: 4,
-              }}
-            >
-              {formatINR(originalPrice)}
-            </div>
-          )}
-
-          <div
-            style={{
-              fontFamily: FONT_DISPLAY,
-              fontSize: 30,
-              fontWeight: 300,
-              color: "#fff",
-              lineHeight: 1.05,
-              marginTop: 2,
-            }}
-          >
-            {formatINR(memberPrice)}
-          </div>
-
-          <div
-            style={{
-              fontFamily: FONT_LABEL,
-              fontSize: 10,
-              fontWeight: 300,
-              color: "rgba(255,255,255,0.4)",
-              marginTop: 4,
-            }}
-          >
-            per night · taxes incl.
-          </div>
-
-          {showTotalBlock && (
-            <>
-              <div
-                style={{
-                  borderTop: "1px solid rgba(255,255,255,0.07)",
-                  margin: "12px 0",
-                }}
-              />
-              <div
-                style={{
-                  fontFamily: FONT_LABEL,
-                  fontSize: 8,
-                  fontWeight: 600,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.35)",
-                }}
-              >
-                Total for {nights} nights
-              </div>
-              <div
-                style={{
-                  fontFamily: FONT_DISPLAY,
-                  fontSize: 22,
-                  fontWeight: 300,
-                  color: "rgba(255,255,255,0.85)",
-                  lineHeight: 1.05,
-                  marginTop: 2,
-                }}
-              >
-                {formatINR(totalPrice)}
-              </div>
-            </>
-          )}
+          <PriceBlock
+            memberRate={memberPrice}
+            originalRate={originalPrice}
+            nights={nights}
+            currency="INR"
+            size="large"
+          />
         </div>
 
         <button

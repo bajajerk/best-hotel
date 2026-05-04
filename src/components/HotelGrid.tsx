@@ -31,6 +31,7 @@ import {
 import { hotelUrl } from "@/lib/urls";
 import { FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import { useBooking } from "@/context/BookingContext";
+import PriceBlock from "@/components/PriceBlock";
 import SearchResultsSkeleton from "@/components/skeletons/SearchResultsSkeleton";
 
 const FALLBACK_IMAGE = FALLBACK_CITY_IMAGE;
@@ -397,7 +398,7 @@ export default function HotelGrid({
   showResultCount = true,
   onSearch,
 }: HotelGridProps) {
-  const { checkIn, checkOut, totalAdults, totalChildren, rooms } = useBooking();
+  const { checkIn, checkOut, nights, totalAdults, totalChildren, rooms } = useBooking();
   const roomsCount = rooms.length;
 
   const [hotelResults, setHotelResults] = useState<HotelGridResult[]>([]);
@@ -806,11 +807,6 @@ export default function HotelGrid({
           const savePct = hotel.rates_from && marketRate
             ? Math.round(((marketRate - hotel.rates_from) / marketRate) * 100)
             : null;
-          const sym = hotel.rates_currency === "INR" ? "₹" : "$";
-          const formatPrice = (n: number) =>
-            hotel.rates_currency === "INR"
-              ? `${sym}${n.toLocaleString("en-IN")}`
-              : `${sym}${n.toLocaleString("en-US")}`;
 
           return (
             <motion.div
@@ -970,43 +966,13 @@ export default function HotelGrid({
                     background: "linear-gradient(180deg, transparent 0%, rgba(201,168,76,0.04) 100%)",
                   }}>
                     {hotel.rates_from != null && hotel.rates_from > 0 ? (
-                      <>
-                        <span style={{
-                          fontSize: 10,
-                          color: "var(--ink-light)",
-                          letterSpacing: "0.06em",
-                          textTransform: "uppercase",
-                          fontFamily: "var(--font-body)",
-                        }}>
-                          from
-                        </span>
-                        {marketRate && marketRate > hotel.rates_from && (
-                          <span style={{
-                            fontSize: 12,
-                            color: "var(--ink-light)",
-                            textDecoration: "line-through",
-                            lineHeight: 1,
-                          }}>
-                            {formatPrice(marketRate)}
-                          </span>
-                        )}
-                        <span style={{
-                          fontFamily: "var(--font-display)",
-                          fontSize: 24,
-                          fontWeight: 500,
-                          color: "var(--ink)",
-                          lineHeight: 1.1,
-                        }}>
-                          {formatPrice(Math.round(hotel.rates_from))}
-                        </span>
-                        <span style={{
-                          fontSize: 10,
-                          color: "var(--ink-light)",
-                          letterSpacing: "0.04em",
-                        }}>
-                          per night · taxes incl.
-                        </span>
-                      </>
+                      <PriceBlock
+                        memberRate={hotel.rates_from}
+                        originalRate={marketRate}
+                        nights={nights}
+                        currency={hotel.rates_currency || "INR"}
+                        align="right"
+                      />
                     ) : batchRatesLoading ? (
                       <span style={{
                         fontSize: 11,

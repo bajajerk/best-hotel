@@ -4,6 +4,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { CuratedHotel } from "@/lib/api";
 import { hotelUrl } from "@/lib/urls";
+import { useBooking } from "@/context/BookingContext";
+import PriceBlock from "@/components/PriceBlock";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -72,6 +74,7 @@ export default function HotelResultCard({
   /** Real savings percent from the backend (integer). */
   liveSavingsPct?: number | null;
 }) {
+  const { nights } = useBooking();
   const photo = sanitizePhoto(hotel.photo1);
   // Prefer real MRP from the batch endpoint; fall back to the legacy ×1.25 heuristic.
   const marketRate = liveMrp?.agoda_rate
@@ -219,103 +222,28 @@ export default function HotelResultCard({
             )}
 
             {/* Row 3: Rate display */}
-            {hotel.rates_from ? (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-end",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  marginBottom: 10,
-                }}
-              >
-                {/* Left: member rate */}
-                <div>
-                  <div
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 500,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: "var(--gold)",
-                      fontFamily: "var(--font-body)",
-                      marginBottom: 2,
-                    }}
-                  >
-                    Member Rate
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "baseline",
-                      gap: 4,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontSize: 24,
-                        fontWeight: 500,
-                        color: "var(--gold)",
-                        lineHeight: 1,
-                      }}
-                    >
-                      {formatCurrency(hotel.rates_from, hotel.rates_currency)}
-                    </span>
-                    <span style={{ fontSize: 11, color: "var(--ink-light)" }}>
-                      /night
-                    </span>
-                  </div>
+            <div style={{ marginBottom: 10 }}>
+              <PriceBlock
+                memberRate={hotel.rates_from || 0}
+                originalRate={marketRate}
+                nights={nights}
+                currency={hotel.rates_currency || "INR"}
+                eyebrow="Member Rate"
+              />
+              {hotel.rates_from && saveAmount && saveAmount > 0 && (
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: "var(--success)",
+                    fontFamily: "var(--font-body)",
+                    marginTop: 8,
+                  }}
+                >
+                  Save {formatCurrency(saveAmount, hotel.rates_currency)}/night
                 </div>
-
-                {/* Right: struck-through market + save */}
-                {marketRate && saveAmount && saveAmount > 0 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-end",
-                      gap: 2,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 12,
-                        textDecoration: "line-through",
-                        color: "var(--ink-light)",
-                        fontFamily: "var(--font-body)",
-                      }}
-                    >
-                      {formatCurrency(marketRate, hotel.rates_currency)}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 500,
-                        color: "var(--success)",
-                        fontFamily: "var(--font-body)",
-                      }}
-                    >
-                      Save {formatCurrency(saveAmount, hotel.rates_currency)}/night
-                    </span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 500,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: "var(--gold)",
-                  fontFamily: "var(--font-body)",
-                  marginBottom: 10,
-                }}
-              >
-                Call for rates
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Row 4: small meta + CTA */}
             <div

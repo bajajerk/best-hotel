@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useCompare } from "@/context/CompareContext";
+import { useBooking } from "@/context/BookingContext";
 import { hotelUrl } from "@/lib/urls";
 import { extractAmenities } from "@/components/AmenityIcons";
 import Header from "@/components/Header";
+import PriceBlock from "@/components/PriceBlock";
 import { trackCompareViewed } from "@/lib/analytics";
 
 // ---------------------------------------------------------------------------
@@ -22,21 +24,6 @@ function sanitizePhoto(url: string | null): string {
   if (!src.startsWith("https://"))
     src = `https://photos.hotelbeds.com/giata/${src}`;
   return src;
-}
-
-function formatCurrency(amount: number, currency?: string | null): string {
-  const symbols: Record<string, string> = {
-    USD: "$", EUR: "\u20AC", GBP: "\u00A3", INR: "\u20B9",
-    JPY: "\u00A5", AUD: "A$", SGD: "S$", THB: "\u0E3F",
-    AED: "AED ", MYR: "RM ", IDR: "Rp ", KRW: "\u20A9",
-  };
-  const sym = currency ? (symbols[currency.toUpperCase()] || `${currency} `) : "$";
-  const rounded = Math.round(amount);
-  const formatted =
-    currency?.toUpperCase() === "INR"
-      ? rounded.toLocaleString("en-IN")
-      : rounded.toLocaleString("en-US");
-  return `${sym}${formatted}`;
 }
 
 function starLabel(count: number | null): string {
@@ -58,6 +45,7 @@ function ratingLabel(avg: number | null): string {
 // ---------------------------------------------------------------------------
 export default function ComparePage() {
   const { hotels, remove } = useCompare();
+  const { nights } = useBooking();
   const router = useRouter();
 
   // Track compare page view
@@ -436,72 +424,31 @@ export default function ComparePage() {
                 : null;
               return (
                 <div>
-                  {hotel.rates_from ? (
-                    <>
-                      {marketRate && (
-                        <div
-                          style={{
-                            fontSize: 12,
-                            textDecoration: "line-through",
-                            color: "var(--market-rate)",
-                            marginBottom: 4,
-                          }}
-                        >
-                          {formatCurrency(marketRate, hotel.rates_currency)}
-                        </div>
-                      )}
-                      <span
-                        style={{
-                          fontFamily: "var(--font-display)",
-                          fontSize: 22,
-                          fontWeight: 500,
-                          color: isCheapest ? "var(--our-rate)" : "var(--ink)",
-                        }}
-                      >
-                        {formatCurrency(hotel.rates_from, hotel.rates_currency)}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          color: "var(--ink-light)",
-                          marginLeft: 4,
-                          fontFamily: "var(--font-body)",
-                        }}
-                      >
-                        / night
-                      </span>
-                      {isCheapest && (
-                        <div
-                          style={{
-                            marginTop: 6,
-                            display: "inline-block",
-                            background: "var(--success-soft)",
-                            color: "var(--success)",
-                            fontSize: 10,
-                            fontWeight: 500,
-                            padding: "3px 10px",
-                            fontFamily: "var(--font-body)",
-                            letterSpacing: "0.06em",
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          Best Price
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <span
+                  <PriceBlock
+                    memberRate={hotel.rates_from || 0}
+                    originalRate={marketRate}
+                    nights={nights}
+                    currency={hotel.rates_currency || "INR"}
+                    eyebrow={null}
+                    size="compact"
+                  />
+                  {hotel.rates_from && isCheapest && (
+                    <div
                       style={{
-                        fontSize: 11,
+                        marginTop: 6,
+                        display: "inline-block",
+                        background: "var(--success-soft)",
+                        color: "var(--success)",
+                        fontSize: 10,
                         fontWeight: 500,
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                        color: "var(--gold)",
+                        padding: "3px 10px",
                         fontFamily: "var(--font-body)",
+                        letterSpacing: "0.06em",
+                        textTransform: "uppercase",
                       }}
                     >
-                      Call for rates
-                    </span>
+                      Best Price
+                    </div>
                   )}
                 </div>
               );

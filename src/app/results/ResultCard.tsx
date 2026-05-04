@@ -6,7 +6,9 @@ import { motion } from "framer-motion";
 import type { RankedHotel } from "@/lib/ranking";
 import { AmenityChips } from "@/components/AmenityIcons";
 import { useBookingFlow } from "@/context/BookingFlowContext";
+import { useBooking } from "@/context/BookingContext";
 import { hotelUrl } from "@/lib/urls";
+import PriceBlock from "@/components/PriceBlock";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -50,6 +52,7 @@ export default function ResultCard({
   const hotel = ranked.hotel;
   const router = useRouter();
   const { setHotel } = useBookingFlow();
+  const { nights } = useBooking();
   const photo = sanitizePhoto(hotel.photo1);
   const marketRate = hotel.rates_from ? Math.round(hotel.rates_from * 1.25) : null;
   const savePercent =
@@ -336,88 +339,32 @@ export default function ResultCard({
                 display: "flex",
                 alignItems: "flex-end",
                 justifyContent: "space-between",
+                gap: 12,
               }}
             >
-              {hotel.rates_from ? (
-                <div>
-                  <div
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 500,
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      color: "var(--gold)",
-                      fontFamily: "var(--font-body)",
-                      marginBottom: 2,
-                    }}
-                  >
-                    Voyagr Rate
-                  </div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                    <span
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontSize: 22,
-                        fontWeight: 500,
-                        color: "var(--our-rate)",
-                      }}
-                    >
-                      {formatCurrency(hotel.rates_from, hotel.rates_currency)}
-                    </span>
-                    <span style={{ fontSize: 10, color: "var(--ink-light)" }}>
-                      /night
-                    </span>
-                  </div>
-                </div>
-              ) : (
+              <PriceBlock
+                memberRate={hotel.rates_from || 0}
+                originalRate={marketRate}
+                nights={nights}
+                currency={hotel.rates_currency || "INR"}
+                eyebrow="Voyagr Rate"
+              />
+
+              {savingsAmount && savingsAmount > 0 && (
                 <span
                   style={{
                     fontSize: 10,
-                    fontWeight: 500,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "var(--gold)",
-                    fontFamily: "var(--font-body)",
+                    fontWeight: 600,
+                    color: "var(--success)",
+                    fontFamily: "var(--font-mono)",
+                    background: "var(--gold-pale)",
+                    padding: "2px 8px",
+                    flexShrink: 0,
                   }}
                 >
-                  Call for rates
+                  Save {formatCurrency(savingsAmount, hotel.rates_currency)}/night
                 </span>
               )}
-
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-end",
-                  gap: 4,
-                }}
-              >
-                {marketRate && hotel.rates_from && (
-                  <span
-                    style={{
-                      fontSize: 11,
-                      textDecoration: "line-through",
-                      color: "var(--market-rate)",
-                    }}
-                  >
-                    {formatCurrency(marketRate, hotel.rates_currency)}
-                  </span>
-                )}
-                {savingsAmount && savingsAmount > 0 && (
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: "var(--success)",
-                      fontFamily: "var(--font-mono)",
-                      background: "var(--gold-pale)",
-                      padding: "2px 8px",
-                    }}
-                  >
-                    Save {formatCurrency(savingsAmount, hotel.rates_currency)}/night
-                  </span>
-                )}
-              </div>
             </div>
 
             {/* Bottom actions */}
