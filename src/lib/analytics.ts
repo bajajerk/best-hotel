@@ -27,6 +27,36 @@ export function trackSearchFilterApplied(params: {
   posthog.capture('search_filter_applied', params);
 }
 
+// Voyagr Club filter bar — fine-grained events used by the filter UI.
+export function trackFilterApplied(params: {
+  filterType: 'stars' | 'perks' | 'price' | 'sort';
+  filterValue: string | number;
+  resultsCount: number;
+}) {
+  posthog.capture('filter_applied', params);
+}
+
+export function trackFilterCleared(params: {
+  whichFilter: 'stars' | 'perks' | 'price' | 'sort' | 'all';
+}) {
+  posthog.capture('filter_cleared', params);
+}
+
+export function trackSortChanged(params: { from: string; to: string }) {
+  posthog.capture('sort_changed', params);
+}
+
+export function trackEmptyStateShown(params: { activeFilters: string[] }) {
+  posthog.capture('empty_state_shown', params);
+}
+
+export function trackResultClicked(params: {
+  hotelId: string | number;
+  position: number;
+}) {
+  posthog.capture('result_clicked', params);
+}
+
 // Hotel Engagement
 export function trackHotelViewed(params: {
   hotel_id: string | number;
