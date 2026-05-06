@@ -43,6 +43,8 @@ import { TRUST_BAR_ITEMS, TRUST_BAR_ITEMS_MOBILE } from "@/constants/trust";
 import { sanitizeOtaProse } from "@/lib/sanitizeOtaProse";
 import { groupRatePlans, type RoomCategory } from "@/lib/roomCategories";
 import HotelFactGrid from "@/components/HotelFactGrid";
+import LuxeDatePicker from "@/components/LuxeDatePicker";
+import GuestRoomPicker from "@/components/GuestRoomPicker";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -407,6 +409,116 @@ function RateFilterBar({
           </select>
         </FilterPillShell>
       </div>
+    </div>
+  );
+}
+
+/* ────────────────────────── Hotel Date Editor ──────────────────────────
+   Inline date + guests editor designed for the rates section. Reads/writes
+   useBooking() so the live-rates effect refetches automatically on change.
+   Dark luxe theme to match the page (DateBar's inline branch is light-only).
+*/
+
+function HotelDateEditor({ compact = false }: { compact?: boolean }) {
+  const { checkIn, checkOut, setDates, formatDate } = useBooking();
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const handleChange = useCallback(
+    ({ checkIn: ci, checkOut: co }: { checkIn: string | null; checkOut: string | null }) => {
+      setDates(ci ?? "", co ?? "");
+    },
+    [setDates],
+  );
+
+  const cellPadding = compact ? "10px 14px" : "14px 18px";
+  const labelSize = compact ? 9 : 10;
+  const valueSize = compact ? 13 : 14;
+
+  const labelStyle: React.CSSProperties = {
+    fontFamily: "var(--font-mono)",
+    fontSize: labelSize,
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
+    color: "var(--luxe-soft-white-50)",
+    marginBottom: 4,
+    fontWeight: 600,
+  };
+  const valueStyle = (filled: boolean): React.CSSProperties => ({
+    fontFamily: "var(--font-display)",
+    fontSize: valueSize + 1,
+    fontWeight: 500,
+    fontStyle: filled ? "italic" : "normal",
+    color: filled ? "var(--luxe-soft-white)" : "var(--luxe-soft-white-50)",
+    lineHeight: 1.25,
+    fontVariantNumeric: "tabular-nums",
+  });
+  const cellBase: React.CSSProperties = {
+    flex: 1,
+    minWidth: 0,
+    padding: cellPadding,
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    textAlign: "left",
+    transition: "background 160ms ease",
+    color: "inherit",
+  };
+  const dividerStyle: React.CSSProperties = {
+    width: 1,
+    background: "var(--luxe-hairline)",
+    flexShrink: 0,
+    margin: "10px 0",
+  };
+
+  return (
+    <div ref={containerRef} style={{ position: "relative" }}>
+      <div
+        className="hotel-date-editor"
+        style={{
+          display: "flex",
+          alignItems: "stretch",
+          borderRadius: 12,
+          overflow: "hidden",
+          border: "1px solid var(--luxe-hairline)",
+          background: "rgba(255,255,255,0.03)",
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          style={cellBase}
+          aria-label="Edit check-in date"
+        >
+          <div style={labelStyle}>Check-in</div>
+          <div style={valueStyle(!!checkIn)}>{formatDate(checkIn, "Add date")}</div>
+        </button>
+        <div style={dividerStyle} />
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          style={cellBase}
+          aria-label="Edit check-out date"
+        >
+          <div style={labelStyle}>Check-out</div>
+          <div style={valueStyle(!!checkOut)}>{formatDate(checkOut, "Add date")}</div>
+        </button>
+        <div style={dividerStyle} />
+        <div style={{ flex: 1, minWidth: 0, padding: cellPadding, display: "flex", alignItems: "center" }}>
+          <GuestRoomPicker variant="dark" compact />
+        </div>
+      </div>
+
+      <LuxeDatePicker
+        mode="range"
+        variant="dark"
+        checkIn={checkIn || null}
+        checkOut={checkOut || null}
+        onChange={handleChange}
+        open={open}
+        onClose={() => setOpen(false)}
+        showTrigger={false}
+        anchorRef={containerRef}
+      />
     </div>
   );
 }
@@ -2319,9 +2431,86 @@ export default function HotelPage() {
             description={
               datesSelected
                 ? "Negotiated directly with the hotel."
-                : "Choose your dates to unlock live, member-only pricing."
+                : "Pick your dates and guests below to unlock live, member-only pricing."
             }
           />
+
+          {/* Plan-your-stay hub — editable dates + guests, always visible */}
+          <div
+            className="hotel-booking-hub"
+            style={{
+              marginBottom: 32,
+              padding: "22px 26px",
+              borderRadius: 16,
+              border: "1px solid var(--luxe-hairline-strong)",
+              background:
+                "linear-gradient(135deg, rgba(201,169,97,0.08) 0%, rgba(20,18,15,0.55) 65%)",
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 16,
+                marginBottom: 16,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <p
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 10,
+                    letterSpacing: "0.22em",
+                    textTransform: "uppercase",
+                    color: "var(--luxe-champagne)",
+                    margin: 0,
+                    marginBottom: 4,
+                    fontWeight: 600,
+                  }}
+                >
+                  Plan your stay
+                </p>
+                <h3
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontStyle: "italic",
+                    fontSize: 22,
+                    fontWeight: 500,
+                    lineHeight: 1.2,
+                    color: "var(--luxe-soft-white)",
+                    margin: 0,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {datesSelected ? "Your dates" : "When are you visiting?"}
+                </h3>
+              </div>
+              {datesSelected && nights > 0 && (
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 11,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    color: "var(--luxe-champagne)",
+                    padding: "6px 14px",
+                    border: "1px solid var(--luxe-champagne)",
+                    borderRadius: 999,
+                    fontWeight: 600,
+                    fontVariantNumeric: "tabular-nums",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {nights} night{nights > 1 ? "s" : ""}
+                </div>
+              )}
+            </div>
+            <HotelDateEditor />
+          </div>
 
           <div
             className="hotel-rates-grid"
@@ -2337,24 +2526,41 @@ export default function HotelPage() {
                 <div
                   className="luxe-card"
                   style={{
-                    padding: "48px 32px",
+                    padding: "44px 32px",
                     textAlign: "center",
                     borderRadius: 14,
+                    border: "1px dashed var(--luxe-hairline-strong)",
+                    background: "rgba(255,255,255,0.015)",
                   }}
                 >
+                  <p
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      letterSpacing: "0.22em",
+                      textTransform: "uppercase",
+                      color: "var(--luxe-champagne)",
+                      margin: 0,
+                      marginBottom: 10,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Awaiting dates
+                  </p>
                   <div
                     style={{
                       fontFamily: "var(--font-display)",
-                      fontSize: 24,
+                      fontSize: 22,
                       fontStyle: "italic",
                       color: "var(--luxe-soft-white)",
-                      marginBottom: 10,
+                      marginBottom: 8,
+                      lineHeight: 1.3,
                     }}
                   >
-                    Select your dates to see rates
+                    Pick your dates to reveal rates
                   </div>
-                  <p style={{ fontSize: 13.5, color: "var(--luxe-soft-white-70)", maxWidth: 480, margin: "0 auto 22px", lineHeight: 1.7 }}>
-                    Choose check-in and check-out from the search bar above to unlock live member-only pricing for {hotel.hotel_name}.
+                  <p style={{ fontSize: 13.5, color: "var(--luxe-soft-white-70)", maxWidth: 460, margin: "0 auto", lineHeight: 1.7 }}>
+                    Use the date picker above. We&rsquo;ll fetch live, member-only pricing for {hotel.hotel_name} the moment you do.
                   </p>
                 </div>
               ) : noMatch ? (
