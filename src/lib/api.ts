@@ -1007,8 +1007,17 @@ export async function createBooking(
     body: JSON.stringify(body),
     credentials: "include",
   });
-  if (!res.ok) throw new Error(`Booking failed: ${res.status}`);
-  return res.json();
+  const data = await res.json().catch(() => ({} as Record<string, unknown>));
+  if (!res.ok) {
+    const msg =
+      (data as { error?: string }).error || `Booking failed: ${res.status}`;
+    throw new Error(msg);
+  }
+  // Backend wraps the row as { "booking": {id, status, ...} }. Unwrap so callers
+  // can read result.id without the envelope. Fall back to the raw body in case
+  // a future endpoint returns the row directly.
+  const wrapped = data as { booking?: CreateBookingResult } & CreateBookingResult;
+  return wrapped.booking ?? wrapped;
 }
 
 
