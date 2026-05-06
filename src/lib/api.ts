@@ -1010,3 +1010,130 @@ export async function createBooking(
   if (!res.ok) throw new Error(`Booking failed: ${res.status}`);
   return res.json();
 }
+
+
+/* ─── MMADPay payment integration ──────────────────────────────────────── */
+
+export interface PaymentRow {
+  id: number;
+  merchant_txnid: string;
+  gateway_txnid: string | null;
+  booking_id: number | null;
+  amount: number;
+  currency: string;
+  pay_mode: "UPI" | "CARD" | "NB";
+  upi_channel: "INTENT" | "COLLECT" | null;
+  status:
+    | "CREATED"
+    | "PENDING"
+    | "SUCCESS"
+    | "FAILED"
+    | "EXCEPTION"
+    | "CHARGEBACK"
+    | "REFUNDED"
+    | "PARTIAL_REFUND"
+    | "LIEN"
+    | "UNKNOWN";
+  status_code: string | null;
+  bank_refno: string | null;
+  intent_url: string | null;
+  qr_image: string | null;
+  payment_link: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface CreateUpiPaymentResult {
+  payment: PaymentRow;
+  intent_url: string | null;
+  qr_image: string | null;
+  gateway_txnid: string | null;
+}
+
+export interface CreateCardPaymentResult {
+  payment: PaymentRow;
+  payment_link: string | null;
+  gateway_txnid: string | null;
+}
+
+async function _postPayment<T>(
+  path: string,
+  body: Record<string, unknown>,
+  idToken?: string | null,
+): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+    credentials: "include",
+  });
+  const data = await res.json().catch(() => ({} as Record<string, unknown>));
+  if (!res.ok) {
+    const msg =
+      (data as { error?: string; detail?: string }).error ||
+      (data as { detail?: string }).detail ||
+      `Payment request failed: ${res.status}`;
+    throw new Error(msg);
+  }
+  return data as T;
+}
+
+export async function createUpiPayment(
+  body: {
+    booking_id: number;
+    amount?: number;
+    channel?: "INTENT" | "COLLECT";
+    customer_vpa?: string;
+    customer_name?: string;
+    customer_mobile?: string;
+    customer_email?: string;
+  },
+  idToken?: string | null,
+): Promise<CreateUpiPaymentResult> {
+  return _postPayment<CreateUpiPaymentResult>("/api/payments/upi/create", body, idToken);
+}
+
+export async function createCardPayment(
+  body: {
+    booking_id: number;
+    amount?: number;
+    pay_mode?: "CARD" | "NB";
+    return_url: string;
+    customer_name?: string;
+    customer_mobile?: string;
+    customer_email?: string;
+  },
+  idToken?: string | null,
+): Promise<CreateCardPaymentResult> {
+  return _postPayment<CreateCardPaymentResult>(
+    "/api/payments/card/create",
+    body,
+    idToken,
+  );
+}
+
+export interface PaymentStatusResult {
+  payment: PaymentRow;
+  source: "cache" | "gateway";
+}
+
+export async function fetchPaymentStatus(
+  merchantTxnid: string,
+  idToken?: string | null,
+): Promise<PaymentStatusResult> {
+  const headers: Record<string, string> = {};
+  if (idToken) headers["Authorization"] = `Bearer ${idToken}`;
+  const res = await fetch(
+    `${API_BASE}/api/payments/${encodeURIComponent(merchantTxnid)}/status`,
+    { method: "GET", headers, credentials: "include" },
+  );
+  const data = await res.json().catch(() => ({} as Record<string, unknown>));
+  if (!res.ok) {
+    const msg =
+      (data as { error?: string }).error || `Status check failed: ${res.status}`;
+    throw new Error(msg);
+  }
+  return data as PaymentStatusResult;
+}
