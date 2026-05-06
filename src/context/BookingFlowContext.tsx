@@ -98,6 +98,26 @@ export interface BookingFlowState {
   bookingId: number | null;
   /** Epoch ms when the 5-minute rate hold began. null = not yet started. */
   holdStartedAt: number | null;
+
+  /** MMADPay merchant_txnid carried from /book/payment to /book/payment/processing. */
+  paymentTxnid: string | null;
+  /** Backend payments.id for the active attempt (for admin lookups + recovery). */
+  paymentId: number | null;
+  /** Last-known payment status — keeps the polling loop sticky across page nav. */
+  paymentStatus:
+    | "CREATED"
+    | "PENDING"
+    | "SUCCESS"
+    | "FAILED"
+    | "EXCEPTION"
+    | "CHARGEBACK"
+    | "REFUNDED"
+    | "PARTIAL_REFUND"
+    | "LIEN"
+    | "UNKNOWN"
+    | null;
+  /** UPI deep-link for INTENT flow ('upi://pay?...') — keep for reopen-on-app-switch. */
+  paymentIntentUrl: string | null;
 }
 
 export interface RatePlanInput {
@@ -137,6 +157,14 @@ interface BookingFlowContextValue extends BookingFlowState {
   setPaymentInfo: (info: PaymentInfo) => void;
   setPaymentMethod: (m: PaymentMethodKind | null) => void;
   setBookingId: (id: number) => void;
+  setPaymentAttempt: (attempt: {
+    paymentTxnid: string;
+    paymentId: number;
+    paymentStatus: BookingFlowState["paymentStatus"];
+    paymentIntentUrl?: string | null;
+  }) => void;
+  setPaymentStatus: (status: BookingFlowState["paymentStatus"]) => void;
+  resetPaymentAttempt: () => void;
   startHold: () => void;
   resetHold: () => void;
   resetFlow: () => void;
@@ -182,6 +210,11 @@ const INITIAL_STATE: BookingFlowState = {
 
   bookingId: null,
   holdStartedAt: null,
+
+  paymentTxnid: null,
+  paymentId: null,
+  paymentStatus: null,
+  paymentIntentUrl: null,
 };
 
 function diffNights(checkIn: string, checkOut: string): number {
@@ -297,6 +330,38 @@ export function BookingFlowProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, bookingId: id }));
   }, []);
 
+  const setPaymentAttempt = useCallback(
+    (attempt: {
+      paymentTxnid: string;
+      paymentId: number;
+      paymentStatus: BookingFlowState["paymentStatus"];
+      paymentIntentUrl?: string | null;
+    }) => {
+      setState((prev) => ({
+        ...prev,
+        paymentTxnid: attempt.paymentTxnid,
+        paymentId: attempt.paymentId,
+        paymentStatus: attempt.paymentStatus,
+        paymentIntentUrl: attempt.paymentIntentUrl ?? null,
+      }));
+    },
+    []
+  );
+
+  const setPaymentStatus = useCallback((status: BookingFlowState["paymentStatus"]) => {
+    setState((prev) => ({ ...prev, paymentStatus: status }));
+  }, []);
+
+  const resetPaymentAttempt = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      paymentTxnid: null,
+      paymentId: null,
+      paymentStatus: null,
+      paymentIntentUrl: null,
+    }));
+  }, []);
+
   const startHold = useCallback(() => {
     setState((prev) => (prev.holdStartedAt ? prev : { ...prev, holdStartedAt: Date.now() }));
   }, []);
@@ -328,6 +393,9 @@ export function BookingFlowProvider({ children }: { children: ReactNode }) {
         setPaymentInfo,
         setPaymentMethod,
         setBookingId,
+        setPaymentAttempt,
+        setPaymentStatus,
+        resetPaymentAttempt,
         startHold,
         resetHold,
         resetFlow,

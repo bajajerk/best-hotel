@@ -1,6 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+/* ──────────────────────────────────────────────────────────────────────────
+   /book/confirmation — booking outcome screen.
+
+   Two surfaces, picked from the BookingFlow context:
+
+     · PAID (paymentStatus === "SUCCESS")
+       Big gold checkmark, "Booking confirmed", payment receipt strip,
+       calendar / share / concierge actions.
+
+     · CONCIERGE-PENDING (paymentStatus === null and bookingId set)
+       Existing "Booking request submitted" surface with WhatsApp CTA;
+       concierge follows up to confirm and collect payment.
+
+   The shared scaffold (hotel summary card, secondary CTAs, footer) is
+   identical between the two, only the headline + primary CTA differ.
+   ────────────────────────────────────────────────────────────────────────── */
+
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -41,6 +58,25 @@ function formatYear(iso: string) {
   return new Date(iso + "T00:00:00").getFullYear();
 }
 
+/** Build a Google Calendar event URL for the stay. */
+function googleCalendarUrl(args: {
+  title: string;
+  details: string;
+  checkin: string;
+  checkout: string;
+  location?: string;
+}) {
+  const fmt = (iso: string) => iso.replaceAll("-", "");
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: args.title,
+    details: args.details,
+    dates: `${fmt(args.checkin)}/${fmt(args.checkout)}`,
+  });
+  if (args.location) params.set("location", args.location);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
 export default function ConfirmationPage() {
   const router = useRouter();
   const flow = useBookingFlow();
@@ -54,11 +90,16 @@ export default function ConfirmationPage() {
     setMounted(true);
   }, [flow.bookingId, router]);
 
+  const isPaid = flow.paymentStatus === "SUCCESS";
+
+  const reference = useMemo(
+    () => (flow.bookingId ? `VG-${String(flow.bookingId).padStart(5, "0")}` : ""),
+    [flow.bookingId]
+  );
+
   if (!mounted || !flow.bookingId) return null;
 
-  const reference = `VG-${String(flow.bookingId).padStart(5, "0")}`;
   const nights = flow.nights || 1;
-
   const datesLine = `${formatShortMonthDay(flow.checkIn)} → ${formatShortMonthDay(flow.checkOut)}, ${formatYear(flow.checkOut)} (${nights} night${nights !== 1 ? "s" : ""})`;
   const guestsLine = `${flow.adults} adult${flow.adults !== 1 ? "s" : ""}${flow.children > 0 ? ` · ${flow.children} child${flow.children !== 1 ? "ren" : ""}` : ""}`;
   const cancelClause = flow.refundable && flow.freeCancelUntil
@@ -70,21 +111,30 @@ export default function ConfirmationPage() {
 
   const messageText =
     `Hi Voyagr Concierge!\n\n` +
-    `Booking request: ${reference}\n\n` +
+    `Booking ${isPaid ? "confirmed" : "request"}: ${reference}\n\n` +
     `🏨 ${flow.hotelName}${cityLine}\n` +
     `🛏️ ${roomLine}\n` +
     `📅 ${datesLine}\n` +
     `👥 ${guestsLine}\n` +
     `💰 ${totalLine}\n\n` +
-    `Please confirm and send payment details. Thanks!`;
-
+    (isPaid
+      ? `Payment received via UPI/Card. Please send my voucher.`
+      : `Please confirm and send payment details. Thanks!`);
   const whatsappUrl = `https://wa.me/${CONCIERGE_WHATSAPP}?text=${encodeURIComponent(messageText)}`;
+
+  const calendarUrl = googleCalendarUrl({
+    title: `Stay at ${flow.hotelName}`,
+    details: `Voyagr booking ${reference} — ${roomLine}, ${guestsLine}.\nTotal ${formatInr(flow.totalPrice)}.\nManage at https://voyagr.club/profile`,
+    checkin: flow.checkIn,
+    checkout: flow.checkOut,
+    location: flow.hotelCity || flow.hotelName,
+  });
 
   const [city, country] = (flow.hotelCity || "").split(",").map((s) => s.trim());
 
   return (
     <div style={{ paddingBottom: 24 }}>
-      {/* Big checkmark */}
+      {/* ── Headline + status pill ────────────────────────────────────── */}
       <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
         <svg width="80" height="80" viewBox="0 0 52 52" aria-hidden>
           <circle cx="26" cy="26" r="24" fill="none" stroke={GOLD} strokeWidth="2" />
@@ -99,7 +149,6 @@ export default function ConfirmationPage() {
         </svg>
       </div>
 
-      {/* Headline */}
       <h1
         style={{
           fontFamily: "var(--font-display)",
@@ -112,7 +161,7 @@ export default function ConfirmationPage() {
           lineHeight: 1.1,
         }}
       >
-        Booking request submitted
+        {isPaid ? "Booking confirmed" : "Booking request submitted"}
       </h1>
       <p
         style={{
@@ -139,11 +188,59 @@ export default function ConfirmationPage() {
           lineHeight: 1.6,
         }}
       >
-        Our concierge will WhatsApp you within 15 minutes to confirm rate and
-        collect payment.
+        {isPaid
+          ? `Your stay is locked in. We've emailed your voucher${flow.guestEmail ? ` to ${flow.guestEmail}` : ""}.`
+          : `Our concierge will WhatsApp you within 15 minutes to confirm rate and collect payment.`}
       </p>
 
-      {/* Summary card */}
+      {/* ── Payment-received strip — only when paid ───────────────────── */}
+      {isPaid && (
+        <div
+          style={{
+            background: "rgba(134,199,155,0.08)",
+            border: `1px solid rgba(134,199,155,0.30)`,
+            borderRadius: 14,
+            padding: "12px 16px",
+            marginBottom: 16,
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={SUCCESS} strokeWidth="2.4" aria-hidden>
+            <circle cx="12" cy="12" r="10" />
+            <path d="M8 12l3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "var(--text-body-sm)",
+                fontWeight: 600,
+                color: SUCCESS,
+              }}
+            >
+              Payment received · {formatInr(flow.totalPrice)}
+            </div>
+            {flow.paymentTxnid && (
+              <div
+                style={{
+                  fontFamily: "var(--font-mono), 'JetBrains Mono', ui-monospace, monospace",
+                  fontSize: 10,
+                  color: TEXT_SOFT,
+                  letterSpacing: "0.12em",
+                  marginTop: 2,
+                  wordBreak: "break-all",
+                }}
+              >
+                {flow.paymentTxnid}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Hotel summary card ────────────────────────────────────────── */}
       <div
         style={{
           background: SURFACE,
@@ -228,7 +325,7 @@ export default function ConfirmationPage() {
               letterSpacing: "0.02em",
             }}
           >
-            Total
+            {isPaid ? "Paid" : "Total"}
           </span>
           <span
             style={{
@@ -258,38 +355,78 @@ export default function ConfirmationPage() {
         )}
       </div>
 
-      {/* Primary CTA — WhatsApp */}
-      <a
-        href={whatsappUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-          width: "100%",
-          fontFamily: "var(--font-body)",
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          padding: "16px 24px",
-          borderRadius: 9999,
-          background: "#25D366",
-          color: "#0a0a0a",
-          textDecoration: "none",
-          marginBottom: 12,
-          boxShadow: "0 4px 16px rgba(37,211,102,0.22)",
-        }}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-        </svg>
-        Confirm on WhatsApp
-      </a>
+      {/* ── Primary CTA differs by surface ────────────────────────────── */}
+      {isPaid ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 10,
+            marginBottom: 18,
+          }}
+        >
+          <a
+            href={calendarUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="luxe-btn-secondary"
+            style={{
+              padding: "14px 16px",
+              fontSize: 11,
+              letterSpacing: "0.18em",
+              textAlign: "center",
+            }}
+          >
+            Add to calendar
+          </a>
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="luxe-btn-secondary"
+            style={{
+              padding: "14px 16px",
+              fontSize: 11,
+              letterSpacing: "0.18em",
+              textAlign: "center",
+            }}
+          >
+            Message concierge
+          </a>
+        </div>
+      ) : (
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            width: "100%",
+            fontFamily: "var(--font-body)",
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            padding: "16px 24px",
+            borderRadius: 9999,
+            background: "#25D366",
+            color: "#0a0a0a",
+            textDecoration: "none",
+            marginBottom: 12,
+            boxShadow: "0 4px 16px rgba(37,211,102,0.22)",
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+          </svg>
+          Confirm on WhatsApp
+        </a>
+      )}
 
-      {/* Secondary CTAs */}
+      {/* ── Secondary CTAs ────────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
         <Link
           href="/profile"
@@ -315,7 +452,6 @@ export default function ConfirmationPage() {
         </Link>
       </div>
 
-      {/* Footer */}
       <div
         style={{
           textAlign: "center",
@@ -327,7 +463,7 @@ export default function ConfirmationPage() {
         }}
       >
         {flow.guestEmail
-          ? <>Confirmation will be emailed to {flow.guestEmail} · Reference {reference}</>
+          ? <>{isPaid ? "Voucher emailed" : "Confirmation will be emailed"} to {flow.guestEmail} · Reference {reference}</>
           : <>Reference {reference}</>}
       </div>
     </div>
