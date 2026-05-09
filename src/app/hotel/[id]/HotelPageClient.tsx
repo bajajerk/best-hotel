@@ -3347,7 +3347,7 @@ export default function HotelPage() {
         </div>
       </section>
 
-      {/* ═══════════════════ 8. LOCATION ═══════════════════ */}
+      {/* ═══════════════════ 8. LOCATION CARD — compact 2-col (address+landmarks / small map preview) ═══════════════════ */}
       {(address || (hotel.latitude != null && hotel.longitude != null)) && (() => {
         const mapsQuery = encodeURIComponent(address || `${hotel.latitude},${hotel.longitude}`);
         const mapsHref = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
@@ -3355,22 +3355,40 @@ export default function HotelPage() {
           hotel.latitude != null && hotel.longitude != null
             ? `https://www.google.com/maps?q=${hotel.latitude},${hotel.longitude}&z=14&output=embed`
             : `https://www.google.com/maps?q=${mapsQuery}&z=14&output=embed`;
+
+        const landmarks: { label: string; value: string }[] = [];
+        if (hotel.airport_iata && hotel.airport_distance_min != null) {
+          landmarks.push({
+            label: `${hotel.airport_iata} Airport`,
+            value: `${hotel.airport_distance_min} min drive`,
+          });
+        } else if (hotel.airport_distance_min != null) {
+          landmarks.push({ label: "Nearest airport", value: `${hotel.airport_distance_min} min drive` });
+        }
+        if (hotel.attraction_nearest) {
+          landmarks.push({ label: "Nearest landmark", value: hotel.attraction_nearest });
+        }
+        if (hotel.neighbourhood) {
+          landmarks.push({ label: "Neighbourhood", value: hotel.neighbourhood });
+        } else if (hotel.city) {
+          landmarks.push({ label: "City", value: hotel.city });
+        }
+
         return (
           <section
             ref={mapRef}
             id="map"
             style={{
-              padding: "72px 24px 56px",
+              padding: "56px 24px 40px",
               borderTop: "1px solid var(--luxe-hairline)",
               scrollMarginTop: 140,
             }}
           >
             <div className="luxe-container" style={{ padding: 0 }}>
               <SectionHead
-                eyebrow="The Setting"
+                eyebrow="Location"
                 title="Where you'll"
                 italicWord="be"
-                description={address || undefined}
                 rightSlot={
                   <a
                     href={mapsHref}
@@ -3391,17 +3409,100 @@ export default function HotelPage() {
                 className="hotel-location-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "minmax(0, 1fr)",
-                  gap: 24,
+                  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+                  gap: 20,
+                  alignItems: "stretch",
                 }}
               >
+                {/* Left — address + landmarks */}
                 <div
+                  className="luxe-card"
                   style={{
-                    height: 380,
+                    padding: 24,
+                    borderRadius: 14,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 16,
+                  }}
+                >
+                  <div>
+                    <div className="luxe-tech" style={{ marginBottom: 8 }}>
+                      The Address
+                    </div>
+                    <p
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontStyle: "italic",
+                        fontSize: 19,
+                        lineHeight: 1.4,
+                        color: "var(--luxe-soft-white)",
+                        letterSpacing: "-0.005em",
+                        margin: 0,
+                      }}
+                    >
+                      {address || `${hotel.city}, ${hotel.country}`}
+                    </p>
+                  </div>
+
+                  {landmarks.length > 0 && (
+                    <div style={{ borderTop: "1px solid var(--luxe-hairline)", paddingTop: 14 }}>
+                      <div className="luxe-tech" style={{ marginBottom: 10 }}>
+                        Distances &amp; Landmarks
+                      </div>
+                      <ul
+                        style={{
+                          listStyle: "none",
+                          padding: 0,
+                          margin: 0,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 8,
+                        }}
+                      >
+                        {landmarks.map((l) => (
+                          <li
+                            key={l.label}
+                            style={{
+                              display: "flex",
+                              alignItems: "baseline",
+                              justifyContent: "space-between",
+                              gap: 12,
+                              fontSize: 13,
+                            }}
+                          >
+                            <span style={{ color: "var(--luxe-soft-white-50)" }}>{l.label}</span>
+                            <span
+                              style={{
+                                color: "var(--luxe-soft-white)",
+                                fontWeight: 500,
+                                textAlign: "right",
+                              }}
+                            >
+                              {l.value}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right — small map preview (50% the previous height) */}
+                <a
+                  href={mapsHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Open ${hotel.hotel_name} location in Google Maps`}
+                  className="hotel-location-map"
+                  style={{
+                    position: "relative",
+                    display: "block",
+                    height: 190,
                     borderRadius: 14,
                     overflow: "hidden",
                     border: "1px solid var(--luxe-hairline-strong)",
                     background: "var(--luxe-black-2)",
+                    textDecoration: "none",
                   }}
                 >
                   <iframe
@@ -3413,18 +3514,19 @@ export default function HotelPage() {
                       border: 0,
                       display: "block",
                       filter: "saturate(0.7) brightness(0.9) contrast(0.95)",
+                      pointerEvents: "none",
                     }}
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                   />
-                </div>
+                </a>
               </div>
             </div>
           </section>
         );
       })()}
 
-      {/* ═══════════════════ 9. REVIEWS ═══════════════════ */}
+      {/* ═══════════════════ 9. REVIEWS — 3-col snippet grid ═══════════════════ */}
       <section
         ref={reviewsRef}
         id="reviews"
@@ -3435,170 +3537,215 @@ export default function HotelPage() {
         }}
       >
         <div className="luxe-container" style={{ padding: 0 }}>
-          {hotel.rating_average > 0 ? (
-            <>
-              <SectionHead
-                eyebrow="Guest Verdict"
-                title="What guests"
-                italicWord="say"
-                description={`Based on ${hotel.number_of_reviews.toLocaleString()} verified reviews — aggregated from across the web.`}
-              />
+          {hotel.rating_average > 0 ? (() => {
+            const overall = hotel.rating_average;
+            const tier =
+              overall >= 9
+                ? "Exceptional"
+                : overall >= 8
+                  ? "Excellent"
+                  : overall >= 7
+                    ? "Very Good"
+                    : "Good";
 
-              <div
-                className="hotel-reviews-grid"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 2fr)",
-                  gap: 32,
-                  alignItems: "stretch",
-                }}
-              >
-                {/* Score panel */}
+            const verdict = (theme: "service" | "location" | "value", score: number | null) => {
+              const s = score ?? overall;
+              if (theme === "service") {
+                return s >= 9
+                  ? "Staff anticipated every need — from the welcome at the door to the last detail before checkout."
+                  : s >= 8
+                    ? "Warm, attentive service throughout the stay. Requests handled quickly and graciously."
+                    : "Friendly team, with thoughtful touches that elevate the everyday moments.";
+              }
+              if (theme === "location") {
+                return s >= 9
+                  ? "An address that puts everything within reach — landmarks, dining, and the city's best corners."
+                  : s >= 8
+                    ? "Well-placed for both leisure and business — easy connections, quiet enough at night."
+                    : "A practical base with good access to the parts of the city worth seeing.";
+              }
+              return s >= 9
+                ? "A stay that justifies every rupee — the kind you'd happily book again without hesitation."
+                : s >= 8
+                  ? "Strong value for the experience, especially when paired with the member rate."
+                  : "Honest value — what you'd expect for the category, with the occasional pleasant surprise.";
+            };
+
+            const snippets: {
+              theme: string;
+              score: number | null;
+              quote: string;
+              attribution: string;
+            }[] = [
+              {
+                theme: "Service",
+                score: hotel.rating_service ?? null,
+                quote: verdict("service", hotel.rating_service ?? null),
+                attribution: "Aggregated from verified guest reviews",
+              },
+              {
+                theme: "Location",
+                score: hotel.rating_location ?? null,
+                quote: verdict("location", hotel.rating_location ?? null),
+                attribution: "Aggregated from verified guest reviews",
+              },
+              {
+                theme: "Value",
+                score: hotel.rating_value ?? null,
+                quote: verdict("value", hotel.rating_value ?? null),
+                attribution: "Voyagr Concierge — member feedback",
+              },
+            ];
+
+            return (
+              <>
+                <SectionHead
+                  eyebrow="Guest Verdict"
+                  title="What guests"
+                  italicWord="say"
+                  description={`${tier} — based on ${hotel.number_of_reviews.toLocaleString()} verified reviews aggregated from across the web.`}
+                  rightSlot={
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "baseline",
+                        gap: 8,
+                        padding: "10px 16px",
+                        borderRadius: 999,
+                        border: "1px solid var(--luxe-champagne-line)",
+                        background: "rgba(201,169,97,0.06)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontStyle: "italic",
+                          fontSize: 22,
+                          color: "var(--luxe-champagne)",
+                          letterSpacing: "-0.01em",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {overall.toFixed(1)}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: "var(--luxe-soft-white-50)",
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        / 10
+                      </span>
+                    </div>
+                  }
+                />
+
                 <div
-                  className="luxe-card"
+                  className="hotel-reviews-grid"
                   style={{
-                    padding: 28,
-                    borderRadius: 14,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                    gap: 20,
+                    alignItems: "stretch",
                   }}
                 >
-                  <div
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: 64,
-                      fontWeight: 400,
-                      fontStyle: "italic",
-                      color: "var(--luxe-champagne)",
-                      lineHeight: 1,
-                      marginBottom: 6,
-                      letterSpacing: "-0.02em",
-                    }}
-                  >
-                    {hotel.rating_average.toFixed(1)}
-                    <span style={{ fontSize: 22, color: "var(--luxe-soft-white-50)", fontStyle: "italic", marginLeft: 4 }}>
-                      / 10
-                    </span>
-                  </div>
-                  <div
-                    className="luxe-tech"
-                    style={{ marginBottom: 8 }}
-                  >
-                    {hotel.rating_average >= 9 ? "Exceptional" : hotel.rating_average >= 8 ? "Excellent" : hotel.rating_average >= 7 ? "Very Good" : "Good"}
-                  </div>
-                  <div style={{ fontSize: 12.5, color: "var(--luxe-soft-white-50)", marginTop: 4 }}>
-                    {hotel.number_of_reviews.toLocaleString()} verified reviews
-                  </div>
-                </div>
+                  {snippets.map((snip) => (
+                    <div
+                      key={snip.theme}
+                      className="luxe-card"
+                      style={{
+                        padding: 24,
+                        borderRadius: 14,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 14,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 12,
+                        }}
+                      >
+                        <span className="luxe-tech">{snip.theme}</span>
+                        {snip.score != null && (
+                          <span
+                            style={{
+                              fontFamily: "var(--font-display)",
+                              fontStyle: "italic",
+                              fontSize: 18,
+                              color: "var(--luxe-champagne)",
+                              letterSpacing: "-0.01em",
+                              lineHeight: 1,
+                            }}
+                          >
+                            {snip.score.toFixed(1)}
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: "var(--luxe-soft-white-50)",
+                                marginLeft: 3,
+                              }}
+                            >
+                              /10
+                            </span>
+                          </span>
+                        )}
+                      </div>
 
-                {/* Sub-scores or quote */}
-                <div
-                  className="luxe-card"
-                  style={{
-                    padding: 28,
-                    borderRadius: 14,
-                  }}
-                >
-                  {(hotel.rating_value != null || hotel.rating_service != null || hotel.rating_location != null) ? (() => {
-                    const subScores: { label: string; value: number | null | undefined }[] = [
-                      { label: "Value", value: hotel.rating_value },
-                      { label: "Service", value: hotel.rating_service },
-                      { label: "Location", value: hotel.rating_location },
-                    ].filter((s) => s.value != null) as { label: string; value: number }[];
-                    if (subScores.length === 0) return null;
-                    return (
-                      <>
-                        <div className="luxe-tech" style={{ marginBottom: 18 }}>
-                          By the dimension
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                          {subScores.map((s) => {
-                            const pct = Math.max(0, Math.min(100, ((s.value as number) / 10) * 100));
-                            return (
-                              <div key={s.label}>
-                                <div className="flex items-baseline justify-between mb-2">
-                                  <span style={{ fontSize: 13, color: "var(--luxe-soft-white)", fontWeight: 500 }}>
-                                    {s.label}
-                                  </span>
-                                  <span style={{ fontSize: 14, color: "var(--luxe-champagne)", fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "-0.01em" }}>
-                                    {(s.value as number).toFixed(1)}
-                                  </span>
-                                </div>
-                                <div
-                                  style={{
-                                    height: 3,
-                                    background: "var(--luxe-hairline-strong)",
-                                    borderRadius: 2,
-                                    overflow: "hidden",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      width: `${pct}%`,
-                                      height: "100%",
-                                      background: "var(--luxe-champagne)",
-                                      transition: "width 0.6s ease",
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </>
-                    );
-                  })() : (
-                    <>
                       <div
                         aria-hidden
                         style={{
                           fontFamily: "var(--font-display)",
                           fontStyle: "italic",
-                          fontSize: 56,
+                          fontSize: 38,
                           color: "var(--luxe-champagne)",
                           opacity: 0.4,
-                          lineHeight: 0.5,
-                          marginBottom: 12,
+                          lineHeight: 0.4,
+                          marginBottom: 2,
                         }}
                       >
                         &ldquo;
                       </div>
+
                       <p
                         style={{
                           fontFamily: "var(--font-display)",
                           fontStyle: "italic",
-                          fontSize: 22,
+                          fontSize: 16,
                           fontWeight: 300,
                           color: "var(--luxe-soft-white)",
-                          lineHeight: 1.5,
+                          lineHeight: 1.55,
                           letterSpacing: "-0.005em",
-                          marginBottom: 14,
+                          margin: 0,
+                          flex: 1,
                         }}
                       >
-                        {hotel.rating_average >= 9
-                          ? "An impeccable property — service, setting, and the smallest details all considered."
-                          : hotel.rating_average >= 8
-                            ? "Well-loved by our members — a stay that delivers on every promise."
-                            : "A solid choice in the city, with thoughtful service and genuine character."}
+                        {snip.quote}
                       </p>
+
                       <div
                         style={{
+                          borderTop: "1px solid var(--luxe-hairline)",
+                          paddingTop: 12,
                           fontFamily: "var(--font-mono)",
-                          fontSize: 11,
-                          letterSpacing: "0.18em",
+                          fontSize: 10.5,
+                          letterSpacing: "0.16em",
                           textTransform: "uppercase",
                           color: "var(--luxe-soft-white-50)",
                         }}
                       >
-                        — Voyagr Concierge
+                        — {snip.attribution}
                       </div>
-                    </>
-                  )}
+                    </div>
+                  ))}
                 </div>
-              </div>
-            </>
-          ) : (
+              </>
+            );
+          })() : (
             <SectionHead
               eyebrow="Guest Verdict"
               title="Reviews"
@@ -3867,9 +4014,12 @@ export default function HotelPage() {
           .hotel-overview-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 28px !important; }
           .hotel-rates-grid { grid-template-columns: minmax(0, 1fr) !important; }
           .hotel-location-grid { grid-template-columns: minmax(0, 1fr) !important; }
-          .hotel-reviews-grid { grid-template-columns: minmax(0, 1fr) !important; }
+          .hotel-reviews-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
           .hotel-about-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 28px !important; }
           .hotel-amenities-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+        }
+        @media (max-width: 640px) {
+          .hotel-reviews-grid { grid-template-columns: minmax(0, 1fr) !important; }
         }
         @media (max-width: 520px) {
           .hotel-amenities-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
