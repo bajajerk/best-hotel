@@ -24,7 +24,6 @@ const IVORY = "#fdfaf5";
 
 export const NAV_LINKS = [
   { label: "Hotels", href: "/search" },
-  { label: "Flights", href: "/flights" },
   { label: "Preferred Rates", href: "/preferred-rates" },
   { label: "My Trips", href: "/booking-history" },
 ];
@@ -32,7 +31,6 @@ export const NAV_LINKS = [
 /* Desktop nav links */
 const DESKTOP_LINKS = [
   { label: "Hotels", href: "/search" },
-  { label: "Flights", href: "/flights" },
   { label: "Preferred Rates", href: "/preferred-rates" },
   { label: "Price Match", href: "/match-my-rates" },
   { label: "Sign In", href: "/login" },
