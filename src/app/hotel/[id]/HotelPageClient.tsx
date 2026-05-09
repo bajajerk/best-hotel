@@ -1194,6 +1194,10 @@ export default function HotelPage() {
   const stayRef = useRef<HTMLDivElement>(null);
   const galleryRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
+  /* Quick-link anchor refs (Overview sub-nav) */
+  const roomsAnchorRef = useRef<HTMLDivElement>(null);
+  const amenitiesAnchorRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<HTMLElement>(null);
 
   /* ── Fetch hotel detail (static) ──
    * `hotelId` is the URL path token — slug-shortid, short_id, master UUID, or
@@ -2317,26 +2321,87 @@ export default function HotelPage() {
         </div>
       </div>
 
-      {/* ═══════════════════ 4. EDITORIAL OVERVIEW ═══════════════════ */}
+      {/* ═══════════════════ 4. OVERVIEW (sub-nav + about + particulars + amenities) ═══════════════════ */}
       <section
         ref={stayRef}
         id="the-stay"
         style={{
-          padding: "80px 24px 48px",
+          padding: "56px 24px 48px",
           scrollMarginTop: 140,
         }}
       >
         <div className="luxe-container" style={{ padding: 0 }}>
-          <div
+          {/* ── Quick-links sub-nav ── thin in-page anchors */}
+          <nav
+            aria-label="Section quick links"
+            className="hotel-quicklinks no-scrollbar"
             style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(0, 1fr)",
-              gap: 36,
+              display: "flex",
+              gap: 4,
+              padding: "6px",
+              marginBottom: 36,
+              borderRadius: 999,
+              border: "1px solid var(--luxe-hairline-strong)",
+              background: "rgba(255,255,255,0.025)",
+              overflowX: "auto",
+              width: "fit-content",
+              maxWidth: "100%",
             }}
           >
-            <div style={{ maxWidth: 760 }}>
+            {[
+              { label: "Overview", target: stayRef as React.RefObject<HTMLElement | null> },
+              { label: "Rooms", target: roomsAnchorRef as React.RefObject<HTMLElement | null> },
+              { label: "Amenities", target: amenitiesAnchorRef as React.RefObject<HTMLElement | null> },
+              { label: "Reviews", target: reviewsRef as React.RefObject<HTMLElement | null> },
+              { label: "Map", target: mapRef as React.RefObject<HTMLElement | null> },
+            ].map(({ label, target }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => target.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                style={{
+                  flexShrink: 0,
+                  padding: "8px 16px",
+                  borderRadius: 999,
+                  background: "transparent",
+                  border: "none",
+                  color: "var(--luxe-soft-white-70)",
+                  fontFamily: "var(--font-body)",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  transition: "color 0.2s ease, background 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "#C9A961";
+                  e.currentTarget.style.background = "rgba(201,169,97,0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "var(--luxe-soft-white-70)";
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          {/* ── 2-column About + Particulars ── */}
+          <div
+            className="hotel-about-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)",
+              gap: 36,
+              alignItems: "start",
+            }}
+          >
+            {/* Left: About the Property */}
+            <div style={{ minWidth: 0 }}>
               <div className="luxe-tech" style={{ marginBottom: 12 }}>
-                The Stay
+                About the Property
               </div>
               <h2
                 style={{
@@ -2352,22 +2417,77 @@ export default function HotelPage() {
                 {hotel.editorial_headline ?? hotel.hotel_name}
               </h2>
               {editorialIntro && (
-                <div style={{ marginBottom: 32 }}>
-                  <CollapsibleText
-                    text={editorialIntro}
-                    scrollTargetRef={stayRef}
-                    bodyStyle={{
-                      fontFamily: "var(--font-body)",
-                      fontSize: 16,
-                      lineHeight: "26px",
-                      color: "rgba(255,255,255,0.78)",
-                      margin: 0,
-                    }}
-                  />
-                </div>
+                <CollapsibleText
+                  text={editorialIntro}
+                  scrollTargetRef={stayRef}
+                  bodyStyle={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: 16,
+                    lineHeight: "26px",
+                    color: "rgba(255,255,255,0.78)",
+                    margin: 0,
+                  }}
+                />
               )}
             </div>
 
+            {/* Right: The Particulars (clean table) */}
+            {(hotel.checkin || hotel.checkout || hotel.accommodation_type || hotel.numberrooms || hotel.yearrenovated || hotel.yearopened || (hotel.brand_name && !hotel.chain_name)) && (
+              <div
+                className="luxe-card"
+                style={{
+                  padding: 24,
+                  borderRadius: 14,
+                }}
+              >
+                <div className="luxe-tech" style={{ marginBottom: 16 }}>
+                  The Particulars
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {hotel.checkin && (
+                    <FactRow label="Check-in" value={hotel.checkin} />
+                  )}
+                  {hotel.checkout && (
+                    <FactRow label="Check-out" value={hotel.checkout} />
+                  )}
+                  {hotel.accommodation_type && (
+                    <FactRow label="Property Type" value={hotel.accommodation_type} />
+                  )}
+                  {hotel.numberrooms && (
+                    <FactRow label="Rooms & Suites" value={String(hotel.numberrooms)} />
+                  )}
+                  {hotel.yearrenovated && (
+                    <FactRow label="Last Renovated" value={String(hotel.yearrenovated)} />
+                  )}
+                  {hotel.yearopened && (
+                    <FactRow label="Year Opened" value={String(hotel.yearopened)} />
+                  )}
+                  {hotel.brand_name && !hotel.chain_name && (
+                    <FactRow label="Brand" value={hotel.brand_name} />
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── Amenities — 6-icon grid ── */}
+          <div
+            ref={amenitiesAnchorRef}
+            id="amenities"
+            style={{ marginTop: 56, scrollMarginTop: 140 }}
+          >
+            <div className="luxe-tech" style={{ marginBottom: 18 }}>
+              Amenities
+            </div>
+            <AmenitiesIconGrid
+              amenities={hotel.amenities}
+              restaurants_count={hotel.restaurants_count}
+              room_service_24h={hotel.room_service_24h}
+            />
+          </div>
+
+          {/* ── At-a-glance facts (kept) ── */}
+          <div style={{ marginTop: 40 }}>
             <HotelFactGrid
               neighbourhood={hotel.neighbourhood}
               city={hotel.city}
@@ -2384,125 +2504,98 @@ export default function HotelPage() {
               shuttle_type={hotel.shuttle_type}
               languages={hotel.languages}
             />
+          </div>
 
-            {hotel.tj_description && (
-              hotel.tj_description.rooms ||
-              hotel.tj_description.dining ||
-              hotel.tj_description.amenities ||
-              hotel.tj_description.business_amenities
-            ) && (
-              <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 28 }}>
-                {[
-                  { key: "rooms", label: "The Rooms" },
-                  { key: "dining", label: "Dining" },
-                  { key: "amenities", label: "Amenities & Recreation" },
-                  { key: "business_amenities", label: "For Business" },
-                ].map(({ key, label }) => {
-                  const text = hotel.tj_description?.[key as keyof NonNullable<typeof hotel.tj_description>];
-                  if (!text) return null;
-                  return (
-                    <CollapsibleText
-                      key={key}
-                      label={
-                        <p
-                          style={{
-                            fontFamily: "var(--font-body)",
-                            fontWeight: 500,
-                            fontSize: 11,
-                            lineHeight: "14px",
-                            letterSpacing: "0.18em",
-                            textTransform: "uppercase",
-                            color: "#C9A961",
-                            margin: "0 0 10px",
-                          }}
-                        >
-                          {label}
-                        </p>
-                      }
-                      text={text}
-                      bodyStyle={{
-                        fontFamily: "var(--font-body)",
-                        fontSize: 15,
-                        lineHeight: "25px",
-                        color: "rgba(255,255,255,0.78)",
-                        margin: 0,
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            )}
+          {/* ── Rooms / Dining / Business prose (anchor target for "Rooms") ── */}
+          {hotel.tj_description && (
+            hotel.tj_description.rooms ||
+            hotel.tj_description.dining ||
+            hotel.tj_description.amenities ||
+            hotel.tj_description.business_amenities
+          ) && (
+            <div
+              ref={roomsAnchorRef}
+              id="rooms-detail"
+              style={{
+                marginTop: 40,
+                scrollMarginTop: 140,
+                display: "flex",
+                flexDirection: "column",
+                gap: 28,
+              }}
+            >
+              {[
+                { key: "rooms", label: "The Rooms" },
+                { key: "dining", label: "Dining" },
+                { key: "amenities", label: "Amenities & Recreation" },
+                { key: "business_amenities", label: "For Business" },
+              ].map(({ key, label }) => {
+                const text = hotel.tj_description?.[key as keyof NonNullable<typeof hotel.tj_description>];
+                if (!text) return null;
+                return (
+                  <CollapsibleText
+                    key={key}
+                    label={
+                      <p
+                        style={{
+                          fontFamily: "var(--font-body)",
+                          fontWeight: 500,
+                          fontSize: 11,
+                          lineHeight: "14px",
+                          letterSpacing: "0.18em",
+                          textTransform: "uppercase",
+                          color: "#C9A961",
+                          margin: "0 0 10px",
+                        }}
+                      >
+                        {label}
+                      </p>
+                    }
+                    text={text}
+                    bodyStyle={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: 15,
+                      lineHeight: "25px",
+                      color: "rgba(255,255,255,0.78)",
+                      margin: 0,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
 
-            {hotel.concierge_note && (
-              <div>
-                <p
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontWeight: 500,
-                    fontSize: 11,
-                    lineHeight: "14px",
-                    fontVariant: "small-caps",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.18em",
-                    color: "#C9A961",
-                    margin: "32px 0 12px",
-                  }}
-                >
-                  WHY OUR CONCIERGE LOVES IT
-                </p>
-                <p
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontStyle: "italic",
-                    fontSize: 17,
-                    lineHeight: "26px",
-                    color: "rgba(255,255,255,0.85)",
-                    margin: 0,
-                  }}
-                >
-                  {hotel.concierge_note}
-                </p>
-              </div>
-            )}
-
-            {(hotel.checkin || hotel.checkout || hotel.numberrooms || hotel.yearrenovated || hotel.yearopened || hotel.accommodation_type || (hotel.brand_name && !hotel.chain_name)) && (
-              <div
-                className="luxe-card"
+          {hotel.concierge_note && (
+            <div style={{ marginTop: 32 }}>
+              <p
                 style={{
-                  padding: 24,
-                  borderRadius: 14,
-                  maxWidth: 480,
+                  fontFamily: "var(--font-body)",
+                  fontWeight: 500,
+                  fontSize: 11,
+                  lineHeight: "14px",
+                  fontVariant: "small-caps",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.18em",
+                  color: "#C9A961",
+                  margin: "0 0 12px",
                 }}
               >
-                <div className="luxe-tech" style={{ marginBottom: 16 }}>
-                  The Particulars
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  {hotel.checkin && (
-                    <FactRow label="Check-in" value={hotel.checkin} />
-                  )}
-                  {hotel.checkout && (
-                    <FactRow label="Check-out" value={hotel.checkout} />
-                  )}
-                  {hotel.numberrooms && (
-                    <FactRow label="Rooms & Suites" value={String(hotel.numberrooms)} />
-                  )}
-                  {hotel.yearrenovated && (
-                    <FactRow label="Last Renovated" value={String(hotel.yearrenovated)} />
-                  )}
-                  {hotel.yearopened && (
-                    <FactRow label="Year Opened" value={String(hotel.yearopened)} />
-                  )}
-                  {hotel.accommodation_type && (
-                    <FactRow label="Type" value={hotel.accommodation_type} />
-                  )}
-                  {hotel.brand_name && !hotel.chain_name && (
-                    <FactRow label="Brand" value={hotel.brand_name} />
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+                WHY OUR CONCIERGE LOVES IT
+              </p>
+              <p
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontStyle: "italic",
+                  fontSize: 17,
+                  lineHeight: "26px",
+                  color: "rgba(255,255,255,0.85)",
+                  margin: 0,
+                }}
+              >
+                {hotel.concierge_note}
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -3229,9 +3322,12 @@ export default function HotelPage() {
             : `https://www.google.com/maps?q=${mapsQuery}&z=14&output=embed`;
         return (
           <section
+            ref={mapRef}
+            id="map"
             style={{
               padding: "72px 24px 56px",
               borderTop: "1px solid var(--luxe-hairline)",
+              scrollMarginTop: 140,
             }}
           >
             <div className="luxe-container" style={{ padding: 0 }}>
@@ -3737,6 +3833,11 @@ export default function HotelPage() {
           .hotel-rates-grid { grid-template-columns: minmax(0, 1fr) !important; }
           .hotel-location-grid { grid-template-columns: minmax(0, 1fr) !important; }
           .hotel-reviews-grid { grid-template-columns: minmax(0, 1fr) !important; }
+          .hotel-about-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 28px !important; }
+          .hotel-amenities-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+        }
+        @media (max-width: 520px) {
+          .hotel-amenities-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
         }
         @media (max-width: 760px) {
           .hotel-bento {
@@ -3753,6 +3854,150 @@ export default function HotelPage() {
           }
         }
       `}</style>
+    </div>
+  );
+}
+
+/* ────────────────────────── AmenitiesIconGrid ────────────────────────── */
+/* 6-icon grid with text labels — derives availability from hotel.amenities
+   prose + structured fields, dims unavailable amenities. */
+
+interface AmenitiesIconGridProps {
+  amenities?: string | null;
+  restaurants_count?: number | null;
+  room_service_24h?: boolean | null;
+}
+
+function AmenitiesIconGrid({
+  amenities,
+  restaurants_count,
+  room_service_24h,
+}: AmenitiesIconGridProps) {
+  const lower = (amenities || "").toLowerCase();
+  const has = (kw: string | string[]) =>
+    Array.isArray(kw) ? kw.some((k) => lower.includes(k)) : lower.includes(kw);
+
+  const items: { label: string; available: boolean; icon: React.ReactNode }[] = [
+    {
+      label: "Wifi",
+      // Every modern hotel has wifi; keep as default-on unless explicitly negated
+      available: true,
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+          <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+          <line x1="12" y1="20" x2="12.01" y2="20" />
+        </svg>
+      ),
+    },
+    {
+      label: "Pool",
+      available: has(["pool", "swimming"]),
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+          <path d="M2 20c1.5 0 1.5-1 3-1s1.5 1 3 1 1.5-1 3-1 1.5 1 3 1 1.5-1 3-1 1.5 1 3 1" />
+          <path d="M2 16c1.5 0 1.5-1 3-1s1.5 1 3 1 1.5-1 3-1 1.5 1 3 1 1.5-1 3-1 1.5 1 3 1" />
+          <path d="M7 14V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2" />
+          <path d="M17 14V5a2 2 0 0 0-2-2h0a2 2 0 0 0-2 2" />
+          <path d="M7 9h10" />
+        </svg>
+      ),
+    },
+    {
+      label: "Spa",
+      available: has(["spa", "massage", "wellness", "sauna", "steam"]),
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+          <path d="M12 22c1.25-.987 2.27-1.975 3.9-2.2a5.56 5.56 0 0 1 3.8 1.5" />
+          <path d="M4.3 21.3a5.56 5.56 0 0 1 3.8-1.5c1.63.225 2.65 1.213 3.9 2.2" />
+          <path d="M8.5 8.5c-.385.39-.74.78-1.05 1.18-1.55 2-2.95 4.32-2.95 7.32 0 1.32 1.5 2 4 2 1.5 0 4-.4 4-2 0-3-1.4-5.32-2.95-7.32C9.24 9.28 8.89 8.89 8.5 8.5Z" />
+          <path d="M12 5.5c0-1.5 1-3 3-3 1.5 0 3 1 3 2.5 0 1.5-1 3-3 3" />
+        </svg>
+      ),
+    },
+    {
+      label: "Gym",
+      available: has(["gym", "fitness", "workout"]),
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+          <path d="M6.5 6.5 17.5 17.5" />
+          <path d="m21 21-1-1" />
+          <path d="m3 3 1 1" />
+          <path d="m18 22 4-4" />
+          <path d="m2 6 4-4" />
+          <path d="m3 10 7-7" />
+          <path d="m14 21 7-7" />
+        </svg>
+      ),
+    },
+    {
+      label: "Restaurant",
+      available: !!restaurants_count || has(["restaurant", "dining", "bar", "café", "cafe"]),
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+          <path d="M3 2v7c0 1.1.9 2 2 2s2-.9 2-2V2" />
+          <path d="M7 2v20" />
+          <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z" />
+          <path d="M19 22v-7" />
+        </svg>
+      ),
+    },
+    {
+      label: room_service_24h ? "24h Service" : "Concierge",
+      // Concierge is part of the brand promise — always on
+      available: true,
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z" />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <div
+      className="hotel-amenities-grid"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+        gap: 12,
+      }}
+    >
+      {items.map((item) => (
+        <div
+          key={item.label}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            padding: "20px 12px",
+            borderRadius: 14,
+            border: "1px solid var(--luxe-hairline)",
+            background: item.available ? "rgba(201,169,97,0.04)" : "rgba(255,255,255,0.015)",
+            color: item.available ? "#C9A961" : "var(--luxe-soft-white-50)",
+            opacity: item.available ? 1 : 0.45,
+            transition: "border-color 0.2s ease, background 0.2s ease",
+          }}
+        >
+          {item.icon}
+          <span
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 11,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              fontWeight: 600,
+              color: item.available ? "var(--luxe-soft-white)" : "var(--luxe-soft-white-50)",
+              textAlign: "center",
+            }}
+          >
+            {item.label}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
