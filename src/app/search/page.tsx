@@ -6,42 +6,16 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   fetchCuratedCities,
-  searchHotelsPaginated,
-  fetchBatchRates,
-  defaultBookingDates,
   CuratedCity,
-  type BatchRatesResponse,
 } from "@/lib/api";
-import { hotelUrl } from "@/lib/urls";
 import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import { trackSearch } from "@/lib/analytics";
 import Header from "@/components/Header";
 import DateBar, { DateBarHandle } from "@/components/DateBar";
 import DestinationSearch from "@/components/DestinationSearch";
 import RegionFilterTabs from "@/components/RegionFilterTabs";
-import HotelResultsView, { type HotelResultsItem } from "@/components/HotelResultsView";
+import HotelGrid from "@/components/HotelGrid";
 import { useBooking } from "@/context/BookingContext";
-
-// Search-result row shape returned by /api/hotels/search
-interface SearchHit {
-  id?: string;
-  short_id?: string | null;
-  slug?: string | null;
-  name?: string;
-  hotel_name?: string;
-  city_name?: string;
-  city?: string;
-  country?: string;
-  star_rating: number | null;
-  rating_average?: number | null;
-  rates_from?: number | null;
-  rates_currency?: string | null;
-  image_url?: string | null;
-  photo1?: string | null;
-  addressline1?: string | null;
-  has_refundable?: boolean;
-  has_breakfast?: boolean;
-}
 
 const FALLBACK_IMAGE = FALLBACK_CITY_IMAGE;
 
@@ -78,7 +52,7 @@ const INDIA_SEARCHES = [
   { label: "Rishikesh", slug: "rishikesh" },
 ];
 
-// Hotel result rendering lives in HotelResultsView (Grid/List/Gallery).
+// Hotel result rows + the row card + pagination now live in HotelGrid.
 
 // ---------------------------------------------------------------------------
 // Recent searches (localStorage)
@@ -255,15 +229,27 @@ export default function SearchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
+  // Pagination from URL — page is 1-indexed, per_page is bounded server-side.
+  const initialPage = (() => {
+    const p = parseInt(searchParams.get("page") || "1", 10);
+    return Number.isFinite(p) && p >= 1 ? p : 1;
+  })();
+  const initialPerPage = (() => {
+    const p = parseInt(searchParams.get("per_page") || "20", 10);
+    return Number.isFinite(p) && p >= 1 && p <= 50 ? p : 20;
+  })();
 
-  const { checkIn, checkOut, totalAdults, totalChildren, rooms } = useBooking();
-  const roomsCount = rooms.length;
+  const { checkIn, checkOut } = useBooking();
   const [query, setQuery] = useState(initialQuery);
   const [cities, setCities] = useState<CuratedCity[]>([]);
-
-  const [searchHits, setSearchHits] = useState<SearchHit[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [batchRates, setBatchRates] = useState<BatchRatesResponse | null>(null);
+  const [page, setPage] = useState<number>(initialPage);
+  const [perPage] = useState<number>(initialPerPage);
+  // Result counts surfaced by HotelGrid via onResults — used only for the
+  // toolbar copy on this page. The list itself is owned by HotelGrid.
+  const [resultInfo, setResultInfo] = useState<{ totalCount: number; visibleCount: number }>({
+    totalCount: 0,
+    visibleCount: 0,
+  });
   const [hasSearched, setHasSearched] = useState<boolean>(!!initialQuery);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [regionFilter, setRegionFilter] = useState<string>("All");
@@ -291,111 +277,71 @@ export default function SearchPage() {
     setRecentSearches(getRecentSearches());
   }, []);
 
-  // Commit a query — persist into localStorage + update URL. The actual
-  // fetch happens in the effect below, keyed off `query`.
+  // Search is now driven entirely by `query`/`page`/`perPage` — HotelGrid
+  // owns the fetch + batch-rates effect. We just persist the recent search,
+  // update the URL, and bump `hasSearched`.
   const commitQuery = useCallback(
     (q: string, options?: { persist?: boolean }) => {
       const trimmed = q.trim();
       if (!trimmed) {
         setQuery("");
         setHasSearched(false);
-        setSearchHits([]);
+        setResultInfo({ totalCount: 0, visibleCount: 0 });
         return;
       }
       setQuery(trimmed);
+      setPage(1);
       setHasSearched(true);
       if (options?.persist) {
         addRecentSearch(trimmed, checkIn, checkOut);
         setRecentSearches(getRecentSearches());
       }
-      // Preserve filter params (stars/perks) when bumping query. Anything
-      // else is dropped.
-      const next = new URLSearchParams();
-      next.set("q", trimmed);
-      const stars = searchParams?.get("stars");
-      const perks = searchParams?.get("perks");
-      if (stars) next.set("stars", stars);
-      if (perks) next.set("perks", perks);
-      router.replace(`/search?${next.toString()}`);
+      const params = new URLSearchParams();
+      params.set("q", trimmed);
+      router.replace(`/search?${params.toString()}`);
     },
-    [checkIn, checkOut, router, searchParams],
+    [checkIn, checkOut, router],
   );
 
-  // Fetch hotel results when query changes. Pull up to 50 — the unified
-  // results view shows 8 → all client-side.
-  useEffect(() => {
-    const q = query.trim();
-    if (!q) {
-      setSearchHits([]);
-      setBatchRates(null);
-      return;
-    }
-    let cancelled = false;
-    setSearchLoading(true);
-    searchHotelsPaginated<SearchHit>(q, 1, 50)
-      .then((resp) => {
-        if (cancelled) return;
-        setSearchHits(resp.hotels || []);
-        trackSearch({
-          query: q,
-          result_count: resp.count,
-          source: "search_page",
-          filters: { region: regionFilter },
-        });
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setSearchHits([]);
-      })
-      .finally(() => {
-        if (!cancelled) setSearchLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-    // regionFilter is read inside but only for analytics — no need to refetch.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
+  const handleGridResults = useCallback(
+    ({ totalCount, visibleCount }: { totalCount: number; visibleCount: number; query: string }) => {
+      setResultInfo({ totalCount, visibleCount });
+    },
+    [],
+  );
 
-  // Live batch rates for the fetched hits.
-  useEffect(() => {
-    if (!searchHits.length) {
-      setBatchRates(null);
-      return;
-    }
-    const ids = Array.from(
-      new Set(searchHits.map((h) => (h.id ? String(h.id) : "")).filter(Boolean)),
-    );
-    if (!ids.length) {
-      setBatchRates(null);
-      return;
-    }
-    const { checkin: defIn, checkout: defOut } = defaultBookingDates();
-    const ci = checkIn || defIn;
-    const co = checkOut || defOut;
-    let cancelled = false;
-    fetchBatchRates(
-      ids,
-      ci,
-      co,
-      Math.max(totalAdults, 1),
-      Math.max(totalChildren, 0),
-      Math.max(roomsCount, 1),
-    )
-      .then((resp) => {
-        if (!cancelled) setBatchRates(resp);
-      })
-      .catch(() => {
-        if (!cancelled) setBatchRates(null);
+  const handleGridSearch = useCallback(
+    (info: { query: string; page: number; resultCount: number }) => {
+      trackSearch({
+        query: info.query,
+        result_count: info.resultCount,
+        source: "search_page",
+        filters: { region: regionFilter },
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [searchHits, checkIn, checkOut, totalAdults, totalChildren, roomsCount]);
+    },
+    [regionFilter],
+  );
 
   const handleRecentClick = (term: string) => {
     commitQuery(term, { persist: true });
   };
+
+  // Pagination handler — bump page state, replace URL with the new page
+  // (so deep links work and back-button paginates), and smooth-scroll the
+  // results into view so the user lands at the top of the freshly-rendered
+  // list. HotelGrid re-fetches on the new page automatically.
+  const handlePageChange = useCallback((newPage: number) => {
+    if (newPage === page) return;
+    setPage(newPage);
+    const params = new URLSearchParams();
+    if (query.trim()) params.set("q", query.trim());
+    if (newPage > 1) params.set("page", String(newPage));
+    if (perPage !== 20) params.set("per_page", String(perPage));
+    router.replace(`/search${params.toString() ? `?${params.toString()}` : ""}`);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [page, query, perPage, router]);
 
   const clearRecentSearches = () => {
     if (typeof window !== "undefined") {
@@ -404,52 +350,32 @@ export default function SearchPage() {
     }
   };
 
-  // ── Build the normalised results list for HotelResultsView ────────────
-  const resultsItems: HotelResultsItem[] = useMemo(() => {
-    return searchHits
-      .filter((h) => h && (h.id || h.short_id || h.slug))
-      .map((h) => {
-        const id = String(h.id || h.short_id || h.slug);
-        const live = batchRates?.results[id];
-        const livePrice = typeof live?.from_price === "number" ? live.from_price : null;
-        const memberPrice = livePrice ?? h.rates_from ?? null;
-        const currency = live?.currency || live?.mrp?.currency || h.rates_currency || "INR";
-        const marketPrice = live?.mrp?.agoda_rate ?? null;
-        const discountPct =
-          typeof live?.savings_pct === "number" && live.savings_pct > 0
-            ? Math.round(live.savings_pct)
-            : null;
-        const photo = h.image_url || h.photo1 || null;
-        const photoUrl = photo
-          ? photo.startsWith("http")
-            ? photo
-            : `https://photos.hotelbeds.com/giata/${photo}`
-          : null;
-        const neighbourhood = h.addressline1?.trim() || null;
+  // Filter matching cities based on query
+  const matchingCities = query.trim().length >= 2
+    ? cities.filter(
+        (c) =>
+          c.city_name.toLowerCase().includes(query.toLowerCase()) ||
+          c.country.toLowerCase().includes(query.toLowerCase())
+      )
+    : [];
 
-        return {
-          id,
-          name: h.name || h.hotel_name || "Hotel",
-          href: hotelUrl({
-            slug: h.slug ?? null,
-            short_id: h.short_id ?? null,
-            id,
-          }),
-          imageUrl: photoUrl,
-          starRating: h.star_rating ?? null,
-          ratingAverage: h.rating_average ?? null,
-          neighbourhood,
-          memberPrice,
-          currency,
-          marketPrice,
-          discountPct,
-          hasFreeCancel: !!(live?.has_refundable ?? h.has_refundable),
-          hasBreakfast: !!(live?.has_breakfast ?? h.has_breakfast),
-          hasUpgrade: false,
-          isEditorPick: false,
-        };
-      });
-  }, [searchHits, batchRates]);
+  // Build a lookup: city name → continent (for region filtering hotel results)
+  const cityToContinentMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const c of cities) {
+      map[c.city_name.toLowerCase()] = c.continent;
+    }
+    return map;
+  }, [cities]);
+
+  // Filter matching cities by region too
+  const regionFilteredCities = regionFilter === "All"
+    ? matchingCities
+    : matchingCities.filter((c) => c.continent === regionFilter);
+
+  // Hotel results — counts surface from HotelGrid via onResults / handleGridResults.
+  const totalCount = resultInfo.totalCount;
+  const totalResults = resultInfo.visibleCount;
 
   return (
     <div className="luxe" style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
@@ -649,13 +575,188 @@ export default function SearchPage() {
       {/* ── Results area ── */}
       <section className="search-results-section" style={{ padding: "60px 60px 100px", maxWidth: "1400px", margin: "0 auto" }}>
 
-        {/* ── Unified hotel results (Grid / List / Image Gallery) ── */}
+        {/* Results count */}
+        {hasSearched && (regionFilteredCities.length > 0 || totalResults > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ marginBottom: "32px" }}
+          >
+            <span style={{
+              fontSize: "13px",
+              color: "var(--ink)",
+              fontWeight: 500,
+            }}>
+              {(totalCount > 0 ? totalCount : totalResults).toLocaleString()}{" "}
+              {(totalCount > 0 ? totalCount : totalResults) === 1 ? "hotel" : "hotels"}{" "}
+              for &ldquo;{query.trim()}&rdquo;
+            </span>
+          </motion.div>
+        )}
+
+        {/* ── Hotel results — paginated cards + live batch-rates (HotelGrid) ── */}
         {hasSearched && (
-          <HotelResultsView
-            cityName={query.trim()}
-            hotels={resultsItems}
-            loading={searchLoading}
+          <HotelGrid
+            query={query.trim()}
+            page={page}
+            perPage={perPage}
+            onPageChange={handlePageChange}
+            regionFilter={regionFilter}
+            cityToContinentMap={cityToContinentMap}
+            heading={<div className="type-eyebrow">Hotels Found</div>}
+            onResults={handleGridResults}
+            onSearch={handleGridSearch}
           />
+        )}
+
+        {/* ── Curated favourites in {city} — small horizontal scroller below results ── */}
+        {hasSearched && totalResults > 0 && regionFilteredCities.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            style={{ marginTop: 56 }}
+          >
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16 }}>
+              <div className="type-eyebrow">
+                Curated favourites{regionFilteredCities[0] ? ` in ${regionFilteredCities[0].city_name}` : ""}
+              </div>
+              <span style={{ fontSize: 11, color: "var(--ink-light)", letterSpacing: "0.04em" }}>
+                Editor&rsquo;s picks
+              </span>
+            </div>
+            <div
+              className="curated-scroller"
+              style={{
+                display: "flex",
+                gap: 12,
+                overflowX: "auto",
+                paddingBottom: 8,
+                scrollbarWidth: "thin",
+              }}
+            >
+              {regionFilteredCities.slice(0, 8).map((city) => (
+                <Link
+                  key={city.city_slug}
+                  href={`/city/${city.city_slug}`}
+                  style={{ textDecoration: "none", flex: "0 0 220px" }}
+                >
+                  <motion.div
+                    whileHover={{ y: -2 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                      background: "var(--white)",
+                      border: "1px solid var(--cream-border)",
+                      borderRadius: 8,
+                      overflow: "hidden",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div style={{ height: 110, overflow: "hidden", position: "relative" }}>
+                      <img
+                        src={safeImageSrc(getCityImage(city.city_slug))}
+                        alt={city.city_name}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                          filter: "saturate(0.9)",
+                        }}
+                        loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
+                      />
+                      <div style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: "linear-gradient(180deg, transparent 50%, rgba(20,18,15,0.55) 100%)",
+                      }} />
+                      <div style={{ position: "absolute", left: 12, bottom: 10 }}>
+                        <div style={{
+                          fontFamily: "var(--font-display)",
+                          fontStyle: "italic",
+                          fontSize: 16,
+                          color: "var(--cream)",
+                          lineHeight: 1.1,
+                        }}>
+                          {city.city_name}
+                        </div>
+                        <div style={{ fontSize: 10, color: "rgba(245,240,232,0.75)", marginTop: 2, letterSpacing: "0.04em" }}>
+                          {city.country}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{
+                      padding: "10px 12px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}>
+                      <span style={{ fontSize: 10, color: "var(--ink-light)" }}>
+                        {city.hotel_count > 0 ? `${city.hotel_count}+ hotels` : "Explore"}
+                      </span>
+                      <span style={{ fontSize: 10, color: "var(--gold)", fontWeight: 600, letterSpacing: "0.04em" }}>
+                        View &rarr;
+                      </span>
+                    </div>
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {hasSearched && totalResults === 0 && regionFilteredCities.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ textAlign: "center", padding: "80px 0" }}
+          >
+            <div style={{
+              width: "64px",
+              height: "64px",
+              margin: "0 auto 20px",
+              background: "var(--cream-deep)",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--ink-light)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <h3 className="type-display-3" style={{ color: "var(--ink)", fontStyle: "italic", marginBottom: "8px" }}>
+              No results found
+            </h3>
+            <p className="type-body" style={{ color: "var(--ink-light)", maxWidth: "400px", margin: "0 auto 24px" }}>
+              Try searching with a different city name, hotel, or country.
+            </p>
+            <Link
+              href="/search"
+              style={{
+                fontSize: "12px",
+                color: "var(--gold)",
+                textDecoration: "none",
+                fontWeight: 500,
+                letterSpacing: "0.06em",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                border: "1px solid var(--gold)",
+                padding: "10px 24px",
+                transition: "all 0.2s",
+              }}
+            >
+              Browse all locations
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </Link>
+          </motion.div>
         )}
 
         {/* Empty state — no search yet */}

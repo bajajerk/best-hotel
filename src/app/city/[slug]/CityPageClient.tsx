@@ -21,49 +21,30 @@
 //  was removed once HotelGrid became the source of truth for the listing.
 // =============================================================================
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import {
   fetchCityCurations,
   fetchBatchRates,
   fetchCityGuide,
   defaultBookingDates,
-  searchHotelsPaginated,
   CuratedHotel,
 } from "@/lib/api";
 import type { BatchRatesResponse, CityGuide } from "@/lib/api";
 import { hotelUrl } from "@/lib/urls";
+import { rankHotels } from "@/lib/ranking";
 import { useBooking } from "@/context/BookingContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { trackCityViewed } from "@/lib/analytics";
 import DateBar from "@/components/DateBar";
 import GuestRoomPicker from "@/components/GuestRoomPicker";
-import HotelResultsView, { type HotelResultsItem } from "@/components/HotelResultsView";
+import HotelGrid from "@/components/HotelGrid";
 import { CITY_IMAGES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import { conciergeWhatsappLink } from "@/lib/concierge";
-
-// Search-result row shape — mirrors HotelGrid's HotelGridResult.
-interface CitySearchHit {
-  id?: string;
-  short_id?: string | null;
-  slug?: string | null;
-  name?: string;
-  hotel_name?: string;
-  city_name?: string;
-  country?: string;
-  star_rating: number | null;
-  rating_average?: number | null;
-  rates_from?: number | null;
-  rates_currency?: string | null;
-  image_url?: string | null;
-  photo1?: string | null;
-  addressline1?: string | null;
-  has_refundable?: boolean;
-  has_breakfast?: boolean;
-}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -92,6 +73,9 @@ function safeImg(u: string | null | undefined): string {
   if (u.startsWith("http://")) return u.replace("http://", "https://");
   return u;
 }
+
+const CITY_FALLBACK_GRADIENT =
+  "linear-gradient(135deg, rgba(200,170,118,0.32) 0%, rgba(20,18,15,0.92) 100%)";
 
 // ---------------------------------------------------------------------------
 // Search Summary Bar — sticky, dark luxe glass
@@ -425,16 +409,17 @@ export default function CityPage() {
   const [tagline, setTagline] = useState("");
   const [cityImage, setCityImage] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [batchRates, setBatchRates] = useState<BatchRatesResponse | null>(null);
   const [cityGuide, setCityGuide] = useState<CityGuide | null>(null);
 
   const [searchOpen, setSearchOpen] = useState(false);
 
-  // ── Unified hotel results — fetched from /api/hotels/search by city
-  // name. The curated set above feeds the "Editor's pick" badge only —
-  // there is no longer a separate visual section for it.
-  const [searchHits, setSearchHits] = useState<CitySearchHit[]>([]);
-  const [searchLoading, setSearchLoading] = useState(true);
+  // ── "All hotels in {City}" grid ────────────────────────────────────────
+  // Component-local pagination — no URL sync. Filtering/sorting now lives
+  // inside <HotelGrid>; the legacy on-page filter UI was removed once the
+  // grid below the editor's-pick carousel became the canonical listing.
+  const [allHotelsPage, setAllHotelsPage] = useState(1);
 
   useEffect(() => {
     fetchCityCurations(slug)
@@ -453,6 +438,7 @@ export default function CityPage() {
       })
       .catch((err) => {
         console.error("[Voyagr] Failed to load city curations:", err);
+        setFetchError(true);
       })
       .finally(() => setLoading(false));
   }, [slug]);
@@ -469,31 +455,15 @@ export default function CityPage() {
     };
   }, [slug]);
 
-  const rawAllHotels = useMemo(
-    () =>
-      Array.from(
-        new Map(
-          [...curations.couples, ...curations.singles, ...curations.families].map(
-            (h) => [h.id, h]
-          )
-        ).values()
-      ),
-    [curations]
-  );
-
-  const displayName = cityName || slugToName(slug);
-
-  // Batch-fetch live rates for every hotel rendered in the unified results
-  // section — search hits + any curated hotel IDs not already in the search
-  // page (defensive). Unmatched IDs simply won't have a live rate; we fall
-  // back to the static `rates_from` from the hit/curated.
+  // Batch-fetch live rates for all hotels on this city page. Unmatched IDs are
+  // hidden from the list; matched IDs get their `rates_from` overridden.
   useEffect(() => {
-    const ids = Array.from(
-      new Set([
-        ...searchHits.map((h) => (h.id ? String(h.id) : "")),
-        ...rawAllHotels.map((h) => String(h.id)),
-      ].filter(Boolean))
-    );
+    const all = [
+      ...(curations.couples ?? []),
+      ...(curations.singles ?? []),
+      ...(curations.families ?? []),
+    ];
+    const ids = Array.from(new Set(all.map((h) => h.id))).filter(Boolean);
     if (ids.length === 0) return;
 
     const { checkin: defIn, checkout: defOut } = defaultBookingDates();
@@ -513,99 +483,50 @@ export default function CityPage() {
     return () => {
       cancelled = true;
     };
-  }, [searchHits, rawAllHotels, checkIn, checkOut, totalAdults, totalChildren]);
+  }, [curations, checkIn, checkOut, totalAdults, totalChildren]);
 
-  // ── Fetch the full hotel list for this city (single source of truth) ──
-  useEffect(() => {
-    if (!displayName) return;
-    let cancelled = false;
-    searchHotelsPaginated<CitySearchHit>(displayName, 1, 50)
-      .then((resp) => {
-        if (cancelled) return;
-        setSearchHits(resp.hotels || []);
-      })
-      .catch(() => {
-        if (!cancelled) setSearchHits([]);
-      })
-      .finally(() => {
-        if (!cancelled) setSearchLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [displayName]);
-
-  // ── Build the normalised results list for HotelResultsView ────────────
-  // Editor's pick = hotel id is in the curated set.
-  // Neighbourhood = curated.addressline1 (fall back to search hit's addressline1).
-  // The curated set has authoritative addressline1; search results may not.
-  const editorPickIds = useMemo(
-    () => new Set(rawAllHotels.map((h) => String(h.id))),
-    [rawAllHotels]
+  const rawAllHotels = Array.from(
+    new Map(
+      [...curations.couples, ...curations.singles, ...curations.families].map(
+        (h) => [h.id, h]
+      )
+    ).values()
   );
-  const curatedById = useMemo(() => {
-    const m = new Map<string, CuratedHotel>();
-    for (const h of rawAllHotels) m.set(String(h.id), h);
-    return m;
-  }, [rawAllHotels]);
 
-  const resultsItems: HotelResultsItem[] = useMemo(() => {
-    return searchHits
-      .filter((h) => h && (h.id || h.short_id || h.slug))
-      .map((h) => {
-        const id = String(h.id || h.short_id || h.slug);
-        const curated = curatedById.get(id);
-        const live = batchRates?.results[id];
-        const livePrice = typeof live?.from_price === "number" ? live.from_price : null;
-        const memberPrice = livePrice ?? h.rates_from ?? curated?.rates_from ?? null;
-        const currency =
-          live?.currency ||
-          live?.mrp?.currency ||
-          h.rates_currency ||
-          curated?.rates_currency ||
-          "INR";
-        const marketPrice = live?.mrp?.agoda_rate ?? null;
-        const discountPct =
-          typeof live?.savings_pct === "number" && live.savings_pct > 0
-            ? Math.round(live.savings_pct)
-            : null;
-        const photo = h.image_url || h.photo1 || curated?.photo1 || curated?.photo2 || null;
-        const photoUrl = photo
-          ? photo.startsWith("http")
-            ? photo
-            : `https://photos.hotelbeds.com/giata/${photo}`
-          : null;
-        const neighbourhood =
-          (curated?.addressline1?.trim() || h.addressline1?.trim() || null) || null;
+  // When live batch rates are available, hide unmatched hotels and override the
+  // stale curated `rates_from`/currency with live `from_price` / mrp currency.
+  const allHotels: CuratedHotel[] = batchRates
+    ? rawAllHotels
+        .filter((h) => !batchRates.unmatched_ids.includes(h.id))
+        .map((h) => {
+          const rate = batchRates.results[h.id];
+          if (!rate) return h;
+          return {
+            ...h,
+            rates_from: rate.from_price,
+            rates_currency: rate.mrp?.currency || h.rates_currency || "INR",
+          };
+        })
+        .filter((h) => batchRates.results[h.id])
+    : rawAllHotels;
 
-        return {
-          id,
-          name: h.name || h.hotel_name || curated?.hotel_name || "Hotel",
-          href: hotelUrl({
-            slug: h.slug ?? curated?.slug ?? null,
-            short_id: h.short_id ?? curated?.short_id ?? null,
-            id,
-          }),
-          imageUrl: photoUrl,
-          starRating: h.star_rating ?? curated?.star_rating ?? null,
-          ratingAverage: h.rating_average ?? curated?.rating_average ?? null,
-          neighbourhood,
-          memberPrice,
-          currency,
-          marketPrice,
-          discountPct,
-          hasFreeCancel: !!(live?.has_refundable ?? h.has_refundable),
-          hasBreakfast: !!(live?.has_breakfast ?? h.has_breakfast),
-          // Backend doesn't surface upgrade as a flag yet — leave false.
-          hasUpgrade: false,
-          isEditorPick: editorPickIds.has(id),
-        };
-      });
-  }, [searchHits, batchRates, curatedById, editorPickIds]);
+  // `rankedAll` is the rating-ranked list of curated hotels; only used to
+  // build `curatedPicks` for the editor's-pick carousel below. The on-page
+  // filter/sort UI was removed once <HotelGrid> became the canonical list.
+  const rankedAll = rankHotels(allHotels);
+
+  const displayName = cityName || slugToName(slug);
 
   // Hero image — prefer admin-curated `image_url` from the curations endpoint,
   // fall back to legacy hardcoded CITY_IMAGES, then to the global fallback.
   const heroImg = safeImg(cityImage || CITY_IMAGES[slug] || FALLBACK_CITY_IMAGE);
+
+  // Curated picks for the editorial carousel — top 8 by rating, deduped.
+  // Uses the same `rankedAll` so we don't double-rank.
+  const curatedPicks: CuratedHotel[] = rankedAll
+    .map((r) => r.hotel)
+    .filter((h) => h.rating_average != null)
+    .slice(0, 8);
 
   const handleScrollToHotels = () => {
     document.getElementById("hotels")?.scrollIntoView({
@@ -851,28 +772,210 @@ export default function CityPage() {
       )}
 
       {/* ================================================================
-          4. UNIFIED HOTEL RESULTS — single section replacing the legacy
-          "Editor's Picks" carousel + "All hotels in {city}" grid. The
-          curated set still drives the "Editor's pick" badge inside the
-          shared card grid; everything else lives in a single component.
-          This is the jump-target for the hero "See member rates" CTA.
+          4. CURATED PICKS — top 8 across all categories
+          Hidden if no curated hotels are available for this city.
           ================================================================ */}
-      <section
-        id="hotels"
-        style={{
-          padding: "56px 24px 80px",
-          borderTop: "1px solid var(--luxe-hairline)",
-        }}
-        className="md:!px-[60px]"
-      >
-        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <HotelResultsView
-            cityName={displayName}
-            hotels={resultsItems}
-            loading={loading || searchLoading}
-          />
-        </div>
-      </section>
+      {curatedPicks.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6 }}
+          style={{
+            padding: "72px 0 56px",
+            borderBottom: "1px solid var(--luxe-hairline)",
+          }}
+        >
+          <div className="luxe-container">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                gap: 24,
+                flexWrap: "wrap",
+                marginBottom: 28,
+              }}
+            >
+              <div style={{ maxWidth: 640 }}>
+                <div className="luxe-tech" style={{ marginBottom: 10 }}>
+                  Editor&rsquo;s Picks
+                </div>
+                <h2
+                  className="luxe-display"
+                  style={{
+                    fontSize: "clamp(26px, 2.8vw, 36px)",
+                    marginBottom: 8,
+                  }}
+                >
+                  Curated for <em>{displayName}</em>
+                </h2>
+                <p
+                  style={{
+                    color: "var(--luxe-soft-white-70)",
+                    fontSize: 14,
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {curatedPicks.length} editor&rsquo;s {curatedPicks.length === 1 ? "pick" : "picks"}
+                </p>
+              </div>
+              <button
+                onClick={handleScrollToHotels}
+                className="luxe-tech"
+                style={{
+                  color: "var(--luxe-champagne)",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                See All Hotels &rarr;
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: 16,
+              }}
+            >
+              {curatedPicks.map((h) => (
+                <Link
+                  key={h.id}
+                  href={hotelUrl(h)}
+                  style={{
+                    display: "block",
+                    textDecoration: "none",
+                    color: "inherit",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      aspectRatio: "4 / 3",
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      border: "1px solid rgba(200,170,118,0.18)",
+                      background: CITY_FALLBACK_GRADIENT,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <Image
+                      src={safeImg(h.photo1 || h.photo2)}
+                      alt={h.hotel_name}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      style={{ objectFit: "cover" }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono, monospace)",
+                      fontSize: 10,
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      color: "var(--luxe-soft-white-50)",
+                      marginBottom: 6,
+                    }}
+                  >
+                    {displayName}
+                    {cityCountry ? ` · ${cityCountry}` : ""}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: 22,
+                      fontWeight: 500,
+                      color: "var(--luxe-soft-white)",
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1.25,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {h.hotel_name}
+                  </div>
+                  {h.rating_average != null && (
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        padding: "4px 10px",
+                        background: "var(--luxe-champagne-soft)",
+                        border: "1px solid var(--luxe-champagne-line)",
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "var(--luxe-champagne)",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {h.rating_average.toFixed(1)}/10
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+      )}
+
+
+      {/* ================================================================
+          5b. ALL HOTELS IN {CITY} — full backend index, paginated.
+          excludeIds drops the editor's-pick rows shown in the carousel
+          above so the same hotel never appears twice. This is the
+          jump-target for the hero "See member rates" CTA — id="hotels".
+          ================================================================ */}
+      {!loading && !fetchError && (
+        <section
+          id="hotels"
+          style={{
+            padding: "40px 24px 80px",
+            borderTop: "1px solid var(--luxe-hairline)",
+          }}
+          className="md:!px-[60px]"
+        >
+          <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+            <div style={{ marginBottom: 24 }}>
+              <div className="luxe-tech" style={{ marginBottom: 8 }}>
+                More stays
+              </div>
+              <h2
+                className="luxe-display"
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "clamp(28px, 3.4vw, 44px)",
+                  fontStyle: "italic",
+                  fontWeight: 300,
+                  color: "var(--luxe-soft-white)",
+                  margin: 0,
+                  lineHeight: 1.1,
+                }}
+              >
+                All hotels in {displayName}
+              </h2>
+            </div>
+            <HotelGrid
+              query={displayName}
+              page={allHotelsPage}
+              perPage={20}
+              onPageChange={(n) => {
+                setAllHotelsPage(n);
+                if (typeof window !== "undefined") {
+                  window.scrollTo({ top: window.scrollY, behavior: "auto" });
+                }
+              }}
+              excludeIds={new Set(rawAllHotels.map((h) => String(h.id)))}
+              showResultCount={false}
+            />
+          </div>
+        </section>
+      )}
 
 
       {/* Search edit modal */}
