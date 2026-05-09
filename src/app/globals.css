@@ -6672,3 +6672,30 @@ body:has(.precision-theme) {
   }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Hotel "Journey 1" header — sticky compact search bar + 66/33 grid.
+   Drives the responsive collapse of the 2-col layout and the search bar.
+   Used by /hotel/[id]/HotelPageClient.tsx.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .hotel-journey-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 24px !important;
+  }
+  .hotel-journey-quickbook {
+    position: static !important;
+    top: auto !important;
+  }
+  .hotel-journey-gallery {
+    height: min(420px, 56vh) !important;
+  }
+}
+@media (max-width: 720px) {
+  .hotel-journey-searchbar {
+    flex-wrap: wrap !important;
+  }
+  .hotel-journey-modify {
+    width: 100%;
+  }
+}
+

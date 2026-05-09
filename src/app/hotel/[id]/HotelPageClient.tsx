@@ -1694,269 +1694,550 @@ export default function HotelPage() {
 
       <Header />
 
-      {/* ═══════════════════ 1. HERO ═══════════════════ */}
-      <header
-        style={{
-          position: "relative",
-          minHeight: "min(720px, 92vh)",
-          display: "flex",
-          alignItems: "flex-end",
-          paddingTop: 96,
-          paddingBottom: 56,
-          paddingLeft: 24,
-          paddingRight: 24,
-          overflow: "hidden",
-          background: "var(--luxe-black)",
-        }}
-      >
-        {/* Background image — clickable to open gallery */}
-        <button
-          onClick={() => openLightbox(0)}
-          aria-label="Open gallery"
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: `url(${heroImage}) center/cover no-repeat`,
-            filter: "saturate(0.92) brightness(0.7)",
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-            zIndex: 0,
-          }}
-        />
-        {/* Gradient overlay */}
+      {/* ═══════════════════ 1. JOURNEY HEADER — sticky search bar + 66/33 grid ═══════════════════
+         "Hotel journey 1" redesign:
+         - top sticky compact dark search bar (City • Dates • Guests)
+         - 2-col layout below: hotel identity + 3-image gallery (66%)
+                               Quick Book sticky card (33%)
+         The whole block sits in its own wrapper so the search bar's `position:
+         sticky` is bounded by this section — once the user scrolls into the
+         trust strip / tab bar / rates region below, the search bar releases
+         and the existing tab bar takes over the sticky channel.
+      */}
+      <div style={{ background: "#0A0A0A", paddingTop: 60 }}>
+        {/* ── Compact sticky dark search bar ── */}
         <div
-          aria-hidden
           style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(180deg, rgba(12,11,10,0.55) 0%, rgba(12,11,10,0.25) 32%, rgba(12,11,10,0.85) 88%, rgba(12,11,10,0.96) 100%)",
-            zIndex: 0,
-            pointerEvents: "none",
+            position: "sticky",
+            top: 60,
+            zIndex: 50,
+            background: "#0A0A0A",
+            borderBottom: "1px solid var(--luxe-hairline-strong)",
+            padding: "12px 24px",
           }}
-        />
-
-        {/* Save / Heart button (top-left) */}
-        <button
-          onClick={handleHeartClick}
-          aria-label={isSaved ? "Remove from saved hotels" : "Save this hotel"}
-          aria-pressed={isSaved}
-          className="absolute top-20 left-4 md:top-24 md:left-8 flex items-center justify-center"
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: "50%",
-            background: "rgba(12,11,10,0.55)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            border: "1px solid var(--luxe-hairline-strong)",
-            cursor: "pointer",
-            transition: "transform 0.15s ease, background 0.15s ease",
-            color: isSaved ? "var(--luxe-champagne)" : "var(--luxe-soft-white)",
-            zIndex: 5,
-          }}
-          onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.92)"; }}
-          onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-        </button>
-
-        {/* Photo counter (top-right) */}
-        {photos.length > 1 && (
-          <button
-            onClick={() => openLightbox(0)}
-            className="absolute top-20 right-4 md:top-24 md:right-8 flex items-center gap-2 px-4 py-2"
+          <div
+            className="luxe-container hotel-journey-searchbar"
             style={{
-              background: "rgba(12,11,10,0.6)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              color: "var(--luxe-soft-white)",
-              fontSize: 11,
-              letterSpacing: "0.18em",
-              fontFamily: "var(--font-mono)",
-              border: "1px solid var(--luxe-hairline-strong)",
-              borderRadius: 999,
-              cursor: "pointer",
-              fontWeight: 600,
-              textTransform: "uppercase",
-              zIndex: 5,
+              padding: 0,
+              display: "flex",
+              alignItems: "stretch",
+              gap: 10,
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <path d="M21 15l-5-5L5 21" />
-            </svg>
-            View all · {photos.length}
-          </button>
-        )}
-
-        {/* Hero content */}
-        <div className="luxe-container" style={{ position: "relative", zIndex: 1, width: "100%" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
-            <div className="luxe-tech" style={{ marginBottom: 16 }}>
-              {hotel.city.toUpperCase()}
-              {hotel.country && (
-                <>
-                  <span style={{ margin: "0 8px", opacity: 0.5 }}>·</span>
-                  <span style={{ color: "var(--luxe-soft-white-50)" }}>
-                    {hotel.country.toUpperCase()}
-                  </span>
-                </>
-              )}
-            </div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="luxe-display"
-              style={{
-                fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif",
-                fontSize: "clamp(40px, 6.4vw, 84px)",
-                fontWeight: 300,
-                fontStyle: "italic",
-                lineHeight: 1.04,
-                color: "var(--luxe-soft-white)",
-                marginBottom: 22,
-                letterSpacing: "-0.02em",
-                maxWidth: 1100,
-              }}
-            >
-              {hotel.hotel_name}
-            </motion.h1>
-
-            {/* Star + chain pills */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.28 }}
+            {/* City cell */}
+            <div
               style={{
                 display: "flex",
-                flexWrap: "wrap",
                 alignItems: "center",
                 gap: 10,
-                marginBottom: 24,
+                padding: "10px 16px",
+                borderRadius: 12,
+                border: "1px solid var(--luxe-hairline-strong)",
+                background: "rgba(255,255,255,0.03)",
+                flexShrink: 0,
+                minWidth: 0,
               }}
             >
-              {starDisplay && (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A961" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1, minWidth: 0 }}>
                 <span
                   style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "6px 14px",
-                    borderRadius: 999,
-                    background: "var(--luxe-champagne-soft)",
-                    border: "1px solid var(--luxe-champagne-line)",
-                    color: "var(--luxe-champagne)",
-                    fontSize: 12,
-                    letterSpacing: "0.16em",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 9,
+                    letterSpacing: "0.22em",
+                    textTransform: "uppercase",
+                    color: "var(--luxe-soft-white-50)",
                     fontWeight: 600,
                   }}
                 >
-                  {starDisplay}
+                  City
                 </span>
-              )}
-              {hotel.rating_average > 0 && (
                 <span
                   style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "6px 14px",
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid var(--luxe-hairline-strong)",
+                    fontFamily: "var(--font-display)",
+                    fontStyle: "italic",
+                    fontSize: 14,
                     color: "var(--luxe-soft-white)",
-                    fontSize: 12,
-                    fontWeight: 500,
-                    letterSpacing: "0.04em",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    maxWidth: 200,
+                    marginTop: 2,
                   }}
                 >
-                  <span style={{ color: "var(--luxe-champagne)" }}>{hotel.rating_average.toFixed(1)}</span>
-                  <span style={{ color: "var(--luxe-soft-white-50)" }}>/ 10</span>
-                  {hotel.number_of_reviews > 0 && (
-                    <span style={{ color: "var(--luxe-soft-white-50)" }}>· {hotel.number_of_reviews.toLocaleString()} reviews</span>
-                  )}
+                  {hotel.city}
                 </span>
-              )}
-              {hotel.chain_name && (
-                <span
+              </div>
+            </div>
+
+            {/* Dates + Guests (reuses the dark, compact editor) */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <HotelDateEditor compact />
+            </div>
+
+            {/* Modify CTA — scrolls to rates */}
+            <button
+              onClick={() => document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" })}
+              className="luxe-btn-gold hotel-journey-modify"
+              style={{
+                flexShrink: 0,
+                padding: "0 22px",
+                fontSize: 11,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+              }}
+              aria-label="Modify and see rates"
+            >
+              Modify
+            </button>
+          </div>
+        </div>
+
+        {/* ── 2-col main grid: identity + gallery (66%) | Quick Book (33%) ── */}
+        <section
+          style={{
+            background: "#0A0A0A",
+            padding: "32px 24px 64px",
+          }}
+        >
+          <div
+            className="luxe-container hotel-journey-grid"
+            style={{
+              padding: 0,
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)",
+              gap: 32,
+              alignItems: "start",
+            }}
+          >
+            {/* ── LEFT 66%: Hotel identity + 3-image gallery ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+              style={{ minWidth: 0 }}
+            >
+              <div className="luxe-tech" style={{ marginBottom: 14 }}>
+                {hotel.city.toUpperCase()}
+                {hotel.country && (
+                  <>
+                    <span style={{ margin: "0 8px", opacity: 0.5 }}>·</span>
+                    <span style={{ color: "var(--luxe-soft-white-50)" }}>
+                      {hotel.country.toUpperCase()}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              <h1
+                className="luxe-display"
+                style={{
+                  fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif",
+                  fontSize: "clamp(34px, 4.4vw, 60px)",
+                  fontWeight: 300,
+                  fontStyle: "italic",
+                  lineHeight: 1.05,
+                  color: "var(--luxe-soft-white)",
+                  margin: "0 0 14px",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {hotel.hotel_name}
+              </h1>
+
+              {/* Compact pill row: stars / rating / chain */}
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 24,
+                }}
+              >
+                {starDisplay && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      padding: "5px 12px",
+                      borderRadius: 999,
+                      background: "var(--luxe-champagne-soft)",
+                      border: "1px solid var(--luxe-champagne-line)",
+                      color: "#C9A961",
+                      fontSize: 11,
+                      letterSpacing: "0.14em",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {starDisplay}
+                  </span>
+                )}
+                {hotel.rating_average > 0 && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "5px 12px",
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid var(--luxe-hairline-strong)",
+                      color: "var(--luxe-soft-white)",
+                      fontSize: 11,
+                      fontWeight: 500,
+                    }}
+                  >
+                    <span style={{ color: "#C9A961" }}>{hotel.rating_average.toFixed(1)}</span>
+                    <span style={{ color: "var(--luxe-soft-white-50)" }}>/ 10</span>
+                    {hotel.number_of_reviews > 0 && (
+                      <span style={{ color: "var(--luxe-soft-white-50)" }}>
+                        · {hotel.number_of_reviews.toLocaleString()} reviews
+                      </span>
+                    )}
+                  </span>
+                )}
+                {hotel.chain_name && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      padding: "5px 12px",
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.05)",
+                      border: "1px solid var(--luxe-hairline-strong)",
+                      color: "var(--luxe-soft-white-70)",
+                      fontSize: 11,
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    {hotel.chain_name}
+                  </span>
+                )}
+              </div>
+
+              {/* 3-image grid: 1 large left, 2 small stacked right */}
+              <div
+                className="hotel-journey-gallery"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "2fr 1fr",
+                  gridTemplateRows: "1fr 1fr",
+                  gap: 8,
+                  height: "min(520px, 60vh)",
+                  borderRadius: 14,
+                  overflow: "hidden",
+                  position: "relative",
+                }}
+              >
+                {/* Large left photo (spans 2 rows) */}
+                <button
+                  onClick={() => openLightbox(0)}
+                  aria-label="Open gallery"
                   style={{
-                    display: "inline-flex",
+                    gridRow: "span 2",
+                    background: `url(${heroImage}) center/cover no-repeat`,
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    minHeight: 0,
+                  }}
+                />
+                {/* Top-right small */}
+                <button
+                  onClick={() => openLightbox(Math.min(1, photos.length - 1))}
+                  aria-label="Open gallery"
+                  style={{
+                    background: `url(${photos[1] ? safePhotoUrl(photos[1]) : (photos[0] ? safePhotoUrl(photos[0]) : FALLBACK_IMG)}) center/cover no-repeat`,
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    minHeight: 0,
+                  }}
+                />
+                {/* Bottom-right small with "View all" overlay */}
+                <button
+                  onClick={() => openLightbox(Math.min(2, photos.length - 1))}
+                  aria-label={photos.length > 3 ? `View all ${photos.length} photos` : "Open gallery"}
+                  style={{
+                    position: "relative",
+                    background: `url(${photos[2] ? safePhotoUrl(photos[2]) : (photos[0] ? safePhotoUrl(photos[0]) : FALLBACK_IMG)}) center/cover no-repeat`,
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    minHeight: 0,
+                  }}
+                >
+                  {photos.length > 3 && (
+                    <span
+                      aria-hidden
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "rgba(10,10,10,0.55)",
+                        backdropFilter: "blur(2px)",
+                        WebkitBackdropFilter: "blur(2px)",
+                        color: "#f7f5f2",
+                        fontSize: 12,
+                        letterSpacing: "0.18em",
+                        textTransform: "uppercase",
+                        fontFamily: "var(--font-mono)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      + {photos.length - 3} photos
+                    </span>
+                  )}
+                </button>
+
+                {/* "View all" pill (bottom-right of gallery) */}
+                {photos.length > 1 && (
+                  <button
+                    onClick={() => openLightbox(0)}
+                    style={{
+                      position: "absolute",
+                      bottom: 12,
+                      right: 12,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "8px 14px",
+                      background: "rgba(10,10,10,0.75)",
+                      backdropFilter: "blur(8px)",
+                      WebkitBackdropFilter: "blur(8px)",
+                      color: "#f7f5f2",
+                      fontSize: 11,
+                      letterSpacing: "0.18em",
+                      fontFamily: "var(--font-mono)",
+                      border: "1px solid rgba(255,255,255,0.18)",
+                      borderRadius: 999,
+                      cursor: "pointer",
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                    }}
+                    aria-label="View all photos"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <path d="M21 15l-5-5L5 21" />
+                    </svg>
+                    View all · {photos.length}
+                  </button>
+                )}
+              </div>
+            </motion.div>
+
+            {/* ── RIGHT 33%: Quick Book sticky card ── */}
+            <motion.aside
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="hotel-journey-quickbook"
+              style={{
+                position: "sticky",
+                top: 144,
+                alignSelf: "start",
+                minWidth: 0,
+              }}
+            >
+              <div
+                style={{
+                  background: "#14120f",
+                  border: "1px solid var(--luxe-hairline-strong)",
+                  borderRadius: 14,
+                  padding: 24,
+                }}
+              >
+                {/* Header row: eyebrow + heart */}
+                <div
+                  style={{
+                    display: "flex",
                     alignItems: "center",
-                    padding: "6px 14px",
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid var(--luxe-hairline-strong)",
-                    color: "var(--luxe-soft-white-70)",
+                    justifyContent: "space-between",
+                    marginBottom: 20,
+                  }}
+                >
+                  <div className="luxe-tech">Quick Book</div>
+                  <button
+                    onClick={handleHeartClick}
+                    aria-label={isSaved ? "Remove from saved hotels" : "Save this hotel"}
+                    aria-pressed={isSaved}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 34,
+                      height: 34,
+                      borderRadius: "50%",
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid var(--luxe-hairline-strong)",
+                      color: isSaved ? "#C9A961" : "var(--luxe-soft-white-70)",
+                      cursor: "pointer",
+                      transition: "color 0.15s, background 0.15s",
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Price block */}
+                {(() => {
+                  const fromAmount =
+                    lowestFromRate != null
+                      ? lowestFromRate
+                      : hotel.rates_from != null
+                        ? hotel.rates_from
+                        : null;
+                  const fromCurrency =
+                    rates && rates.rates.length > 0
+                      ? rates.rates[0].currency
+                      : hotel.rates_currency || "INR";
+
+                  if (fromAmount != null) {
+                    return (
+                      <>
+                        <div
+                          style={{
+                            fontFamily: "var(--font-mono)",
+                            fontSize: 10,
+                            letterSpacing: "0.22em",
+                            textTransform: "uppercase",
+                            color: "var(--luxe-soft-white-50)",
+                            fontWeight: 600,
+                            marginBottom: 6,
+                          }}
+                        >
+                          From
+                        </div>
+                        <div
+                          style={{
+                            fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif",
+                            fontStyle: "italic",
+                            fontWeight: 300,
+                            fontSize: 40,
+                            lineHeight: 1.05,
+                            letterSpacing: "-0.02em",
+                            color: "var(--luxe-soft-white)",
+                          }}
+                        >
+                          {formatPrice(fromAmount, fromCurrency)}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            fontFamily: "var(--font-body)",
+                            color: "var(--luxe-soft-white-50)",
+                            marginTop: 4,
+                          }}
+                        >
+                          per night, before taxes
+                        </div>
+                        {heroSavePercent != null && (
+                          <div
+                            style={{
+                              marginTop: 14,
+                              display: "inline-flex",
+                              padding: "5px 12px",
+                              borderRadius: 999,
+                              background: "var(--luxe-champagne-soft)",
+                              border: "1px solid var(--luxe-champagne-line)",
+                              color: "#C9A961",
+                              fontSize: 11,
+                              fontWeight: 600,
+                              letterSpacing: "0.08em",
+                            }}
+                          >
+                            Members save up to {heroSavePercent}%
+                          </div>
+                        )}
+                      </>
+                    );
+                  }
+
+                  if (datesSelected) {
+                    return (
+                      <div
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontStyle: "italic",
+                          fontSize: 18,
+                          color: "var(--luxe-soft-white-70)",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        Loading rates…
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontStyle: "italic",
+                        fontSize: 18,
+                        color: "var(--luxe-soft-white-70)",
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      Pick dates to see rates
+                    </div>
+                  );
+                })()}
+
+                {/* Select Room CTA */}
+                <button
+                  onClick={() => document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" })}
+                  className="luxe-btn-gold"
+                  style={{
+                    width: "100%",
+                    marginTop: 24,
+                    padding: "14px 20px",
                     fontSize: 12,
-                    letterSpacing: "0.04em",
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    fontWeight: 600,
+                  }}
+                  aria-label="Select Room"
+                >
+                  Select Room
+                </button>
+
+                {/* Trust line */}
+                <div
+                  style={{
+                    marginTop: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 11,
+                    color: "var(--luxe-soft-white-50)",
                     fontFamily: "var(--font-body)",
                   }}
                 >
-                  {hotel.chain_name}
-                </span>
-              )}
-            </motion.div>
-
-            {/* Champagne lead */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.36 }}
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: 13,
-                color: "var(--luxe-champagne)",
-                letterSpacing: "0.06em",
-                marginBottom: 30,
-              }}
-            >
-              <span style={{ fontWeight: 600 }}>Preferred rate</span>
-              <span style={{ color: "var(--luxe-soft-white-50)", margin: "0 8px" }}>·</span>
-              <span style={{ color: "var(--luxe-soft-white-70)" }}>
-                {heroSavePercent != null
-                  ? `Voyagr Club members save up to ${heroSavePercent}% vs. public rates`
-                  : "Voyagr Club members save on every stay"}
-              </span>
-            </motion.p>
-
-            {/* Scroll CTA */}
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.44 }}
-              style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}
-            >
-              <button
-                onClick={() => document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" })}
-                className="luxe-btn-primary"
-                aria-label="See member rates"
-              >
-                See member rates ↓
-              </button>
-              <a
-                href={conciergeWhatsappLink(`Hi, I'm interested in ${hotel.hotel_name} in ${hotel.city}`)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="luxe-btn-secondary"
-              >
-                Ask Concierge
-              </a>
-            </motion.div>
-          </motion.div>
-        </div>
-      </header>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A961" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 12l2 2 4-4" />
+                    <circle cx="12" cy="12" r="10" />
+                  </svg>
+                  Free cancellation on most rates
+                </div>
+              </div>
+            </motion.aside>
+          </div>
+        </section>
+      </div>
 
       {/* ═══════════════════ 2. CHAMPAGNE TRUST STRIP ═══════════════════ */}
       <section
