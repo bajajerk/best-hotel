@@ -21,25 +21,35 @@ function CounterButton({
   variant: "dark" | "light";
 }) {
   const isDark = variant === "dark";
+  const [hover, setHover] = useState(false);
+  const [active, setActive] = useState(false);
+
+  const baseBorder = isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.14)";
+  const hoverBorder = isDark ? "rgba(200,170,118,0.55)" : "rgba(0,0,0,0.4)";
+  const baseBg = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)";
+  const hoverBg = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
+  const baseColor = isDark ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0.75)";
+  const hoverColor = isDark ? "#f7f5f2" : "#000";
+  const disabledColor = isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.22)";
+  const disabledBorder = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)";
+
   return (
     <button
       type="button"
       onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => { setHover(false); setActive(false); }}
+      onMouseDown={() => setActive(true)}
+      onMouseUp={() => setActive(false)}
       disabled={disabled}
       className="cursor-pointer"
       style={{
         width: 36,
         height: 36,
-        borderRadius: 8,
-        border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}`,
-        background: disabled
-          ? "transparent"
-          : isDark
-            ? "rgba(255,255,255,0.06)"
-            : "rgba(0,0,0,0.04)",
-        color: disabled
-          ? isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.2)"
-          : isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.7)",
+        borderRadius: "50%",
+        border: `1px solid ${disabled ? disabledBorder : (hover ? hoverBorder : baseBorder)}`,
+        background: disabled ? "transparent" : (hover ? hoverBg : baseBg),
+        color: disabled ? disabledColor : (hover ? hoverColor : baseColor),
         fontSize: 16,
         fontWeight: 400,
         display: "flex",
@@ -47,6 +57,10 @@ function CounterButton({
         justifyContent: "center",
         cursor: disabled ? "not-allowed" : "pointer",
         lineHeight: 1,
+        transition: "all 0.2s ease",
+        transform: active && !disabled ? "scale(0.94)" : "scale(1)",
+        outline: "none",
+        padding: 0,
       }}
       aria-label={label}
     >
@@ -61,6 +75,8 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
     guestSummary,
   } = useBooking();
   const [open, setOpen] = useState(false);
+  const [doneHover, setDoneHover] = useState(false);
+  const [addRoomHover, setAddRoomHover] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -77,11 +93,14 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
   const bgCard = isDark ? "var(--bg-input, rgba(255,255,255,0.06))" : "rgba(0,0,0,0.04)";
   const borderColor = isDark ? "var(--border, rgba(255,255,255,0.08))" : "rgba(0,0,0,0.08)";
   const labelColor = isDark ? "var(--white-30, rgba(255,255,255,0.3))" : "var(--ink-light)";
-  const valueColor = isDark ? "var(--white-80, rgba(255,255,255,0.8))" : "var(--ink)";
-  const dropdownBg = isDark ? "#1e1e1e" : "#ffffff";
-  const dropdownBorder = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)";
-  const rowBorder = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
-  const subLabelColor = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.45)";
+  const valueColor = isDark ? "var(--white-80, rgba(255,255,255,0.85))" : "var(--ink)";
+  const dropdownBg = isDark ? "#151515" : "#ffffff";
+  const dropdownBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
+  const sectionLabelColor = isDark ? "rgba(255,255,255,0.92)" : "rgba(0,0,0,0.92)";
+  const subLabelColor = isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)";
+  const dividerColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+  const goldBase = isDark ? "#c8aa76" : "#8b7340";
+  const goldHover = isDark ? "#d6bb88" : "#7a6334";
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
@@ -94,6 +113,7 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
           borderRadius: compact ? 0 : 12,
           padding: compact ? 0 : "12px 14px",
           cursor: "pointer",
+          transition: "all 0.2s ease",
         }}
       >
         <div
@@ -112,8 +132,8 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
         <div
           style={{
             fontFamily: compact ? "var(--font-body, sans-serif)" : "var(--font-dm-sans)",
-            fontSize: compact ? 16 : 14,
-            fontWeight: compact ? 500 : 400,
+            fontSize: compact ? 16 : 15,
+            fontWeight: compact ? 500 : 500,
             letterSpacing: compact ? "0.2px" : undefined,
             color: compact ? "var(--ink, var(--ink))" : valueColor,
             display: "flex",
@@ -122,7 +142,16 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
             minWidth: 0,
           }}
         >
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
+          <span
+            title={guestSummary}
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              minWidth: 0,
+              flex: 1,
+            }}
+          >
             {guestSummary}
           </span>
           <svg
@@ -144,37 +173,48 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
         <div
           style={{
             position: "absolute",
-            top: "calc(100% + 6px)",
-            left: 0,
+            top: "calc(100% + 8px)",
             right: 0,
             zIndex: 1000,
+            width: 360,
+            maxWidth: "calc(100vw - 32px)",
+            minWidth: 320,
             background: dropdownBg,
             border: `1px solid ${dropdownBorder}`,
-            borderRadius: 14,
-            padding: "12px 14px",
+            borderRadius: 18,
+            padding: "18px 20px",
             boxShadow: isDark
-              ? "0 8px 32px rgba(0,0,0,0.5)"
-              : "0 8px 32px rgba(0,0,0,0.12)",
+              ? "0 10px 30px rgba(0,0,0,0.35)"
+              : "0 10px 30px rgba(0,0,0,0.12)",
+            transition: "all 0.2s ease",
           }}
         >
           {rooms.map((room, idx) => (
-            <div key={idx}>
+            <div
+              key={idx}
+              style={{
+                paddingBottom: idx < rooms.length - 1 ? 16 : 0,
+                marginBottom: idx < rooms.length - 1 ? 16 : 0,
+                borderBottom: idx < rooms.length - 1 ? `1px solid ${dividerColor}` : "none",
+              }}
+            >
               {/* Room header */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  marginBottom: 10,
-                  marginTop: idx > 0 ? 4 : 0,
+                  marginBottom: 14,
                 }}
               >
                 <span
                   style={{
                     fontFamily: "var(--font-dm-sans, sans-serif)",
                     fontSize: 13,
-                    fontWeight: 500,
-                    color: valueColor,
+                    fontWeight: 600,
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                    color: subLabelColor,
                   }}
                 >
                   Room {idx + 1}
@@ -189,9 +229,17 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
                       border: "none",
                       padding: "2px 6px",
                       fontSize: 11,
-                      color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                      fontWeight: 500,
+                      color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
                       cursor: "pointer",
                       fontFamily: "var(--font-dm-sans, sans-serif)",
+                      transition: "color 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.85)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)";
                     }}
                   >
                     Remove
@@ -205,14 +253,37 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  marginBottom: 8,
+                  paddingBottom: 14,
+                  marginBottom: 14,
+                  borderBottom: `1px solid ${dividerColor}`,
+                  minHeight: 36,
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 13, color: valueColor, fontFamily: "var(--font-dm-sans, sans-serif)" }}>Adults</div>
-                  <div style={{ fontSize: 10, color: subLabelColor, fontFamily: "var(--font-dm-sans, sans-serif)" }}>Age 13+</div>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 500,
+                      color: sectionLabelColor,
+                      fontFamily: "var(--font-dm-sans, sans-serif)",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    Adults
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: subLabelColor,
+                      opacity: 0.85,
+                      fontFamily: "var(--font-dm-sans, sans-serif)",
+                      marginTop: 2,
+                    }}
+                  >
+                    Age 13+
+                  </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <CounterButton
                     onClick={() => setRoomAdults(idx, room.adults - 1)}
                     disabled={room.adults <= 1}
@@ -222,11 +293,12 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
                   <span
                     style={{
                       fontFamily: "var(--font-dm-sans, sans-serif)",
-                      fontSize: 14,
+                      fontSize: 16,
                       fontWeight: 500,
-                      color: valueColor,
-                      minWidth: 18,
+                      color: sectionLabelColor,
+                      minWidth: 22,
                       textAlign: "center",
+                      lineHeight: 1,
                     }}
                   >
                     {room.adults}
@@ -246,16 +318,34 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  paddingBottom: idx < rooms.length - 1 ? 12 : 0,
-                  borderBottom: idx < rooms.length - 1 ? `1px solid ${rowBorder}` : "none",
-                  marginBottom: idx < rooms.length - 1 ? 12 : 0,
+                  minHeight: 36,
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 13, color: valueColor, fontFamily: "var(--font-dm-sans, sans-serif)" }}>Children</div>
-                  <div style={{ fontSize: 10, color: subLabelColor, fontFamily: "var(--font-dm-sans, sans-serif)" }}>Age 0-12</div>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 500,
+                      color: sectionLabelColor,
+                      fontFamily: "var(--font-dm-sans, sans-serif)",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    Children
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: subLabelColor,
+                      opacity: 0.85,
+                      fontFamily: "var(--font-dm-sans, sans-serif)",
+                      marginTop: 2,
+                    }}
+                  >
+                    Age 0–12
+                  </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <CounterButton
                     onClick={() => setRoomChildren(idx, room.children - 1)}
                     disabled={room.children <= 0}
@@ -265,11 +355,12 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
                   <span
                     style={{
                       fontFamily: "var(--font-dm-sans, sans-serif)",
-                      fontSize: 14,
+                      fontSize: 16,
                       fontWeight: 500,
-                      color: valueColor,
-                      minWidth: 18,
+                      color: sectionLabelColor,
+                      minWidth: 22,
                       textAlign: "center",
+                      lineHeight: 1,
                     }}
                   >
                     {room.children}
@@ -290,22 +381,35 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
             <button
               type="button"
               onClick={addRoom}
+              onMouseEnter={() => setAddRoomHover(true)}
+              onMouseLeave={() => setAddRoomHover(false)}
               className="cursor-pointer"
               style={{
                 width: "100%",
-                marginTop: 12,
-                padding: "10px 0",
-                background: "transparent",
-                border: `1px dashed ${dropdownBorder}`,
-                borderRadius: 10,
-                fontSize: 12,
+                marginTop: 16,
+                padding: "12px 0",
+                background: addRoomHover
+                  ? (isDark ? "rgba(200,170,118,0.08)" : "rgba(139,115,64,0.06)")
+                  : "transparent",
+                border: `1px dashed ${addRoomHover
+                  ? (isDark ? "rgba(200,170,118,0.55)" : "rgba(139,115,64,0.55)")
+                  : (isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.18)")}`,
+                borderRadius: 12,
+                fontSize: 13,
                 fontWeight: 500,
-                color: isDark ? "var(--gold, #c9a96e)" : "#8b7340",
+                letterSpacing: "0.02em",
+                color: addRoomHover ? goldHover : goldBase,
                 cursor: "pointer",
                 fontFamily: "var(--font-dm-sans, sans-serif)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                transition: "all 0.2s ease",
               }}
             >
-              + Add Room
+              <span style={{ fontSize: 15, lineHeight: 1, marginTop: -1 }}>+</span>
+              <span>Add Another Room</span>
             </button>
           )}
 
@@ -313,19 +417,29 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
           <button
             type="button"
             onClick={() => setOpen(false)}
+            onMouseEnter={() => setDoneHover(true)}
+            onMouseLeave={() => setDoneHover(false)}
             className="cursor-pointer"
             style={{
               width: "100%",
-              marginTop: 10,
-              padding: "10px 0",
-              background: isDark ? "var(--gold, #c9a96e)" : "var(--ink)",
+              height: 44,
+              marginTop: 16,
+              padding: 0,
+              background: isDark
+                ? (doneHover ? goldHover : goldBase)
+                : (doneHover ? "#000" : "var(--ink, #1a1a1a)"),
               border: "none",
-              borderRadius: 10,
-              fontSize: 13,
-              fontWeight: 500,
-              color: isDark ? "var(--bg-black, #0a0a0a)" : "#ffffff",
+              borderRadius: 12,
+              fontSize: 14,
+              fontWeight: 600,
+              letterSpacing: "0.04em",
+              color: isDark ? "#0a0a0a" : "#ffffff",
               cursor: "pointer",
               fontFamily: "var(--font-dm-sans, sans-serif)",
+              transition: "all 0.2s ease",
+              boxShadow: doneHover
+                ? (isDark ? "0 6px 18px rgba(200,170,118,0.25)" : "0 6px 18px rgba(0,0,0,0.18)")
+                : "none",
             }}
           >
             Done
