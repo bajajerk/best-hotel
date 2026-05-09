@@ -4517,6 +4517,33 @@ body:has(.precision-theme) {
   background: rgba(255, 255, 255, 0.04);
 }
 
+/* ── Room category card — compact MMT-style row (thumb / details / price) ── */
+.room-cat-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 140px) 1fr auto;
+  gap: 18px;
+  width: 100%;
+  padding: 14px;
+  align-items: center;
+  box-sizing: border-box;
+}
+@media (max-width: 639px) {
+  .room-cat-row {
+    grid-template-columns: 96px 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
+  .room-cat-row > .room-cat-price {
+    grid-column: 1 / -1;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    min-width: 0 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 12px;
+  }
+}
+
 /* ── Top Cities — Embla carousel (cinematic motion) ── */
 
 /* Disable all transitions during window resize to prevent jank */

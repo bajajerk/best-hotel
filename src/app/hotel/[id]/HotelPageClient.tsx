@@ -544,34 +544,43 @@ function RoomCategoryCard({
   children?: React.ReactNode;
 }) {
   const cheapest = formatPrice(category.cheapestPrice, category.currency);
-  const cheapestRefundable = category.cheapestRefundablePrice
-    ? formatPrice(category.cheapestRefundablePrice, category.currency)
-    : null;
+  const hasRefundable = category.cheapestRefundablePrice != null;
+
+  // Build bullet inclusions from cheapest plan + category data.
+  const cheapestPlan =
+    category.plans.slice().sort((a, b) => a.total_price - b.total_price)[0];
+  const inclusions: string[] = [];
+  if (hasRefundable) inclusions.push("Free Cancellation available");
+  if (cheapestPlan) {
+    const meal = formatMealBasis(cheapestPlan.meal_basis);
+    if (meal && meal !== "Room Only") inclusions.push(`${meal} included`);
+  }
+  if (variantsPreview.length > 0) {
+    inclusions.push(
+      variantsPreview.slice(0, 2).join(" · ") +
+        (category.variants.length > 2
+          ? ` · +${category.variants.length - 2} more`
+          : "")
+    );
+  }
+  inclusions.push(
+    `${planCount} rate option${planCount !== 1 ? "s" : ""} available`
+  );
+
   return (
     <div
-      className="luxe-card"
       style={{
-        borderRadius: 14,
+        background: "#1A1A1A",
+        border: isExpanded
+          ? "1px solid #C9A961"
+          : "1px solid rgba(255,255,255,0.06)",
+        borderRadius: 12,
         overflow: "hidden",
-        border: isExpanded ? "1px solid #C9A961" : undefined,
-        transition: "border-color 200ms ease",
+        transition: "border-color 200ms ease, background 200ms ease",
       }}
     >
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isExpanded}
-        style={{
-          all: "unset",
-          cursor: "pointer",
-          display: "grid",
-          gridTemplateColumns: "minmax(120px, 160px) 1fr",
-          gap: 18,
-          width: "100%",
-          padding: 14,
-          boxSizing: "border-box",
-        }}
-      >
+      <div className="room-cat-row">
+        {/* Left — thumbnail */}
         <div
           style={{
             position: "relative",
@@ -584,99 +593,125 @@ function RoomCategoryCard({
             backgroundPosition: "center",
           }}
         />
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
-          <p
+
+        {/* Middle — room name + bullet inclusions */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            minWidth: 0,
+          }}
+        >
+          <h4
             style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 10,
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              color: "#C9A961",
+              fontFamily: "var(--font-display)",
+              fontStyle: "italic",
+              fontSize: 20,
+              fontWeight: 500,
+              color: "var(--luxe-soft-white)",
               margin: 0,
+              lineHeight: 1.2,
+              letterSpacing: "-0.01em",
             }}
           >
             {category.name}
-          </p>
-          {variantsPreview.length > 0 && (
-            <p
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: 13,
-                lineHeight: "20px",
-                color: "var(--luxe-soft-white-70)",
-                margin: 0,
-              }}
-            >
-              {variantsPreview.join(" · ")}
-              {category.variants.length > variantsPreview.length
-                ? ` · +${category.variants.length - variantsPreview.length} more`
-                : ""}
-            </p>
-          )}
-          <p
+          </h4>
+          <ul
             style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 10,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              color: "var(--luxe-soft-white-50)",
+              listStyle: "none",
+              padding: 0,
               margin: 0,
-            }}
-          >
-            {planCount} rate plan{planCount !== 1 ? "s" : ""}
-            {cheapestRefundable && cheapestRefundable !== cheapest
-              ? " · refundable available"
-              : ""}
-          </p>
-          <div
-            style={{
               display: "flex",
-              alignItems: "baseline",
-              justifyContent: "space-between",
-              marginTop: "auto",
-              paddingTop: 6,
-              gap: 12,
-              flexWrap: "wrap",
+              flexDirection: "column",
+              gap: 4,
             }}
           >
-            <div>
-              <span
+            {inclusions.map((line, i) => (
+              <li
+                key={i}
                 style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 10,
-                  letterSpacing: "0.16em",
-                  textTransform: "uppercase",
-                  color: "var(--luxe-soft-white-50)",
-                  marginRight: 8,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                  fontFamily: "var(--font-body)",
+                  fontSize: 13,
+                  lineHeight: "18px",
+                  color:
+                    i === 0 && hasRefundable
+                      ? "#C9A961"
+                      : "var(--luxe-soft-white-70)",
                 }}
               >
-                From
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontStyle: "italic",
-                  fontSize: 22,
-                  color: "var(--luxe-soft-white)",
-                }}
-              >
-                {cheapest}
-              </span>
-            </div>
-            <span
+                <span
+                  aria-hidden
+                  style={{
+                    flex: "none",
+                    color:
+                      i === 0 && hasRefundable
+                        ? "#C9A961"
+                        : "var(--luxe-soft-white-50)",
+                    fontSize: 12,
+                    lineHeight: "18px",
+                  }}
+                >
+                  {i === 0 && hasRefundable ? "✓" : "•"}
+                </span>
+                {line}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Right — price + Select button */}
+        <div
+          className="room-cat-price"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: 10,
+            minWidth: 132,
+          }}
+        >
+          <div style={{ textAlign: "right" }}>
+            <div
               style={{
                 fontFamily: "var(--font-mono)",
-                fontSize: 11,
-                letterSpacing: "0.16em",
+                fontSize: 9.5,
+                letterSpacing: "0.18em",
                 textTransform: "uppercase",
-                color: "#C9A961",
+                color: "var(--luxe-soft-white-50)",
+                marginBottom: 2,
               }}
             >
-              {isExpanded ? "Hide rates ↑" : "View rates ↓"}
-            </span>
+              From
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: 24,
+                fontWeight: 700,
+                color: "#C9A961",
+                lineHeight: 1.1,
+                letterSpacing: "-0.015em",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {cheapest}
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded={isExpanded}
+            className="luxe-btn-gold"
+            style={{ padding: "10px 22px", fontSize: 11 }}
+          >
+            {isExpanded ? "Hide rates" : "Select"}
+          </button>
         </div>
-      </button>
+      </div>
       {children && <div style={{ padding: "0 14px 14px" }}>{children}</div>}
     </div>
   );
@@ -3024,7 +3059,7 @@ export default function HotelPage() {
                         {filteredRates.length > categories.length ? ` · ${filteredRates.length} rate plans` : ""}
                         {rates.nights > 0 ? ` · ${rates.nights} night${rates.nights > 1 ? "s" : ""}` : ""}
                       </p>
-                      <div className="flex flex-col gap-3">
+                      <div className="flex flex-col" style={{ gap: 6 }}>
                         {categories.map((category, idx) => {
                           const isExpanded = expandedCategory === category.name;
                           const photo = [hotel.photo1, hotel.photo2, hotel.photo3, hotel.photo4]
