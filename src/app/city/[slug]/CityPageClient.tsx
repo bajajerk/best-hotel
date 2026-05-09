@@ -42,7 +42,7 @@ import Footer from "@/components/Footer";
 import { trackCityViewed } from "@/lib/analytics";
 import DateBar from "@/components/DateBar";
 import GuestRoomPicker from "@/components/GuestRoomPicker";
-import HotelGrid from "@/components/HotelGrid";
+import HotelResultsView from "@/components/HotelResultsView";
 import { CITY_IMAGES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
 import { conciergeWhatsappLink } from "@/lib/concierge";
 
@@ -414,12 +414,6 @@ export default function CityPage() {
   const [cityGuide, setCityGuide] = useState<CityGuide | null>(null);
 
   const [searchOpen, setSearchOpen] = useState(false);
-
-  // ── "All hotels in {City}" grid ────────────────────────────────────────
-  // Component-local pagination — no URL sync. Filtering/sorting now lives
-  // inside <HotelGrid>; the legacy on-page filter UI was removed once the
-  // grid below the editor's-pick carousel became the canonical listing.
-  const [allHotelsPage, setAllHotelsPage] = useState(1);
 
   useEffect(() => {
     fetchCityCurations(slug)
@@ -926,7 +920,7 @@ export default function CityPage() {
 
 
       {/* ================================================================
-          5b. ALL HOTELS IN {CITY} — full backend index, paginated.
+          5b. ALL HOTELS IN {CITY} — unified Grid/List view.
           excludeIds drops the editor's-pick rows shown in the carousel
           above so the same hotel never appears twice. This is the
           jump-target for the hero "See member rates" CTA — id="hotels".
@@ -941,37 +935,10 @@ export default function CityPage() {
           className="md:!px-[60px]"
         >
           <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-            <div style={{ marginBottom: 24 }}>
-              <div className="luxe-tech" style={{ marginBottom: 8 }}>
-                More stays
-              </div>
-              <h2
-                className="luxe-display"
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "clamp(28px, 3.4vw, 44px)",
-                  fontStyle: "italic",
-                  fontWeight: 300,
-                  color: "var(--luxe-soft-white)",
-                  margin: 0,
-                  lineHeight: 1.1,
-                }}
-              >
-                All hotels in {displayName}
-              </h2>
-            </div>
-            <HotelGrid
+            <HotelResultsView
               query={displayName}
-              page={allHotelsPage}
-              perPage={20}
-              onPageChange={(n) => {
-                setAllHotelsPage(n);
-                if (typeof window !== "undefined") {
-                  window.scrollTo({ top: window.scrollY, behavior: "auto" });
-                }
-              }}
+              cityName={displayName}
               excludeIds={new Set(rawAllHotels.map((h) => String(h.id)))}
-              showResultCount={false}
             />
           </div>
         </section>
