@@ -210,25 +210,21 @@ export default function DestinationSearch({
 
   // Style config
   const isDark = variant === "dark";
+  // Light variant uses hardcoded hex (not --ink/--ink-light) because the search
+  // page wraps everything in `.luxe`, which flips those tokens to near-white —
+  // making text invisible on the white dropdown surface.
   const styles = {
     input: {
       border: "none",
       background: "transparent",
       fontSize: "14px",
-      color: isDark ? "var(--luxe-soft-white, var(--luxe-soft-white))" : "var(--ink)",
+      color: isDark ? "var(--luxe-soft-white, var(--luxe-soft-white))" : "#111111",
       fontFamily: "var(--font-body)",
       fontWeight: 400 as const,
       width: "100%",
       outline: "none",
       padding: "0",
     },
-    // Solid dark glass panel — readable over any backdrop, with champagne hairline
-    // border so the dropdown reads as part of the luxe system, not a generic OS popover.
-    //
-    // Light-variant note: using `var(--white)` here was visually identical to the
-    // cream search card and the cream page bg — the dropdown read as translucent
-    // because all three layers were near-equal. Pinned to opaque pure white +
-    // a stronger ink-tinted shadow + champagne hairline so it pops off the card.
     dropdown: {
       position: "absolute" as const,
       top: "calc(100% + 8px)",
@@ -237,63 +233,64 @@ export default function DestinationSearch({
       background: isDark ? "rgba(20, 18, 15, 0.98)" : "#ffffff",
       backdropFilter: isDark ? "blur(24px) saturate(140%)" : undefined,
       WebkitBackdropFilter: isDark ? "blur(24px) saturate(140%)" : undefined,
-      border: `1px solid ${isDark ? "rgba(200, 170, 118, 0.18)" : "rgba(200, 170, 118, 0.35)"}`,
-      borderRadius: "12px",
+      border: `1px solid ${isDark ? "rgba(200, 170, 118, 0.18)" : "rgba(0, 0, 0, 0.06)"}`,
+      borderRadius: "16px",
       boxShadow: isDark
         ? "0 24px 64px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35)"
-        : "0 24px 64px rgba(26, 23, 16, 0.18), 0 6px 16px rgba(26, 23, 16, 0.10)",
+        : "0 18px 48px rgba(17, 17, 17, 0.10), 0 4px 12px rgba(17, 17, 17, 0.05)",
       zIndex: 1000,
       maxHeight: "440px",
       overflowY: "auto" as const,
-      padding: "6px 0",
+      padding: "8px 0",
     },
     sectionLabel: {
-      padding: "12px 16px 8px",
+      padding: "14px 20px 8px",
       fontSize: "10px",
       fontFamily: "var(--font-mono, monospace)",
       letterSpacing: "0.16em",
       textTransform: "uppercase" as const,
       fontWeight: 500,
-      color: isDark ? "var(--luxe-champagne, var(--luxe-champagne))" : "var(--ink-light)",
+      color: isDark ? "var(--luxe-champagne, var(--luxe-champagne))" : "#666666",
     },
     item: (isActive: boolean) => ({
       display: "flex" as const,
       alignItems: "center" as const,
-      gap: "12px",
-      padding: "10px 16px",
+      gap: "14px",
+      padding: "11px 20px",
       cursor: "pointer" as const,
-      transition: "background 0.15s ease, border-left-color 0.15s ease",
-      // Active = keyboard-focused; clearer champagne tint + champagne left bar
+      transition: "background 0.2s ease, color 0.2s ease, border-left-color 0.2s ease",
       background: isActive
         ? isDark
           ? "rgba(200, 170, 118, 0.14)"
-          : "var(--cream)"
+          : "#F5F5F5"
         : "transparent",
       borderLeft: isActive && isDark ? "2px solid var(--luxe-champagne, var(--luxe-champagne))" : "2px solid transparent",
     }),
     cityName: {
-      fontSize: "14px",
+      fontSize: "15px",
       fontFamily: "var(--font-display)",
-      fontWeight: 400,
+      fontWeight: 500 as const,
       fontStyle: "italic" as const,
-      color: isDark ? "var(--luxe-soft-white, var(--luxe-soft-white))" : "var(--ink)",
-      lineHeight: 1.25,
+      color: isDark ? "var(--luxe-soft-white, var(--luxe-soft-white))" : "#111111",
+      lineHeight: 1.3,
     },
     cityCountry: {
-      fontSize: "12px",
-      color: isDark ? "var(--luxe-soft-white-70, rgba(247,245,242,0.7))" : "var(--ink-light)",
-      marginTop: 2,
+      fontSize: "13px",
+      color: isDark ? "var(--luxe-soft-white-70, rgba(247,245,242,0.7))" : "#666666",
+      opacity: isDark ? 1 : 0.85,
+      marginTop: 3,
     },
     hotelName: {
-      fontSize: "14px",
-      fontWeight: 500,
-      color: isDark ? "var(--luxe-soft-white, var(--luxe-soft-white))" : "var(--ink)",
-      lineHeight: 1.25,
+      fontSize: "15px",
+      fontWeight: 500 as const,
+      color: isDark ? "var(--luxe-soft-white, var(--luxe-soft-white))" : "#111111",
+      lineHeight: 1.3,
     },
     hotelLocation: {
-      fontSize: "12px",
-      color: isDark ? "var(--luxe-soft-white-70, rgba(247,245,242,0.7))" : "var(--ink-light)",
-      marginTop: 2,
+      fontSize: "13px",
+      color: isDark ? "var(--luxe-soft-white-70, rgba(247,245,242,0.7))" : "#666666",
+      opacity: isDark ? 1 : 0.85,
+      marginTop: 3,
     },
   };
 
@@ -312,7 +309,7 @@ export default function DestinationSearch({
           height="16"
           viewBox="0 0 24 24"
           fill="none"
-          stroke={isDark ? "rgba(245,240,232,0.4)" : "var(--ink-light)"}
+          stroke={isDark ? "rgba(245,240,232,0.4)" : "#666666"}
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -374,7 +371,7 @@ export default function DestinationSearch({
                       width: "32px",
                       height: "32px",
                       borderRadius: "8px",
-                      background: isDark ? "rgba(200, 170, 118, 0.10)" : "var(--cream)",
+                      background: isDark ? "rgba(200, 170, 118, 0.10)" : "rgba(201, 168, 76, 0.10)",
                       border: isDark ? "1px solid rgba(200, 170, 118, 0.18)" : "none",
                       display: "flex",
                       alignItems: "center",
@@ -399,7 +396,7 @@ export default function DestinationSearch({
                         )}
                       </div>
                     </div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? "var(--luxe-soft-white-50, rgba(247,245,242,0.5))" : "var(--cream-border)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? "var(--luxe-soft-white-50, rgba(247,245,242,0.5))" : "rgba(0, 0, 0, 0.25)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
                   </div>
@@ -413,10 +410,10 @@ export default function DestinationSearch({
                 <div style={{
                   ...styles.sectionLabel,
                   borderTop: citySuggestions.length > 0
-                    ? `1px solid ${isDark ? "rgba(200, 170, 118, 0.12)" : "var(--cream-border)"}`
+                    ? `1px solid ${isDark ? "rgba(200, 170, 118, 0.12)" : "rgba(0, 0, 0, 0.08)"}`
                     : "none",
-                  paddingTop: citySuggestions.length > 0 ? "14px" : "10px",
-                  marginTop: citySuggestions.length > 0 ? "6px" : 0,
+                  paddingTop: citySuggestions.length > 0 ? "16px" : "10px",
+                  marginTop: citySuggestions.length > 0 ? "8px" : 0,
                 }}>
                   Hotels
                 </div>
@@ -436,7 +433,7 @@ export default function DestinationSearch({
                         width: "32px",
                         height: "32px",
                         borderRadius: "8px",
-                        background: isDark ? "rgba(245,240,232,0.06)" : "var(--cream)",
+                        background: isDark ? "rgba(245,240,232,0.06)" : "rgba(201, 168, 76, 0.10)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -464,7 +461,7 @@ export default function DestinationSearch({
                           ) : null}
                         </div>
                       </div>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? "rgba(245,240,232,0.2)" : "var(--cream-border)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? "rgba(245,240,232,0.2)" : "rgba(0, 0, 0, 0.25)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="9 18 15 12 9 6" />
                       </svg>
                     </div>
@@ -476,9 +473,9 @@ export default function DestinationSearch({
             {/* Loading indicator */}
             {loading && hotelSuggestions.length === 0 && (
               <div style={{
-                padding: "12px 16px",
-                fontSize: "12px",
-                color: isDark ? "var(--luxe-soft-white-70, rgba(247,245,242,0.7))" : "var(--ink-light)",
+                padding: "12px 20px",
+                fontSize: "13px",
+                color: isDark ? "var(--luxe-soft-white-70, rgba(247,245,242,0.7))" : "#666666",
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
@@ -488,7 +485,7 @@ export default function DestinationSearch({
                   width: "12px",
                   height: "12px",
                   borderRadius: "50%",
-                  background: isDark ? "rgba(200, 170, 118, 0.18)" : "var(--cream-deep)",
+                  background: isDark ? "rgba(200, 170, 118, 0.18)" : "rgba(0, 0, 0, 0.06)",
                 }} />
                 Searching hotels...
               </div>
@@ -500,11 +497,11 @@ export default function DestinationSearch({
               hotelSuggestions.length === 0 && (
                 <div
                   style={{
-                    padding: "14px 16px",
+                    padding: "14px 20px",
                     fontSize: "13px",
                     color: isDark
                       ? "var(--luxe-soft-white-70, rgba(247,245,242,0.7))"
-                      : "var(--ink-light)",
+                      : "#666666",
                   }}
                 >
                   No cities or hotels match
@@ -515,11 +512,11 @@ export default function DestinationSearch({
             {query.trim().length >= 2 && (
               <div
                 style={{
-                  padding: "12px 16px",
+                  padding: "12px 20px",
                   marginTop: 4,
-                  borderTop: `1px solid ${isDark ? "rgba(200, 170, 118, 0.12)" : "var(--cream-border)"}`,
+                  borderTop: `1px solid ${isDark ? "rgba(200, 170, 118, 0.12)" : "rgba(0, 0, 0, 0.08)"}`,
                   cursor: "pointer",
-                  transition: "background 0.15s",
+                  transition: "background 0.2s ease",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
@@ -529,7 +526,7 @@ export default function DestinationSearch({
                   router.push(`/search?q=${encodeURIComponent(query.trim())}`);
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = isDark ? "rgba(200, 170, 118, 0.10)" : "var(--cream)";
+                  e.currentTarget.style.background = isDark ? "rgba(200, 170, 118, 0.10)" : "#F5F5F5";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = "transparent";
