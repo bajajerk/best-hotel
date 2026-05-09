@@ -2136,7 +2136,7 @@ export default function HotelPage() {
                 />
 
 
-                {/* Price block */}
+                {/* Price block — the most prominent text in the sidebar */}
                 {(() => {
                   const fromAmount =
                     lowestFromRate != null
@@ -2160,20 +2160,20 @@ export default function HotelPage() {
                             textTransform: "uppercase",
                             color: "var(--luxe-soft-white-50)",
                             fontWeight: 600,
-                            marginBottom: 6,
+                            marginBottom: 8,
                           }}
                         >
-                          From
+                          Starting From
                         </div>
                         <div
                           style={{
                             fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif",
                             fontStyle: "italic",
                             fontWeight: 300,
-                            fontSize: 40,
-                            lineHeight: 1.05,
-                            letterSpacing: "-0.02em",
-                            color: "var(--luxe-soft-white)",
+                            fontSize: 52,
+                            lineHeight: 1,
+                            letterSpacing: "-0.025em",
+                            color: "#FFFFFF",
                           }}
                         >
                           {formatPrice(fromAmount, fromCurrency)}
@@ -2183,7 +2183,7 @@ export default function HotelPage() {
                             fontSize: 11,
                             fontFamily: "var(--font-body)",
                             color: "var(--luxe-soft-white-50)",
-                            marginTop: 4,
+                            marginTop: 6,
                           }}
                         >
                           per night, before taxes
@@ -2241,13 +2241,62 @@ export default function HotelPage() {
                   );
                 })()}
 
+                {/* Trust factors — small green checkmarks above the CTA.
+                   Replaces the page's floating trust icons; keeps the user
+                   focused on price + the single primary action below. */}
+                <ul
+                  style={{
+                    listStyle: "none",
+                    padding: 0,
+                    margin: "22px 0 0",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                  }}
+                >
+                  {[
+                    "Free Cancellation",
+                    "Member Rate Included",
+                    "No Booking Fees",
+                  ].map((label) => (
+                    <li
+                      key={label}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 9,
+                        fontSize: 12,
+                        fontFamily: "var(--font-body)",
+                        color: "var(--luxe-soft-white-70)",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#5FB476"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                        style={{ flexShrink: 0 }}
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+
                 {/* Book Now CTA — primary gold, scrolls to rates picker */}
                 <button
                   onClick={() => document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" })}
                   className="luxe-btn-gold"
                   style={{
                     width: "100%",
-                    marginTop: 24,
+                    marginTop: 14,
                     padding: "14px 20px",
                     fontSize: 12,
                     letterSpacing: "0.18em",
@@ -2258,25 +2307,6 @@ export default function HotelPage() {
                 >
                   Book Now
                 </button>
-
-                {/* Trust line */}
-                <div
-                  style={{
-                    marginTop: 16,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    fontSize: 11,
-                    color: "var(--luxe-soft-white-50)",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A961" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 12l2 2 4-4" />
-                    <circle cx="12" cy="12" r="10" />
-                  </svg>
-                  Free cancellation on most rates
-                </div>
               </div>
             </motion.aside>
           </div>
