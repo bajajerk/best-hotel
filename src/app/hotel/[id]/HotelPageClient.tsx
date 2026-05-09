@@ -2506,7 +2506,7 @@ export default function HotelPage() {
             ))}
           </nav>
 
-          {/* ── 2-column About + Particulars ── */}
+          {/* ── 2-column: Left = About + Amenities · Right = Particulars ── */}
           <div
             className="hotel-about-grid"
             style={{
@@ -2516,7 +2516,7 @@ export default function HotelPage() {
               alignItems: "start",
             }}
           >
-            {/* Left: About the Property */}
+            {/* Left column: About + Amenities icon-grid */}
             <div style={{ minWidth: 0 }}>
               <div className="luxe-tech" style={{ marginBottom: 12 }}>
                 About the Property
@@ -2547,9 +2547,25 @@ export default function HotelPage() {
                   }}
                 />
               )}
+
+              {/* Amenities — 3-per-row monochromatic icon grid (lives under About) */}
+              <div
+                ref={amenitiesAnchorRef}
+                id="amenities"
+                style={{ marginTop: 32, scrollMarginTop: 140 }}
+              >
+                <div className="luxe-tech" style={{ marginBottom: 16 }}>
+                  Amenities
+                </div>
+                <AmenitiesIconGrid
+                  amenities={hotel.amenities}
+                  restaurants_count={hotel.restaurants_count}
+                  room_service_24h={hotel.room_service_24h}
+                />
+              </div>
             </div>
 
-            {/* Right: The Particulars (clean table) */}
+            {/* Right column: The Particulars (clean, minimalist card) */}
             {(hotel.checkin || hotel.checkout || hotel.accommodation_type || hotel.numberrooms || hotel.yearrenovated || hotel.yearopened || (hotel.brand_name && !hotel.chain_name)) && (
               <div
                 className="luxe-card"
@@ -2586,22 +2602,6 @@ export default function HotelPage() {
                 </div>
               </div>
             )}
-          </div>
-
-          {/* ── Amenities — 6-icon grid ── */}
-          <div
-            ref={amenitiesAnchorRef}
-            id="amenities"
-            style={{ marginTop: 56, scrollMarginTop: 140 }}
-          >
-            <div className="luxe-tech" style={{ marginBottom: 18 }}>
-              Amenities
-            </div>
-            <AmenitiesIconGrid
-              amenities={hotel.amenities}
-              restaurants_count={hotel.restaurants_count}
-              room_service_24h={hotel.room_service_24h}
-            />
           </div>
 
           {/* ── At-a-glance facts (kept) ── */}
@@ -4228,7 +4228,7 @@ function AmenitiesIconGrid({
       className="hotel-amenities-grid"
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
         gap: 12,
       }}
     >
