@@ -15,6 +15,8 @@ import DateBar, { DateBarHandle } from "@/components/DateBar";
 import DestinationSearch from "@/components/DestinationSearch";
 import RegionFilterTabs from "@/components/RegionFilterTabs";
 import HotelGrid from "@/components/HotelGrid";
+import LuxeDatePicker from "@/components/LuxeDatePicker";
+import GuestRoomPicker from "@/components/GuestRoomPicker";
 import { useBooking } from "@/context/BookingContext";
 
 const FALLBACK_IMAGE = FALLBACK_CITY_IMAGE;
@@ -222,6 +224,89 @@ function DestinationPill({ href, label }: { href: string; label: string }) {
 }
 
 
+/**
+ * Compact "Dates" button used inside the post-search sticky search header.
+ * Merges check-in + check-out into one cell ("May 25 – 30"), pops open
+ * LuxeDatePicker anchored beneath the cell. Reads/writes BookingContext
+ * directly so the page-level component doesn't need to thread setDates.
+ */
+function CompactDatesButton() {
+  const { checkIn, checkOut, setDates } = useBooking();
+  const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement | null>(null);
+
+  const handleChange = useCallback(
+    ({ checkIn: ci, checkOut: co }: { checkIn: string | null; checkOut: string | null }) => {
+      setDates(ci ?? "", co ?? "");
+    },
+    [setDates],
+  );
+
+  const label = formatDateRange(checkIn, checkOut) || "Add dates";
+
+  return (
+    <div ref={anchorRef} style={{ position: "relative", height: "100%" }}>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="csh-cell csh-cell--dates"
+        style={{
+          width: "100%",
+          height: "100%",
+          background: "transparent",
+          border: "none",
+          padding: "0 18px",
+          cursor: "pointer",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          justifyContent: "center",
+          textAlign: "left",
+          gap: 2,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "var(--font-body), sans-serif",
+            fontSize: 9,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: "rgba(245,240,232,0.5)",
+            fontWeight: 600,
+          }}
+        >
+          Dates
+        </span>
+        <span
+          style={{
+            fontFamily: "var(--font-body), sans-serif",
+            fontSize: 14,
+            fontWeight: 500,
+            color: checkIn ? "#f5f0e8" : "rgba(245,240,232,0.55)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            maxWidth: "100%",
+          }}
+        >
+          {label}
+        </span>
+      </button>
+      <LuxeDatePicker
+        mode="range"
+        variant="dark"
+        checkIn={checkIn || null}
+        checkOut={checkOut || null}
+        onChange={handleChange}
+        open={open}
+        onClose={() => setOpen(false)}
+        showTrigger={false}
+        anchorRef={anchorRef}
+      />
+    </div>
+  );
+}
+
 // ============================================================================
 // Search Page
 // ============================================================================
@@ -381,9 +466,185 @@ export default function SearchPage() {
     <div className="luxe" style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
       <Header />
 
-      {/* ── Unified search card + destination pills (single section, no dark hero) ── */}
-      <section
+      {/* ── Search section ──
+           Two visual modes, swapped by `hasSearched`:
+           1. Expanded: full luxury card + destination pill strips (homepage feel).
+           2. Compact:  72–76px sticky dark-glass header that sits beneath the
+              fixed nav, restoring the viewport to the hotel results. The
+              transition is animated via AnimatePresence + Framer's `layout`
+              prop so height/position changes feel intentional, not abrupt. */}
+      {hasSearched ? (
+        // ─────────────────────────── COMPACT (post-search, sticky) ──────────────
+        <motion.section
+          key="search-compact"
+          className="search-compact"
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            position: "sticky",
+            top: 88, // floating pill nav (top:18 + height:64 ≈ 82) + 6px buffer
+            zIndex: 50,
+            paddingTop: 10,
+            paddingBottom: 10,
+            background: "rgba(10,10,10,0.92)",
+            backdropFilter: "blur(12px) saturate(1.1)",
+            WebkitBackdropFilter: "blur(12px) saturate(1.1)",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          <div
+            className="csh-inner"
+            style={{
+              maxWidth: 1240,
+              margin: "0 auto",
+              padding: "0 24px",
+            }}
+          >
+            <div
+              className="csh-card"
+              style={{
+                display: "flex",
+                alignItems: "stretch",
+                height: 60,
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 999,
+                overflow: "visible",
+                boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
+              }}
+            >
+              {/* Destination — 30% */}
+              <div
+                className="csh-cell csh-cell--destination usc-cell--destination"
+                style={{
+                  flex: "0 0 30%",
+                  minWidth: 0,
+                  padding: "0 18px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  gap: 2,
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-body), sans-serif",
+                    fontSize: 9,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "rgba(245,240,232,0.5)",
+                    fontWeight: 600,
+                  }}
+                >
+                  Destination
+                </div>
+                <DestinationSearch
+                  key="dest-compact"
+                  variant="dark"
+                  placeholder="Search destinations"
+                  defaultValue={query}
+                  onValueChange={(val) => {
+                    setQuery(val);
+                    if (debounceRef.current) clearTimeout(debounceRef.current);
+                    debounceRef.current = setTimeout(() => {
+                      commitQuery(val);
+                    }, 400);
+                  }}
+                  onSelect={(_type, _value, label) => {
+                    const filled = label ?? _value;
+                    if (debounceRef.current) clearTimeout(debounceRef.current);
+                    commitQuery(filled, { persist: true });
+                  }}
+                />
+              </div>
+
+              {/* Dates — 40% */}
+              <div
+                className="csh-cell-wrap"
+                style={{
+                  flex: "0 0 40%",
+                  minWidth: 0,
+                  borderLeft: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                <CompactDatesButton />
+              </div>
+
+              {/* Guests — 20% */}
+              <div
+                className="csh-cell csh-cell--guests"
+                style={{
+                  flex: "0 0 20%",
+                  minWidth: 0,
+                  padding: "0 18px",
+                  display: "flex",
+                  alignItems: "center",
+                  borderLeft: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                <GuestRoomPicker variant="dark" compact />
+              </div>
+
+              {/* Search CTA — auto width */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!query.trim()) return;
+                  if (debounceRef.current) clearTimeout(debounceRef.current);
+                  commitQuery(query, { persist: true });
+                }}
+                disabled={!query.trim()}
+                className="csh-submit"
+                aria-label="Search hotels"
+                style={{
+                  flex: "0 0 auto",
+                  margin: 6,
+                  padding: "0 22px",
+                  background: "var(--gold)",
+                  color: "#1a1710",
+                  border: "none",
+                  borderRadius: 999,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  letterSpacing: "0.04em",
+                  fontFamily: "var(--font-body)",
+                  cursor: query.trim() ? "pointer" : "not-allowed",
+                  opacity: query.trim() ? 1 : 0.55,
+                  transition: "opacity 0.2s, background 0.2s, transform 0.2s",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span className="csh-submit-label">Search</span>
+              </button>
+            </div>
+          </div>
+        </motion.section>
+      ) : (
+        // ─────────────────────────── EXPANDED (pre-search, hero) ────────────────
+      <motion.section
+        key="search-expanded"
         className="search-unified"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         style={{
           paddingTop: 84,
           paddingBottom: 32,
@@ -570,10 +831,22 @@ export default function SearchPage() {
             )}
           </motion.div>
         </div>
-      </section>
+      </motion.section>
+      )}
 
-      {/* ── Results area ── */}
-      <section className="search-results-section" style={{ padding: "60px 60px 100px", maxWidth: "1400px", margin: "0 auto" }}>
+      {/* ── Results area ──
+           Vertical padding tightens dramatically once a search has been
+           submitted so the first hotel row sits high in the viewport,
+           directly below the sticky compact header. */}
+      <section
+        className="search-results-section"
+        style={{
+          padding: hasSearched ? "20px 60px 100px" : "60px 60px 100px",
+          maxWidth: "1400px",
+          margin: "0 auto",
+          transition: "padding 0.35s ease",
+        }}
+      >
 
         {/* Results count */}
         {hasSearched && (regionFilteredCities.length > 0 || totalResults > 0) && (

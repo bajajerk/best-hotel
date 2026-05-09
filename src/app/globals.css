@@ -1654,6 +1654,98 @@ footer h4 {
 }
 
 /* ═══════════════════════════════════════
+   COMPACT STICKY SEARCH HEADER (post-search)
+   ═══════════════════════════════════════
+   The compact bar appears after a search has been submitted: a sticky
+   dark-glass strip beneath the floating nav, containing destination /
+   dates / guests / search CTA in a single horizontal row. */
+
+.search-compact .csh-card {
+  /* Subtle hover lift to suggest editability */
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.search-compact .csh-card:focus-within {
+  border-color: rgba(201, 168, 76, 0.35) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Make text inside the compact bar consistently light on dark glass */
+.search-compact .csh-cell input,
+.search-compact .csh-cell input::placeholder {
+  color: rgba(245, 240, 232, 0.92) !important;
+  -webkit-text-fill-color: rgba(245, 240, 232, 0.92) !important;
+}
+.search-compact .csh-cell input::placeholder {
+  color: rgba(245, 240, 232, 0.45) !important;
+  -webkit-text-fill-color: rgba(245, 240, 232, 0.45) !important;
+}
+
+/* The compact bar's 88px sticky offset clears the floating-pill nav.
+   On mobile (nav top:10 + height:56 ≈ 66) we tighten this so the bar
+   isn't floating in mid-air, and we shrink the inner padding/heights. */
+@media (max-width: 767px) {
+  .search-compact {
+    top: 76px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+  .search-compact .csh-inner {
+    padding: 0 12px !important;
+  }
+  .search-compact .csh-card {
+    border-radius: 14px !important;
+    height: auto !important;
+    /* Allow horizontal scroll if the row gets cramped on tiny screens */
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .search-compact .csh-card::-webkit-scrollbar {
+    display: none;
+  }
+  .search-compact .csh-card > * {
+    flex: 0 0 auto !important;
+  }
+  .search-compact .csh-cell--destination {
+    min-width: 180px !important;
+    padding: 10px 14px !important;
+  }
+  .search-compact .csh-cell-wrap {
+    min-width: 170px !important;
+  }
+  .search-compact .csh-cell--guests {
+    min-width: 130px !important;
+    padding: 10px 14px !important;
+  }
+  /* Hide the "Search" word on mobile — icon alone keeps the bar tight */
+  .search-compact .csh-submit-label {
+    display: none !important;
+  }
+  .search-compact .csh-submit {
+    margin: 6px !important;
+    padding: 0 12px !important;
+    height: calc(100% - 12px);
+    min-width: 40px;
+  }
+}
+
+/* Tablet — keep the row but slightly relax the percentage cells */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .search-compact .csh-inner {
+    padding: 0 16px !important;
+  }
+  .search-compact .csh-cell--destination {
+    flex: 0 0 32% !important;
+  }
+  .search-compact .csh-cell-wrap {
+    flex: 0 0 36% !important;
+  }
+  .search-compact .csh-cell--guests {
+    flex: 0 0 22% !important;
+  }
+}
+
+/* ═══════════════════════════════════════
    LOCATIONS PAGE — responsive overrides
    ═══════════════════════════════════════ */
 
