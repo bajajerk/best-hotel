@@ -1143,6 +1143,176 @@ function RateCard({
 
 /* ────────────────────────── Skeleton Rate Card ────────────────────────── */
 
+/* ────────────────────────── Rates Loading Scene ──────────────────────────
+   Cinematic loader for the rates panel: rotating concierge phrases, a live
+   stopwatch, and a row of shimmering rate skeletons. Replaces the bare 3×
+   skeleton stack so users get a sense of momentum during 2–15s TripJack
+   round-trips instead of staring at empty cards.
+*/
+
+const LOADING_PHRASES = [
+  "Pinging the hotel for live availability",
+  "Negotiating your member rate",
+  "Comparing against public OTAs",
+  "Almost there — sourcing the best plan",
+];
+
+function RatesLoadingScene() {
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const start = typeof performance !== "undefined" ? performance.now() : Date.now();
+    const tick = setInterval(() => {
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+      setElapsed((now - start) / 1000);
+    }, 100);
+    return () => clearInterval(tick);
+  }, []);
+
+  useEffect(() => {
+    const rot = setInterval(() => {
+      setPhraseIdx((i) => (i + 1) % LOADING_PHRASES.length);
+    }, 2400);
+    return () => clearInterval(rot);
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Concierge progress card */}
+      <div
+        className="luxe-card"
+        style={{
+          padding: "20px 24px",
+          borderRadius: 14,
+          border: "1px solid var(--luxe-hairline-strong)",
+          background:
+            "linear-gradient(135deg, rgba(201,169,97,0.08) 0%, rgba(20,18,15,0.55) 60%)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          minHeight: 72,
+        }}
+        role="status"
+        aria-live="polite"
+      >
+        {/* Animated champagne pulse */}
+        <span
+          aria-hidden="true"
+          style={{
+            position: "relative",
+            width: 14,
+            height: 14,
+            flexShrink: 0,
+            display: "inline-block",
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "50%",
+              background: "var(--luxe-champagne)",
+              opacity: 0.9,
+              animation: "rates-pulse-dot 1.4s ease-in-out infinite",
+            }}
+          />
+          <span
+            style={{
+              position: "absolute",
+              inset: -6,
+              borderRadius: "50%",
+              border: "1px solid var(--luxe-champagne)",
+              opacity: 0.35,
+              animation: "rates-pulse-ring 1.6s ease-out infinite",
+            }}
+          />
+        </span>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            className="luxe-tech"
+            style={{
+              color: "var(--luxe-champagne)",
+              marginBottom: 4,
+            }}
+          >
+            Searching live rates
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={phraseIdx}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.32, ease: "easeOut" }}
+              style={{
+                fontFamily: "var(--font-display)",
+                fontStyle: "italic",
+                fontSize: 17,
+                lineHeight: 1.35,
+                color: "var(--luxe-soft-white)",
+                margin: 0,
+                letterSpacing: "-0.005em",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {LOADING_PHRASES[phraseIdx]}…
+            </motion.p>
+          </AnimatePresence>
+        </div>
+
+        <div
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 13,
+            fontVariantNumeric: "tabular-nums",
+            color: "var(--luxe-soft-white-70)",
+            padding: "6px 12px",
+            border: "1px solid var(--luxe-hairline)",
+            borderRadius: 999,
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}
+        >
+          {elapsed.toFixed(1)}s
+        </div>
+      </div>
+
+      <RateCardSkeleton />
+      <RateCardSkeleton />
+      <RateCardSkeleton />
+
+      <style jsx global>{`
+        @keyframes rates-pulse-dot {
+          0%, 100% {
+            transform: scale(0.85);
+            opacity: 0.85;
+          }
+          50% {
+            transform: scale(1.05);
+            opacity: 1;
+          }
+        }
+        @keyframes rates-pulse-ring {
+          0% {
+            transform: scale(0.6);
+            opacity: 0.55;
+          }
+          100% {
+            transform: scale(1.6);
+            opacity: 0;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 function RateCardSkeleton() {
   return (
     <div
@@ -1355,6 +1525,8 @@ export default function HotelPage() {
   /* Live rates */
   const [rates, setRates] = useState<RatesResponse | null>(null);
   const [ratesLoading, setRatesLoading] = useState(false);
+  /* Wall-clock fetch duration in ms — surfaced as "Searched in X.Xs" once rates land. */
+  const [ratesLoadMs, setRatesLoadMs] = useState<number | null>(null);
   const [noMatch, setNoMatch] = useState(false);
   const [ratesError, setRatesError] = useState<string | null>(null);
   const [ratesRefreshKey, setRatesRefreshKey] = useState(0);
@@ -1457,9 +1629,15 @@ export default function HotelPage() {
     let cancelled = false;
     setRatesLoading(true);
     setRatesError(null);
+    setRatesLoadMs(null);
+    const fetchStart =
+      typeof performance !== "undefined" ? performance.now() : Date.now();
     fetchHotelRates(hotelId, booking.checkIn, booking.checkOut, adultsCount, childrenCount)
       .then((res) => {
         if (cancelled) return;
+        const fetchEnd =
+          typeof performance !== "undefined" ? performance.now() : Date.now();
+        setRatesLoadMs(Math.max(0, Math.round(fetchEnd - fetchStart)));
         if ("error" in res && res.error === "no_tripjack_match") {
           setNoMatch(true);
           setRates(null);
@@ -2912,11 +3090,7 @@ export default function HotelPage() {
                   </button>
                 </div>
               ) : ratesLoading ? (
-                <div className="flex flex-col gap-4">
-                  <RateCardSkeleton />
-                  <RateCardSkeleton />
-                  <RateCardSkeleton />
-                </div>
+                <RatesLoadingScene />
               ) : rates && rates.rates.length === 0 ? (
                 <div
                   className="luxe-card"
@@ -2955,6 +3129,9 @@ export default function HotelPage() {
                         {categories.length} room type{categories.length !== 1 ? "s" : ""}
                         {filteredRates.length > categories.length ? ` · ${filteredRates.length} rate plans` : ""}
                         {rates.nights > 0 ? ` · ${rates.nights} night${rates.nights > 1 ? "s" : ""}` : ""}
+                        {ratesLoadMs != null
+                          ? ` · Searched in ${(ratesLoadMs / 1000).toFixed(1)}s`
+                          : ""}
                       </p>
                       <div
                         style={{
