@@ -39,7 +39,6 @@ import { useBooking } from "@/context/BookingContext";
 import { useAuth } from "@/context/AuthContext";
 import { fetchHotelRates, type RatePlan, type RatesResponse } from "@/lib/api";
 import { conciergeWhatsappLink } from "@/lib/concierge";
-import { TRUST_BAR_ITEMS, TRUST_BAR_ITEMS_MOBILE } from "@/constants/trust";
 import { sanitizeOtaProse } from "@/lib/sanitizeOtaProse";
 import { groupRatePlans, type RoomCategory } from "@/lib/roomCategories";
 import HotelFactGrid from "@/components/HotelFactGrid";
@@ -204,7 +203,7 @@ function mealBasisMatchesFilter(mealBasis: string, filter: MealPlanFilter): bool
 
 /* ────────────────────────── Tabs ────────────────────────── */
 
-const TABS = ["Rates", "The Stay", "Gallery", "Reviews"] as const;
+const TABS = ["Rates", "The Stay", "Reviews"] as const;
 type TabName = (typeof TABS)[number];
 
 /* ────────────────────────── Lightbox ────────────────────────── */
@@ -1108,44 +1107,6 @@ function RateCardSkeleton() {
   );
 }
 
-/* ────────────────────────── Trust Strip (champagne) ────────────────────────── */
-
-function TrustStrip() {
-  const sharedStyle: React.CSSProperties = {
-    gap: "12px 16px",
-    fontFamily: "var(--font-body)",
-    fontSize: 12.5,
-    color: "var(--luxe-champagne)",
-    letterSpacing: "0.04em",
-  };
-
-  function renderItems(items: readonly string[]) {
-    return items.map((item, i) => (
-      <span key={item} style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-        <span aria-hidden style={{ fontSize: 10, opacity: 0.85 }}>★</span>
-        <span style={{ color: "var(--luxe-soft-white-70)" }}>{item}</span>
-        {i < items.length - 1 && (
-          <span aria-hidden style={{ color: "var(--luxe-hairline-strong)", marginLeft: 22, opacity: 0.6 }}>·</span>
-        )}
-      </span>
-    ));
-  }
-
-  const mobileItems = TRUST_BAR_ITEMS_MOBILE;
-  const fullItems = TRUST_BAR_ITEMS;
-
-  return (
-    <>
-      <div className="flex flex-wrap items-center justify-center sm:hidden" style={sharedStyle}>
-        {renderItems(mobileItems)}
-      </div>
-      <div className="hidden sm:flex flex-wrap items-center justify-center" style={sharedStyle}>
-        {renderItems(fullItems)}
-      </div>
-    </>
-  );
-}
-
 /* ────────────────────────── Section Eyebrow + Heading ────────────────────────── */
 
 function SectionHead({
@@ -1342,7 +1303,6 @@ export default function HotelPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
   const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
-  const [activeGalleryCategory, setActiveGalleryCategory] = useState<GalleryCategory | null>(null);
 
   /* Tabs */
   const [activeTab, setActiveTab] = useState<TabName>("Rates");
@@ -1383,7 +1343,6 @@ export default function HotelPage() {
   /* Section refs for scroll-based tabs */
   const ratesRef = useRef<HTMLDivElement>(null);
   const stayRef = useRef<HTMLDivElement>(null);
-  const galleryRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
   /* Quick-link anchor refs (Overview sub-nav) */
   const roomsAnchorRef = useRef<HTMLDivElement>(null);
@@ -1523,35 +1482,6 @@ export default function HotelPage() {
         : [],
     [hotel]
   );
-
-  /* ── Photo categories (only if backend provides photo_categories metadata) ── */
-  const GALLERY_CATEGORIES: GalleryCategory[] = useMemo(
-    () => ["Hotel View", "Guest Rooms", "Suites", "Pool & Spa", "Amenities"],
-    []
-  );
-  const photosByCategory = hotel?.photo_categories || null;
-  const availableCategories = useMemo<GalleryCategory[]>(() => {
-    if (!photosByCategory) return [];
-    return GALLERY_CATEGORIES.filter(
-      (c) => Array.isArray(photosByCategory[c]) && (photosByCategory[c] as string[]).length > 0
-    );
-  }, [photosByCategory, GALLERY_CATEGORIES]);
-  const hasCategorisedPhotos = availableCategories.length > 0;
-
-  const visibleGalleryPhotos = useMemo(() => {
-    if (!hasCategorisedPhotos || !photosByCategory) return photos;
-    if (activeGalleryCategory && photosByCategory[activeGalleryCategory]) {
-      return photosByCategory[activeGalleryCategory] as string[];
-    }
-    const seen = new Set<string>();
-    const merged: string[] = [];
-    for (const cat of availableCategories) {
-      for (const p of photosByCategory[cat] as string[]) {
-        if (!seen.has(p)) { seen.add(p); merged.push(p); }
-      }
-    }
-    return merged.length ? merged : photos;
-  }, [hasCategorisedPhotos, photosByCategory, activeGalleryCategory, availableCategories, photos]);
 
   const openLightbox = useCallback((idx: number, overridePhotos?: string[]) => {
     setLightboxPhotos(overridePhotos && overridePhotos.length > 0 ? overridePhotos : photos);
@@ -1727,7 +1657,6 @@ export default function HotelPage() {
     const refMap: Record<TabName, React.RefObject<HTMLDivElement | null>> = {
       "Rates": ratesRef,
       "The Stay": stayRef,
-      "Gallery": galleryRef,
       "Reviews": reviewsRef,
     };
     const ref = refMap[tab];
@@ -1741,7 +1670,6 @@ export default function HotelPage() {
     const sections: { ref: React.RefObject<HTMLDivElement | null>; tab: TabName }[] = [
       { ref: ratesRef, tab: "Rates" },
       { ref: stayRef, tab: "The Stay" },
-      { ref: galleryRef, tab: "Gallery" },
       { ref: reviewsRef, tab: "Reviews" },
     ];
 
@@ -1868,9 +1796,6 @@ export default function HotelPage() {
   const lowestFromRate = rates && rates.rates.length > 0
     ? Math.min(...rates.rates.map((r) => r.total_price / Math.max(nights, 1)))
     : null;
-
-  /* Bento gallery slots (first 5) */
-  const bentoPhotos = photos.slice(0, 5);
 
   return (
     <div className="luxe min-h-screen" style={{ background: "var(--luxe-black)", color: "var(--luxe-soft-white)", overflowX: "hidden" }}>
@@ -2358,21 +2283,7 @@ export default function HotelPage() {
         </section>
       </div>
 
-      {/* ═══════════════════ 2. CHAMPAGNE TRUST STRIP ═══════════════════ */}
-      <section
-        style={{
-          padding: "20px 24px",
-          borderTop: "1px solid var(--luxe-hairline)",
-          borderBottom: "1px solid var(--luxe-hairline)",
-          background: "rgba(255,255,255,0.015)",
-        }}
-      >
-        <div className="luxe-container">
-          <TrustStrip />
-        </div>
-      </section>
-
-      {/* ═══════════════════ 3. STICKY TAB BAR ═══════════════════ */}
+      {/* ═══════════════════ 2. STICKY TAB BAR ═══════════════════ */}
       <div
         className="overflow-x-auto"
         style={{
@@ -2503,7 +2414,7 @@ export default function HotelPage() {
             ))}
           </nav>
 
-          {/* ── 2-column: Left = About + Amenities · Right = Particulars ── */}
+          {/* ── 2-column: Left = About the Hotel · Right = compact Hotel Facts ── */}
           <div
             className="hotel-about-grid"
             style={{
@@ -2513,10 +2424,10 @@ export default function HotelPage() {
               alignItems: "start",
             }}
           >
-            {/* Left column: About + Amenities icon-grid */}
+            {/* Left column: About the Hotel — description clamped to 4 lines + Read More */}
             <div style={{ minWidth: 0 }}>
               <div className="luxe-tech" style={{ marginBottom: 12 }}>
-                About the Property
+                About the Hotel
               </div>
               <h2
                 style={{
@@ -2544,37 +2455,21 @@ export default function HotelPage() {
                   }}
                 />
               )}
-
-              {/* Amenities — 3-per-row monochromatic icon grid (lives under About) */}
-              <div
-                ref={amenitiesAnchorRef}
-                id="amenities"
-                style={{ marginTop: 32, scrollMarginTop: 140 }}
-              >
-                <div className="luxe-tech" style={{ marginBottom: 16 }}>
-                  Amenities
-                </div>
-                <AmenitiesIconGrid
-                  amenities={hotel.amenities}
-                  restaurants_count={hotel.restaurants_count}
-                  room_service_24h={hotel.room_service_24h}
-                />
-              </div>
             </div>
 
-            {/* Right column: The Particulars (clean, minimalist card) */}
+            {/* Right column: compact Hotel Facts list */}
             {(hotel.checkin || hotel.checkout || hotel.accommodation_type || hotel.numberrooms || hotel.yearrenovated || hotel.yearopened || (hotel.brand_name && !hotel.chain_name)) && (
               <div
                 className="luxe-card"
                 style={{
-                  padding: 24,
+                  padding: 20,
                   borderRadius: 14,
                 }}
               >
-                <div className="luxe-tech" style={{ marginBottom: 16 }}>
-                  The Particulars
+                <div className="luxe-tech" style={{ marginBottom: 14 }}>
+                  Hotel Facts
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {hotel.checkin && (
                     <FactRow label="Check-in" value={hotel.checkin} />
                   )}
@@ -2599,6 +2494,22 @@ export default function HotelPage() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* ── Amenities — 3-per-row monochromatic icon grid (lifted out of About) ── */}
+          <div
+            ref={amenitiesAnchorRef}
+            id="amenities"
+            style={{ marginTop: 40, scrollMarginTop: 140 }}
+          >
+            <div className="luxe-tech" style={{ marginBottom: 16 }}>
+              Amenities
+            </div>
+            <AmenitiesIconGrid
+              amenities={hotel.amenities}
+              restaurants_count={hotel.restaurants_count}
+              room_service_24h={hotel.room_service_24h}
+            />
           </div>
 
           {/* ── At-a-glance facts (kept) ── */}
@@ -2714,193 +2625,7 @@ export default function HotelPage() {
         </div>
       </section>
 
-      {/* ═══════════════════ 5. BENTO GALLERY ═══════════════════ */}
-      <section
-        ref={galleryRef}
-        id="gallery"
-        style={{
-          padding: "48px 24px 80px",
-          borderTop: "1px solid var(--luxe-hairline)",
-          scrollMarginTop: 140,
-        }}
-      >
-        <div className="luxe-container" style={{ padding: 0 }}>
-          <SectionHead
-            eyebrow="In Frame"
-            title="The"
-            italicWord="property"
-            description={
-              hasCategorisedPhotos
-                ? `${photos.length} photographs across ${availableCategories.length} categories. Click any image to enter the gallery.`
-                : photos.length > 0
-                  ? `${photos.length} photographs. Click any image to enter the gallery.`
-                  : "Photographs coming soon."
-            }
-            rightSlot={
-              photos.length > 0 ? (
-                <button
-                  onClick={() => openLightbox(0)}
-                  className="luxe-tech"
-                  style={{
-                    color: "var(--luxe-champagne)",
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                  }}
-                >
-                  View All &rarr;
-                </button>
-              ) : null
-            }
-          />
-
-          {/* Category chips (if categorised photos available) */}
-          {hasCategorisedPhotos && photosByCategory && (
-            <div
-              className="flex gap-2 mb-6 no-scrollbar"
-              style={{
-                overflowX: "auto",
-                paddingBottom: 4,
-              }}
-            >
-              {availableCategories.map((cat) => {
-                const isActive = activeGalleryCategory === cat;
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveGalleryCategory((prev) => (prev === cat ? null : cat))}
-                    className={isActive ? "luxe-tab is-active" : "luxe-tab"}
-                    style={{ flexShrink: 0 }}
-                  >
-                    {cat}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Bento layout — only when not actively filtering by category */}
-          {!activeGalleryCategory && bentoPhotos.length >= 5 ? (
-            <div
-              className="hotel-bento"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                gridTemplateRows: "260px 260px",
-                gap: 12,
-                borderRadius: 14,
-                overflow: "hidden",
-              }}
-            >
-              {/* Big left photo (2x2) */}
-              <button
-                onClick={() => openLightbox(0)}
-                className="bento-tile"
-                style={{
-                  gridColumn: "1 / 3",
-                  gridRow: "1 / 3",
-                }}
-              >
-                <img
-                  src={safePhotoUrl(bentoPhotos[0])}
-                  alt={`${hotel.hotel_name} 1`}
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                />
-                <div className="bento-tile-overlay" />
-              </button>
-              {/* Top-right two */}
-              <button onClick={() => openLightbox(1)} className="bento-tile">
-                <img
-                  src={safePhotoUrl(bentoPhotos[1])}
-                  alt={`${hotel.hotel_name} 2`}
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                />
-                <div className="bento-tile-overlay" />
-              </button>
-              <button onClick={() => openLightbox(2)} className="bento-tile">
-                <img
-                  src={safePhotoUrl(bentoPhotos[2])}
-                  alt={`${hotel.hotel_name} 3`}
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                />
-                <div className="bento-tile-overlay" />
-              </button>
-              {/* Bottom-right two */}
-              <button onClick={() => openLightbox(3)} className="bento-tile">
-                <img
-                  src={safePhotoUrl(bentoPhotos[3])}
-                  alt={`${hotel.hotel_name} 4`}
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                />
-                <div className="bento-tile-overlay" />
-              </button>
-              <button
-                onClick={() => openLightbox(4)}
-                className="bento-tile"
-                style={{ position: "relative" }}
-              >
-                <img
-                  src={safePhotoUrl(bentoPhotos[4])}
-                  alt={`${hotel.hotel_name} 5`}
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                />
-                <div className="bento-tile-overlay" />
-                {photos.length > 5 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      background: "rgba(12,11,10,0.55)",
-                      color: "var(--luxe-soft-white)",
-                      fontFamily: "var(--font-display)",
-                      fontStyle: "italic",
-                      fontSize: 22,
-                      letterSpacing: "-0.01em",
-                      pointerEvents: "none",
-                    }}
-                  >
-                    + {photos.length - 5} more
-                  </div>
-                )}
-              </button>
-            </div>
-          ) : (
-            /* Fallback grid (mobile, < 5 photos, or category filter active) */
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                gap: 10,
-              }}
-            >
-              {visibleGalleryPhotos.map((photo, i) => (
-                <button
-                  key={`${photo}-${i}`}
-                  onClick={() => {
-                    const idx = photos.indexOf(photo);
-                    openLightbox(idx >= 0 ? idx : 0);
-                  }}
-                  className="bento-tile"
-                  style={{ aspectRatio: "4/3", borderRadius: 14 }}
-                >
-                  <img
-                    src={safePhotoUrl(photo)}
-                    alt={`${hotel.hotel_name} ${i + 1}`}
-                    onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                  />
-                  <div className="bento-tile-overlay" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ═══════════════════ 7. RATES (CLIMAX) — two-column with sticky sidebar ═══════════════════ */}
+      {/* ═══════════════════ 5. RATES (CLIMAX) — two-column with sticky sidebar ═══════════════════ */}
       <section
         ref={ratesRef}
         id="rates"
