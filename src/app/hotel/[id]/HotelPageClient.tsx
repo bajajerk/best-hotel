@@ -523,6 +523,165 @@ function HotelDateEditor({ compact = false }: { compact?: boolean }) {
   );
 }
 
+/* ───────── MMT-style Search Utility Bar (Journey 2 revision) ─────────
+   Single dark #1A1A1A bar that sits directly above the photo gallery.
+   4 segments separated by thin grey vertical dividers:
+     Location · Check-in · Check-out · Guests
+   plus a small gold "Search" button on the far right that scrolls the
+   user to the rates region. Dates open the shared LuxeDatePicker;
+   guests reuse the existing dark, compact GuestRoomPicker dropdown.
+   ───────────────────────────────────────────────────────────────────── */
+function HotelSearchUtilityBar({ city }: { city: string }) {
+  const { checkIn, checkOut, setDates, formatDate } = useBooking();
+  const [datesOpen, setDatesOpen] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  const handleDateChange = useCallback(
+    ({ checkIn: ci, checkOut: co }: { checkIn: string | null; checkOut: string | null }) => {
+      setDates(ci ?? "", co ?? "");
+    },
+    [setDates],
+  );
+
+  const labelStyle: React.CSSProperties = {
+    fontFamily: "var(--font-mono)",
+    fontSize: 9,
+    letterSpacing: "0.22em",
+    textTransform: "uppercase",
+    color: "var(--luxe-soft-white-50)",
+    fontWeight: 600,
+    marginBottom: 4,
+  };
+  const valueStyle = (filled: boolean): React.CSSProperties => ({
+    fontFamily: "var(--font-display)",
+    fontStyle: filled ? "italic" : "normal",
+    fontSize: 14,
+    fontWeight: 500,
+    color: filled ? "var(--luxe-soft-white)" : "var(--luxe-soft-white-50)",
+    lineHeight: 1.2,
+    fontVariantNumeric: "tabular-nums",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  });
+  const cellBase: React.CSSProperties = {
+    flex: 1,
+    minWidth: 0,
+    padding: "10px 16px",
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    textAlign: "left",
+    color: "inherit",
+    transition: "background 160ms ease",
+  };
+  const dividerStyle: React.CSSProperties = {
+    width: 1,
+    background: "rgba(255,255,255,0.08)",
+    flexShrink: 0,
+    margin: "10px 0",
+  };
+
+  return (
+    <div
+      ref={anchorRef}
+      className="hotel-search-utilbar"
+      style={{
+        display: "flex",
+        alignItems: "stretch",
+        background: "#1A1A1A",
+        border: "1px solid rgba(255,255,255,0.06)",
+        borderRadius: 12,
+        overflow: "hidden",
+      }}
+    >
+      {/* 1. Location */}
+      <div
+        className="hotel-search-utilbar__cell"
+        style={{ ...cellBase, cursor: "default", display: "flex", alignItems: "center", gap: 10 }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A961" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        <div style={{ minWidth: 0 }}>
+          <div style={labelStyle}>Location</div>
+          <div style={valueStyle(true)}>{city}</div>
+        </div>
+      </div>
+      <div className="hotel-search-utilbar__divider" style={dividerStyle} />
+
+      {/* 2. Check-in */}
+      <button
+        type="button"
+        onClick={() => setDatesOpen(true)}
+        className="hotel-search-utilbar__cell"
+        style={cellBase}
+        aria-label="Edit check-in date"
+      >
+        <div style={labelStyle}>Check-in</div>
+        <div style={valueStyle(!!checkIn)}>{formatDate(checkIn, "Add date")}</div>
+      </button>
+      <div className="hotel-search-utilbar__divider" style={dividerStyle} />
+
+      {/* 3. Check-out */}
+      <button
+        type="button"
+        onClick={() => setDatesOpen(true)}
+        className="hotel-search-utilbar__cell"
+        style={cellBase}
+        aria-label="Edit check-out date"
+      >
+        <div style={labelStyle}>Check-out</div>
+        <div style={valueStyle(!!checkOut)}>{formatDate(checkOut, "Add date")}</div>
+      </button>
+      <div className="hotel-search-utilbar__divider" style={dividerStyle} />
+
+      {/* 4. Guests */}
+      <div
+        className="hotel-search-utilbar__cell"
+        style={{ ...cellBase, padding: "8px 16px", display: "flex", alignItems: "center" }}
+      >
+        <GuestRoomPicker variant="dark" compact />
+      </div>
+
+      {/* Search button on the far right */}
+      <button
+        type="button"
+        onClick={() => document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" })}
+        className="luxe-btn-gold hotel-search-utilbar__btn"
+        style={{
+          flexShrink: 0,
+          margin: 6,
+          padding: "0 22px",
+          fontSize: 11,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          fontWeight: 600,
+          whiteSpace: "nowrap",
+          border: "none",
+          borderRadius: 8,
+        }}
+        aria-label="Search rates"
+      >
+        Search
+      </button>
+
+      <LuxeDatePicker
+        mode="range"
+        variant="dark"
+        checkIn={checkIn || null}
+        checkOut={checkOut || null}
+        onChange={handleDateChange}
+        open={datesOpen}
+        onClose={() => setDatesOpen(false)}
+        showTrigger={false}
+        anchorRef={anchorRef}
+      />
+    </div>
+  );
+}
+
 /* ────────────────────────── Room Category Card ────────────────────────── */
 
 function RoomCategoryCard({
@@ -1733,9 +1892,12 @@ export default function HotelPage() {
 
       <Header />
 
-      {/* ═══════════════════ 1. JOURNEY HEADER — sticky search bar + 65/35 above-the-fold ═══════════════════
-         "Hotel journey 1" revision:
-         - top sticky compact dark search bar (City • Dates • Guests • Modify)
+      {/* ═══════════════════ 1. JOURNEY HEADER — MMT-style search utility bar + 65/35 above-the-fold ═══════════════════
+         "Hotel journey 2" revision:
+         - top sticky MMT-style Search Utility Bar with 4 explicit segments
+           (Location · Check-in · Check-out · Guests) on a single #1A1A1A
+           dark-grey bar, separated by thin grey vertical dividers, plus a
+           small "Search" CTA on the far right that scrolls to rates.
          - 2-col container (max-w 1280px / Tailwind 7xl) below:
              LEFT 65%: 3-image gallery only (1 large + 2 stacked)
              RIGHT 35%: sticky Booking Card — hotel name, star rating,
@@ -1747,7 +1909,7 @@ export default function HotelPage() {
          and the existing tab bar takes over the sticky channel.
       */}
       <div style={{ background: "#0A0A0A", paddingTop: 60 }}>
-        {/* ── Compact sticky dark search bar ── */}
+        {/* ── Sticky MMT-style Search Utility Bar (above the photo gallery) ── */}
         <div
           style={{
             position: "sticky",
@@ -1758,86 +1920,8 @@ export default function HotelPage() {
             padding: "12px 24px",
           }}
         >
-          <div
-            className="luxe-container hotel-journey-searchbar"
-            style={{
-              padding: 0,
-              display: "flex",
-              alignItems: "stretch",
-              gap: 10,
-            }}
-          >
-            {/* City cell */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "10px 16px",
-                borderRadius: 12,
-                border: "1px solid var(--luxe-hairline-strong)",
-                background: "rgba(255,255,255,0.03)",
-                flexShrink: 0,
-                minWidth: 0,
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A961" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.1, minWidth: 0 }}>
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 9,
-                    letterSpacing: "0.22em",
-                    textTransform: "uppercase",
-                    color: "var(--luxe-soft-white-50)",
-                    fontWeight: 600,
-                  }}
-                >
-                  City
-                </span>
-                <span
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontStyle: "italic",
-                    fontSize: 14,
-                    color: "var(--luxe-soft-white)",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    maxWidth: 200,
-                    marginTop: 2,
-                  }}
-                >
-                  {hotel.city}
-                </span>
-              </div>
-            </div>
-
-            {/* Dates + Guests (reuses the dark, compact editor) */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <HotelDateEditor compact />
-            </div>
-
-            {/* Modify CTA — scrolls to rates */}
-            <button
-              onClick={() => document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" })}
-              className="luxe-btn-gold hotel-journey-modify"
-              style={{
-                flexShrink: 0,
-                padding: "0 22px",
-                fontSize: 11,
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                fontWeight: 600,
-                whiteSpace: "nowrap",
-              }}
-              aria-label="Modify and see rates"
-            >
-              Modify
-            </button>
+          <div className="luxe-container hotel-journey-searchbar" style={{ padding: 0 }}>
+            <HotelSearchUtilityBar city={hotel.city} />
           </div>
         </div>
 

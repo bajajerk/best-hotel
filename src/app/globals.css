@@ -6726,3 +6726,35 @@ body:has(.precision-theme) {
   }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   MMT-style Search Utility Bar (Hotel "Journey 2" revision).
+   Single dark #1A1A1A bar above the gallery, 4 segments + Search button.
+   Used by /hotel/[id]/HotelPageClient.tsx — HotelSearchUtilityBar.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .hotel-search-utilbar {
+    flex-wrap: wrap !important;
+  }
+  .hotel-search-utilbar__cell {
+    flex: 1 1 50% !important;
+  }
+  .hotel-search-utilbar__divider:nth-of-type(2n) {
+    display: none !important;
+  }
+  .hotel-search-utilbar__btn {
+    width: 100% !important;
+    margin: 6px !important;
+    padding: 12px 22px !important;
+  }
+}
+@media (max-width: 520px) {
+  .hotel-search-utilbar__cell {
+    flex: 1 1 100% !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .hotel-search-utilbar__divider {
+    display: none !important;
+  }
+}
+
+
