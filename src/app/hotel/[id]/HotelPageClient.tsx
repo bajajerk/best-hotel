@@ -45,6 +45,7 @@ import { groupRatePlans, type RoomCategory } from "@/lib/roomCategories";
 import HotelFactGrid from "@/components/HotelFactGrid";
 import LuxeDatePicker from "@/components/LuxeDatePicker";
 import GuestRoomPicker from "@/components/GuestRoomPicker";
+import { extractAmenities, type Amenity } from "@/components/AmenityIcons";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -1128,6 +1129,625 @@ function CollapsibleText({
   );
 }
 
+/* ────────────────────────── Search & Utility Bar ──────────────────────────
+   Horizontal search bar pinned to the very top of the page. Dark grey
+   (#1A1A1A) backdrop, three fields: Hotel/Location · Check-in–Check-out ·
+   Rooms/Guests, plus a gold Search button. On submit we route to /results
+   for a fresh search; the existing booking context is updated in place so
+   the rates fetch refreshes if the user changes dates here. */
+
+function SearchUtilityBar({ defaultDestination = "" }: { defaultDestination?: string }) {
+  const router = useRouter();
+  const { checkIn, checkOut, setDates, formatDate, setDestination } = useBooking();
+  const [localDestination, setLocalDestination] = useState(defaultDestination);
+  const [dateOpen, setDateOpen] = useState(false);
+  const dateAnchorRef = useRef<HTMLDivElement>(null);
+
+  const handleSearch = useCallback(() => {
+    const q = localDestination.trim();
+    if (!q) return;
+    setDestination(q);
+    if (checkIn && checkOut) setDates(checkIn, checkOut);
+    const slug = q.toLowerCase().replace(/\s+/g, "-");
+    router.push(`/results?q=${encodeURIComponent(q)}&city=${slug}`);
+  }, [localDestination, checkIn, checkOut, setDates, setDestination, router]);
+
+  const cellStyle: React.CSSProperties = {
+    background: "transparent",
+    border: "none",
+    padding: "12px 18px",
+    cursor: "pointer",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 4,
+    minWidth: 0,
+    flex: 1,
+    color: "inherit",
+  };
+  const labelStyle: React.CSSProperties = {
+    fontFamily: "var(--font-mono)",
+    fontSize: 9,
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
+    color: "var(--luxe-soft-white-50)",
+    fontWeight: 600,
+  };
+  const valueStyle = (filled: boolean): React.CSSProperties => ({
+    fontFamily: "var(--font-body)",
+    fontSize: 13,
+    fontWeight: 500,
+    color: filled ? "var(--luxe-soft-white)" : "var(--luxe-soft-white-50)",
+    fontVariantNumeric: "tabular-nums",
+    width: "100%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  });
+  const dividerStyle: React.CSSProperties = {
+    width: 1,
+    background: "rgba(255,255,255,0.08)",
+    flexShrink: 0,
+    margin: "12px 0",
+  };
+
+  return (
+    <div
+      className="hotel-utility-bar"
+      style={{
+        background: "#1A1A1A",
+        borderBottom: "1px solid var(--luxe-hairline)",
+        padding: "16px 24px",
+      }}
+    >
+      <div
+        className="luxe-container"
+        style={{
+          padding: 0,
+          display: "flex",
+          alignItems: "stretch",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div
+          className="hotel-utility-fields"
+          style={{
+            flex: 1,
+            minWidth: 0,
+            display: "flex",
+            alignItems: "stretch",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid var(--luxe-hairline-strong)",
+            borderRadius: 10,
+            overflow: "hidden",
+          }}
+        >
+          {/* Destination */}
+          <div style={{ flex: 1.4, minWidth: 0, padding: "8px 14px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <span style={{ ...labelStyle, marginBottom: 4 }}>Hotel / Location</span>
+            <input
+              type="text"
+              value={localDestination}
+              placeholder="City or hotel name"
+              onChange={(e) => setLocalDestination(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+              style={{
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                color: "var(--luxe-soft-white)",
+                fontFamily: "var(--font-body)",
+                fontSize: 13,
+                fontWeight: 500,
+                padding: 0,
+                width: "100%",
+              }}
+            />
+          </div>
+          <div style={dividerStyle} />
+          {/* Check-in */}
+          <div ref={dateAnchorRef} style={{ display: "flex", flex: 2, minWidth: 0, position: "relative" }}>
+            <button type="button" onClick={() => setDateOpen(true)} style={cellStyle} aria-label="Check-in date">
+              <span style={labelStyle}>Check-in</span>
+              <span style={valueStyle(!!checkIn)}>{formatDate(checkIn, "Add date")}</span>
+            </button>
+            <div style={dividerStyle} />
+            <button type="button" onClick={() => setDateOpen(true)} style={cellStyle} aria-label="Check-out date">
+              <span style={labelStyle}>Check-out</span>
+              <span style={valueStyle(!!checkOut)}>{formatDate(checkOut, "Add date")}</span>
+            </button>
+            <LuxeDatePicker
+              mode="range"
+              variant="dark"
+              checkIn={checkIn || null}
+              checkOut={checkOut || null}
+              onChange={({ checkIn: ci, checkOut: co }) => setDates(ci ?? "", co ?? "")}
+              open={dateOpen}
+              onClose={() => setDateOpen(false)}
+              showTrigger={false}
+              anchorRef={dateAnchorRef}
+            />
+          </div>
+          <div style={dividerStyle} />
+          {/* Rooms / Guests */}
+          <div style={{ flex: 1.1, minWidth: 0, padding: "8px 14px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <span style={{ ...labelStyle, marginBottom: 2 }}>Rooms / Guests</span>
+            <GuestRoomPicker variant="dark" compact />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSearch}
+          className="luxe-btn-gold"
+          style={{
+            padding: "0 28px",
+            fontSize: 11,
+            letterSpacing: "0.18em",
+            whiteSpace: "nowrap",
+            alignSelf: "stretch",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            borderRadius: 10,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          Search
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────── Top Booking Widget ──────────────────────────
+   The "top-right" sticky booking card called out in the spec. Sits next to
+   the photo gallery in the functional grid. Lighter dark shade (#242424) to
+   create depth against the page's #0c0b0a background. Shows the cheapest
+   available nightly rate (live), the public/MRP rate for context, and a
+   gold "Book Now" CTA that scrolls to the rates section so the user can
+   pick a specific room. */
+
+function TopBookingWidget({
+  hotelName,
+  starDisplay,
+  rating,
+  reviews,
+  fromNightly,
+  fromCurrency,
+  mrpNightly,
+  savingsPct,
+  nights,
+  datesSelected,
+  isLoading,
+  onBookNow,
+  onAskConcierge,
+}: {
+  hotelName: string;
+  starDisplay: string;
+  rating: number;
+  reviews: number;
+  fromNightly: number | null;
+  fromCurrency: string;
+  mrpNightly: number | null;
+  savingsPct: number | null;
+  nights: number;
+  datesSelected: boolean;
+  isLoading: boolean;
+  onBookNow: () => void;
+  onAskConcierge: () => void;
+}) {
+  return (
+    <aside
+      className="hotel-top-widget"
+      style={{
+        position: "sticky",
+        top: 92,
+        background: "#242424",
+        border: "1px solid var(--luxe-hairline-strong)",
+        borderRadius: 12,
+        padding: 22,
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
+        alignSelf: "start",
+      }}
+    >
+      {savingsPct != null && savingsPct > 0 && (
+        <div
+          style={{
+            alignSelf: "flex-start",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "5px 11px",
+            background: "var(--luxe-champagne-soft)",
+            border: "1px solid var(--luxe-champagne-line)",
+            borderRadius: 999,
+            fontSize: 10.5,
+            fontWeight: 600,
+            color: "var(--luxe-champagne)",
+            letterSpacing: "0.08em",
+            fontFamily: "var(--font-body)",
+            textTransform: "uppercase",
+          }}
+        >
+          <span style={{ fontSize: 9 }}>★</span>
+          Member Preferred · {savingsPct}% off
+        </div>
+      )}
+
+      <div>
+        <div
+          style={{
+            fontFamily: "var(--font-display)",
+            fontStyle: "italic",
+            fontSize: 22,
+            fontWeight: 500,
+            color: "var(--luxe-soft-white)",
+            lineHeight: 1.2,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          {hotelName}
+        </div>
+        {(starDisplay || rating > 0) && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginTop: 8,
+              fontSize: 12,
+              fontFamily: "var(--font-body)",
+              color: "var(--luxe-soft-white-70)",
+              flexWrap: "wrap",
+            }}
+          >
+            {starDisplay && (
+              <span style={{ color: "#D4AF37", letterSpacing: 1, fontSize: 13 }}>
+                {starDisplay}
+              </span>
+            )}
+            {rating > 0 && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span style={{ color: "var(--luxe-champagne)", fontWeight: 600 }}>
+                  {rating.toFixed(1)}
+                </span>
+                {reviews > 0 && (
+                  <span style={{ color: "var(--luxe-soft-white-50)" }}>
+                    · {reviews.toLocaleString()} reviews
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div
+        aria-hidden
+        style={{ height: 1, background: "var(--luxe-hairline)" }}
+      />
+
+      <div>
+        <div
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 10,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: "var(--luxe-champagne)",
+            fontWeight: 600,
+            marginBottom: 6,
+          }}
+        >
+          {datesSelected ? "From" : "Starting from"}
+        </div>
+        {isLoading ? (
+          <div
+            className="luxe-skeleton luxe-skeleton--dark"
+            style={{ height: 36, width: "70%", borderRadius: 6 }}
+          />
+        ) : fromNightly != null ? (
+          <>
+            {mrpNightly != null && mrpNightly > fromNightly && (
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "var(--luxe-soft-white-50)",
+                  textDecoration: "line-through",
+                  fontFamily: "var(--font-mono)",
+                  marginBottom: 2,
+                }}
+              >
+                {formatPrice(mrpNightly, fromCurrency)}
+              </div>
+            )}
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: 34,
+                  fontWeight: 500,
+                  color: "#D4AF37",
+                  letterSpacing: "-0.015em",
+                  lineHeight: 1.05,
+                }}
+              >
+                {formatPrice(fromNightly, fromCurrency)}
+              </span>
+              <span
+                style={{
+                  fontSize: 12,
+                  color: "var(--luxe-soft-white-50)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                / night
+              </span>
+            </div>
+            {datesSelected && nights > 0 && (
+              <div
+                style={{
+                  fontSize: 11.5,
+                  color: "var(--luxe-soft-white-50)",
+                  marginTop: 6,
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                {nights} night{nights > 1 ? "s" : ""} · taxes &amp; fees calculated at booking
+              </div>
+            )}
+          </>
+        ) : (
+          <p
+            style={{
+              fontSize: 12.5,
+              color: "var(--luxe-soft-white-70)",
+              fontFamily: "var(--font-body)",
+              lineHeight: 1.6,
+              margin: 0,
+            }}
+          >
+            {datesSelected
+              ? "Live rates loading…"
+              : "Pick your dates below to see live, member-only pricing."}
+          </p>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={onBookNow}
+        className="luxe-btn-gold"
+        style={{
+          width: "100%",
+          padding: "13px 0",
+          fontSize: 11,
+          letterSpacing: "0.22em",
+          textTransform: "uppercase",
+          fontWeight: 600,
+          borderRadius: 999,
+        }}
+      >
+        Book Now &rarr;
+      </button>
+
+      <button
+        type="button"
+        onClick={onAskConcierge}
+        style={{
+          background: "transparent",
+          border: "1px solid var(--luxe-hairline-strong)",
+          borderRadius: 999,
+          padding: "11px 0",
+          color: "var(--luxe-soft-white)",
+          fontFamily: "var(--font-body)",
+          fontSize: 11,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          fontWeight: 500,
+          cursor: "pointer",
+          transition: "border-color 0.2s, color 0.2s",
+        }}
+      >
+        Ask Concierge
+      </button>
+
+      <p
+        style={{
+          fontSize: 11,
+          color: "var(--luxe-soft-white-50)",
+          textAlign: "center",
+          fontFamily: "var(--font-body)",
+          lineHeight: 1.5,
+          margin: 0,
+        }}
+      >
+        No payment required · Confirmed on WhatsApp in 15 min
+      </p>
+    </aside>
+  );
+}
+
+/* ────────────────────────── Functional Photo Grid ──────────────────────────
+   3-part grid: one large image on the left, two stacked smaller images on
+   the right. Replaces the full-bleed hero. Click any tile to open the
+   lightbox. Falls back gracefully when fewer than 3 photos are available. */
+
+function FunctionalGalleryGrid({
+  photos,
+  hotelName,
+  totalPhotoCount,
+  onOpenLightbox,
+}: {
+  photos: string[];
+  hotelName: string;
+  totalPhotoCount: number;
+  onOpenLightbox: (idx: number) => void;
+}) {
+  if (photos.length === 0) {
+    return (
+      <div
+        style={{
+          aspectRatio: "16 / 11",
+          borderRadius: 12,
+          background: "var(--luxe-black-2)",
+          border: "1px solid var(--luxe-hairline)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "var(--luxe-soft-white-50)",
+          fontFamily: "var(--font-body)",
+          fontSize: 13,
+        }}
+      >
+        Photos coming soon
+      </div>
+    );
+  }
+
+  const big = photos[0];
+  const top = photos[1] || photos[0];
+  const bot = photos[2] || photos[1] || photos[0];
+  const remaining = Math.max(0, totalPhotoCount - 3);
+
+  return (
+    <div
+      className="hotel-func-gallery"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 1.7fr) minmax(0, 1fr)",
+        gridTemplateRows: "1fr 1fr",
+        gap: 10,
+        aspectRatio: "16 / 11",
+        borderRadius: 12,
+        overflow: "hidden",
+      }}
+    >
+      <button
+        onClick={() => onOpenLightbox(0)}
+        className="hotel-func-tile"
+        style={{ gridRow: "1 / 3", gridColumn: "1 / 2" }}
+        aria-label={`${hotelName} primary photo`}
+      >
+        <img
+          src={safePhotoUrl(big)}
+          alt={`${hotelName} 1`}
+          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+        />
+        <div className="hotel-func-overlay" />
+      </button>
+      <button
+        onClick={() => onOpenLightbox(1)}
+        className="hotel-func-tile"
+        style={{ gridRow: "1 / 2", gridColumn: "2 / 3" }}
+        aria-label={`${hotelName} photo 2`}
+      >
+        <img
+          src={safePhotoUrl(top)}
+          alt={`${hotelName} 2`}
+          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+        />
+        <div className="hotel-func-overlay" />
+      </button>
+      <button
+        onClick={() => onOpenLightbox(Math.min(2, photos.length - 1))}
+        className="hotel-func-tile"
+        style={{ gridRow: "2 / 3", gridColumn: "2 / 3", position: "relative" }}
+        aria-label={`${hotelName} photo 3`}
+      >
+        <img
+          src={safePhotoUrl(bot)}
+          alt={`${hotelName} 3`}
+          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+        />
+        <div className="hotel-func-overlay" />
+        {remaining > 0 && (
+          <div
+            style={{
+              position: "absolute",
+              right: 12,
+              bottom: 12,
+              padding: "8px 14px",
+              background: "rgba(12,11,10,0.78)",
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
+              border: "1px solid var(--luxe-hairline-strong)",
+              borderRadius: 999,
+              color: "var(--luxe-soft-white)",
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              fontWeight: 600,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              pointerEvents: "none",
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+            +{remaining} photos
+          </div>
+        )}
+      </button>
+    </div>
+  );
+}
+
+/* ────────────────────────── Glass Amenity Chip ──────────────────────────
+   Icon-led pill with a faint glassmorphism (subtle border + low-alpha bg).
+   White label text against the page's dark background. */
+
+function AmenityGlassChip({ icon, label }: { icon: string; label: string }) {
+  return (
+    <span
+      className="hotel-amenity-chip"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "10px 16px",
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.10)",
+        borderRadius: 12,
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        color: "var(--luxe-soft-white)",
+        fontFamily: "var(--font-body)",
+        fontSize: 13,
+        fontWeight: 500,
+        letterSpacing: "0.01em",
+      }}
+    >
+      <svg
+        width={16}
+        height={16}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#D4AF37"
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ flexShrink: 0 }}
+      >
+        <path d={icon} />
+      </svg>
+      {label}
+    </span>
+  );
+}
+
 /* ────────────────────────── Main Page ────────────────────────── */
 
 export default function HotelPage() {
@@ -1660,8 +2280,6 @@ export default function HotelPage() {
 
   const address = [hotel.addressline1, hotel.city, hotel.country].filter(Boolean).join(", ");
   const datesSelected = !!(booking.checkIn && booking.checkOut);
-  const heroSavePercent = savingsPct != null && savingsPct > 0 ? savingsPct : null;
-  const heroImage = photos.length > 0 ? safePhotoUrl(photos[0]) : FALLBACK_IMG;
 
   /* Sidebar derived values */
   const sidebarNightly = selectedPlan ? selectedPlan.total_price / Math.max(nights, 1) : 0;
@@ -1694,269 +2312,282 @@ export default function HotelPage() {
 
       <Header />
 
-      {/* ═══════════════════ 1. HERO ═══════════════════ */}
-      <header
+      {/* ═══════════════════ 1. SEARCH & UTILITY BAR ═══════════════════ */}
+      <SearchUtilityBar defaultDestination={hotel.city || ""} />
+
+      {/* ═══════════════════ 1B. TITLE STRIP ═══════════════════ */}
+      <section
         style={{
-          position: "relative",
-          minHeight: "min(720px, 92vh)",
-          display: "flex",
-          alignItems: "flex-end",
-          paddingTop: 96,
-          paddingBottom: 56,
-          paddingLeft: 24,
-          paddingRight: 24,
-          overflow: "hidden",
+          padding: "28px 24px 22px",
           background: "var(--luxe-black)",
         }}
       >
-        {/* Background image — clickable to open gallery */}
-        <button
-          onClick={() => openLightbox(0)}
-          aria-label="Open gallery"
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: `url(${heroImage}) center/cover no-repeat`,
-            filter: "saturate(0.92) brightness(0.7)",
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-            zIndex: 0,
-          }}
-        />
-        {/* Gradient overlay */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(180deg, rgba(12,11,10,0.55) 0%, rgba(12,11,10,0.25) 32%, rgba(12,11,10,0.85) 88%, rgba(12,11,10,0.96) 100%)",
-            zIndex: 0,
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* Save / Heart button (top-left) */}
-        <button
-          onClick={handleHeartClick}
-          aria-label={isSaved ? "Remove from saved hotels" : "Save this hotel"}
-          aria-pressed={isSaved}
-          className="absolute top-20 left-4 md:top-24 md:left-8 flex items-center justify-center"
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: "50%",
-            background: "rgba(12,11,10,0.55)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            border: "1px solid var(--luxe-hairline-strong)",
-            cursor: "pointer",
-            transition: "transform 0.15s ease, background 0.15s ease",
-            color: isSaved ? "var(--luxe-champagne)" : "var(--luxe-soft-white)",
-            zIndex: 5,
-          }}
-          onMouseDown={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.92)"; }}
-          onMouseUp={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-        </button>
-
-        {/* Photo counter (top-right) */}
-        {photos.length > 1 && (
-          <button
-            onClick={() => openLightbox(0)}
-            className="absolute top-20 right-4 md:top-24 md:right-8 flex items-center gap-2 px-4 py-2"
+        <div className="luxe-container" style={{ padding: 0 }}>
+          <div
             style={{
-              background: "rgba(12,11,10,0.6)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              color: "var(--luxe-soft-white)",
-              fontSize: 11,
-              letterSpacing: "0.18em",
-              fontFamily: "var(--font-mono)",
-              border: "1px solid var(--luxe-hairline-strong)",
-              borderRadius: 999,
-              cursor: "pointer",
-              fontWeight: 600,
-              textTransform: "uppercase",
-              zIndex: 5,
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 24,
+              flexWrap: "wrap",
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <path d="M21 15l-5-5L5 21" />
-            </svg>
-            View all · {photos.length}
-          </button>
-        )}
-
-        {/* Hero content */}
-        <div className="luxe-container" style={{ position: "relative", zIndex: 1, width: "100%" }}>
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
-            <div className="luxe-tech" style={{ marginBottom: 16 }}>
-              {hotel.city.toUpperCase()}
-              {hotel.country && (
-                <>
-                  <span style={{ margin: "0 8px", opacity: 0.5 }}>·</span>
-                  <span style={{ color: "var(--luxe-soft-white-50)" }}>
-                    {hotel.country.toUpperCase()}
+            <div style={{ minWidth: 0, flex: "1 1 auto" }}>
+              <div className="luxe-tech" style={{ marginBottom: 10 }}>
+                {hotel.city.toUpperCase()}
+                {hotel.country && (
+                  <>
+                    <span style={{ margin: "0 8px", opacity: 0.5 }}>·</span>
+                    <span style={{ color: "var(--luxe-soft-white-50)" }}>
+                      {hotel.country.toUpperCase()}
+                    </span>
+                  </>
+                )}
+              </div>
+              <h1
+                className="luxe-display"
+                style={{
+                  fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif",
+                  fontSize: "clamp(30px, 4.4vw, 52px)",
+                  fontWeight: 300,
+                  fontStyle: "italic",
+                  lineHeight: 1.06,
+                  color: "var(--luxe-soft-white)",
+                  marginBottom: 14,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {hotel.hotel_name}
+              </h1>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                {starDisplay && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      padding: "5px 12px",
+                      borderRadius: 999,
+                      background: "rgba(212,175,55,0.12)",
+                      border: "1px solid rgba(212,175,55,0.32)",
+                      color: "#D4AF37",
+                      fontSize: 12,
+                      letterSpacing: "0.18em",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {starDisplay}
                   </span>
-                </>
-              )}
+                )}
+                {hotel.rating_average > 0 && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "5px 12px",
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      color: "var(--luxe-soft-white)",
+                      fontSize: 12,
+                      fontWeight: 500,
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    <span style={{ color: "#D4AF37" }}>★</span>
+                    <span style={{ color: "var(--luxe-champagne)", fontWeight: 600 }}>
+                      {hotel.rating_average.toFixed(1)}
+                    </span>
+                    {hotel.rating_average >= 8 && (
+                      <span style={{ color: "#D4AF37", fontWeight: 600, marginLeft: 4 }}>
+                        {hotel.rating_average >= 9 ? "Exceptional" : "Excellent"}
+                      </span>
+                    )}
+                    {hotel.number_of_reviews > 0 && (
+                      <span style={{ color: "var(--luxe-soft-white-50)" }}>
+                        · {hotel.number_of_reviews.toLocaleString()} reviews
+                      </span>
+                    )}
+                  </span>
+                )}
+                {hotel.chain_name && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      padding: "5px 12px",
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      color: "var(--luxe-soft-white-70)",
+                      fontSize: 12,
+                      letterSpacing: "0.04em",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    {hotel.chain_name}
+                  </span>
+                )}
+                {address && (
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      color: "var(--luxe-soft-white-50)",
+                      fontFamily: "var(--font-body)",
+                      fontSize: 12.5,
+                      marginLeft: 4,
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    {address}
+                  </span>
+                )}
+              </div>
             </div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="luxe-display"
+            <button
+              onClick={handleHeartClick}
+              aria-label={isSaved ? "Remove from saved hotels" : "Save this hotel"}
+              aria-pressed={isSaved}
               style={{
-                fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif",
-                fontSize: "clamp(40px, 6.4vw, 84px)",
-                fontWeight: 300,
-                fontStyle: "italic",
-                lineHeight: 1.04,
-                color: "var(--luxe-soft-white)",
-                marginBottom: 22,
-                letterSpacing: "-0.02em",
-                maxWidth: 1100,
-              }}
-            >
-              {hotel.hotel_name}
-            </motion.h1>
-
-            {/* Star + chain pills */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.28 }}
-              style={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+                background: isSaved ? "rgba(212,175,55,0.14)" : "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                cursor: "pointer",
+                color: isSaved ? "#D4AF37" : "var(--luxe-soft-white)",
                 display: "flex",
-                flexWrap: "wrap",
                 alignItems: "center",
-                gap: 10,
-                marginBottom: 24,
+                justifyContent: "center",
+                flexShrink: 0,
+                transition: "transform 0.15s ease, background 0.15s ease",
               }}
             >
-              {starDisplay && (
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "6px 14px",
-                    borderRadius: 999,
-                    background: "var(--luxe-champagne-soft)",
-                    border: "1px solid var(--luxe-champagne-line)",
-                    color: "var(--luxe-champagne)",
-                    fontSize: 12,
-                    letterSpacing: "0.16em",
-                    fontWeight: 600,
-                  }}
-                >
-                  {starDisplay}
-                </span>
-              )}
-              {hotel.rating_average > 0 && (
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "6px 14px",
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid var(--luxe-hairline-strong)",
-                    color: "var(--luxe-soft-white)",
-                    fontSize: 12,
-                    fontWeight: 500,
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  <span style={{ color: "var(--luxe-champagne)" }}>{hotel.rating_average.toFixed(1)}</span>
-                  <span style={{ color: "var(--luxe-soft-white-50)" }}>/ 10</span>
-                  {hotel.number_of_reviews > 0 && (
-                    <span style={{ color: "var(--luxe-soft-white-50)" }}>· {hotel.number_of_reviews.toLocaleString()} reviews</span>
-                  )}
-                </span>
-              )}
-              {hotel.chain_name && (
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    padding: "6px 14px",
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid var(--luxe-hairline-strong)",
-                    color: "var(--luxe-soft-white-70)",
-                    fontSize: 12,
-                    letterSpacing: "0.04em",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  {hotel.chain_name}
-                </span>
-              )}
-            </motion.div>
-
-            {/* Champagne lead */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.36 }}
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: 13,
-                color: "var(--luxe-champagne)",
-                letterSpacing: "0.06em",
-                marginBottom: 30,
-              }}
-            >
-              <span style={{ fontWeight: 600 }}>Preferred rate</span>
-              <span style={{ color: "var(--luxe-soft-white-50)", margin: "0 8px" }}>·</span>
-              <span style={{ color: "var(--luxe-soft-white-70)" }}>
-                {heroSavePercent != null
-                  ? `Voyagr Club members save up to ${heroSavePercent}% vs. public rates`
-                  : "Voyagr Club members save on every stay"}
-              </span>
-            </motion.p>
-
-            {/* Scroll CTA */}
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.44 }}
-              style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}
-            >
-              <button
-                onClick={() => document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" })}
-                className="luxe-btn-primary"
-                aria-label="See member rates"
-              >
-                See member rates ↓
-              </button>
-              <a
-                href={conciergeWhatsappLink(`Hi, I'm interested in ${hotel.hotel_name} in ${hotel.city}`)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="luxe-btn-secondary"
-              >
-                Ask Concierge
-              </a>
-            </motion.div>
-          </motion.div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </header>
+      </section>
+
+      {/* ═══════════════════ 1C. FUNCTIONAL TOP GRID — Gallery + Booking Widget ═══════════════════ */}
+      <section style={{ padding: "0 24px 56px", background: "var(--luxe-black)" }}>
+        <div className="luxe-container" style={{ padding: 0 }}>
+          <div
+            className="hotel-func-top-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1fr) 360px",
+              gap: 28,
+              alignItems: "start",
+            }}
+          >
+            {/* ─── Left column: Gallery + About + Amenities ─── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 40, minWidth: 0 }}>
+              <FunctionalGalleryGrid
+                photos={photos}
+                hotelName={hotel.hotel_name}
+                totalPhotoCount={photos.length}
+                onOpenLightbox={openLightbox}
+              />
+
+              {/* About Property */}
+              {(editorialIntro || hotel.editorial_headline || hotel.overview) && (
+                <div>
+                  <div className="luxe-tech" style={{ marginBottom: 12 }}>
+                    About the Property
+                  </div>
+                  <h2
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontStyle: "italic",
+                      fontWeight: 400,
+                      fontSize: "clamp(22px, 2.6vw, 30px)",
+                      lineHeight: 1.2,
+                      color: "var(--luxe-soft-white)",
+                      margin: "0 0 16px",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {hotel.editorial_headline ?? hotel.hotel_name}
+                  </h2>
+                  {editorialIntro && (
+                    <CollapsibleText
+                      text={editorialIntro}
+                      bodyStyle={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: 15,
+                        lineHeight: 1.75,
+                        color: "rgba(255,255,255,0.82)",
+                        margin: 0,
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Amenities — glass chips */}
+              {(() => {
+                const amenitySource = [
+                  hotel.amenities,
+                  hotel.tj_description?.amenities,
+                  hotel.overview,
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+                const amenities: Amenity[] = amenitySource ? extractAmenities(amenitySource) : [];
+                if (amenities.length === 0) return null;
+                return (
+                  <div>
+                    <div className="luxe-tech" style={{ marginBottom: 14 }}>
+                      Amenities
+                    </div>
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      {amenities.map((a) => (
+                        <AmenityGlassChip key={a.key} icon={a.icon} label={a.label} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* ─── Right column: Sticky Booking Widget ─── */}
+            <TopBookingWidget
+              hotelName={hotel.hotel_name}
+              starDisplay={starDisplay}
+              rating={hotel.rating_average}
+              reviews={hotel.number_of_reviews}
+              fromNightly={lowestFromRate}
+              fromCurrency={rates?.rates[0]?.currency || hotel.rates_currency || "INR"}
+              mrpNightly={mrpRate != null && nights > 0 ? mrpRate / Math.max(nights, 1) : null}
+              savingsPct={savingsPct}
+              nights={nights}
+              datesSelected={datesSelected}
+              isLoading={ratesLoading}
+              onBookNow={() => document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" })}
+              onAskConcierge={() => {
+                const link = conciergeWhatsappLink(`Hi, I'm interested in ${hotel.hotel_name} in ${hotel.city}`);
+                window.open(link, "_blank", "noopener,noreferrer");
+              }}
+            />
+          </div>
+        </div>
+      </section>
 
       {/* ═══════════════════ 2. CHAMPAGNE TRUST STRIP ═══════════════════ */}
       <section
@@ -2036,12 +2667,13 @@ export default function HotelPage() {
         </div>
       </div>
 
-      {/* ═══════════════════ 4. EDITORIAL OVERVIEW ═══════════════════ */}
+      {/* ═══════════════════ 4. PROPERTY DETAILS ═══════════════════ */}
       <section
         ref={stayRef}
         id="the-stay"
         style={{
-          padding: "80px 24px 48px",
+          padding: "20px 24px 48px",
+          borderTop: "1px solid var(--luxe-hairline)",
           scrollMarginTop: 140,
         }}
       >
@@ -2055,36 +2687,8 @@ export default function HotelPage() {
           >
             <div style={{ maxWidth: 760 }}>
               <div className="luxe-tech" style={{ marginBottom: 12 }}>
-                The Stay
+                Property Details
               </div>
-              <h2
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontStyle: "italic",
-                  fontWeight: "normal",
-                  fontSize: 26,
-                  lineHeight: "30px",
-                  color: "#f5f1e8",
-                  margin: "0 0 16px",
-                }}
-              >
-                {hotel.editorial_headline ?? hotel.hotel_name}
-              </h2>
-              {editorialIntro && (
-                <div style={{ marginBottom: 32 }}>
-                  <CollapsibleText
-                    text={editorialIntro}
-                    scrollTargetRef={stayRef}
-                    bodyStyle={{
-                      fontFamily: "var(--font-body)",
-                      fontSize: 16,
-                      lineHeight: "26px",
-                      color: "rgba(255,255,255,0.78)",
-                      margin: 0,
-                    }}
-                  />
-                </div>
-              )}
             </div>
 
             <HotelFactGrid
@@ -3389,6 +3993,54 @@ export default function HotelPage() {
       {hotel && <HotelPageWhatsAppTrigger hotelName={hotel.hotel_name} />}
 
       <style jsx global>{`
+        /* Functional gallery grid — 1 large + 2 stacked */
+        .hotel-func-tile {
+          position: relative;
+          overflow: hidden;
+          border: none;
+          background: var(--luxe-black-2);
+          padding: 0;
+          cursor: pointer;
+          isolation: isolate;
+          width: 100%;
+          height: 100%;
+          transition: transform 0.4s ease;
+        }
+        .hotel-func-tile img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease;
+          filter: saturate(0.95) brightness(0.92);
+        }
+        .hotel-func-tile:hover img {
+          transform: scale(1.05);
+          filter: saturate(1) brightness(1);
+        }
+        .hotel-func-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(12,11,10,0.30) 0%, transparent 50%);
+          pointer-events: none;
+        }
+
+        /* Glass amenity chip hover */
+        .hotel-amenity-chip {
+          transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+        }
+        .hotel-amenity-chip:hover {
+          border-color: rgba(212, 175, 55, 0.32);
+          background: rgba(255,255,255,0.06);
+        }
+
+        /* Search & utility bar — input placeholder colour */
+        .hotel-utility-bar input::placeholder {
+          color: var(--luxe-soft-white-50);
+          opacity: 1;
+        }
+
         /* Bento gallery tile — magazine grid */
         .bento-tile {
           position: relative;
@@ -3451,11 +4103,33 @@ export default function HotelPage() {
         .no-scrollbar::-webkit-scrollbar { display: none; }
 
         /* Responsive — collapse multi-column grids on narrow screens */
+        @media (max-width: 1080px) {
+          .hotel-func-top-grid {
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 24px !important;
+          }
+          .hotel-top-widget {
+            position: static !important;
+          }
+        }
         @media (max-width: 960px) {
           .hotel-overview-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 28px !important; }
           .hotel-rates-grid { grid-template-columns: minmax(0, 1fr) !important; }
           .hotel-location-grid { grid-template-columns: minmax(0, 1fr) !important; }
           .hotel-reviews-grid { grid-template-columns: minmax(0, 1fr) !important; }
+          .hotel-utility-fields {
+            flex-direction: column !important;
+          }
+          .hotel-utility-fields > div[style*="width: 1px"] {
+            width: 100% !important;
+            height: 1px !important;
+            margin: 0 !important;
+          }
+        }
+        @media (max-width: 760px) {
+          .hotel-func-gallery {
+            aspect-ratio: 4 / 3 !important;
+          }
         }
         @media (max-width: 760px) {
           .hotel-bento {
