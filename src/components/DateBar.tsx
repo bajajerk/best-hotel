@@ -96,8 +96,9 @@ const DateBar = forwardRef<DateBarHandle, DateBarProps>(function DateBar(
     };
     const valueStyle = (filled: boolean): React.CSSProperties => ({
       fontFamily: "var(--font-body), sans-serif",
-      fontSize: 14,
-      fontWeight: filled ? 500 : 400,
+      fontSize: 16,
+      fontWeight: 500,
+      letterSpacing: "0.2px",
       color: filled ? "var(--ink)" : "var(--ink-light)",
       overflow: "hidden",
       textOverflow: "ellipsis",

@@ -432,7 +432,7 @@ export default function SearchPage() {
                     Destination
                   </div>
                   <DestinationSearch
-                    variant="light"
+                    variant="dark"
                     placeholder="Where are you going?"
                     defaultValue={initialQuery}
                     onValueChange={(val) => {

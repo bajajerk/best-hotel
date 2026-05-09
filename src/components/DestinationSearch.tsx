@@ -217,13 +217,15 @@ export default function DestinationSearch({
     input: {
       border: "none",
       background: "transparent",
-      fontSize: "14px",
-      color: isDark ? "var(--luxe-soft-white, var(--luxe-soft-white))" : "#111111",
+      fontSize: "16px",
+      color: isDark ? "#ffffff" : "#111111",
       fontFamily: "var(--font-body)",
-      fontWeight: 400 as const,
+      fontWeight: 500 as const,
+      letterSpacing: "0.2px",
       width: "100%",
       outline: "none",
       padding: "0",
+      WebkitTextFillColor: isDark ? "#ffffff" : "#111111",
     },
     dropdown: {
       position: "absolute" as const,

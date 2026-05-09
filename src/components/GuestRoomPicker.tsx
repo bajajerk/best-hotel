@@ -112,8 +112,9 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
         <div
           style={{
             fontFamily: compact ? "var(--font-body, sans-serif)" : "var(--font-dm-sans)",
-            fontSize: compact ? 14 : 14,
+            fontSize: compact ? 16 : 14,
             fontWeight: compact ? 500 : 400,
+            letterSpacing: compact ? "0.2px" : undefined,
             color: compact ? "var(--ink, var(--ink))" : valueColor,
             display: "flex",
             alignItems: "center",
