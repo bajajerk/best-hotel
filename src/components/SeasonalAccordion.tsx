@@ -1,572 +1,310 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+const LABEL_GOLD = "#b8956a";
+const ITALIC_GOLD = "#c9a66b";
+const CARD_BG = "#0c0c0c";
 
-const GOLD = "#c9a96e";
+const INTER =
+  "'Inter', var(--font-body), system-ui, -apple-system, sans-serif";
+const CORMORANT =
+  "'Cormorant Garamond', var(--font-display), Georgia, serif";
 
-type Destination = { city: string; country: string; img: string };
+type Destination = { city: string; cc: string };
+
 type Season = {
   name: string;
-  icon: string;
   range: string;
-  accent: string;
+  href: string;
+  img: string;
+  imgAlt: string;
   destinations: Destination[];
 };
 
 const SEASONS: Season[] = [
   {
     name: "Summer",
-    icon: "☀",
-    range: "Jun – Aug",
-    accent: "#c9a96e",
+    range: "JUN – AUG",
+    href: "/hotels?season=summer",
+    img: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=1200&q=80&auto=format&fit=crop",
+    imgAlt: "Santorini, Greece — whitewashed cliffside village above the Aegean Sea",
     destinations: [
-      {
-        city: "Santorini",
-        country: "Greece",
-        img: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=1200&q=80&auto=format&fit=crop",
-      },
-      {
-        city: "Bali",
-        country: "Indonesia",
-        img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200&q=80&auto=format&fit=crop",
-      },
-      {
-        city: "Cape Town",
-        country: "South Africa",
-        img: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=1200&q=80&auto=format&fit=crop",
-      },
+      { city: "Santorini", cc: "GR" },
+      { city: "Bali", cc: "ID" },
+      { city: "Cape Town", cc: "ZA" },
     ],
   },
   {
     name: "Autumn",
-    icon: "🍂",
-    range: "Sep – Nov",
-    accent: "#b8860b",
+    range: "SEP – NOV",
+    href: "/hotels?season=autumn",
+    img: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&q=80&auto=format&fit=crop",
+    imgAlt: "Kyoto, Japan — temple roofline framed by autumn maple foliage",
     destinations: [
-      {
-        city: "Kyoto",
-        country: "Japan",
-        img: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&q=80&auto=format&fit=crop",
-      },
-      {
-        city: "Prague",
-        country: "Czech Republic",
-        img: "https://images.unsplash.com/photo-1519677100203-a0e668c92439?w=1200&q=80&auto=format&fit=crop",
-      },
-      {
-        city: "Budapest",
-        country: "Hungary",
-        img: "https://images.unsplash.com/photo-1541849546-216549ae216d?w=1200&q=80&auto=format&fit=crop",
-      },
+      { city: "Kyoto", cc: "JP" },
+      { city: "Tuscany", cc: "IT" },
+      { city: "Rajasthan", cc: "IN" },
     ],
   },
   {
     name: "Winter",
-    icon: "❄",
-    range: "Dec – Feb",
-    accent: "#8ab4d4",
+    range: "DEC – FEB",
+    href: "/hotels?season=winter",
+    img: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=1200&q=80&auto=format&fit=crop",
+    imgAlt: "Maldives — overwater villa above turquoise water",
     destinations: [
-      {
-        city: "Dubai",
-        country: "UAE",
-        img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&q=80&auto=format&fit=crop",
-      },
-      {
-        city: "Maldives",
-        country: "Maldives",
-        img: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=1200&q=80&auto=format&fit=crop",
-      },
-      {
-        city: "Rajasthan",
-        country: "India",
-        img: "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=1200&q=80&auto=format&fit=crop",
-      },
+      { city: "Maldives", cc: "MV" },
+      { city: "Swiss Alps", cc: "CH" },
+      { city: "Goa", cc: "IN" },
     ],
   },
   {
     name: "Spring",
-    icon: "🌸",
-    range: "Mar – May",
-    accent: "#c8a0b4",
+    range: "MAR – MAY",
+    href: "/hotels?season=spring",
+    img: "https://images.unsplash.com/photo-1534351590666-13e3e96c5017?w=1200&q=80&auto=format&fit=crop",
+    imgAlt: "Amsterdam, Netherlands — canal lined with spring blossoms",
     destinations: [
-      {
-        city: "Tokyo",
-        country: "Japan",
-        img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1200&q=80&auto=format&fit=crop",
-      },
-      {
-        city: "Amsterdam",
-        country: "Netherlands",
-        img: "https://images.unsplash.com/photo-1534351590666-13e3e96c5017?w=1200&q=80&auto=format&fit=crop",
-      },
-      {
-        city: "Istanbul",
-        country: "Turkey",
-        img: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=1200&q=80&auto=format&fit=crop",
-      },
+      { city: "Amsterdam", cc: "NL" },
+      { city: "Sri Lanka", cc: "LK" },
+      { city: "Provence", cc: "FR" },
     ],
   },
 ];
 
-const MONTSERRAT =
-  "'Montserrat', var(--font-body), system-ui, -apple-system, sans-serif";
-const CORMORANT =
-  "'Cormorant Garamond', var(--font-display), Georgia, serif";
-
-function SeasonTile({
-  season,
-  isOpen,
-  onToggle,
-}: {
-  season: Season;
-  isOpen: boolean;
-  onToggle: () => void;
-}) {
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const [maxH, setMaxH] = useState(0);
-  const [imgIndex, setImgIndex] = useState(0);
-  const [fading, setFading] = useState(false);
-
-  // Image rotation: only run while tile is open. Reset to 0 on close.
-  useEffect(() => {
-    if (!isOpen) {
-      setImgIndex(0);
-      setFading(false);
-      return;
-    }
-    let fadeTimer: ReturnType<typeof setTimeout> | null = null;
-    const interval = setInterval(() => {
-      setFading(true);
-      fadeTimer = setTimeout(() => {
-        setImgIndex((i) => (i + 1) % season.destinations.length);
-        setFading(false);
-      }, 400);
-    }, 2500);
-    return () => {
-      clearInterval(interval);
-      if (fadeTimer) clearTimeout(fadeTimer);
-    };
-  }, [isOpen, season.destinations.length]);
-
-  // Sync max-height with the actual rendered body so the panel can grow with
-  // any content (e.g. responsive font sizes pushing rows).
-  useEffect(() => {
-    const el = bodyRef.current;
-    if (!el) return;
-    if (isOpen) {
-      // Read scrollHeight after layout
-      const next = el.scrollHeight;
-      setMaxH(next);
-    } else {
-      setMaxH(0);
-    }
-  }, [isOpen, imgIndex]);
-
-  const active = season.destinations[imgIndex];
-  const headerId = `season-h-${season.name}`;
-  const panelId = `season-p-${season.name}`;
-
+function SeasonCard({ season }: { season: Season }) {
   return (
-    <div
+    <article
       style={{
-        background: "#111",
-        border: `1px solid ${isOpen ? season.accent : "rgba(255,255,255,0.08)"}`,
-        borderRadius: 14,
+        background: CARD_BG,
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 8,
         overflow: "hidden",
-        transition:
-          "border-color 0.4s ease, background 0.4s ease",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      <button
-        type="button"
-        id={headerId}
-        aria-expanded={isOpen}
-        aria-controls={panelId}
-        onClick={onToggle}
+      {/* Hero image */}
+      <div
+        className="seasons-grid__hero"
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
+          position: "relative",
           width: "100%",
-          padding: 20,
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          color: "inherit",
-          textAlign: "left",
-          fontFamily: "inherit",
-          gap: 12,
+          height: 120,
+          overflow: "hidden",
         }}
       >
-        <span
+        <img
+          src={season.img}
+          alt={season.imgAlt}
+          loading="lazy"
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            minWidth: 0,
+            display: "block",
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
           }}
-        >
-          <span
-            aria-hidden="true"
-            style={{
-              fontSize: 22,
-              lineHeight: 1,
-              color: season.accent,
-              flexShrink: 0,
-            }}
-          >
-            {season.icon}
-          </span>
-          <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <span
-              style={{
-                fontFamily: MONTSERRAT,
-                fontSize: 9,
-                fontWeight: 600,
-                letterSpacing: "2.5px",
-                textTransform: "uppercase",
-                color: season.accent,
-                lineHeight: 1.2,
-                marginBottom: 4,
-              }}
-            >
-              {season.range}
-            </span>
-            <span
-              style={{
-                fontFamily: CORMORANT,
-                fontSize: 28,
-                fontWeight: 300,
-                color: "#ffffff",
-                lineHeight: 1.1,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              {season.name}
-            </span>
-          </span>
-        </span>
-        <span
+        />
+        <div
           aria-hidden="true"
           style={{
-            fontFamily: MONTSERRAT,
-            fontSize: 22,
-            fontWeight: 300,
-            color: season.accent,
-            lineHeight: 1,
-            flexShrink: 0,
-            transition: "transform 0.4s ease",
-            display: "inline-block",
-            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-            width: 18,
-            textAlign: "center",
+            position: "absolute",
+            inset: 0,
+            background: `linear-gradient(0deg, ${CARD_BG} 0%, transparent 60%)`,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: 12,
+            bottom: 12,
+            right: 12,
           }}
         >
-          {isOpen ? "−" : "+"}
-        </span>
-      </button>
-
-      <div
-        id={panelId}
-        role="region"
-        aria-labelledby={headerId}
-        style={{
-          maxHeight: maxH,
-          opacity: isOpen ? 1 : 0,
-          overflow: "hidden",
-          transition:
-            "max-height 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease",
-        }}
-      >
-        <div ref={bodyRef}>
-          {/* Rotating image block */}
           <div
             style={{
-              margin: "0 20px",
-              position: "relative",
-              height: 200,
-              borderRadius: 12,
-              overflow: "hidden",
-              background: "#0a0a0a",
-            }}
-          >
-            <img
-              src={active.img}
-              alt={`${active.city}, ${active.country}`}
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                opacity: fading ? 0 : 1,
-                transform: fading ? "scale(1.06)" : "scale(1.03)",
-                transition:
-                  "opacity 0.4s ease, transform 0.4s ease",
-              }}
-            />
-            <div
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%)",
-              }}
-            />
-            {/* Bottom-left labels */}
-            <div
-              style={{
-                position: "absolute",
-                left: 16,
-                bottom: 14,
-                right: 100,
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: MONTSERRAT,
-                  fontSize: 8,
-                  fontWeight: 600,
-                  letterSpacing: "2px",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.5)",
-                  marginBottom: 4,
-                }}
-              >
-                {active.country}
-              </div>
-              <div
-                style={{
-                  fontFamily: CORMORANT,
-                  fontSize: 22,
-                  fontWeight: 300,
-                  color: "#ffffff",
-                  lineHeight: 1.1,
-                  letterSpacing: "-0.005em",
-                }}
-              >
-                {active.city}
-              </div>
-            </div>
-            {/* Bottom-right dot indicators */}
-            <div
-              style={{
-                position: "absolute",
-                right: 16,
-                bottom: 18,
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              {season.destinations.map((d, i) => {
-                const isActive = i === imgIndex;
-                return (
-                  <button
-                    key={d.city}
-                    type="button"
-                    aria-label={`Show ${d.city}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFading(false);
-                      setImgIndex(i);
-                    }}
-                    style={{
-                      background: isActive
-                        ? season.accent
-                        : "rgba(255,255,255,0.35)",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                      width: isActive ? 14 : 5,
-                      height: 5,
-                      borderRadius: 999,
-                      transition:
-                        "width 0.3s ease, background 0.3s ease",
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Destination list */}
-          <div style={{ padding: "16px 20px 0" }}>
-            {season.destinations.map((d, i) => {
-              const isActive = i === imgIndex;
-              return (
-                <button
-                  key={d.city}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setFading(false);
-                    setImgIndex(i);
-                  }}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    padding: "10px 0",
-                    background: "transparent",
-                    border: "none",
-                    borderTop:
-                      i === 0 ? "none" : "1px solid rgba(255,255,255,0.05)",
-                    cursor: "pointer",
-                    color: "inherit",
-                    textAlign: "left",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  <span
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      minWidth: 0,
-                    }}
-                  >
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: 999,
-                        background: isActive
-                          ? season.accent
-                          : "rgba(255,255,255,0.25)",
-                        flexShrink: 0,
-                        transition: "background 0.3s ease",
-                      }}
-                    />
-                    <span
-                      style={{
-                        fontFamily: CORMORANT,
-                        fontSize: 20,
-                        fontWeight: 300,
-                        color: isActive
-                          ? "#ffffff"
-                          : "rgba(255,255,255,0.4)",
-                        lineHeight: 1.2,
-                        letterSpacing: "-0.005em",
-                        transition: "color 0.3s ease",
-                      }}
-                    >
-                      {d.city}
-                    </span>
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: MONTSERRAT,
-                      fontSize: 9,
-                      fontWeight: 500,
-                      letterSpacing: "1.5px",
-                      textTransform: "uppercase",
-                      color: "rgba(255,255,255,0.3)",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {d.country}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* CTA */}
-          <button
-            type="button"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              display: "block",
-              width: "calc(100% - 40px)",
-              margin: "4px 20px 22px",
-              padding: "14px 16px",
-              background: "transparent",
-              border: `1px solid ${season.accent}`,
-              borderRadius: 100,
-              color: season.accent,
-              fontFamily: MONTSERRAT,
+              fontFamily: INTER,
               fontSize: 10,
               fontWeight: 600,
               letterSpacing: "1.5px",
               textTransform: "uppercase",
-              cursor: "pointer",
-              transition: "background 0.3s ease",
+              color: LABEL_GOLD,
+              marginBottom: 2,
+              lineHeight: 1.2,
             }}
           >
-            Explore {season.name} stays &rarr;
-          </button>
+            {season.range}
+          </div>
+          <div
+            style={{
+              fontFamily: CORMORANT,
+              fontSize: 20,
+              fontWeight: 400,
+              color: "#fff",
+              lineHeight: 1.1,
+              letterSpacing: "-0.005em",
+              textShadow: "0 1px 8px rgba(0,0,0,0.55)",
+            }}
+          >
+            {season.name}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Destination list */}
+      <ul
+        style={{
+          listStyle: "none",
+          margin: 0,
+          padding: "0 12px",
+        }}
+      >
+        {season.destinations.map((d, i) => (
+          <li
+            key={d.city}
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: 12,
+              padding: "7px 0",
+              borderBottom:
+                i === season.destinations.length - 1
+                  ? "none"
+                  : "1px solid rgba(255,255,255,0.06)",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: INTER,
+                fontSize: 13,
+                fontWeight: 400,
+                color: "#d4cfc7",
+                lineHeight: 1.3,
+              }}
+            >
+              {d.city}
+            </span>
+            <span
+              style={{
+                fontFamily: INTER,
+                fontSize: 10,
+                fontWeight: 500,
+                letterSpacing: "0.5px",
+                textTransform: "uppercase",
+                color: "#6b665e",
+                flexShrink: 0,
+              }}
+            >
+              {d.cc}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {/* CTA */}
+      <div style={{ padding: "10px 12px 12px" }}>
+        <a
+          href={season.href}
+          style={{
+            display: "block",
+            textAlign: "center",
+            padding: "8px",
+            borderRadius: 6,
+            border: "1px solid rgba(184,149,106,0.3)",
+            color: LABEL_GOLD,
+            fontFamily: INTER,
+            fontSize: 11,
+            fontWeight: 500,
+            letterSpacing: "0.4px",
+            textDecoration: "none",
+            background: "transparent",
+            transition: "background 0.2s ease, border-color 0.2s ease",
+          }}
+        >
+          Explore →
+        </a>
+      </div>
+    </article>
   );
 }
 
 export default function SeasonalAccordion() {
-  const [openIdx, setOpenIdx] = useState(0);
-
   return (
     <section
-      aria-labelledby="seasonal-accordion-heading"
+      aria-labelledby="seasonal-grid-heading"
       style={{
         background: "#0a0a0a",
-        padding: "56px 20px 48px",
+        padding: "60px 20px",
       }}
     >
-      <div style={{ maxWidth: 720, margin: "0 auto" }}>
-        <div style={{ marginBottom: 28 }}>
-          <div
-            style={{
-              fontFamily: MONTSERRAT,
-              fontSize: 9,
-              fontWeight: 600,
-              letterSpacing: "3px",
-              textTransform: "uppercase",
-              color: GOLD,
-              marginBottom: 14,
-            }}
-          >
-            Travel Calendar
-          </div>
-          <h2
-            id="seasonal-accordion-heading"
-            style={{
-              fontFamily: CORMORANT,
-              fontSize: 36,
-              fontWeight: 300,
-              lineHeight: 1.15,
-              letterSpacing: "-0.01em",
-              color: "#ffffff",
-              margin: 0,
-            }}
-          >
-            When to go,{" "}
-            <em
-              style={{
-                fontStyle: "italic",
-                fontWeight: 300,
-                color: "rgba(255,255,255,0.5)",
-              }}
-            >
-              where to go
-            </em>
-          </h2>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .seasons-grid {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 12px;
+              max-width: 1200px;
+              margin: 0 auto;
+            }
+            @media (max-width: 768px) {
+              .seasons-grid { grid-template-columns: repeat(2, 1fr); }
+              .seasons-grid__hero { height: 100px !important; }
+            }
+            @media (max-width: 480px) {
+              .seasons-grid { grid-template-columns: 1fr; }
+            }
+          `,
+        }}
+      />
+      <header
+        style={{
+          maxWidth: 1200,
+          margin: "0 auto 1.5rem",
+        }}
+      >
+        <div
+          style={{
+            fontFamily: INTER,
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "2.5px",
+            textTransform: "uppercase",
+            color: LABEL_GOLD,
+            marginBottom: 10,
+          }}
+        >
+          Travel Calendar
         </div>
+        <h2
+          id="seasonal-grid-heading"
+          style={{
+            fontFamily: CORMORANT,
+            fontSize: 28,
+            fontWeight: 400,
+            lineHeight: 1.2,
+            letterSpacing: "-0.005em",
+            color: "#ffffff",
+            margin: 0,
+          }}
+        >
+          When to go,{" "}
+          <em
+            style={{
+              fontStyle: "italic",
+              fontWeight: 400,
+              color: ITALIC_GOLD,
+            }}
+          >
+            where to go
+          </em>
+        </h2>
+      </header>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {SEASONS.map((season, i) => (
-            <SeasonTile
-              key={season.name}
-              season={season}
-              isOpen={openIdx === i}
-              onToggle={() => setOpenIdx(openIdx === i ? -1 : i)}
-            />
-          ))}
-        </div>
+      <div className="seasons-grid">
+        {SEASONS.map((s) => (
+          <SeasonCard key={s.name} season={s} />
+        ))}
       </div>
     </section>
   );
