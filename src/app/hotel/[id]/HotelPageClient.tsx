@@ -1733,11 +1733,14 @@ export default function HotelPage() {
 
       <Header />
 
-      {/* ═══════════════════ 1. JOURNEY HEADER — sticky search bar + 66/33 grid ═══════════════════
-         "Hotel journey 1" redesign:
-         - top sticky compact dark search bar (City • Dates • Guests)
-         - 2-col layout below: hotel identity + 3-image gallery (66%)
-                               Quick Book sticky card (33%)
+      {/* ═══════════════════ 1. JOURNEY HEADER — sticky search bar + 65/35 above-the-fold ═══════════════════
+         "Hotel journey 1" revision:
+         - top sticky compact dark search bar (City • Dates • Guests • Modify)
+         - 2-col container (max-w 1280px / Tailwind 7xl) below:
+             LEFT 65%: 3-image gallery only (1 large + 2 stacked)
+             RIGHT 35%: sticky Booking Card — hotel name, star rating,
+                        current price, primary 'Book Now' CTA.
+         No full-bleed hero image; #0A0A0A pure-black throughout, gold accents.
          The whole block sits in its own wrapper so the search bar's `position:
          sticky` is bounded by this section — once the user scrolls into the
          trust strip / tab bar / rates region below, the search bar releases
@@ -1838,7 +1841,7 @@ export default function HotelPage() {
           </div>
         </div>
 
-        {/* ── 2-col main grid: identity + gallery (66%) | Quick Book (33%) ── */}
+        {/* ── 2-col main grid: gallery (65%) | Booking Card (35%) ── */}
         <section
           style={{
             background: "#0A0A0A",
@@ -1850,117 +1853,18 @@ export default function HotelPage() {
             style={{
               padding: 0,
               display: "grid",
-              gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)",
+              gridTemplateColumns: "minmax(0, 65fr) minmax(0, 35fr)",
               gap: 32,
               alignItems: "start",
             }}
           >
-            {/* ── LEFT 66%: Hotel identity + 3-image gallery ── */}
+            {/* ── LEFT 65%: 3-image gallery (1 large + 2 stacked) ── */}
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
               style={{ minWidth: 0 }}
             >
-              <div className="luxe-tech" style={{ marginBottom: 14 }}>
-                {hotel.city.toUpperCase()}
-                {hotel.country && (
-                  <>
-                    <span style={{ margin: "0 8px", opacity: 0.5 }}>·</span>
-                    <span style={{ color: "var(--luxe-soft-white-50)" }}>
-                      {hotel.country.toUpperCase()}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              <h1
-                className="luxe-display"
-                style={{
-                  fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif",
-                  fontSize: "clamp(34px, 4.4vw, 60px)",
-                  fontWeight: 300,
-                  fontStyle: "italic",
-                  lineHeight: 1.05,
-                  color: "var(--luxe-soft-white)",
-                  margin: "0 0 14px",
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                {hotel.hotel_name}
-              </h1>
-
-              {/* Compact pill row: stars / rating / chain */}
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 24,
-                }}
-              >
-                {starDisplay && (
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      padding: "5px 12px",
-                      borderRadius: 999,
-                      background: "var(--luxe-champagne-soft)",
-                      border: "1px solid var(--luxe-champagne-line)",
-                      color: "#C9A961",
-                      fontSize: 11,
-                      letterSpacing: "0.14em",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {starDisplay}
-                  </span>
-                )}
-                {hotel.rating_average > 0 && (
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 6,
-                      padding: "5px 12px",
-                      borderRadius: 999,
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid var(--luxe-hairline-strong)",
-                      color: "var(--luxe-soft-white)",
-                      fontSize: 11,
-                      fontWeight: 500,
-                    }}
-                  >
-                    <span style={{ color: "#C9A961" }}>{hotel.rating_average.toFixed(1)}</span>
-                    <span style={{ color: "var(--luxe-soft-white-50)" }}>/ 10</span>
-                    {hotel.number_of_reviews > 0 && (
-                      <span style={{ color: "var(--luxe-soft-white-50)" }}>
-                        · {hotel.number_of_reviews.toLocaleString()} reviews
-                      </span>
-                    )}
-                  </span>
-                )}
-                {hotel.chain_name && (
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      padding: "5px 12px",
-                      borderRadius: 999,
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid var(--luxe-hairline-strong)",
-                      color: "var(--luxe-soft-white-70)",
-                      fontSize: 11,
-                      fontFamily: "var(--font-body)",
-                    }}
-                  >
-                    {hotel.chain_name}
-                  </span>
-                )}
-              </div>
-
               {/* 3-image grid: 1 large left, 2 small stacked right */}
               <div
                 className="hotel-journey-gallery"
@@ -2076,7 +1980,7 @@ export default function HotelPage() {
               </div>
             </motion.div>
 
-            {/* ── RIGHT 33%: Quick Book sticky card ── */}
+            {/* ── RIGHT 35%: Sticky Booking Card — name, stars, price, Book Now ── */}
             <motion.aside
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
@@ -2097,21 +2001,33 @@ export default function HotelPage() {
                   padding: 24,
                 }}
               >
-                {/* Header row: eyebrow + heart */}
+                {/* Header row: location eyebrow + heart */}
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    marginBottom: 20,
+                    marginBottom: 12,
+                    gap: 12,
                   }}
                 >
-                  <div className="luxe-tech">Quick Book</div>
+                  <div className="luxe-tech" style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {hotel.city.toUpperCase()}
+                    {hotel.country && (
+                      <>
+                        <span style={{ margin: "0 6px", opacity: 0.5 }}>·</span>
+                        <span style={{ color: "var(--luxe-soft-white-50)" }}>
+                          {hotel.country.toUpperCase()}
+                        </span>
+                      </>
+                    )}
+                  </div>
                   <button
                     onClick={handleHeartClick}
                     aria-label={isSaved ? "Remove from saved hotels" : "Save this hotel"}
                     aria-pressed={isSaved}
                     style={{
+                      flexShrink: 0,
                       display: "inline-flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -2130,6 +2046,89 @@ export default function HotelPage() {
                     </svg>
                   </button>
                 </div>
+
+                {/* Hotel name (display italic) */}
+                <h1
+                  className="luxe-display"
+                  style={{
+                    fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif",
+                    fontSize: "clamp(26px, 2.4vw, 34px)",
+                    fontWeight: 300,
+                    fontStyle: "italic",
+                    lineHeight: 1.1,
+                    color: "var(--luxe-soft-white)",
+                    margin: "0 0 12px",
+                    letterSpacing: "-0.015em",
+                  }}
+                >
+                  {hotel.hotel_name}
+                </h1>
+
+                {/* Star rating + review average pills */}
+                {(starDisplay || hotel.rating_average > 0) && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      gap: 6,
+                      marginBottom: 18,
+                    }}
+                  >
+                    {starDisplay && (
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          padding: "4px 10px",
+                          borderRadius: 999,
+                          background: "var(--luxe-champagne-soft)",
+                          border: "1px solid var(--luxe-champagne-line)",
+                          color: "#C9A961",
+                          fontSize: 10,
+                          letterSpacing: "0.14em",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {starDisplay}
+                      </span>
+                    )}
+                    {hotel.rating_average > 0 && (
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                          padding: "4px 10px",
+                          borderRadius: 999,
+                          background: "rgba(255,255,255,0.05)",
+                          border: "1px solid var(--luxe-hairline-strong)",
+                          color: "var(--luxe-soft-white)",
+                          fontSize: 10,
+                          fontWeight: 500,
+                        }}
+                      >
+                        <span style={{ color: "#C9A961" }}>{hotel.rating_average.toFixed(1)}</span>
+                        <span style={{ color: "var(--luxe-soft-white-50)" }}>/ 10</span>
+                        {hotel.number_of_reviews > 0 && (
+                          <span style={{ color: "var(--luxe-soft-white-50)" }}>
+                            · {hotel.number_of_reviews.toLocaleString()}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Hairline divider before price */}
+                <div
+                  style={{
+                    height: 1,
+                    background: "var(--luxe-hairline-strong)",
+                    margin: "0 0 18px",
+                  }}
+                />
+
 
                 {/* Price block */}
                 {(() => {
@@ -2236,7 +2235,7 @@ export default function HotelPage() {
                   );
                 })()}
 
-                {/* Select Room CTA */}
+                {/* Book Now CTA — primary gold, scrolls to rates picker */}
                 <button
                   onClick={() => document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" })}
                   className="luxe-btn-gold"
@@ -2249,9 +2248,9 @@ export default function HotelPage() {
                     textTransform: "uppercase",
                     fontWeight: 600,
                   }}
-                  aria-label="Select Room"
+                  aria-label="Book Now"
                 >
-                  Select Room
+                  Book Now
                 </button>
 
                 {/* Trust line */}
