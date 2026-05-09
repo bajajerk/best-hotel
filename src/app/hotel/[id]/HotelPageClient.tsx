@@ -3865,7 +3865,7 @@ export default function HotelPage() {
           .hotel-reviews-grid { grid-template-columns: minmax(0, 1fr) !important; }
         }
         @media (max-width: 520px) {
-          .hotel-amenities-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+          .hotel-amenities-grid { gap: 8px !important; }
         }
         @media (max-width: 760px) {
           .hotel-bento {
@@ -3887,8 +3887,9 @@ export default function HotelPage() {
 }
 
 /* ────────────────────────── AmenitiesIconGrid ────────────────────────── */
-/* 6-icon grid with text labels — derives availability from hotel.amenities
-   prose + structured fields, dims unavailable amenities. */
+/* 3×3 icon grid — thin gold-outlined icons (1.25 stroke) with white labels.
+   Availability derived from hotel.amenities prose + structured fields;
+   unavailable amenities are dimmed. */
 
 interface AmenitiesIconGridProps {
   amenities?: string | null;
@@ -3908,10 +3909,9 @@ function AmenitiesIconGrid({
   const items: { label: string; available: boolean; icon: React.ReactNode }[] = [
     {
       label: "Wifi",
-      // Every modern hotel has wifi; keep as default-on unless explicitly negated
       available: true,
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d="M5 12.55a11 11 0 0 1 14.08 0" />
           <path d="M1.42 9a16 16 0 0 1 21.16 0" />
           <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
@@ -3923,7 +3923,7 @@ function AmenitiesIconGrid({
       label: "Pool",
       available: has(["pool", "swimming"]),
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d="M2 20c1.5 0 1.5-1 3-1s1.5 1 3 1 1.5-1 3-1 1.5 1 3 1 1.5-1 3-1 1.5 1 3 1" />
           <path d="M2 16c1.5 0 1.5-1 3-1s1.5 1 3 1 1.5-1 3-1 1.5 1 3 1 1.5-1 3-1 1.5 1 3 1" />
           <path d="M7 14V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2" />
@@ -3936,7 +3936,7 @@ function AmenitiesIconGrid({
       label: "Spa",
       available: has(["spa", "massage", "wellness", "sauna", "steam"]),
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d="M12 22c1.25-.987 2.27-1.975 3.9-2.2a5.56 5.56 0 0 1 3.8 1.5" />
           <path d="M4.3 21.3a5.56 5.56 0 0 1 3.8-1.5c1.63.225 2.65 1.213 3.9 2.2" />
           <path d="M8.5 8.5c-.385.39-.74.78-1.05 1.18-1.55 2-2.95 4.32-2.95 7.32 0 1.32 1.5 2 4 2 1.5 0 4-.4 4-2 0-3-1.4-5.32-2.95-7.32C9.24 9.28 8.89 8.89 8.5 8.5Z" />
@@ -3948,7 +3948,7 @@ function AmenitiesIconGrid({
       label: "Gym",
       available: has(["gym", "fitness", "workout"]),
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d="M6.5 6.5 17.5 17.5" />
           <path d="m21 21-1-1" />
           <path d="m3 3 1 1" />
@@ -3961,9 +3961,9 @@ function AmenitiesIconGrid({
     },
     {
       label: "Restaurant",
-      available: !!restaurants_count || has(["restaurant", "dining", "bar", "café", "cafe"]),
+      available: !!restaurants_count || has(["restaurant", "dining", "café", "cafe"]),
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d="M3 2v7c0 1.1.9 2 2 2s2-.9 2-2V2" />
           <path d="M7 2v20" />
           <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z" />
@@ -3972,11 +3972,42 @@ function AmenitiesIconGrid({
       ),
     },
     {
+      label: "Bar",
+      available: has(["bar", "lounge", "cocktail", "wine"]),
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+          <path d="M5 3h14l-7 9-7-9Z" />
+          <path d="M12 12v8" />
+          <path d="M8 20h8" />
+        </svg>
+      ),
+    },
+    {
+      label: "Parking",
+      available: has(["parking", "valet", "garage"]),
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M9 17V7h4a3 3 0 0 1 0 6H9" />
+        </svg>
+      ),
+    },
+    {
+      label: "Business",
+      available: has(["business", "meeting", "conference", "boardroom"]),
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+          <rect x="2" y="7" width="20" height="14" rx="2" />
+          <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          <path d="M2 13h20" />
+        </svg>
+      ),
+    },
+    {
       label: room_service_24h ? "24h Service" : "Concierge",
-      // Concierge is part of the brand promise — always on
       available: true,
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z" />
         </svg>
       ),
@@ -3989,7 +4020,7 @@ function AmenitiesIconGrid({
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-        gap: 12,
+        gap: 10,
       }}
     >
       {items.map((item) => (
@@ -4001,12 +4032,14 @@ function AmenitiesIconGrid({
             alignItems: "center",
             justifyContent: "center",
             gap: 10,
-            padding: "20px 12px",
-            borderRadius: 14,
-            border: "1px solid var(--luxe-hairline)",
-            background: item.available ? "rgba(201,169,97,0.04)" : "rgba(255,255,255,0.015)",
-            color: item.available ? "#C9A961" : "var(--luxe-soft-white-50)",
-            opacity: item.available ? 1 : 0.45,
+            padding: "18px 12px",
+            borderRadius: 12,
+            border: item.available
+              ? "1px solid rgba(201,169,97,0.55)"
+              : "1px solid rgba(201,169,97,0.18)",
+            background: "transparent",
+            color: item.available ? "#C9A961" : "rgba(201,169,97,0.35)",
+            opacity: item.available ? 1 : 0.5,
             transition: "border-color 0.2s ease, background 0.2s ease",
           }}
         >
@@ -4017,8 +4050,8 @@ function AmenitiesIconGrid({
               fontSize: 11,
               letterSpacing: "0.16em",
               textTransform: "uppercase",
-              fontWeight: 600,
-              color: item.available ? "var(--luxe-soft-white)" : "var(--luxe-soft-white-50)",
+              fontWeight: 500,
+              color: item.available ? "#ffffff" : "rgba(255,255,255,0.4)",
               textAlign: "center",
             }}
           >
