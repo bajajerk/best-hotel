@@ -44,6 +44,7 @@ import { groupRatePlans, type RoomCategory } from "@/lib/roomCategories";
 import HotelFactGrid from "@/components/HotelFactGrid";
 import LuxeDatePicker from "@/components/LuxeDatePicker";
 import GuestRoomPicker from "@/components/GuestRoomPicker";
+import DestinationSearch from "@/components/DestinationSearch";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -533,7 +534,9 @@ function HotelDateEditor({ compact = false }: { compact?: boolean }) {
 function HotelSearchUtilityBar({ city }: { city: string }) {
   const { checkIn, checkOut, setDates, formatDate } = useBooking();
   const [datesOpen, setDatesOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
+  const locationPopoverRef = useRef<HTMLDivElement>(null);
 
   const handleDateChange = useCallback(
     ({ checkIn: ci, checkOut: co }: { checkIn: string | null; checkOut: string | null }) => {
@@ -541,6 +544,27 @@ function HotelSearchUtilityBar({ city }: { city: string }) {
     },
     [setDates],
   );
+
+  // Close the Location popover on outside click / Escape so it behaves like
+  // the date picker and the guest dropdown.
+  useEffect(() => {
+    if (!locationOpen) return;
+    function onDown(e: MouseEvent) {
+      if (!locationPopoverRef.current) return;
+      if (!locationPopoverRef.current.contains(e.target as Node)) {
+        setLocationOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setLocationOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [locationOpen]);
 
   const labelStyle: React.CSSProperties = {
     fontFamily: "var(--font-mono)",
@@ -594,19 +618,54 @@ function HotelSearchUtilityBar({ city }: { city: string }) {
         overflow: "hidden",
       }}
     >
-      {/* 1. Location */}
+      {/* 1. Location — opens a destination search popover */}
       <div
-        className="hotel-search-utilbar__cell"
-        style={{ ...cellBase, cursor: "default", display: "flex", alignItems: "center", gap: 10 }}
+        ref={locationPopoverRef}
+        style={{ position: "relative", flex: 1, minWidth: 0, display: "flex" }}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A961" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-        <div style={{ minWidth: 0 }}>
-          <div style={labelStyle}>Location</div>
-          <div style={valueStyle(true)}>{city}</div>
-        </div>
+        <button
+          type="button"
+          onClick={() => setLocationOpen((v) => !v)}
+          aria-haspopup="dialog"
+          aria-expanded={locationOpen}
+          aria-label="Change destination"
+          className="hotel-search-utilbar__cell"
+          style={{ ...cellBase, display: "flex", alignItems: "center", gap: 10, width: "100%" }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A961" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          <div style={{ minWidth: 0 }}>
+            <div style={labelStyle}>Location</div>
+            <div style={valueStyle(true)}>{city}</div>
+          </div>
+        </button>
+        {locationOpen && (
+          <div
+            role="dialog"
+            aria-label="Search destinations"
+            style={{
+              position: "absolute",
+              top: "calc(100% + 8px)",
+              left: 0,
+              zIndex: 1100,
+              width: 380,
+              maxWidth: "calc(100vw - 32px)",
+              background: "rgba(20, 18, 15, 0.98)",
+              border: "1px solid rgba(200, 170, 118, 0.18)",
+              borderRadius: 14,
+              padding: "14px 16px 10px",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.35)",
+            }}
+          >
+            <DestinationSearch
+              variant="dark"
+              autoFocus
+              placeholder="City, country or hotel"
+            />
+          </div>
+        )}
       </div>
       <div className="hotel-search-utilbar__divider" style={dividerStyle} />
 
@@ -636,12 +695,13 @@ function HotelSearchUtilityBar({ city }: { city: string }) {
       </button>
       <div className="hotel-search-utilbar__divider" style={dividerStyle} />
 
-      {/* 4. Guests */}
+      {/* 4. Room — guest/room selector. Click anywhere on the cell triggers
+          the GuestRoomPicker dropdown (full row is the click target). */}
       <div
         className="hotel-search-utilbar__cell"
         style={{ ...cellBase, padding: "8px 16px", display: "flex", alignItems: "center" }}
       >
-        <GuestRoomPicker variant="dark" compact />
+        <GuestRoomPicker variant="dark" compact label="ROOM" />
       </div>
 
       {/* Search button on the far right */}
@@ -1830,12 +1890,14 @@ export default function HotelPage() {
          trust strip / tab bar / rates region below, the search bar releases
          and the existing tab bar takes over the sticky channel.
       */}
-      <div style={{ background: "#0A0A0A", paddingTop: 60 }}>
-        {/* ── Sticky MMT-style Search Utility Bar (above the photo gallery) ── */}
+      <div style={{ background: "#0A0A0A", paddingTop: 96 }}>
+        {/* ── Sticky MMT-style Search Utility Bar (above the photo gallery)
+              Sits ~36px below the floating header so the bar reads as a
+              distinct page element rather than an extension of the nav. ── */}
         <div
           style={{
             position: "sticky",
-            top: 60,
+            top: 96,
             zIndex: 50,
             background: "#0A0A0A",
             borderBottom: "1px solid var(--luxe-hairline-strong)",

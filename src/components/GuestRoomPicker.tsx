@@ -7,6 +7,8 @@ interface GuestRoomPickerProps {
   variant?: "dark" | "light";
   /** Compact mode for DateBar */
   compact?: boolean;
+  /** Override the trigger label (default "GUESTS") */
+  label?: string;
 }
 
 function CounterButton({
@@ -69,7 +71,7 @@ function CounterButton({
   );
 }
 
-export default function GuestRoomPicker({ variant = "dark", compact = false }: GuestRoomPickerProps) {
+export default function GuestRoomPicker({ variant = "dark", compact = false, label = "GUESTS" }: GuestRoomPickerProps) {
   const {
     rooms, addRoom, removeRoom, setRoomAdults, setRoomChildren,
     guestSummary,
@@ -127,7 +129,7 @@ export default function GuestRoomPicker({ variant = "dark", compact = false }: G
             marginBottom: compact ? 4 : 4,
           }}
         >
-          GUESTS
+          {label}
         </div>
         <div
           style={{
