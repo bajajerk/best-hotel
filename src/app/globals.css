@@ -4517,21 +4517,25 @@ body:has(.precision-theme) {
   background: rgba(255, 255, 255, 0.04);
 }
 
-/* ── Room category card — compact MMT-style row (thumb / details / price) ── */
+/* ── Room category card — compact compare-card row (thumb / details / price) ── */
 .room-cat-row {
   display: grid;
-  grid-template-columns: minmax(120px, 140px) 1fr auto;
-  gap: 18px;
+  grid-template-columns: 90px 1fr auto;
+  gap: 16px;
   width: 100%;
-  padding: 14px;
+  padding: 12px 14px;
   align-items: center;
   box-sizing: border-box;
 }
 @media (max-width: 639px) {
   .room-cat-row {
-    grid-template-columns: 96px 1fr;
+    grid-template-columns: 72px 1fr;
     gap: 12px;
     padding: 12px;
+  }
+  .room-cat-row > div:first-child {
+    width: 72px !important;
+    height: 72px !important;
   }
   .room-cat-row > .room-cat-price {
     grid-column: 1 / -1;
@@ -4540,7 +4544,7 @@ body:has(.precision-theme) {
     justify-content: space-between !important;
     min-width: 0 !important;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-    padding-top: 12px;
+    padding-top: 10px;
   }
 }
 

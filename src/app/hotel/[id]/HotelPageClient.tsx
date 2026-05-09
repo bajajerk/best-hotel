@@ -691,6 +691,7 @@ function RoomCategoryCard({
   onToggle,
   planCount,
   variantsPreview,
+  isFirst,
   children,
 }: {
   category: RoomCategory;
@@ -700,65 +701,60 @@ function RoomCategoryCard({
   planCount: number;
   variantsPreview: string[];
   nights: number;
+  isFirst: boolean;
   children?: React.ReactNode;
 }) {
   const cheapest = formatPrice(category.cheapestPrice, category.currency);
   const hasRefundable = category.cheapestRefundablePrice != null;
 
-  // Build bullet inclusions from cheapest plan + category data.
+  // Compact compare-card benefits — keep to 2 high-signal lines.
   const cheapestPlan =
     category.plans.slice().sort((a, b) => a.total_price - b.total_price)[0];
-  const inclusions: string[] = [];
-  if (hasRefundable) inclusions.push("Free Cancellation available");
+  const benefits: string[] = [];
+  if (hasRefundable) benefits.push("Free Cancellation");
   if (cheapestPlan) {
     const meal = formatMealBasis(cheapestPlan.meal_basis);
-    if (meal && meal !== "Room Only") inclusions.push(`${meal} included`);
+    if (meal && meal !== "Room Only") benefits.push(`${meal} included`);
   }
-  if (variantsPreview.length > 0) {
-    inclusions.push(
-      variantsPreview.slice(0, 2).join(" · ") +
-        (category.variants.length > 2
-          ? ` · +${category.variants.length - 2} more`
-          : "")
-    );
+  if (benefits.length < 2 && variantsPreview.length > 0) {
+    benefits.push(variantsPreview[0]);
   }
-  inclusions.push(
-    `${planCount} rate option${planCount !== 1 ? "s" : ""} available`
-  );
+  if (benefits.length < 2) {
+    benefits.push(`${planCount} rate option${planCount !== 1 ? "s" : ""}`);
+  }
 
   return (
     <div
       style={{
-        background: "#1A1A1A",
-        border: isExpanded
-          ? "1px solid #C9A961"
-          : "1px solid rgba(255,255,255,0.06)",
-        borderRadius: 12,
-        overflow: "hidden",
-        transition: "border-color 200ms ease, background 200ms ease",
+        background: isExpanded ? "#1A1A1A" : "transparent",
+        borderTop: isFirst ? "none" : "1px solid rgba(255,255,255,0.06)",
+        boxShadow: isExpanded ? "inset 3px 0 0 #C9A961" : "none",
+        transition: "background 200ms ease, box-shadow 200ms ease",
       }}
     >
       <div className="room-cat-row">
-        {/* Left — thumbnail */}
+        {/* Left — small square thumbnail */}
         <div
           style={{
             position: "relative",
-            aspectRatio: "4 / 3",
-            borderRadius: 8,
+            width: 90,
+            height: 90,
+            borderRadius: 6,
             overflow: "hidden",
             backgroundColor: "rgba(255,255,255,0.05)",
             backgroundImage: `url(${photoUrl})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
+            flexShrink: 0,
           }}
         />
 
-        {/* Middle — room name + bullet inclusions */}
+        {/* Middle — room name + 2 key benefits */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: 10,
+            gap: 6,
             minWidth: 0,
           }}
         >
@@ -766,11 +762,11 @@ function RoomCategoryCard({
             style={{
               fontFamily: "var(--font-display)",
               fontStyle: "italic",
-              fontSize: 20,
+              fontSize: 17,
               fontWeight: 500,
               color: "var(--luxe-soft-white)",
               margin: 0,
-              lineHeight: 1.2,
+              lineHeight: 1.25,
               letterSpacing: "-0.01em",
             }}
           >
@@ -783,65 +779,66 @@ function RoomCategoryCard({
               margin: 0,
               display: "flex",
               flexDirection: "column",
-              gap: 4,
+              gap: 3,
             }}
           >
-            {inclusions.map((line, i) => (
-              <li
-                key={i}
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 8,
-                  fontFamily: "var(--font-body)",
-                  fontSize: 13,
-                  lineHeight: "18px",
-                  color:
-                    i === 0 && hasRefundable
+            {benefits.map((line, i) => {
+              const isFreeCancel = i === 0 && hasRefundable;
+              return (
+                <li
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontFamily: "var(--font-body)",
+                    fontSize: 12.5,
+                    lineHeight: "17px",
+                    color: isFreeCancel
                       ? "#C9A961"
                       : "var(--luxe-soft-white-70)",
-                }}
-              >
-                <span
-                  aria-hidden
-                  style={{
-                    flex: "none",
-                    color:
-                      i === 0 && hasRefundable
-                        ? "#C9A961"
-                        : "var(--luxe-soft-white-50)",
-                    fontSize: 12,
-                    lineHeight: "18px",
                   }}
                 >
-                  {i === 0 && hasRefundable ? "✓" : "•"}
-                </span>
-                {line}
-              </li>
-            ))}
+                  <span
+                    aria-hidden
+                    style={{
+                      flex: "none",
+                      color: isFreeCancel
+                        ? "#C9A961"
+                        : "var(--luxe-soft-white-50)",
+                      fontSize: 11,
+                      lineHeight: "17px",
+                    }}
+                  >
+                    {isFreeCancel ? "✓" : "•"}
+                  </span>
+                  {line}
+                </li>
+              );
+            })}
           </ul>
         </div>
 
-        {/* Right — price + Select button */}
+        {/* Right — price + Select Room button */}
         <div
           className="room-cat-price"
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "flex-end",
-            gap: 10,
-            minWidth: 132,
+            gap: 8,
+            minWidth: 128,
           }}
         >
           <div style={{ textAlign: "right" }}>
             <div
               style={{
                 fontFamily: "var(--font-mono)",
-                fontSize: 9.5,
+                fontSize: 9,
                 letterSpacing: "0.18em",
                 textTransform: "uppercase",
                 color: "var(--luxe-soft-white-50)",
-                marginBottom: 2,
+                marginBottom: 1,
               }}
             >
               From
@@ -849,7 +846,7 @@ function RoomCategoryCard({
             <div
               style={{
                 fontFamily: "var(--font-display)",
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: 700,
                 color: "#C9A961",
                 lineHeight: 1.1,
@@ -865,9 +862,9 @@ function RoomCategoryCard({
             onClick={onToggle}
             aria-expanded={isExpanded}
             className="luxe-btn-gold"
-            style={{ padding: "10px 22px", fontSize: 11 }}
+            style={{ padding: "8px 18px", fontSize: 10.5 }}
           >
-            {isExpanded ? "Hide rates" : "Select"}
+            {isExpanded ? "Hide Rates" : "Select Room"}
           </button>
         </div>
       </div>
@@ -3142,7 +3139,14 @@ export default function HotelPage() {
                         {filteredRates.length > categories.length ? ` · ${filteredRates.length} rate plans` : ""}
                         {rates.nights > 0 ? ` · ${rates.nights} night${rates.nights > 1 ? "s" : ""}` : ""}
                       </p>
-                      <div className="flex flex-col" style={{ gap: 6 }}>
+                      <div
+                        style={{
+                          background: "#141312",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          borderRadius: 12,
+                          overflow: "hidden",
+                        }}
+                      >
                         {categories.map((category, idx) => {
                           const isExpanded = expandedCategory === category.name;
                           const photo = [hotel.photo1, hotel.photo2, hotel.photo3, hotel.photo4]
@@ -3161,6 +3165,7 @@ export default function HotelPage() {
                               planCount={planCount}
                               variantsPreview={variantsPreview}
                               nights={rates.nights || nights}
+                              isFirst={idx === 0}
                             >
                               {isExpanded && (
                                 <div className="flex flex-col gap-3" style={{ marginTop: 16 }}>
