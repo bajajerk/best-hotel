@@ -204,7 +204,7 @@ function mealBasisMatchesFilter(mealBasis: string, filter: MealPlanFilter): bool
 
 /* ────────────────────────── Tabs ────────────────────────── */
 
-const TABS = ["Rates", "The Stay", "Gallery", "Reviews"] as const;
+const TABS = ["Overview", "Rooms", "Amenities", "Reviews", "Policies"] as const;
 type TabName = (typeof TABS)[number];
 
 /* ────────────────────────── Lightbox ────────────────────────── */
@@ -565,10 +565,10 @@ function RoomCategoryCard({
           all: "unset",
           cursor: "pointer",
           display: "grid",
-          gridTemplateColumns: "minmax(120px, 160px) 1fr",
-          gap: 18,
+          gridTemplateColumns: "minmax(100px, 130px) 1fr",
+          gap: 14,
           width: "100%",
-          padding: 14,
+          padding: 11,
           boxSizing: "border-box",
         }}
       >
@@ -677,7 +677,7 @@ function RoomCategoryCard({
           </div>
         </div>
       </button>
-      {children && <div style={{ padding: "0 14px 14px" }}>{children}</div>}
+      {children && <div style={{ padding: "0 11px 11px" }}>{children}</div>}
     </div>
   );
 }
@@ -725,7 +725,7 @@ function RateCard({
           ? "1px solid var(--luxe-champagne)"
           : "1px solid var(--luxe-hairline-strong)",
         borderRadius: 14,
-        padding: "22px 24px",
+        padding: "16px 20px",
         cursor: "pointer",
         transition: "border-color 0.25s, background 0.25s, box-shadow 0.25s",
         boxShadow: isSelected ? "0 0 0 1px rgba(200,170,118,0.25), 0 8px 32px rgba(0,0,0,0.3)" : "none",
@@ -766,7 +766,7 @@ function RateCard({
           <h4
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: 500,
               fontStyle: "italic",
               color: "var(--luxe-soft-white)",
@@ -850,8 +850,8 @@ function RateCard({
           )}
           <div
             style={{
-              fontSize: 28,
-              fontWeight: 500,
+              fontSize: 24,
+              fontWeight: 600,
               color: "var(--luxe-champagne)",
               fontFamily: "var(--font-display)",
               lineHeight: 1.1,
@@ -882,9 +882,9 @@ function RateCard({
         <button
           onClick={(e) => { e.stopPropagation(); onProceed(); }}
           className="luxe-btn-gold"
-          style={{ padding: "12px 24px", fontSize: 11 }}
+          style={{ padding: "13px 26px", fontSize: 11.5, fontWeight: 700, boxShadow: "0 6px 18px rgba(200,170,118,0.22)" }}
         >
-          Select &rarr;
+          Book Your Stay &rarr;
         </button>
       </div>
     </motion.div>
@@ -980,7 +980,7 @@ function SectionHead({
         justifyContent: "space-between",
         gap: 24,
         flexWrap: "wrap",
-        marginBottom: 28,
+        marginBottom: 24,
       }}
     >
       <div style={{ maxWidth: 720 }}>
@@ -990,7 +990,7 @@ function SectionHead({
         <h2
           className="luxe-display"
           style={{
-            fontSize: "clamp(26px, 3vw, 38px)",
+            fontSize: "clamp(23px, 2.7vw, 34px)",
             marginBottom: description ? 10 : 0,
           }}
         >
@@ -1004,7 +1004,7 @@ function SectionHead({
           {trailingTitle && <> {trailingTitle}</>}
         </h2>
         {description && (
-          <p style={{ color: "var(--luxe-soft-white-70)", fontSize: 14.5, lineHeight: 1.7 }}>
+          <p style={{ color: "var(--luxe-soft-white-70)", fontSize: 13.5, lineHeight: 1.65 }}>
             {description}
           </p>
         )}
@@ -1074,7 +1074,7 @@ function CollapsibleText({
               ? {}
               : {
                   display: "-webkit-box",
-                  WebkitLineClamp: 4,
+                  WebkitLineClamp: 3,
                   WebkitBoxOrient: "vertical",
                   overflow: "hidden",
                 }),
@@ -1154,7 +1154,7 @@ export default function HotelPage() {
   const [activeGalleryCategory, setActiveGalleryCategory] = useState<GalleryCategory | null>(null);
 
   /* Tabs */
-  const [activeTab, setActiveTab] = useState<TabName>("Rates");
+  const [activeTab, setActiveTab] = useState<TabName>("Overview");
 
   /* Rate plan selection */
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -1194,6 +1194,12 @@ export default function HotelPage() {
   const stayRef = useRef<HTMLDivElement>(null);
   const galleryRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
+  const amenitiesRef = useRef<HTMLDivElement>(null);
+  const policiesRef = useRef<HTMLDivElement>(null);
+
+  /* "View all" modal toggles */
+  const [allAmenitiesOpen, setAllAmenitiesOpen] = useState(false);
+  const [allReviewsOpen, setAllReviewsOpen] = useState(false);
 
   /* ── Fetch hotel detail (static) ──
    * `hotelId` is the URL path token — slug-shortid, short_id, master UUID, or
@@ -1530,10 +1536,11 @@ export default function HotelPage() {
       trackHotelTabClicked({ hotel_id: hotel.id, hotel_name: hotel.hotel_name, tab_name: tab });
     }
     const refMap: Record<TabName, React.RefObject<HTMLDivElement | null>> = {
-      "Rates": ratesRef,
-      "The Stay": stayRef,
-      "Gallery": galleryRef,
+      "Overview": stayRef,
+      "Rooms": ratesRef,
+      "Amenities": amenitiesRef,
       "Reviews": reviewsRef,
+      "Policies": policiesRef,
     };
     const ref = refMap[tab];
     if (ref?.current) {
@@ -1544,10 +1551,11 @@ export default function HotelPage() {
   /* ── Scroll-based active tab detection ── */
   useEffect(() => {
     const sections: { ref: React.RefObject<HTMLDivElement | null>; tab: TabName }[] = [
-      { ref: ratesRef, tab: "Rates" },
-      { ref: stayRef, tab: "The Stay" },
-      { ref: galleryRef, tab: "Gallery" },
+      { ref: stayRef, tab: "Overview" },
+      { ref: ratesRef, tab: "Rooms" },
+      { ref: amenitiesRef, tab: "Amenities" },
       { ref: reviewsRef, tab: "Reviews" },
+      { ref: policiesRef, tab: "Policies" },
     ];
 
     const observer = new IntersectionObserver(
@@ -1674,8 +1682,8 @@ export default function HotelPage() {
     ? Math.min(...rates.rates.map((r) => r.total_price / Math.max(nights, 1)))
     : null;
 
-  /* Bento gallery slots (first 5) */
-  const bentoPhotos = photos.slice(0, 5);
+  /* Bento gallery slots (first 4 — compressed preview) */
+  const bentoPhotos = photos.slice(0, 4);
 
   return (
     <div className="luxe min-h-screen" style={{ background: "var(--luxe-black)", color: "var(--luxe-soft-white)", overflowX: "hidden" }}>
@@ -1698,11 +1706,11 @@ export default function HotelPage() {
       <header
         style={{
           position: "relative",
-          minHeight: "min(720px, 92vh)",
+          minHeight: "min(560px, 65vh)",
           display: "flex",
           alignItems: "flex-end",
-          paddingTop: 96,
-          paddingBottom: 56,
+          paddingTop: 68,
+          paddingBottom: 40,
           paddingLeft: 24,
           paddingRight: 24,
           overflow: "hidden",
@@ -1821,12 +1829,12 @@ export default function HotelPage() {
               className="luxe-display"
               style={{
                 fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif",
-                fontSize: "clamp(40px, 6.4vw, 84px)",
+                fontSize: "clamp(34px, 5.4vw, 72px)",
                 fontWeight: 300,
                 fontStyle: "italic",
                 lineHeight: 1.04,
                 color: "var(--luxe-soft-white)",
-                marginBottom: 22,
+                marginBottom: 18,
                 letterSpacing: "-0.02em",
                 maxWidth: 1100,
               }}
@@ -1961,7 +1969,7 @@ export default function HotelPage() {
       {/* ═══════════════════ 2. CHAMPAGNE TRUST STRIP ═══════════════════ */}
       <section
         style={{
-          padding: "20px 24px",
+          padding: "16px 24px",
           borderTop: "1px solid var(--luxe-hairline)",
           borderBottom: "1px solid var(--luxe-hairline)",
           background: "rgba(255,255,255,0.015)",
@@ -2039,9 +2047,9 @@ export default function HotelPage() {
       {/* ═══════════════════ 4. EDITORIAL OVERVIEW ═══════════════════ */}
       <section
         ref={stayRef}
-        id="the-stay"
+        id="overview"
         style={{
-          padding: "80px 24px 48px",
+          padding: "56px 24px 40px",
           scrollMarginTop: 140,
         }}
       >
@@ -2050,35 +2058,35 @@ export default function HotelPage() {
             style={{
               display: "grid",
               gridTemplateColumns: "minmax(0, 1fr)",
-              gap: 36,
+              gap: 24,
             }}
           >
             <div style={{ maxWidth: 760 }}>
-              <div className="luxe-tech" style={{ marginBottom: 12 }}>
-                The Stay
+              <div className="luxe-tech" style={{ marginBottom: 10 }}>
+                Overview
               </div>
               <h2
                 style={{
                   fontFamily: "var(--font-display)",
                   fontStyle: "italic",
                   fontWeight: "normal",
-                  fontSize: 26,
-                  lineHeight: "30px",
+                  fontSize: 23,
+                  lineHeight: "28px",
                   color: "#f5f1e8",
-                  margin: "0 0 16px",
+                  margin: "0 0 14px",
                 }}
               >
                 {hotel.editorial_headline ?? hotel.hotel_name}
               </h2>
               {editorialIntro && (
-                <div style={{ marginBottom: 32 }}>
+                <div style={{ marginBottom: 24 }}>
                   <CollapsibleText
                     text={editorialIntro}
                     scrollTargetRef={stayRef}
                     bodyStyle={{
                       fontFamily: "var(--font-body)",
-                      fontSize: 16,
-                      lineHeight: "26px",
+                      fontSize: 14.5,
+                      lineHeight: "24px",
                       color: "rgba(255,255,255,0.78)",
                       margin: 0,
                     }}
@@ -2086,71 +2094,6 @@ export default function HotelPage() {
                 </div>
               )}
             </div>
-
-            <HotelFactGrid
-              neighbourhood={hotel.neighbourhood}
-              city={hotel.city}
-              airport_iata={hotel.airport_iata}
-              airport_distance_min={hotel.airport_distance_min}
-              attraction_nearest={hotel.attraction_nearest}
-              numberrooms={hotel.numberrooms}
-              rooms_description={hotel.rooms_description}
-              restaurants_count={hotel.restaurants_count}
-              room_service_24h={hotel.room_service_24h}
-              signature_restaurant={hotel.signature_restaurant}
-              amenities={hotel.amenities}
-              parking_type={hotel.parking_type}
-              shuttle_type={hotel.shuttle_type}
-              languages={hotel.languages}
-            />
-
-            {hotel.tj_description && (
-              hotel.tj_description.rooms ||
-              hotel.tj_description.dining ||
-              hotel.tj_description.amenities ||
-              hotel.tj_description.business_amenities
-            ) && (
-              <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 28 }}>
-                {[
-                  { key: "rooms", label: "The Rooms" },
-                  { key: "dining", label: "Dining" },
-                  { key: "amenities", label: "Amenities & Recreation" },
-                  { key: "business_amenities", label: "For Business" },
-                ].map(({ key, label }) => {
-                  const text = hotel.tj_description?.[key as keyof NonNullable<typeof hotel.tj_description>];
-                  if (!text) return null;
-                  return (
-                    <CollapsibleText
-                      key={key}
-                      label={
-                        <p
-                          style={{
-                            fontFamily: "var(--font-body)",
-                            fontWeight: 500,
-                            fontSize: 11,
-                            lineHeight: "14px",
-                            letterSpacing: "0.18em",
-                            textTransform: "uppercase",
-                            color: "#C9A961",
-                            margin: "0 0 10px",
-                          }}
-                        >
-                          {label}
-                        </p>
-                      }
-                      text={text}
-                      bodyStyle={{
-                        fontFamily: "var(--font-body)",
-                        fontSize: 15,
-                        lineHeight: "25px",
-                        color: "rgba(255,255,255,0.78)",
-                        margin: 0,
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            )}
 
             {hotel.concierge_note && (
               <div>
@@ -2164,7 +2107,7 @@ export default function HotelPage() {
                     textTransform: "uppercase",
                     letterSpacing: "0.18em",
                     color: "#C9A961",
-                    margin: "32px 0 12px",
+                    margin: "8px 0 10px",
                   }}
                 >
                   WHY OUR CONCIERGE LOVES IT
@@ -2173,8 +2116,8 @@ export default function HotelPage() {
                   style={{
                     fontFamily: "var(--font-display)",
                     fontStyle: "italic",
-                    fontSize: 17,
-                    lineHeight: "26px",
+                    fontSize: 16,
+                    lineHeight: "25px",
                     color: "rgba(255,255,255,0.85)",
                     margin: 0,
                   }}
@@ -2183,45 +2126,59 @@ export default function HotelPage() {
                 </p>
               </div>
             )}
+          </div>
+        </div>
+      </section>
 
-            {(hotel.checkin || hotel.checkout || hotel.numberrooms || hotel.yearrenovated || hotel.yearopened || hotel.accommodation_type || (hotel.brand_name && !hotel.chain_name)) && (
-              <div
-                className="luxe-card"
+      {/* ═══════════════════ 4b. AMENITIES ═══════════════════ */}
+      <section
+        ref={amenitiesRef}
+        id="amenities"
+        style={{
+          padding: "56px 24px 40px",
+          borderTop: "1px solid var(--luxe-hairline)",
+          scrollMarginTop: 140,
+        }}
+      >
+        <div className="luxe-container" style={{ padding: 0 }}>
+          <SectionHead
+            eyebrow="In Residence"
+            title="The"
+            italicWord="amenities"
+            description="The features and services that define this stay."
+            rightSlot={
+              <button
+                type="button"
+                onClick={() => setAllAmenitiesOpen(true)}
+                className="luxe-tech"
                 style={{
-                  padding: 24,
-                  borderRadius: 14,
-                  maxWidth: 480,
+                  color: "var(--luxe-champagne)",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
                 }}
               >
-                <div className="luxe-tech" style={{ marginBottom: 16 }}>
-                  The Particulars
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  {hotel.checkin && (
-                    <FactRow label="Check-in" value={hotel.checkin} />
-                  )}
-                  {hotel.checkout && (
-                    <FactRow label="Check-out" value={hotel.checkout} />
-                  )}
-                  {hotel.numberrooms && (
-                    <FactRow label="Rooms & Suites" value={String(hotel.numberrooms)} />
-                  )}
-                  {hotel.yearrenovated && (
-                    <FactRow label="Last Renovated" value={String(hotel.yearrenovated)} />
-                  )}
-                  {hotel.yearopened && (
-                    <FactRow label="Year Opened" value={String(hotel.yearopened)} />
-                  )}
-                  {hotel.accommodation_type && (
-                    <FactRow label="Type" value={hotel.accommodation_type} />
-                  )}
-                  {hotel.brand_name && !hotel.chain_name && (
-                    <FactRow label="Brand" value={hotel.brand_name} />
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+                View All Amenities &rarr;
+              </button>
+            }
+          />
+          <HotelFactGrid
+            neighbourhood={hotel.neighbourhood}
+            city={hotel.city}
+            airport_iata={hotel.airport_iata}
+            airport_distance_min={hotel.airport_distance_min}
+            attraction_nearest={hotel.attraction_nearest}
+            numberrooms={hotel.numberrooms}
+            rooms_description={hotel.rooms_description}
+            restaurants_count={hotel.restaurants_count}
+            room_service_24h={hotel.room_service_24h}
+            signature_restaurant={hotel.signature_restaurant}
+            amenities={hotel.amenities}
+            parking_type={hotel.parking_type}
+            shuttle_type={hotel.shuttle_type}
+            languages={hotel.languages}
+          />
         </div>
       </section>
 
@@ -2230,7 +2187,7 @@ export default function HotelPage() {
         ref={galleryRef}
         id="gallery"
         style={{
-          padding: "48px 24px 80px",
+          padding: "40px 24px 56px",
           borderTop: "1px solid var(--luxe-hairline)",
           scrollMarginTop: 140,
         }}
@@ -2291,73 +2248,45 @@ export default function HotelPage() {
             </div>
           )}
 
-          {/* Bento layout — only when not actively filtering by category */}
-          {!activeGalleryCategory && bentoPhotos.length >= 5 ? (
+          {/* Compressed 4-up gallery — only when not actively filtering by category */}
+          {!activeGalleryCategory && bentoPhotos.length >= 4 ? (
             <div
               className="hotel-bento"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(4, 1fr)",
-                gridTemplateRows: "260px 260px",
+                gridTemplateRows: "195px",
                 gap: 12,
                 borderRadius: 14,
                 overflow: "hidden",
               }}
             >
-              {/* Big left photo (2x2) */}
+              {bentoPhotos.slice(0, 3).map((photo, i) => (
+                <button
+                  key={i}
+                  onClick={() => openLightbox(i)}
+                  className="bento-tile"
+                >
+                  <img
+                    src={safePhotoUrl(photo)}
+                    alt={`${hotel.hotel_name} ${i + 1}`}
+                    onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
+                  />
+                  <div className="bento-tile-overlay" />
+                </button>
+              ))}
               <button
-                onClick={() => openLightbox(0)}
+                onClick={() => openLightbox(3)}
                 className="bento-tile"
-                style={{
-                  gridColumn: "1 / 3",
-                  gridRow: "1 / 3",
-                }}
+                style={{ position: "relative" }}
               >
-                <img
-                  src={safePhotoUrl(bentoPhotos[0])}
-                  alt={`${hotel.hotel_name} 1`}
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                />
-                <div className="bento-tile-overlay" />
-              </button>
-              {/* Top-right two */}
-              <button onClick={() => openLightbox(1)} className="bento-tile">
-                <img
-                  src={safePhotoUrl(bentoPhotos[1])}
-                  alt={`${hotel.hotel_name} 2`}
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                />
-                <div className="bento-tile-overlay" />
-              </button>
-              <button onClick={() => openLightbox(2)} className="bento-tile">
-                <img
-                  src={safePhotoUrl(bentoPhotos[2])}
-                  alt={`${hotel.hotel_name} 3`}
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                />
-                <div className="bento-tile-overlay" />
-              </button>
-              {/* Bottom-right two */}
-              <button onClick={() => openLightbox(3)} className="bento-tile">
                 <img
                   src={safePhotoUrl(bentoPhotos[3])}
                   alt={`${hotel.hotel_name} 4`}
                   onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
                 />
                 <div className="bento-tile-overlay" />
-              </button>
-              <button
-                onClick={() => openLightbox(4)}
-                className="bento-tile"
-                style={{ position: "relative" }}
-              >
-                <img
-                  src={safePhotoUrl(bentoPhotos[4])}
-                  alt={`${hotel.hotel_name} 5`}
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG; }}
-                />
-                <div className="bento-tile-overlay" />
-                {photos.length > 5 && (
+                {photos.length > 4 && (
                   <div
                     style={{
                       position: "absolute",
@@ -2369,12 +2298,12 @@ export default function HotelPage() {
                       color: "var(--luxe-soft-white)",
                       fontFamily: "var(--font-display)",
                       fontStyle: "italic",
-                      fontSize: 22,
+                      fontSize: 20,
                       letterSpacing: "-0.01em",
                       pointerEvents: "none",
                     }}
                   >
-                    + {photos.length - 5} more
+                    + {photos.length - 4} more
                   </div>
                 )}
               </button>
@@ -2416,7 +2345,7 @@ export default function HotelPage() {
         ref={ratesRef}
         id="rates"
         style={{
-          padding: "72px 24px 96px",
+          padding: "56px 24px 56px",
           borderTop: "1px solid var(--luxe-hairline)",
           scrollMarginTop: 140,
           background: "linear-gradient(180deg, rgba(200,170,118,0.03) 0%, transparent 60%)",
@@ -2516,8 +2445,8 @@ export default function HotelPage() {
             className="hotel-rates-grid"
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(0, 1fr) 380px",
-              gap: 36,
+              gridTemplateColumns: "minmax(0, 1fr) 340px",
+              gap: 24,
             }}
           >
             {/* ─── Left: Rate cards ─── */}
@@ -2707,13 +2636,14 @@ export default function HotelPage() {
                 className="hotel-booking-sidebar"
                 style={{
                   position: "sticky",
-                  top: 140,
+                  top: 120,
                   background: "rgba(20,18,15,0.6)",
                   border: "1px solid var(--luxe-hairline-strong)",
                   backdropFilter: "blur(16px)",
                   WebkitBackdropFilter: "blur(16px)",
-                  borderRadius: 14,
+                  borderRadius: 16,
                   overflow: "hidden",
+                  boxShadow: "0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(200,170,118,0.06)",
                 }}
               >
                 {/* Header */}
@@ -2893,10 +2823,10 @@ export default function HotelPage() {
                     className={selectedPlan ? "unlock-rate-btn-pulse" : ""}
                     style={{
                       width: "100%",
-                      marginTop: 22,
-                      padding: "14px 0",
-                      fontSize: 11,
-                      fontWeight: 600,
+                      marginTop: 20,
+                      padding: "16px 0",
+                      fontSize: 12,
+                      fontWeight: 700,
                       letterSpacing: "0.18em",
                       textTransform: "uppercase",
                       borderRadius: 999,
@@ -2910,13 +2840,14 @@ export default function HotelPage() {
                       alignItems: "center",
                       justifyContent: "center",
                       gap: 8,
+                      boxShadow: selectedPlan ? "0 8px 24px rgba(200,170,118,0.28)" : "none",
                     }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
-                    {selectedPlan ? "Unlock Preferred Rate" : "Select a Room"}
+                    {selectedPlan ? "Unlock Member Rate" : "Select a Room"}
                   </button>
 
                   <p
@@ -2949,7 +2880,7 @@ export default function HotelPage() {
         return (
           <section
             style={{
-              padding: "72px 24px 56px",
+              padding: "56px 24px 40px",
               borderTop: "1px solid var(--luxe-hairline)",
             }}
           >
@@ -2985,7 +2916,7 @@ export default function HotelPage() {
               >
                 <div
                   style={{
-                    height: 380,
+                    height: 300,
                     borderRadius: 14,
                     overflow: "hidden",
                     border: "1px solid var(--luxe-hairline-strong)",
@@ -3017,7 +2948,7 @@ export default function HotelPage() {
         ref={reviewsRef}
         id="reviews"
         style={{
-          padding: "72px 24px 80px",
+          padding: "56px 24px 56px",
           borderTop: "1px solid var(--luxe-hairline)",
           scrollMarginTop: 140,
         }}
@@ -3030,6 +2961,22 @@ export default function HotelPage() {
                 title="What guests"
                 italicWord="say"
                 description={`Based on ${hotel.number_of_reviews.toLocaleString()} verified reviews — aggregated from across the web.`}
+                rightSlot={
+                  <button
+                    type="button"
+                    onClick={() => setAllReviewsOpen(true)}
+                    className="luxe-tech"
+                    style={{
+                      color: "var(--luxe-champagne)",
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
+                    View All Reviews &rarr;
+                  </button>
+                }
               />
 
               <div
@@ -3055,7 +3002,7 @@ export default function HotelPage() {
                   <div
                     style={{
                       fontFamily: "var(--font-display)",
-                      fontSize: 64,
+                      fontSize: 56,
                       fontWeight: 400,
                       fontStyle: "italic",
                       color: "var(--luxe-champagne)",
@@ -3065,7 +3012,7 @@ export default function HotelPage() {
                     }}
                   >
                     {hotel.rating_average.toFixed(1)}
-                    <span style={{ fontSize: 22, color: "var(--luxe-soft-white-50)", fontStyle: "italic", marginLeft: 4 }}>
+                    <span style={{ fontSize: 20, color: "var(--luxe-soft-white-50)", fontStyle: "italic", marginLeft: 4 }}>
                       / 10
                     </span>
                   </div>
@@ -3197,10 +3144,32 @@ export default function HotelPage() {
         </div>
       </section>
 
+      {/* ═══════════════════ 9b. POLICIES (accordion) ═══════════════════ */}
+      <section
+        ref={policiesRef}
+        id="policies"
+        style={{
+          padding: "56px 24px 56px",
+          borderTop: "1px solid var(--luxe-hairline)",
+          scrollMarginTop: 140,
+        }}
+      >
+        <div className="luxe-container" style={{ padding: 0 }}>
+          <SectionHead
+            eyebrow="The Particulars"
+            title="Policies &"
+            italicWord="house rules"
+            description="Quiet hours, check-in windows and the small print — all in one place."
+          />
+
+          <PoliciesAccordion hotel={hotel} />
+        </div>
+      </section>
+
       {/* ═══════════════════ 10. CLOSING CONCIERGE CTA ═══════════════════ */}
       <section
         style={{
-          padding: "80px 24px 100px",
+          padding: "56px 24px 80px",
           borderTop: "1px solid var(--luxe-hairline)",
         }}
       >
@@ -3239,7 +3208,7 @@ export default function HotelPage() {
               onClick={() => document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" })}
               className="luxe-btn-secondary"
             >
-              See Member Rates
+              Unlock Member Rate
             </button>
           </div>
         </div>
@@ -3316,9 +3285,9 @@ export default function HotelPage() {
               document.getElementById("rates")?.scrollIntoView({ behavior: "smooth" });
             }}
             className="luxe-btn-gold"
-            style={{ padding: "10px 22px", fontSize: 11, whiteSpace: "nowrap" }}
+            style={{ padding: "12px 26px", fontSize: 11.5, fontWeight: 700, whiteSpace: "nowrap", boxShadow: "0 6px 18px rgba(200,170,118,0.32)" }}
           >
-            Select Room &rarr;
+            Book Your Stay &rarr;
           </button>
         </div>
       </div>
@@ -3384,6 +3353,97 @@ export default function HotelPage() {
           }
         />
       )}
+
+      {/* ═══════════════════ View All Amenities Modal ═══════════════════ */}
+      <ViewAllModal
+        open={allAmenitiesOpen}
+        onClose={() => setAllAmenitiesOpen(false)}
+        title="All amenities"
+      >
+        <HotelFactGrid
+          neighbourhood={hotel.neighbourhood}
+          city={hotel.city}
+          airport_iata={hotel.airport_iata}
+          airport_distance_min={hotel.airport_distance_min}
+          attraction_nearest={hotel.attraction_nearest}
+          numberrooms={hotel.numberrooms}
+          rooms_description={hotel.rooms_description}
+          restaurants_count={hotel.restaurants_count}
+          room_service_24h={hotel.room_service_24h}
+          signature_restaurant={hotel.signature_restaurant}
+          amenities={hotel.amenities}
+          parking_type={hotel.parking_type}
+          shuttle_type={hotel.shuttle_type}
+          languages={hotel.languages}
+        />
+        {hotel.tj_description?.amenities && (
+          <p
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 14,
+              lineHeight: 1.7,
+              color: "var(--luxe-soft-white-70)",
+              marginTop: 24,
+            }}
+          >
+            {hotel.tj_description.amenities}
+          </p>
+        )}
+        {hotel.amenities && !hotel.tj_description?.amenities && (
+          <p
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 14,
+              lineHeight: 1.7,
+              color: "var(--luxe-soft-white-70)",
+              marginTop: 24,
+            }}
+          >
+            {hotel.amenities}
+          </p>
+        )}
+      </ViewAllModal>
+
+      {/* ═══════════════════ View All Reviews Modal ═══════════════════ */}
+      <ViewAllModal
+        open={allReviewsOpen}
+        onClose={() => setAllReviewsOpen(false)}
+        title="Guest reviews"
+      >
+        <p
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: 14,
+            lineHeight: 1.7,
+            color: "var(--luxe-soft-white-70)",
+            marginBottom: 16,
+          }}
+        >
+          {hotel.rating_average > 0
+            ? `Aggregate score: ${hotel.rating_average.toFixed(1)} / 10 across ${hotel.number_of_reviews.toLocaleString()} verified reviews.`
+            : "No verified reviews yet for this property."}
+        </p>
+        <p
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: 13.5,
+            lineHeight: 1.7,
+            color: "var(--luxe-soft-white-50)",
+          }}
+        >
+          Detailed reviews are sourced on request. Your concierge can share first-hand notes and recent guest feedback before you book.
+        </p>
+        <div style={{ marginTop: 22 }}>
+          <a
+            href={conciergeWhatsappLink(`Hi, can you share recent guest feedback on ${hotel.hotel_name}?`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="luxe-btn-gold"
+          >
+            Ask concierge for review notes
+          </a>
+        </div>
+      </ViewAllModal>
 
       {/* ═══════════════════ WhatsApp Concierge Trigger (40s delay) ═══════════════════ */}
       {hotel && <HotelPageWhatsAppTrigger hotelName={hotel.hotel_name} />}
@@ -3460,18 +3520,249 @@ export default function HotelPage() {
         @media (max-width: 760px) {
           .hotel-bento {
             grid-template-columns: repeat(2, 1fr) !important;
-            grid-template-rows: 200px 200px 200px !important;
+            grid-template-rows: 160px 160px !important;
           }
-          .hotel-bento .bento-tile:nth-child(1) {
-            grid-column: 1 / 3 !important;
-            grid-row: 1 / 2 !important;
-          }
-          .hotel-bento .bento-tile:nth-child(n+2) {
+          .hotel-bento .bento-tile {
             grid-column: auto !important;
             grid-row: auto !important;
           }
         }
       `}</style>
+    </div>
+  );
+}
+
+/* ────────────────────────── PoliciesAccordion ────────────────────────── */
+
+function AccordionItem({
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div
+      style={{
+        borderBottom: "1px solid var(--luxe-hairline)",
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        style={{
+          all: "unset",
+          cursor: "pointer",
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "18px 4px",
+          fontFamily: "var(--font-mono)",
+          fontSize: 11,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          color: "var(--luxe-soft-white)",
+          fontWeight: 600,
+        }}
+      >
+        <span>{title}</span>
+        <span
+          aria-hidden
+          style={{
+            color: "var(--luxe-champagne)",
+            fontSize: 14,
+            transition: "transform 200ms ease",
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+          }}
+        >
+          ▾
+        </span>
+      </button>
+      {open && (
+        <div style={{ padding: "0 4px 20px" }}>{children}</div>
+      )}
+    </div>
+  );
+}
+
+function PoliciesAccordion({ hotel }: { hotel: HotelDetail }) {
+  const hasParticulars = !!(
+    hotel.checkin || hotel.checkout || hotel.numberrooms ||
+    hotel.yearrenovated || hotel.yearopened || hotel.accommodation_type ||
+    (hotel.brand_name && !hotel.chain_name)
+  );
+
+  const tj = hotel.tj_description;
+  const tjBlocks: { key: string; label: string; text: string }[] = [];
+  if (tj?.rooms) tjBlocks.push({ key: "rooms", label: "Rooms & Suites", text: tj.rooms });
+  if (tj?.dining) tjBlocks.push({ key: "dining", label: "Dining", text: tj.dining });
+  if (tj?.business_amenities) tjBlocks.push({ key: "biz", label: "For Business", text: tj.business_amenities });
+
+  return (
+    <div
+      className="luxe-card"
+      style={{
+        borderRadius: 14,
+        padding: "4px 20px",
+        border: "1px solid var(--luxe-hairline)",
+        background: "rgba(255,255,255,0.03)",
+      }}
+    >
+      {hasParticulars && (
+        <AccordionItem title="Check-in & Particulars" defaultOpen>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {hotel.checkin && <FactRow label="Check-in" value={hotel.checkin} />}
+            {hotel.checkout && <FactRow label="Check-out" value={hotel.checkout} />}
+            {hotel.numberrooms && <FactRow label="Rooms & Suites" value={String(hotel.numberrooms)} />}
+            {hotel.yearrenovated && <FactRow label="Last Renovated" value={String(hotel.yearrenovated)} />}
+            {hotel.yearopened && <FactRow label="Year Opened" value={String(hotel.yearopened)} />}
+            {hotel.accommodation_type && <FactRow label="Type" value={hotel.accommodation_type} />}
+            {hotel.brand_name && !hotel.chain_name && <FactRow label="Brand" value={hotel.brand_name} />}
+          </div>
+        </AccordionItem>
+      )}
+
+      <AccordionItem title="Cancellation">
+        <p
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: 13.5,
+            lineHeight: 1.65,
+            color: "var(--luxe-soft-white-70)",
+            margin: 0,
+          }}
+        >
+          Each rate has its own cancellation window — refundable plans show a free-cancellation date, while non-refundable rates are flagged on every card. Final terms are confirmed by your concierge before payment.
+        </p>
+      </AccordionItem>
+
+      <AccordionItem title="Children & Extra Beds">
+        <p
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: 13.5,
+            lineHeight: 1.65,
+            color: "var(--luxe-soft-white-70)",
+            margin: 0,
+          }}
+        >
+          Children are welcome. Cribs, extra beds and connecting rooms are subject to availability — let your concierge know your party composition and we&rsquo;ll arrange it directly with the property.
+        </p>
+      </AccordionItem>
+
+      {tjBlocks.map(({ key, label, text }) => (
+        <AccordionItem key={key} title={label}>
+          <p
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 13.5,
+              lineHeight: 1.65,
+              color: "var(--luxe-soft-white-70)",
+              margin: 0,
+            }}
+          >
+            {text}
+          </p>
+        </AccordionItem>
+      ))}
+    </div>
+  );
+}
+
+/* ────────────────────────── ViewAllModal ────────────────────────── */
+
+function ViewAllModal({
+  open,
+  onClose,
+  title,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handler);
+      document.body.style.overflow = "";
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(8,7,6,0.86)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        zIndex: 10003,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "32px 16px",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "var(--luxe-black-2, #14120f)",
+          border: "1px solid var(--luxe-hairline-strong)",
+          borderRadius: 16,
+          maxWidth: 720,
+          width: "100%",
+          maxHeight: "85vh",
+          overflowY: "auto",
+          padding: "28px 28px 32px",
+          color: "var(--luxe-soft-white)",
+          boxShadow: "0 24px 80px rgba(0,0,0,0.55)",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+          <h3
+            style={{
+              fontFamily: "var(--font-display)",
+              fontStyle: "italic",
+              fontSize: 26,
+              fontWeight: 500,
+              color: "var(--luxe-soft-white)",
+              margin: 0,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {title}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              all: "unset",
+              cursor: "pointer",
+              fontSize: 22,
+              color: "var(--luxe-soft-white-50)",
+              padding: "4px 8px",
+            }}
+          >
+            ×
+          </button>
+        </div>
+        {children}
+      </div>
     </div>
   );
 }
