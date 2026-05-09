@@ -30,7 +30,7 @@ import { trackCtaClicked } from "@/lib/analytics";
 import TopCitiesMobileCarousel from "@/components/TopCitiesMobileCarousel";
 import EditorsBentoCarousel, { type BentoHotel } from "@/components/EditorsBentoCarousel";
 import PreferredHotelsCarousel from "@/components/PreferredHotelsCarousel";
-import WhyMembersAccordion from "@/components/WhyMembersAccordion";
+import WhyMembersBand from "@/components/WhyMembersBand";
 import SeasonalAccordion from "@/components/SeasonalAccordion";
 
 export interface HomePageClientProps {
@@ -466,8 +466,8 @@ export default function Home({
         </div>
       </motion.section>
 
-      {/* ── The Difference — mobile-first accordion (Voyagr Club spec) ───── */}
-      <WhyMembersAccordion />
+      {/* ── The Difference — compact 5-col value-prop band ──────────────── */}
+      <WhyMembersBand />
 
       {/* ── Preferred Hotels — admin-curated stays with member benefits ─── */}
       {/* Sourced from GET /api/curations/preferred-hotels (admin-curated,
