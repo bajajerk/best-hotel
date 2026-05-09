@@ -9,11 +9,12 @@ import {
   CuratedCity,
 } from "@/lib/api";
 import { SAMPLE_CITIES, getCityImage, FALLBACK_CITY_IMAGE } from "@/lib/constants";
+import { trackSearch } from "@/lib/analytics";
 import Header from "@/components/Header";
 import DateBar, { DateBarHandle } from "@/components/DateBar";
 import DestinationSearch from "@/components/DestinationSearch";
 import RegionFilterTabs from "@/components/RegionFilterTabs";
-import HotelResultsView from "@/components/HotelResultsView";
+import HotelGrid from "@/components/HotelGrid";
 import { useBooking } from "@/context/BookingContext";
 
 const FALLBACK_IMAGE = FALLBACK_CITY_IMAGE;
@@ -228,10 +229,27 @@ export default function SearchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
+  // Pagination from URL — page is 1-indexed, per_page is bounded server-side.
+  const initialPage = (() => {
+    const p = parseInt(searchParams.get("page") || "1", 10);
+    return Number.isFinite(p) && p >= 1 ? p : 1;
+  })();
+  const initialPerPage = (() => {
+    const p = parseInt(searchParams.get("per_page") || "20", 10);
+    return Number.isFinite(p) && p >= 1 && p <= 50 ? p : 20;
+  })();
 
   const { checkIn, checkOut } = useBooking();
   const [query, setQuery] = useState(initialQuery);
   const [cities, setCities] = useState<CuratedCity[]>([]);
+  const [page, setPage] = useState<number>(initialPage);
+  const [perPage] = useState<number>(initialPerPage);
+  // Result counts surfaced by HotelGrid via onResults — used only for the
+  // toolbar copy on this page. The list itself is owned by HotelGrid.
+  const [resultInfo, setResultInfo] = useState<{ totalCount: number; visibleCount: number }>({
+    totalCount: 0,
+    visibleCount: 0,
+  });
   const [hasSearched, setHasSearched] = useState<boolean>(!!initialQuery);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [regionFilter, setRegionFilter] = useState<string>("All");
@@ -259,19 +277,20 @@ export default function SearchPage() {
     setRecentSearches(getRecentSearches());
   }, []);
 
-  // Search is driven entirely by `query` — HotelResultsView owns the fetch +
-  // batch-rates effect and its own filter-driven URL params. We just persist
-  // the recent search, update the URL with the canonical `q`, and flip
-  // `hasSearched` so results render.
+  // Search is now driven entirely by `query`/`page`/`perPage` — HotelGrid
+  // owns the fetch + batch-rates effect. We just persist the recent search,
+  // update the URL, and bump `hasSearched`.
   const commitQuery = useCallback(
     (q: string, options?: { persist?: boolean }) => {
       const trimmed = q.trim();
       if (!trimmed) {
         setQuery("");
         setHasSearched(false);
+        setResultInfo({ totalCount: 0, visibleCount: 0 });
         return;
       }
       setQuery(trimmed);
+      setPage(1);
       setHasSearched(true);
       if (options?.persist) {
         addRecentSearch(trimmed, checkIn, checkOut);
@@ -284,9 +303,45 @@ export default function SearchPage() {
     [checkIn, checkOut, router],
   );
 
+  const handleGridResults = useCallback(
+    ({ totalCount, visibleCount }: { totalCount: number; visibleCount: number; query: string }) => {
+      setResultInfo({ totalCount, visibleCount });
+    },
+    [],
+  );
+
+  const handleGridSearch = useCallback(
+    (info: { query: string; page: number; resultCount: number }) => {
+      trackSearch({
+        query: info.query,
+        result_count: info.resultCount,
+        source: "search_page",
+        filters: { region: regionFilter },
+      });
+    },
+    [regionFilter],
+  );
+
   const handleRecentClick = (term: string) => {
     commitQuery(term, { persist: true });
   };
+
+  // Pagination handler — bump page state, replace URL with the new page
+  // (so deep links work and back-button paginates), and smooth-scroll the
+  // results into view so the user lands at the top of the freshly-rendered
+  // list. HotelGrid re-fetches on the new page automatically.
+  const handlePageChange = useCallback((newPage: number) => {
+    if (newPage === page) return;
+    setPage(newPage);
+    const params = new URLSearchParams();
+    if (query.trim()) params.set("q", query.trim());
+    if (newPage > 1) params.set("page", String(newPage));
+    if (perPage !== 20) params.set("per_page", String(perPage));
+    router.replace(`/search${params.toString() ? `?${params.toString()}` : ""}`);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [page, query, perPage, router]);
 
   const clearRecentSearches = () => {
     if (typeof window !== "undefined") {
@@ -317,6 +372,10 @@ export default function SearchPage() {
   const regionFilteredCities = regionFilter === "All"
     ? matchingCities
     : matchingCities.filter((c) => c.continent === regionFilter);
+
+  // Hotel results — counts surface from HotelGrid via onResults / handleGridResults.
+  const totalCount = resultInfo.totalCount;
+  const totalResults = resultInfo.visibleCount;
 
   return (
     <div className="luxe" style={{ minHeight: "100vh", background: "var(--cream)", color: "var(--ink)" }}>
@@ -516,18 +575,43 @@ export default function SearchPage() {
       {/* ── Results area ── */}
       <section className="search-results-section" style={{ padding: "60px 60px 100px", maxWidth: "1400px", margin: "0 auto" }}>
 
-        {/* ── Hotel results — unified Grid/List view ── */}
+        {/* Results count */}
+        {hasSearched && (regionFilteredCities.length > 0 || totalResults > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{ marginBottom: "32px" }}
+          >
+            <span style={{
+              fontSize: "13px",
+              color: "var(--ink)",
+              fontWeight: 500,
+            }}>
+              {(totalCount > 0 ? totalCount : totalResults).toLocaleString()}{" "}
+              {(totalCount > 0 ? totalCount : totalResults) === 1 ? "hotel" : "hotels"}{" "}
+              for &ldquo;{query.trim()}&rdquo;
+            </span>
+          </motion.div>
+        )}
+
+        {/* ── Hotel results — paginated cards + live batch-rates (HotelGrid) ── */}
         {hasSearched && (
-          <HotelResultsView
+          <HotelGrid
             query={query.trim()}
-            cityName={query.trim()}
+            page={page}
+            perPage={perPage}
+            onPageChange={handlePageChange}
             regionFilter={regionFilter}
             cityToContinentMap={cityToContinentMap}
+            heading={<div className="type-eyebrow">Hotels Found</div>}
+            onResults={handleGridResults}
+            onSearch={handleGridSearch}
           />
         )}
 
         {/* ── Curated favourites in {city} — small horizontal scroller below results ── */}
-        {hasSearched && regionFilteredCities.length > 0 && (
+        {hasSearched && totalResults > 0 && regionFilteredCities.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -620,6 +704,58 @@ export default function SearchPage() {
                 </Link>
               ))}
             </div>
+          </motion.div>
+        )}
+
+        {hasSearched && totalResults === 0 && regionFilteredCities.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ textAlign: "center", padding: "80px 0" }}
+          >
+            <div style={{
+              width: "64px",
+              height: "64px",
+              margin: "0 auto 20px",
+              background: "var(--cream-deep)",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--ink-light)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <h3 className="type-display-3" style={{ color: "var(--ink)", fontStyle: "italic", marginBottom: "8px" }}>
+              No results found
+            </h3>
+            <p className="type-body" style={{ color: "var(--ink-light)", maxWidth: "400px", margin: "0 auto 24px" }}>
+              Try searching with a different city name, hotel, or country.
+            </p>
+            <Link
+              href="/search"
+              style={{
+                fontSize: "12px",
+                color: "var(--gold)",
+                textDecoration: "none",
+                fontWeight: 500,
+                letterSpacing: "0.06em",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                border: "1px solid var(--gold)",
+                padding: "10px 24px",
+                transition: "all 0.2s",
+              }}
+            >
+              Browse all locations
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </Link>
           </motion.div>
         )}
 
