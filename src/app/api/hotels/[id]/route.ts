@@ -30,7 +30,10 @@ export async function GET(
       `${BACKEND_URL}/api/hotels/${encodeURIComponent(id)}`,
       {
         headers: { "Content-Type": "application/json" },
-        next: { revalidate: 3600 },
+        // Backend already serves from Redis (5 min TTL via voyagr:hotel-detail
+        // cache_key) — a second layer of Next-level cache just delays photo
+        // backfills and editorial edits by up to an hour. Always hit live.
+        cache: "no-store",
       }
     );
 
@@ -50,7 +53,9 @@ export async function GET(
     return NextResponse.json(hotel, {
       status: 200,
       headers: {
-        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        // Short CDN cache only — backend Redis TTL is 5 min, edge stays
+        // in sync without trapping stale photos / editorial for an hour.
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
       },
     });
   } catch {
