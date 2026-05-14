@@ -299,120 +299,395 @@ function Lightbox({
   );
 }
 
-/* ────────────────────────── Filter Pill ────────────────────────── */
+/* ────────────────────────── Rate Results Strip ──────────────────────────
+   Single editorial bar that frames the rate-cards list. Left side carries
+   the search stats in italic Playfair (rooms / rate plans / nights), right
+   side carries the live filters (Free cancellation toggle + Board pill
+   that opens a styled popover). Replaces the separate filter row + plain
+   uppercase-mono summary line.
+*/
 
-function FilterPillShell({
-  active,
-  children,
-  onClick,
-  as = "button",
-}: {
-  active: boolean;
-  children: React.ReactNode;
-  onClick?: () => void;
-  as?: "button" | "label";
-}) {
-  const Component = as;
-  return (
-    <Component
-      onClick={onClick}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "9px 16px",
-        fontSize: 12,
-        fontWeight: 500,
-        letterSpacing: "0.04em",
-        background: active ? "var(--luxe-champagne-soft)" : "rgba(255,255,255,0.04)",
-        border: active
-          ? "1px solid var(--luxe-champagne-line)"
-          : "1px solid var(--luxe-hairline-strong)",
-        color: active ? "var(--luxe-champagne)" : "var(--luxe-soft-white-70)",
-        borderRadius: 999,
-        cursor: "pointer",
-        fontFamily: "var(--font-body)",
-        transition: "border-color 0.15s, color 0.15s, background 0.15s",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {children}
-    </Component>
-  );
-}
+type BoardFilterValue = MealPlanFilter;
+const BOARD_FILTER_OPTIONS: { value: BoardFilterValue; label: string }[] = [
+  { value: "all", label: "Any board" },
+  { value: "room-only", label: "Room only" },
+  { value: "breakfast", label: "Breakfast" },
+  { value: "half-board", label: "Half board" },
+  { value: "full-board", label: "Full board" },
+];
+const BOARD_FILTER_LABEL: Record<BoardFilterValue, string> = Object.fromEntries(
+  BOARD_FILTER_OPTIONS.map((o) => [o.value, o.label]),
+) as Record<BoardFilterValue, string>;
 
-function RateFilterBar({
+function RateResultsStrip({
+  roomTypes,
+  ratePlans,
+  nights,
+  ratesLoadMs,
   freeCancellation,
   onToggleFreeCancellation,
   mealPlan,
   onChangeMealPlan,
 }: {
+  roomTypes: number;
+  ratePlans: number;
+  nights: number;
+  ratesLoadMs: number | null;
   freeCancellation: boolean;
   onToggleFreeCancellation: () => void;
-  mealPlan: MealPlanFilter;
-  onChangeMealPlan: (v: MealPlanFilter) => void;
+  mealPlan: BoardFilterValue;
+  onChangeMealPlan: (v: BoardFilterValue) => void;
 }) {
-  const mealLabel: Record<MealPlanFilter, string> = {
-    all: "Meal Plan",
-    "room-only": "Room Only",
-    breakfast: "With Breakfast",
-    "half-board": "Breakfast & Dinner (Half Board)",
-    "full-board": "All Meals Included (Full Board)",
-  };
-
   return (
-    <div className="flex flex-wrap gap-2 mb-6" style={{ alignItems: "center" }}>
-      <FilterPillShell active={freeCancellation} onClick={onToggleFreeCancellation}>
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 18,
+        padding: "14px 0",
+        marginBottom: 18,
+        borderTop: "1px solid var(--luxe-hairline)",
+        borderBottom: "1px solid var(--luxe-hairline)",
+      }}
+    >
+      {/* Left: editorial stat line */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          flexWrap: "wrap",
+          gap: "4px 14px",
+          color: "var(--luxe-soft-white-70)",
+        }}
+      >
+        <Stat n={roomTypes} label={roomTypes === 1 ? "room" : "rooms"} />
+        <StatDivider />
+        <Stat n={ratePlans} label={ratePlans === 1 ? "rate plan" : "rate plans"} />
+        {nights > 0 && (
+          <>
+            <StatDivider />
+            <Stat n={nights} label={nights === 1 ? "night" : "nights"} />
+          </>
+        )}
+        {ratesLoadMs != null && (
+          <>
+            <StatDivider />
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 10.5,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: "var(--luxe-soft-white-50)",
+                fontVariantNumeric: "tabular-nums",
+                fontWeight: 600,
+              }}
+            >
+              Live · {(ratesLoadMs / 1000).toFixed(1)}s
+            </span>
+          </>
+        )}
+      </div>
+
+      {/* Right: filters */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        <FreeCancelToggle
+          active={freeCancellation}
+          onToggle={onToggleFreeCancellation}
+        />
+        <BoardPill value={mealPlan} onChange={onChangeMealPlan} />
+      </div>
+    </div>
+  );
+}
+
+function Stat({ n, label }: { n: number; label: string }) {
+  return (
+    <span style={{ whiteSpace: "nowrap" }}>
+      <span
+        style={{
+          fontFamily: "var(--font-display)",
+          fontStyle: "italic",
+          fontSize: 22,
+          fontWeight: 500,
+          color: "var(--luxe-soft-white)",
+          letterSpacing: "-0.01em",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {n}
+      </span>
+      <span
+        style={{
+          marginLeft: 7,
+          fontFamily: "var(--font-body)",
+          fontSize: 12.5,
+          letterSpacing: "0.04em",
+          color: "var(--luxe-soft-white-70)",
+        }}
+      >
+        {label}
+      </span>
+    </span>
+  );
+}
+
+function StatDivider() {
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: "inline-block",
+        width: 1,
+        height: 14,
+        background: "var(--luxe-hairline-strong)",
+        margin: "0 4px",
+        transform: "translateY(1px)",
+      }}
+    />
+  );
+}
+
+function FreeCancelToggle({
+  active,
+  onToggle,
+}: {
+  active: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      role="switch"
+      aria-checked={active}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 9,
+        padding: "8px 14px",
+        border: `1px solid ${active ? "var(--luxe-champagne)" : "var(--luxe-hairline-strong)"}`,
+        background: active ? "rgba(201,169,97,0.08)" : "rgba(255,255,255,0.025)",
+        color: active ? "var(--luxe-champagne)" : "var(--luxe-soft-white-70)",
+        borderRadius: 999,
+        fontFamily: "var(--font-body)",
+        fontSize: 12,
+        fontWeight: 500,
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+        transition: "border-color 200ms ease, background 200ms ease, color 200ms ease",
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          position: "relative",
+          width: 24,
+          height: 14,
+          borderRadius: 999,
+          background: active ? "var(--luxe-champagne)" : "rgba(255,255,255,0.12)",
+          transition: "background 200ms ease",
+          flexShrink: 0,
+        }}
+      >
         <span
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 14,
-            height: 14,
-            borderRadius: 3,
-            border: freeCancellation ? "1.5px solid var(--luxe-champagne)" : "1.5px solid var(--luxe-hairline-strong)",
-            background: freeCancellation ? "var(--luxe-champagne)" : "transparent",
-            transition: "all 0.15s",
+            position: "absolute",
+            top: 2,
+            left: active ? 12 : 2,
+            width: 10,
+            height: 10,
+            borderRadius: "50%",
+            background: active ? "var(--luxe-black)" : "rgba(255,255,255,0.65)",
+            transition: "left 200ms ease, background 200ms ease",
+          }}
+        />
+      </span>
+      Free cancellation
+    </button>
+  );
+}
+
+function BoardPill({
+  value,
+  onChange,
+}: {
+  value: BoardFilterValue;
+  onChange: (v: BoardFilterValue) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isActive = value !== "all";
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (!containerRef.current) return;
+      if (!containerRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={containerRef} style={{ position: "relative" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "8px 14px",
+          border: `1px solid ${isActive ? "var(--luxe-champagne)" : "var(--luxe-hairline-strong)"}`,
+          background: isActive ? "rgba(201,169,97,0.08)" : "rgba(255,255,255,0.025)",
+          color: isActive ? "var(--luxe-champagne)" : "var(--luxe-soft-white-70)",
+          borderRadius: 999,
+          fontFamily: "var(--font-body)",
+          fontSize: 12,
+          fontWeight: 500,
+          cursor: "pointer",
+          whiteSpace: "nowrap",
+          transition: "border-color 200ms ease, background 200ms ease, color 200ms ease",
+        }}
+      >
+        <span
+          aria-hidden
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 9.5,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: "var(--luxe-soft-white-50)",
+            fontWeight: 600,
           }}
         >
-          {freeCancellation && (
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#0c0b0a" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          )}
+          Board
         </span>
-        Free Cancellation
-      </FilterPillShell>
+        <span style={{ fontWeight: 500 }}>{BOARD_FILTER_LABEL[value]}</span>
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+          style={{
+            transition: "transform 200ms ease",
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+          }}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
 
-      <div style={{ position: "relative" }}>
-        <FilterPillShell active={mealPlan !== "all"} as="label">
-          <span style={{ pointerEvents: "none" }}>{mealLabel[mealPlan]}</span>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: "none" }}>
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-          <select
-            value={mealPlan}
-            onChange={(e) => onChangeMealPlan(e.target.value as MealPlanFilter)}
-            style={{
-              position: "absolute",
-              inset: 0,
-              opacity: 0,
-              cursor: "pointer",
-              fontSize: 12,
-              width: "100%",
-              height: "100%",
-            }}
-            aria-label="Meal plan filter"
-          >
-            <option value="all">All Meal Plans</option>
-            <option value="room-only">Room Only</option>
-            <option value="breakfast">With Breakfast</option>
-            <option value="half-board">Breakfast & Dinner (Half Board)</option>
-            <option value="full-board">All Meals Included (Full Board)</option>
-          </select>
-        </FilterPillShell>
-      </div>
+      {open && (
+        <div
+          role="listbox"
+          aria-label="Board basis filter"
+          style={{
+            position: "absolute",
+            top: "calc(100% + 8px)",
+            right: 0,
+            zIndex: 60,
+            minWidth: 200,
+            padding: 6,
+            background: "rgba(20,18,15,0.98)",
+            border: "1px solid rgba(201,169,97,0.18)",
+            borderRadius: 12,
+            boxShadow:
+              "0 24px 64px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.35)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
+          }}
+        >
+          {BOARD_FILTER_OPTIONS.map((opt) => {
+            const selected = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                onClick={() => {
+                  onChange(opt.value);
+                  setOpen(false);
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  border: "none",
+                  background: selected
+                    ? "rgba(201,169,97,0.1)"
+                    : "transparent",
+                  color: selected
+                    ? "var(--luxe-champagne)"
+                    : "var(--luxe-soft-white)",
+                  fontFamily: "var(--font-body)",
+                  fontSize: 13,
+                  fontWeight: selected ? 600 : 400,
+                  textAlign: "left",
+                  cursor: "pointer",
+                  transition: "background 160ms ease, color 160ms ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (!selected) {
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "rgba(255,255,255,0.04)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!selected) {
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "transparent";
+                  }
+                }}
+              >
+                <span>{opt.label}</span>
+                {selected && (
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -3439,7 +3714,11 @@ export default function HotelPage() {
                 </div>
               ) : rates ? (
                 <>
-                  <RateFilterBar
+                  <RateResultsStrip
+                    roomTypes={categories.length}
+                    ratePlans={filteredRates.length}
+                    nights={rates.nights}
+                    ratesLoadMs={ratesLoadMs}
                     freeCancellation={filterFreeCancellation}
                     onToggleFreeCancellation={() => setFilterFreeCancellation((v) => !v)}
                     mealPlan={filterMealPlan}
@@ -3455,23 +3734,6 @@ export default function HotelPage() {
                     </div>
                   ) : (
                     <>
-                      <p
-                        style={{
-                          fontSize: 11,
-                          fontFamily: "var(--font-mono)",
-                          letterSpacing: "0.18em",
-                          textTransform: "uppercase",
-                          color: "var(--luxe-soft-white-50)",
-                          marginBottom: 14,
-                        }}
-                      >
-                        {categories.length} room type{categories.length !== 1 ? "s" : ""}
-                        {filteredRates.length > categories.length ? ` · ${filteredRates.length} rate plans` : ""}
-                        {rates.nights > 0 ? ` · ${rates.nights} night${rates.nights > 1 ? "s" : ""}` : ""}
-                        {ratesLoadMs != null
-                          ? ` · Searched in ${(ratesLoadMs / 1000).toFixed(1)}s`
-                          : ""}
-                      </p>
                       <div
                         style={{
                           background: "#141312",
