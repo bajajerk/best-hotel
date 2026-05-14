@@ -745,7 +745,11 @@ function HotelSearchUtilityBar({ city }: { city: string }) {
   );
 }
 
-/* ────────────────────────── Room Category Card ────────────────────────── */
+/* ────────────────────────── Room Category Card ──────────────────────────
+   Editorial "stay card": large left-side photograph + amenity chip strip,
+   "from / night" price stack pinned right, full-card click to expand. When
+   expanded, rate plans cascade in below with a soft accent rail.
+*/
 
 function RoomCategoryCard({
   category,
@@ -754,6 +758,7 @@ function RoomCategoryCard({
   onToggle,
   planCount,
   variantsPreview,
+  nights,
   isFirst,
   children,
 }: {
@@ -768,140 +773,235 @@ function RoomCategoryCard({
   children?: React.ReactNode;
 }) {
   const cheapest = formatPrice(category.cheapestPrice, category.currency);
+  const cheapestPerNight = formatPrice(
+    category.cheapestPrice / Math.max(nights, 1),
+    category.currency,
+  );
   const hasRefundable = category.cheapestRefundablePrice != null;
 
-  // Compact compare-card benefits — keep to 2 high-signal lines.
   const cheapestPlan =
     category.plans.slice().sort((a, b) => a.total_price - b.total_price)[0];
-  const benefits: string[] = [];
-  if (hasRefundable) benefits.push("Free Cancellation");
-  if (cheapestPlan) {
-    const meal = formatMealBasis(cheapestPlan.meal_basis);
-    if (meal && meal !== "Room Only") benefits.push(`${meal} included`);
+  const mealLabel = cheapestPlan ? formatMealBasis(cheapestPlan.meal_basis) : "";
+  const includesMeals = mealLabel && mealLabel !== "Room Only";
+
+  // 2-3 high-signal chips, in priority order
+  const chips: { label: string; tone: "champagne" | "muted" }[] = [];
+  if (hasRefundable) chips.push({ label: "Free cancellation", tone: "champagne" });
+  if (includesMeals) chips.push({ label: `${mealLabel} included`, tone: "champagne" });
+  if (variantsPreview.length > 0) {
+    chips.push({ label: variantsPreview[0], tone: "muted" });
   }
-  if (benefits.length < 2 && variantsPreview.length > 0) {
-    benefits.push(variantsPreview[0]);
-  }
-  if (benefits.length < 2) {
-    benefits.push(`${planCount} rate option${planCount !== 1 ? "s" : ""}`);
+  if (chips.length < 2) {
+    chips.push({ label: `${planCount} rate option${planCount !== 1 ? "s" : ""}`, tone: "muted" });
   }
 
   return (
-    <div
+    <motion.div
+      layout
+      transition={{ layout: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } }}
       style={{
-        background: isExpanded ? "#1A1A1A" : "transparent",
-        borderTop: isFirst ? "none" : "1px solid rgba(255,255,255,0.06)",
-        boxShadow: isExpanded ? "inset 3px 0 0 #C9A961" : "none",
-        transition: "background 200ms ease, box-shadow 200ms ease",
+        background: isExpanded ? "rgba(20,18,15,0.7)" : "rgba(20,18,15,0.4)",
+        borderTop: isFirst ? "none" : "1px solid var(--luxe-hairline)",
+        position: "relative",
+        transition: "background 220ms ease",
       }}
     >
-      <div className="room-cat-row">
-        {/* Left — small square thumbnail */}
+      {/* Champagne accent rail on the left edge when expanded */}
+      <span
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 3,
+          background: "var(--luxe-champagne)",
+          opacity: isExpanded ? 1 : 0,
+          transform: `scaleY(${isExpanded ? 1 : 0.4})`,
+          transformOrigin: "top",
+          transition: "opacity 280ms ease, transform 320ms ease",
+        }}
+      />
+
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isExpanded}
+        className="room-cat-card-hit"
+        style={{
+          all: "unset",
+          cursor: "pointer",
+          display: "grid",
+          gridTemplateColumns: "minmax(220px, 280px) 1fr auto",
+          gap: 28,
+          alignItems: "stretch",
+          width: "100%",
+          padding: "22px 24px",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* ── Left: editorial photograph ── */}
         <div
           style={{
             position: "relative",
-            width: 90,
-            height: 90,
-            borderRadius: 6,
+            aspectRatio: "5 / 4",
+            borderRadius: 10,
             overflow: "hidden",
-            backgroundColor: "rgba(255,255,255,0.05)",
+            backgroundColor: "rgba(255,255,255,0.04)",
             backgroundImage: `url(${photoUrl})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
-            flexShrink: 0,
+            boxShadow: isExpanded
+              ? "0 0 0 1px rgba(201,169,97,0.25), 0 12px 32px rgba(0,0,0,0.4)"
+              : "0 4px 14px rgba(0,0,0,0.25)",
+            transition: "box-shadow 320ms ease",
           }}
-        />
+        >
+          {/* Subtle bottom-to-top gradient for legibility (kept light — image speaks) */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%)",
+              pointerEvents: "none",
+            }}
+          />
+          {/* Plan count badge bottom-right */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 10,
+              right: 10,
+              padding: "4px 10px",
+              borderRadius: 999,
+              background: "rgba(20,18,15,0.7)",
+              backdropFilter: "blur(6px)",
+              WebkitBackdropFilter: "blur(6px)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              fontFamily: "var(--font-mono)",
+              fontSize: 9.5,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "var(--luxe-soft-white)",
+              fontWeight: 600,
+            }}
+          >
+            {planCount} {planCount === 1 ? "rate" : "rates"}
+          </div>
+        </div>
 
-        {/* Middle — room name + 2 key benefits */}
+        {/* ── Middle: name + amenity chips ── */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: 6,
+            justifyContent: "center",
+            gap: 14,
             minWidth: 0,
           }}
         >
-          <h4
-            style={{
-              fontFamily: "var(--font-display)",
-              fontStyle: "italic",
-              fontSize: 17,
-              fontWeight: 500,
-              color: "var(--luxe-soft-white)",
-              margin: 0,
-              lineHeight: 1.25,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {category.name}
-          </h4>
-          <ul
-            style={{
-              listStyle: "none",
-              padding: 0,
-              margin: 0,
-              display: "flex",
-              flexDirection: "column",
-              gap: 3,
-            }}
-          >
-            {benefits.map((line, i) => {
-              const isFreeCancel = i === 0 && hasRefundable;
+          <div>
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 10,
+                letterSpacing: "0.22em",
+                textTransform: "uppercase",
+                color: "var(--luxe-champagne)",
+                marginBottom: 6,
+                fontWeight: 600,
+              }}
+            >
+              The Room
+            </div>
+            <h4
+              style={{
+                fontFamily: "var(--font-display)",
+                fontStyle: "italic",
+                fontSize: 24,
+                fontWeight: 500,
+                color: "var(--luxe-soft-white)",
+                margin: 0,
+                lineHeight: 1.18,
+                letterSpacing: "-0.015em",
+              }}
+            >
+              {category.name}
+            </h4>
+            {variantsPreview.length > 1 && (
+              <p
+                style={{
+                  marginTop: 6,
+                  fontFamily: "var(--font-body)",
+                  fontSize: 12.5,
+                  lineHeight: 1.55,
+                  color: "var(--luxe-soft-white-50)",
+                }}
+              >
+                {variantsPreview.slice(1, 3).join(" · ")}
+                {variantsPreview.length > 3
+                  ? ` · +${variantsPreview.length - 3} more`
+                  : ""}
+              </p>
+            )}
+          </div>
+
+          {/* Amenity chip strip */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {chips.map((chip, i) => {
+              const isChampagne = chip.tone === "champagne";
               return (
-                <li
+                <span
                   key={i}
                   style={{
-                    display: "flex",
+                    display: "inline-flex",
                     alignItems: "center",
                     gap: 6,
+                    padding: "5px 11px",
+                    borderRadius: 999,
+                    border: `1px solid ${isChampagne ? "rgba(201,169,97,0.28)" : "var(--luxe-hairline)"}`,
+                    background: isChampagne ? "rgba(201,169,97,0.06)" : "rgba(255,255,255,0.02)",
                     fontFamily: "var(--font-body)",
-                    fontSize: 12.5,
-                    lineHeight: "17px",
-                    color: isFreeCancel
-                      ? "#C9A961"
-                      : "var(--luxe-soft-white-70)",
+                    fontSize: 11.5,
+                    fontWeight: 500,
+                    color: isChampagne ? "var(--luxe-champagne)" : "var(--luxe-soft-white-70)",
+                    letterSpacing: "0.01em",
                   }}
                 >
-                  <span
-                    aria-hidden
-                    style={{
-                      flex: "none",
-                      color: isFreeCancel
-                        ? "#C9A961"
-                        : "var(--luxe-soft-white-50)",
-                      fontSize: 11,
-                      lineHeight: "17px",
-                    }}
-                  >
-                    {isFreeCancel ? "✓" : "•"}
-                  </span>
-                  {line}
-                </li>
+                  {isChampagne && (
+                    <span aria-hidden style={{ fontSize: 10, lineHeight: 1 }}>✓</span>
+                  )}
+                  {chip.label}
+                </span>
               );
             })}
-          </ul>
+          </div>
         </div>
 
-        {/* Right — price + Select Room button */}
+        {/* ── Right: price stack + CTA ── */}
         <div
-          className="room-cat-price"
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "flex-end",
-            gap: 8,
-            minWidth: 128,
+            justifyContent: "center",
+            gap: 12,
+            minWidth: 156,
+            textAlign: "right",
           }}
         >
-          <div style={{ textAlign: "right" }}>
+          <div>
             <div
               style={{
                 fontFamily: "var(--font-mono)",
-                fontSize: 9,
-                letterSpacing: "0.18em",
+                fontSize: 9.5,
+                letterSpacing: "0.22em",
                 textTransform: "uppercase",
                 color: "var(--luxe-soft-white-50)",
-                marginBottom: 1,
+                marginBottom: 3,
+                fontWeight: 600,
               }}
             >
               From
@@ -909,34 +1009,113 @@ function RoomCategoryCard({
             <div
               style={{
                 fontFamily: "var(--font-display)",
-                fontSize: 22,
-                fontWeight: 700,
-                color: "#C9A961",
-                lineHeight: 1.1,
-                letterSpacing: "-0.015em",
+                fontSize: 30,
+                fontWeight: 500,
+                color: "var(--luxe-champagne)",
+                lineHeight: 1,
+                letterSpacing: "-0.02em",
                 whiteSpace: "nowrap",
+                fontVariantNumeric: "tabular-nums",
               }}
             >
-              {cheapest}
+              {cheapestPerNight}
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 11.5,
+                color: "var(--luxe-soft-white-50)",
+                marginTop: 4,
+                letterSpacing: "0.02em",
+              }}
+            >
+              per night
+              {nights > 1 && (
+                <>
+                  {" · "}
+                  <span style={{ fontVariantNumeric: "tabular-nums" }}>{cheapest}</span> total
+                </>
+              )}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-expanded={isExpanded}
-            className="luxe-btn-gold"
-            style={{ padding: "8px 18px", fontSize: 10.5 }}
+
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "9px 18px",
+              borderRadius: 999,
+              border: `1px solid ${isExpanded ? "var(--luxe-champagne)" : "var(--luxe-hairline-strong)"}`,
+              background: isExpanded ? "var(--luxe-champagne)" : "transparent",
+              color: isExpanded ? "var(--luxe-black)" : "var(--luxe-soft-white)",
+              fontFamily: "var(--font-body)",
+              fontSize: 10.5,
+              fontWeight: 600,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              transition: "background 220ms ease, color 220ms ease, border-color 220ms ease",
+            }}
           >
-            {isExpanded ? "Hide Rates" : "Select Room"}
-          </button>
+            {isExpanded ? "Showing rates" : "View rates"}
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                transition: "transform 280ms ease",
+                transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+              }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
         </div>
-      </div>
-      {children && <div style={{ padding: "0 14px 14px" }}>{children}</div>}
-    </div>
+      </button>
+
+      {/* Expanded rate plan tray */}
+      <AnimatePresence initial={false}>
+        {isExpanded && children && (
+          <motion.div
+            key="tray"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+            style={{ overflow: "hidden" }}
+          >
+            <div style={{ padding: "0 24px 24px", paddingLeft: 24 }}>
+              {/* hairline divider before rate plans */}
+              <div
+                aria-hidden
+                style={{
+                  height: 1,
+                  background:
+                    "linear-gradient(90deg, transparent 0%, var(--luxe-hairline) 20%, var(--luxe-hairline) 80%, transparent 100%)",
+                  marginBottom: 18,
+                }}
+              />
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
-/* ────────────────────────── Rate Card ────────────────────────── */
+/* ────────────────────────── Rate Card ──────────────────────────
+   Single rate plan inside an expanded room category. Two-column layout:
+   left = identity (board, cancellation), right = price stack + select CTA.
+   Cheapest refundable plan gets a "Best Value" champagne pill. Members-rate
+   savings vs MRP shown as a subtle pill on the top-right. Stagger-reveals
+   based on revealIndex so cards cascade in when the category opens.
+*/
 
 function RateCard({
   plan,
@@ -946,6 +1125,8 @@ function RateCard({
   savingsPct,
   isSelected,
   isHighlighted,
+  isBestValue,
+  revealIndex,
   cardRef,
   onSelect,
   onProceed,
@@ -957,6 +1138,8 @@ function RateCard({
   savingsPct: number | null;
   isSelected: boolean;
   isHighlighted: boolean;
+  isBestValue: boolean;
+  revealIndex: number;
   cardRef: (el: HTMLDivElement | null) => void;
   onSelect: () => void;
   onProceed: () => void;
@@ -964,7 +1147,8 @@ function RateCard({
   const nightsSafe = Math.max(nights, 1);
   const perNight = plan.total_price / nightsSafe;
   const cancelDate = formatFreeCancelDate(plan.free_cancel_until);
-  const showSavings = savingsPct != null && savingsPct > 0 && mrpRate != null && mrpRate > plan.total_price;
+  const showSavings =
+    savingsPct != null && savingsPct > 0 && mrpRate != null && mrpRate > plan.total_price;
 
   return (
     <motion.div
@@ -972,122 +1156,170 @@ function RateCard({
       ref={cardRef}
       onClick={onSelect}
       className={isHighlighted ? "rate-card-highlight-pulse" : undefined}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.32,
+        delay: Math.min(revealIndex * 0.07, 0.42),
+        ease: [0.22, 1, 0.36, 1],
+      }}
       style={{
         position: "relative",
-        background: isSelected ? "rgba(200,170,118,0.08)" : "rgba(255,255,255,0.04)",
-        border: isSelected
-          ? "1px solid var(--luxe-champagne)"
-          : "1px solid var(--luxe-hairline-strong)",
-        borderRadius: 14,
-        padding: "22px 24px",
+        background: isSelected ? "rgba(201,169,97,0.07)" : "rgba(255,255,255,0.025)",
+        border: `1px solid ${isSelected ? "var(--luxe-champagne)" : "var(--luxe-hairline)"}`,
+        borderRadius: 12,
+        padding: "20px 22px",
         cursor: "pointer",
-        transition: "border-color 0.25s, background 0.25s, box-shadow 0.25s",
-        boxShadow: isSelected ? "0 0 0 1px rgba(200,170,118,0.25), 0 8px 32px rgba(0,0,0,0.3)" : "none",
+        transition: "border-color 220ms ease, background 220ms ease, box-shadow 220ms ease, transform 220ms ease",
+        boxShadow: isSelected
+          ? "0 0 0 1px rgba(201,169,97,0.22), 0 12px 32px rgba(0,0,0,0.32)"
+          : "none",
+        display: "grid",
+        gridTemplateColumns: "1fr auto",
+        gap: 24,
+        alignItems: "center",
       }}
-      transition={{ duration: 0.2 }}
     >
-      {/* Member-rate ribbon */}
-      {showSavings && (
+      {/* Top-right pill row: BEST VALUE (when applicable) + Member-rate savings */}
+      {(isBestValue || showSavings) && (
         <div
-          aria-hidden
           style={{
             position: "absolute",
-            top: 16,
-            right: 18,
-            display: "inline-flex",
-            alignItems: "center",
+            top: 14,
+            right: 16,
+            display: "flex",
             gap: 6,
-            padding: "5px 11px",
-            background: "var(--luxe-champagne-soft)",
-            border: "1px solid var(--luxe-champagne-line)",
-            borderRadius: 999,
-            fontSize: 10.5,
-            fontWeight: 600,
-            color: "var(--luxe-champagne)",
-            letterSpacing: "0.06em",
-            fontFamily: "var(--font-body)",
-            textTransform: "uppercase" as const,
+            alignItems: "center",
           }}
         >
-          <span style={{ fontSize: 9 }}>★</span>
-          Member rate · {savingsPct}% off
+          {isBestValue && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "4px 10px",
+                background: "var(--luxe-champagne)",
+                color: "var(--luxe-black)",
+                borderRadius: 999,
+                fontSize: 9.5,
+                fontWeight: 700,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              <span aria-hidden style={{ fontSize: 9 }}>★</span>
+              Best value
+            </span>
+          )}
+          {showSavings && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "4px 10px",
+                background: "var(--luxe-champagne-soft)",
+                border: "1px solid var(--luxe-champagne-line)",
+                borderRadius: 999,
+                fontSize: 9.5,
+                fontWeight: 600,
+                color: "var(--luxe-champagne)",
+                letterSpacing: "0.14em",
+                fontFamily: "var(--font-body)",
+                textTransform: "uppercase",
+              }}
+            >
+              −{savingsPct}%
+            </span>
+          )}
         </div>
       )}
 
-      {/* Header: room name */}
-      <div className="flex items-start justify-between gap-3 mb-2" style={{ paddingRight: showSavings ? 140 : 36 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h4
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: 20,
-              fontWeight: 500,
-              fontStyle: "italic",
-              color: "var(--luxe-soft-white)",
-              lineHeight: 1.2,
-              letterSpacing: "-0.01em",
-            }}
+      {/* ── Left: identity column ── */}
+      <div style={{ minWidth: 0, paddingTop: isBestValue || showSavings ? 28 : 0 }}>
+        <p
+          style={{
+            fontSize: 10.5,
+            fontFamily: "var(--font-mono)",
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: "var(--luxe-champagne)",
+            margin: 0,
+            marginBottom: 6,
+            fontWeight: 600,
+          }}
+        >
+          {formatMealBasis(plan.meal_basis) || "Rate plan"}
+        </p>
+        <h4
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: 19,
+            fontWeight: 500,
+            fontStyle: "italic",
+            color: "var(--luxe-soft-white)",
+            lineHeight: 1.22,
+            letterSpacing: "-0.01em",
+            margin: 0,
+          }}
+        >
+          {plan.room_name}
+        </h4>
+
+        {/* Cancellation row with icon */}
+        <div
+          style={{
+            marginTop: 14,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            fontFamily: "var(--font-body)",
+            fontSize: 12.5,
+            color: plan.refundable ? "var(--luxe-champagne)" : "var(--luxe-soft-white-50)",
+            fontWeight: plan.refundable ? 500 : 400,
+          }}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
           >
-            {plan.room_name}
-          </h4>
-          <p
-            style={{
-              fontSize: 11,
-              fontFamily: "var(--font-mono)",
-              letterSpacing: "0.18em",
-              textTransform: "uppercase" as const,
-              color: "var(--luxe-soft-white-50)",
-              marginTop: 6,
-              fontWeight: 600,
-            }}
-          >
-            {formatMealBasis(plan.meal_basis)}
-          </p>
-        </div>
-        {isSelected && (
-          <span
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: "50%",
-              background: "var(--luxe-champagne)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              position: "absolute",
-              top: 22,
-              right: 22,
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0c0b0a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            {plan.refundable ? (
               <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </span>
-        )}
+            ) : (
+              <>
+                <circle cx="12" cy="12" r="10" />
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+              </>
+            )}
+          </svg>
+          {plan.refundable
+            ? cancelDate
+              ? `Free cancellation until ${cancelDate}`
+              : "Free cancellation"
+            : "Non-refundable"}
+        </div>
       </div>
 
-      {/* Cancellation line */}
+      {/* ── Right: price + CTA stack ── */}
       <div
         style={{
-          fontSize: 12.5,
-          fontFamily: "var(--font-body)",
-          marginTop: 14,
-          marginBottom: 18,
-          color: plan.refundable ? "var(--luxe-champagne)" : "var(--luxe-soft-white-50)",
-          fontWeight: plan.refundable ? 500 : 400,
-          letterSpacing: "0.01em",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: 12,
+          textAlign: "right",
+          paddingTop: isBestValue || showSavings ? 28 : 0,
         }}
       >
-        {plan.refundable
-          ? cancelDate
-            ? `✓ Free cancellation until ${cancelDate}`
-            : "✓ Free cancellation"
-          : "Non-refundable"}
-      </div>
-
-      {/* Rate block + CTA */}
-      <div className="flex items-end justify-between flex-wrap gap-3">
         <div>
           {mrpRate && mrpRate > plan.total_price && (
             <div
@@ -1097,6 +1329,7 @@ function RateCard({
                 textDecoration: "line-through",
                 fontFamily: "var(--font-mono)",
                 letterSpacing: "0.04em",
+                fontVariantNumeric: "tabular-nums",
               }}
             >
               {formatPrice(mrpRate, mrpCurrency || plan.currency)}
@@ -1104,68 +1337,323 @@ function RateCard({
           )}
           <div
             style={{
-              fontSize: 28,
+              fontSize: 26,
               fontWeight: 500,
               color: "var(--luxe-champagne)",
               fontFamily: "var(--font-display)",
-              lineHeight: 1.1,
+              lineHeight: 1.05,
               marginTop: 2,
-              letterSpacing: "-0.015em",
+              letterSpacing: "-0.02em",
+              fontVariantNumeric: "tabular-nums",
+              whiteSpace: "nowrap",
             }}
           >
-            {formatPrice(plan.total_price, plan.currency)}
-            {nightsSafe > 1 && (
-              <span style={{ fontSize: 12, fontWeight: 400, color: "var(--luxe-soft-white-50)", marginLeft: 8, fontStyle: "italic", fontFamily: "var(--font-display)" }}>
-                total
-              </span>
-            )}
+            {formatPrice(perNight, plan.currency)}
           </div>
           <div
             style={{
-              fontSize: 12,
+              fontSize: 11.5,
               color: "var(--luxe-soft-white-50)",
-              marginTop: 4,
+              marginTop: 3,
               fontFamily: "var(--font-body)",
+              letterSpacing: "0.02em",
             }}
           >
-            {formatPrice(perNight, plan.currency)}/night
-            {nightsSafe > 1 && <> · {nightsSafe} nights</>}
+            per night
+            {nightsSafe > 1 && (
+              <>
+                {" · "}
+                <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                  {formatPrice(plan.total_price, plan.currency)}
+                </span>{" "}
+                total
+              </>
+            )}
           </div>
         </div>
 
         <button
-          onClick={(e) => { e.stopPropagation(); onProceed(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onProceed();
+          }}
           className="luxe-btn-gold"
-          style={{ padding: "12px 24px", fontSize: 11 }}
+          style={{
+            padding: "11px 22px",
+            fontSize: 10.5,
+            letterSpacing: "0.18em",
+            fontWeight: 600,
+            textTransform: "uppercase",
+            whiteSpace: "nowrap",
+          }}
         >
-          Select &rarr;
+          Select
+          <span aria-hidden style={{ marginLeft: 8 }}>→</span>
         </button>
       </div>
+
+      {/* Selected check pill (bottom-left) — gentler than a full overlay */}
+      {isSelected && (
+        <span
+          aria-hidden
+          style={{
+            position: "absolute",
+            bottom: -8,
+            left: 18,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "4px 10px",
+            background: "var(--luxe-champagne)",
+            color: "var(--luxe-black)",
+            borderRadius: 999,
+            fontSize: 9.5,
+            fontWeight: 700,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            fontFamily: "var(--font-body)",
+            boxShadow: "0 4px 12px rgba(201,169,97,0.4)",
+          }}
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Selected
+        </span>
+      )}
     </motion.div>
   );
 }
 
-/* ────────────────────────── Skeleton Rate Card ────────────────────────── */
+/* ────────────────────────── Loading State ──────────────────────────
+   Premium loading scene for the rates panel. Three layers stacked:
+     1. Concierge progress card — champagne pulse + ripple ring, rotating
+        editorial phrases, live stopwatch. Gives momentum on the 2-15s
+        TripJack round-trips so users don't see a static spinner.
+     2. Two RoomCategoryCard ghosts — full-fidelity preview of the actual
+        layout (photo + chips + price stack) so the page doesn't shift
+        when data lands.
+     3. A subtle scrim under the second ghost (fade-out) hinting at more.
+   Replaces the bare 3× skeleton stack.
+*/
 
-function RateCardSkeleton() {
+const RATES_LOADING_PHRASES = [
+  "Pinging the hotel for live availability",
+  "Negotiating your member rate",
+  "Comparing against public OTAs",
+  "Almost there — sourcing the best plan",
+];
+
+function RatesLoadingScene() {
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const start = typeof performance !== "undefined" ? performance.now() : Date.now();
+    const tick = setInterval(() => {
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+      setElapsed((now - start) / 1000);
+    }, 100);
+    return () => clearInterval(tick);
+  }, []);
+
+  useEffect(() => {
+    const rot = setInterval(() => {
+      setPhraseIdx((i) => (i + 1) % RATES_LOADING_PHRASES.length);
+    }, 2400);
+    return () => clearInterval(rot);
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* ── Concierge progress card ── */}
+      <div
+        role="status"
+        aria-live="polite"
+        style={{
+          padding: "20px 24px",
+          borderRadius: 14,
+          border: "1px solid var(--luxe-hairline-strong)",
+          background:
+            "linear-gradient(135deg, rgba(201,169,97,0.08) 0%, rgba(20,18,15,0.55) 60%)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          minHeight: 72,
+        }}
+      >
+        <span
+          aria-hidden
+          style={{
+            position: "relative",
+            width: 14,
+            height: 14,
+            flexShrink: 0,
+            display: "inline-block",
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "50%",
+              background: "var(--luxe-champagne)",
+              opacity: 0.9,
+              animation: "rates-pulse-dot 1.4s ease-in-out infinite",
+            }}
+          />
+          <span
+            style={{
+              position: "absolute",
+              inset: -6,
+              borderRadius: "50%",
+              border: "1px solid var(--luxe-champagne)",
+              opacity: 0.35,
+              animation: "rates-pulse-ring 1.6s ease-out infinite",
+            }}
+          />
+        </span>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            className="luxe-tech"
+            style={{
+              color: "var(--luxe-champagne)",
+              marginBottom: 4,
+            }}
+          >
+            Searching live rates
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={phraseIdx}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.32, ease: "easeOut" }}
+              style={{
+                fontFamily: "var(--font-display)",
+                fontStyle: "italic",
+                fontSize: 17,
+                lineHeight: 1.35,
+                color: "var(--luxe-soft-white)",
+                margin: 0,
+                letterSpacing: "-0.005em",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {RATES_LOADING_PHRASES[phraseIdx]}…
+            </motion.p>
+          </AnimatePresence>
+        </div>
+
+        <div
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 13,
+            fontVariantNumeric: "tabular-nums",
+            color: "var(--luxe-soft-white-70)",
+            padding: "6px 12px",
+            border: "1px solid var(--luxe-hairline)",
+            borderRadius: 999,
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}
+        >
+          {elapsed.toFixed(1)}s
+        </div>
+      </div>
+
+      {/* ── Ghost room category ladder — matches real layout shape ── */}
+      <RoomCategoryCardSkeleton />
+      <RoomCategoryCardSkeleton fade={0.55} />
+
+      <style jsx global>{`
+        @keyframes rates-pulse-dot {
+          0%, 100% { transform: scale(0.85); opacity: 0.85; }
+          50%      { transform: scale(1.05); opacity: 1;   }
+        }
+        @keyframes rates-pulse-ring {
+          0%   { transform: scale(0.6); opacity: 0.55; }
+          100% { transform: scale(1.6); opacity: 0;    }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* Ghost preview of the RoomCategoryCard layout. The shape is identical so
+   the page doesn't shift when real cards land. `fade` softens the second
+   ghost to suggest "more below" without showing a third full card. */
+function RoomCategoryCardSkeleton({ fade = 1 }: { fade?: number } = {}) {
   return (
     <div
+      aria-hidden
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid var(--luxe-hairline)",
+        opacity: fade,
+        background: "rgba(20,18,15,0.4)",
+        borderTop: "1px solid var(--luxe-hairline)",
         borderRadius: 14,
         padding: "22px 24px",
+        display: "grid",
+        gridTemplateColumns: "minmax(220px, 280px) 1fr auto",
+        gap: 28,
+        alignItems: "stretch",
       }}
     >
-      <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 18, width: "55%", marginBottom: 10, borderRadius: 4 }} />
-      <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 10, width: "30%", marginBottom: 18, borderRadius: 3 }} />
-      <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 12, width: "40%", marginBottom: 16, borderRadius: 3 }} />
-      <div className="flex items-end justify-between">
+      <div
+        className="luxe-skeleton luxe-skeleton--dark"
+        style={{ aspectRatio: "5 / 4", borderRadius: 10 }}
+      />
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 14, minWidth: 0 }}>
         <div>
-          <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 28, width: 140, marginBottom: 8, borderRadius: 4 }} />
-          <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 12, width: 100, borderRadius: 3 }} />
+          <div
+            className="luxe-skeleton luxe-skeleton--dark"
+            style={{ height: 10, width: 70, marginBottom: 10, borderRadius: 3 }}
+          />
+          <div
+            className="luxe-skeleton luxe-skeleton--dark"
+            style={{ height: 24, width: "70%", marginBottom: 10, borderRadius: 5 }}
+          />
+          <div
+            className="luxe-skeleton luxe-skeleton--dark"
+            style={{ height: 12, width: "45%", borderRadius: 3 }}
+          />
         </div>
-        <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 40, width: 110, borderRadius: 999 }} />
+        <div style={{ display: "flex", gap: 8 }}>
+          <div
+            className="luxe-skeleton luxe-skeleton--dark"
+            style={{ height: 24, width: 130, borderRadius: 999 }}
+          />
+          <div
+            className="luxe-skeleton luxe-skeleton--dark"
+            style={{ height: 24, width: 110, borderRadius: 999 }}
+          />
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "center", gap: 12, minWidth: 156 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+          <div
+            className="luxe-skeleton luxe-skeleton--dark"
+            style={{ height: 8, width: 50, borderRadius: 2 }}
+          />
+          <div
+            className="luxe-skeleton luxe-skeleton--dark"
+            style={{ height: 30, width: 130, borderRadius: 5 }}
+          />
+          <div
+            className="luxe-skeleton luxe-skeleton--dark"
+            style={{ height: 10, width: 100, borderRadius: 2 }}
+          />
+        </div>
+        <div
+          className="luxe-skeleton luxe-skeleton--dark"
+          style={{ height: 36, width: 140, borderRadius: 999 }}
+        />
       </div>
     </div>
   );
@@ -1359,6 +1847,8 @@ export default function HotelPage() {
   /* Live rates */
   const [rates, setRates] = useState<RatesResponse | null>(null);
   const [ratesLoading, setRatesLoading] = useState(false);
+  /* Wall-clock fetch duration in ms — surfaced as "Searched in X.Xs" once rates land. */
+  const [ratesLoadMs, setRatesLoadMs] = useState<number | null>(null);
   const [noMatch, setNoMatch] = useState(false);
   const [ratesError, setRatesError] = useState<string | null>(null);
   const [ratesRefreshKey, setRatesRefreshKey] = useState(0);
@@ -1461,9 +1951,15 @@ export default function HotelPage() {
     let cancelled = false;
     setRatesLoading(true);
     setRatesError(null);
+    setRatesLoadMs(null);
+    const fetchStart =
+      typeof performance !== "undefined" ? performance.now() : Date.now();
     fetchHotelRates(hotelId, booking.checkIn, booking.checkOut, adultsCount, childrenCount)
       .then((res) => {
         if (cancelled) return;
+        const fetchEnd =
+          typeof performance !== "undefined" ? performance.now() : Date.now();
+        setRatesLoadMs(Math.max(0, Math.round(fetchEnd - fetchStart)));
         if ("error" in res && res.error === "no_tripjack_match") {
           setNoMatch(true);
           setRates(null);
@@ -1800,9 +2296,8 @@ export default function HotelPage() {
             }}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <RateCardSkeleton />
-              <RateCardSkeleton />
-              <RateCardSkeleton />
+              <RoomCategoryCardSkeleton />
+              <RoomCategoryCardSkeleton fade={0.6} />
             </div>
             <div className="luxe-skeleton luxe-skeleton--dark" style={{ height: 380, width: "100%", borderRadius: 14 }} />
           </div>
@@ -2934,11 +3429,7 @@ export default function HotelPage() {
                   </button>
                 </div>
               ) : ratesLoading ? (
-                <div className="flex flex-col gap-4">
-                  <RateCardSkeleton />
-                  <RateCardSkeleton />
-                  <RateCardSkeleton />
-                </div>
+                <RatesLoadingScene />
               ) : rates && rates.rates.length === 0 ? (
                 <div
                   className="luxe-card"
@@ -2977,6 +3468,9 @@ export default function HotelPage() {
                         {categories.length} room type{categories.length !== 1 ? "s" : ""}
                         {filteredRates.length > categories.length ? ` · ${filteredRates.length} rate plans` : ""}
                         {rates.nights > 0 ? ` · ${rates.nights} night${rates.nights > 1 ? "s" : ""}` : ""}
+                        {ratesLoadMs != null
+                          ? ` · Searched in ${(ratesLoadMs / 1000).toFixed(1)}s`
+                          : ""}
                       </p>
                       <div
                         style={{
@@ -3006,27 +3500,41 @@ export default function HotelPage() {
                               nights={rates.nights || nights}
                               isFirst={idx === 0}
                             >
-                              {isExpanded && (
-                                <div className="flex flex-col gap-3" style={{ marginTop: 16 }}>
-                                  {category.plans.map((plan) => (
-                                    <RateCard
-                                      key={plan.option_id}
-                                      plan={plan}
-                                      nights={rates.nights || nights}
-                                      mrpRate={mrpRate}
-                                      mrpCurrency={mrpCurrency}
-                                      savingsPct={savingsPct}
-                                      isSelected={selectedOptionId === plan.option_id}
-                                      isHighlighted={highlightedOptionId === plan.option_id}
-                                      cardRef={(el) => { rateCardRefs.current[plan.option_id] = el; }}
-                                      onSelect={() =>
-                                        setSelectedOptionId(selectedOptionId === plan.option_id ? null : plan.option_id)
-                                      }
-                                      onProceed={() => handlePlanSelectCTA(plan)}
-                                    />
-                                  ))}
-                                </div>
-                              )}
+                              {isExpanded && (() => {
+                                // "Best value" is the cheapest refundable plan when one exists,
+                                // otherwise the absolute cheapest. Single rate plan → no badge.
+                                const sorted = [...category.plans].sort(
+                                  (a, b) => a.total_price - b.total_price,
+                                );
+                                const cheapestRefundable = sorted.find((p) => p.refundable);
+                                const bestValueId =
+                                  category.plans.length > 1
+                                    ? (cheapestRefundable?.option_id ?? sorted[0]?.option_id)
+                                    : null;
+                                return (
+                                  <div className="flex flex-col gap-3">
+                                    {category.plans.map((plan, planIdx) => (
+                                      <RateCard
+                                        key={plan.option_id}
+                                        plan={plan}
+                                        nights={rates.nights || nights}
+                                        mrpRate={mrpRate}
+                                        mrpCurrency={mrpCurrency}
+                                        savingsPct={savingsPct}
+                                        isSelected={selectedOptionId === plan.option_id}
+                                        isHighlighted={highlightedOptionId === plan.option_id}
+                                        isBestValue={plan.option_id === bestValueId}
+                                        revealIndex={planIdx}
+                                        cardRef={(el) => { rateCardRefs.current[plan.option_id] = el; }}
+                                        onSelect={() =>
+                                          setSelectedOptionId(selectedOptionId === plan.option_id ? null : plan.option_id)
+                                        }
+                                        onProceed={() => handlePlanSelectCTA(plan)}
+                                      />
+                                    ))}
+                                  </div>
+                                );
+                              })()}
                             </RoomCategoryCard>
                           );
                         })}
