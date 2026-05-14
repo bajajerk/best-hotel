@@ -79,6 +79,10 @@ interface HotelDetail {
   photo3: string | null;
   photo4: string | null;
   photo5: string | null;
+  /* Full TripJack photo catalogue — backend joins tripjack_hotel_photos.
+     Up to ~100 entries per hotel. Empty when the backfill hasn't reached
+     this hotel yet, in which case we fall back to photo1..5. */
+  photos?: Array<{ url: string; size_code?: string | null; room_ids?: string[] }> | null;
   overview: string | null;
   addressline1: string | null;
   addressline2: string | null;
@@ -1534,14 +1538,32 @@ export default function HotelPage() {
     setSelectedOptionId(null);
   }, [rates]);
 
-  /* ── Photos ── */
-  const photos = useMemo<string[]>(
-    () =>
-      hotel
-        ? ([hotel.photo1, hotel.photo2, hotel.photo3, hotel.photo4, hotel.photo5].filter(Boolean) as string[])
-        : [],
-    [hotel]
-  );
+  /* ── Photos ──
+     Prefer the full catalogue (backfilled from the TripJack dump → up to
+     ~100 entries). Fall back to photo1..5 for hotels the backfill hasn't
+     reached yet so galleries always render *something*.
+     De-duplicated by URL to guard against the photo1..5 columns repeating
+     entries already in the full list. */
+  const photos = useMemo<string[]>(() => {
+    if (!hotel) return [];
+    const ordered: string[] = [];
+    if (hotel.photos && hotel.photos.length > 0) {
+      for (const p of hotel.photos) {
+        if (p?.url) ordered.push(p.url);
+      }
+    }
+    for (const legacy of [hotel.photo1, hotel.photo2, hotel.photo3, hotel.photo4, hotel.photo5]) {
+      if (legacy) ordered.push(legacy);
+    }
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const url of ordered) {
+      if (seen.has(url)) continue;
+      seen.add(url);
+      out.push(url);
+    }
+    return out;
+  }, [hotel]);
 
   const openLightbox = useCallback((idx: number, overridePhotos?: string[]) => {
     setLightboxPhotos(overridePhotos && overridePhotos.length > 0 ? overridePhotos : photos);
