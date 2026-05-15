@@ -114,7 +114,7 @@ const TESTIMONIALS = [
     role: "Frequent Flyer",
   },
   {
-    text: "I never thought luxury travel to Canada could be this accessible. Thanks to Mer Voyage Club, I now enjoy business class comfort to Toronto at literally half the regular price.",
+    text: "I never thought luxury travel to Canada could be this accessible. Thanks to Voyagr Club, I now enjoy business class comfort to Toronto at literally half the regular price.",
     author: "Simran",
     role: "Business Class Traveller",
   },
@@ -132,7 +132,7 @@ export default function BusinessClassFlightsPage() {
 
   const openContactForm = () => {
     window.open(
-      "https://wa.me/919876543210?text=Hi%2C%20I%27m%20interested%20in%20business%20class%20flights%20via%20Mer%20Voyage%20Club",
+      "https://wa.me/919833534627?text=Hi%2C%20I%27m%20interested%20in%20business%20class%20flights%20via%20Mer%20Voyage%20Club",
       "_blank",
     );
   };
@@ -192,7 +192,7 @@ export default function BusinessClassFlightsPage() {
                 marginBottom: "16px",
               }}
             >
-              Mer Voyage Club — Premium Flights
+              Voyagr Club — Premium Flights
             </p>
             <h1
               style={{
@@ -1029,7 +1029,7 @@ export default function BusinessClassFlightsPage() {
               marginBottom: "32px",
             }}
           >
-            Join thousands of Mer Voyage Club members who fly business class
+            Join thousands of Voyagr Club members who fly business class
             at economy prices. Contact us on WhatsApp for instant quotes.
           </p>
           <button

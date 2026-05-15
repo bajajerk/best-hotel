@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 
 const FALLBACK_LINK =
-  "https://wa.me/919876543210?text=Hi%20Voyagr%2C%20I%27d%20like%20to%20book%20a%20hotel";
+  "https://wa.me/919833534627?text=Hi%20Voyagr%2C%20I%27d%20like%20to%20book%20a%20hotel";
 
 export default function WhatsAppFab() {
   const handleClick = useCallback(async () => {

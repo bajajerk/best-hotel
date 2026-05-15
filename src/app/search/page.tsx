@@ -926,7 +926,7 @@ export default function SearchPage() {
             {[
               { label: "Search", href: "/search" },
               { label: "Search", href: "/search" },
-              { label: "WhatsApp", href: "https://wa.me/919876543210" },
+              { label: "WhatsApp", href: "https://wa.me/919833534627" },
             ].map((link) => (
               <Link
                 key={link.label}

@@ -191,7 +191,7 @@ export default async function HomePage() {
 
         <h2>Contact</h2>
         <p>
-          WhatsApp: +91 98765 43210 | Email: hello@voyagr.com |
+          WhatsApp: +91 98335 34627 | Email: hello@voyagrclub.com |
           Website: <a href={SITE_URL}>{SITE_URL}</a>
         </p>
       </div>

@@ -10,7 +10,7 @@ import PreferredPartners from "@/components/PreferredPartners";
 const TEXT_PRIMARY = "var(--luxe-soft-white)";
 const TEXT_MUTED = "rgba(247, 245, 242, 0.65)";
 
-const AMBER = "#C9A961";
+const AMBER = "#c8aa76";
 const ICON_SIZE = 28;
 const ICON_STROKE = 1.5;
 

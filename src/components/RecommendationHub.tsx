@@ -1494,11 +1494,11 @@ function HotelRecommendationCard({ hotel }: { hotel: RecommendationHotel }) {
   const whatsappMessage = encodeURIComponent(
     `Hi, interested in ${hotel.name} in ${hotel.city}. Send Voyagr preferred rate + perks.`,
   );
-  const whatsappUrl = `https://wa.me/919876543210?text=${whatsappMessage}`;
+  const whatsappUrl = `https://wa.me/919833534627?text=${whatsappMessage}`;
   const conciergeMessage = encodeURIComponent(
     `Hi, I'd like to learn more about ${hotel.name} in ${hotel.city}. Can you help?`,
   );
-  const conciergeUrl = `https://wa.me/919876543210?text=${conciergeMessage}`;
+  const conciergeUrl = `https://wa.me/919833534627?text=${conciergeMessage}`;
 
   const displayPerks = hotel.perks.slice(0, 3);
 

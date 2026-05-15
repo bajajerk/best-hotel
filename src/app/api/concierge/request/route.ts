@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     const whatsappText = encodeURIComponent(
       `${defaultMessage}\nRef: ${requestId}`
     );
-    const whatsappLink = `https://wa.me/919876543210?text=${whatsappText}`;
+    const whatsappLink = `https://wa.me/919833534627?text=${whatsappText}`;
 
     return NextResponse.json({
       success: true,

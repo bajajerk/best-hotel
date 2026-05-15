@@ -275,7 +275,7 @@ export default function GuestDetailsPage() {
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+91 98765 43210"
+              placeholder="+91 98335 34627"
               autoComplete="tel"
               style={inputStyle(false)}
             />

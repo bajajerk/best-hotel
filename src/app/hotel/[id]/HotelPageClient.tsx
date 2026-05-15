@@ -915,7 +915,7 @@ function HotelSearchUtilityBar({ city }: { city: string }) {
           className="hotel-search-utilbar__cell"
           style={{ ...cellBase, display: "flex", alignItems: "center", gap: 10, width: "100%" }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A961" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c8aa76" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
             <circle cx="12" cy="10" r="3" />
           </svg>
@@ -2909,7 +2909,7 @@ export default function HotelPage() {
                       borderRadius: "50%",
                       background: "rgba(255,255,255,0.04)",
                       border: "1px solid var(--luxe-hairline-strong)",
-                      color: isSaved ? "#C9A961" : "var(--luxe-soft-white-70)",
+                      color: isSaved ? "#c8aa76" : "var(--luxe-soft-white-70)",
                       cursor: "pointer",
                       transition: "color 0.15s, background 0.15s",
                     }}
@@ -2957,7 +2957,7 @@ export default function HotelPage() {
                           borderRadius: 999,
                           background: "var(--luxe-champagne-soft)",
                           border: "1px solid var(--luxe-champagne-line)",
-                          color: "#C9A961",
+                          color: "#c8aa76",
                           fontSize: 10,
                           letterSpacing: "0.14em",
                           fontWeight: 600,
@@ -2981,7 +2981,7 @@ export default function HotelPage() {
                           fontWeight: 500,
                         }}
                       >
-                        <span style={{ color: "#C9A961" }}>{hotel.rating_average.toFixed(1)}</span>
+                        <span style={{ color: "#c8aa76" }}>{hotel.rating_average.toFixed(1)}</span>
                         <span style={{ color: "var(--luxe-soft-white-50)" }}>/ 10</span>
                         {hotel.number_of_reviews > 0 && (
                           <span style={{ color: "var(--luxe-soft-white-50)" }}>
@@ -3064,7 +3064,7 @@ export default function HotelPage() {
                               borderRadius: 999,
                               background: "var(--luxe-champagne-soft)",
                               border: "1px solid var(--luxe-champagne-line)",
-                              color: "#C9A961",
+                              color: "#c8aa76",
                               fontSize: 11,
                               fontWeight: 600,
                               letterSpacing: "0.08em",
@@ -3299,7 +3299,7 @@ export default function HotelPage() {
                   transition: "color 0.2s ease, background 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#C9A961";
+                  e.currentTarget.style.color = "#c8aa76";
                   e.currentTarget.style.background = "rgba(201,169,97,0.08)";
                 }}
                 onMouseLeave={(e) => {
@@ -3468,7 +3468,7 @@ export default function HotelPage() {
                           lineHeight: "14px",
                           letterSpacing: "0.18em",
                           textTransform: "uppercase",
-                          color: "#C9A961",
+                          color: "#c8aa76",
                           margin: "0 0 10px",
                         }}
                       >
@@ -3500,7 +3500,7 @@ export default function HotelPage() {
                   fontVariant: "small-caps",
                   textTransform: "uppercase",
                   letterSpacing: "0.18em",
-                  color: "#C9A961",
+                  color: "#c8aa76",
                   margin: "0 0 12px",
                 }}
               >
@@ -5329,7 +5329,7 @@ function AmenitiesIconGrid({
               ? "1px solid rgba(201,169,97,0.55)"
               : "1px solid rgba(201,169,97,0.18)",
             background: "transparent",
-            color: item.available ? "#C9A961" : "rgba(201,169,97,0.35)",
+            color: item.available ? "#c8aa76" : "rgba(201,169,97,0.35)",
             opacity: item.available ? 1 : 0.5,
             transition: "border-color 0.2s ease, background 0.2s ease",
           }}

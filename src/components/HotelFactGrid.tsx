@@ -19,7 +19,7 @@ export interface HotelFactGridData {
   languages?: string[] | null;
 }
 
-const GOLD = "#C9A961";
+const GOLD = "#c8aa76";
 
 const WELLNESS_KEYWORDS: [string, string][] = [
   ["spa", "Spa"],

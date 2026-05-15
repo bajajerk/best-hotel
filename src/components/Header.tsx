@@ -18,7 +18,9 @@ import type { User } from "firebase/auth";
    text invisible on the navy bar). Don't var-ify these.
    ──────────────────────────────────────────────────────────── */
 
-const GOLD = "#C9A84C";
+// Unified to match --luxe-champagne (was #C9A84C — visibly drifted from
+// the rest of the site's gold). All chrome golds now resolve to one hex.
+const GOLD = "#c8aa76";
 const NAVY = "#0B1B2B";
 const IVORY = "#fdfaf5";
 
