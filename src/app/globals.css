@@ -5880,6 +5880,14 @@ body:has(.precision-theme) {
   border: 1px solid rgba(200,170,118,0.15);
 }
 
+/* New mobile slide wrapper — holds an EditorialCard (which carries its own
+   4:5 portrait aspect-ratio). Keeps scroll-snap on the parent flex track. */
+.ep-mobile-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  display: block;
+}
+
 /* Allow the Next.js image span to overflow so the image fills correctly */
 .ep-mobile-card > div > span {
   overflow: visible !important;
@@ -6141,6 +6149,229 @@ body:has(.precision-theme) {
   color: inherit;
   border: 1px solid rgba(200, 170, 118, 0.15);
   background: var(--luxe-card-bg, rgba(20, 18, 15, 0.4));
+}
+
+/* New mobile slide wrapper for the PreferredHotels carousel — wraps an
+   EditorialCard (4:5 portrait). Scroll-snap stays on the flex track. */
+.ph-mobile-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  display: block;
+}
+
+/* ─── EditorialCard primitive (.edcard-*) ─────────────────────────────────
+   Shared luxe-editorial card used by Editor's Picks, Preferred Hotels,
+   and Top Cities carousels. Geometry locked to 4:5 portrait by default;
+   `--edcard-fill` (.edcard--fill) lets the card fill a bento slot whose
+   height is driven by the grid instead of an aspect-ratio. Touch target
+   meets the ≥44px guideline thanks to the card's portrait sizing.
+   ───────────────────────────────────────────────────────────────────── */
+.edcard {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  border-radius: 14px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(200, 170, 118, 0.22) 0%,
+    rgba(20, 18, 15, 0.92) 100%
+  );
+  border: 1px solid rgba(200, 170, 118, 0.15);
+  isolation: isolate;
+  transform: translateZ(0);
+  transition:
+    border-color 320ms ease,
+    box-shadow 320ms ease;
+}
+
+.edcard--fill {
+  height: 100%;
+}
+
+.edcard:hover,
+.edcard:focus-visible {
+  border-color: rgba(200, 170, 118, 0.42);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+}
+
+.edcard:focus-visible {
+  outline: 2px solid var(--luxe-champagne, #c8aa76);
+  outline-offset: 2px;
+}
+
+/* ── Image ── */
+.edcard-img-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background-color: #14120f;
+}
+
+/* next/image renders a wrapping span with overflow:hidden — let the
+   image scale beyond that span; the outer wrap is what clips. */
+.edcard-img-wrap > span {
+  overflow: visible !important;
+}
+
+.edcard-img {
+  transform: scale(1);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.edcard:hover .edcard-img,
+.edcard:focus-visible .edcard-img {
+  transform: scale(1.02) !important;
+}
+
+/* ── Gradient scrim ── */
+.edcard-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 38%,
+    rgba(0, 0, 0, 0.78) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Text block ── */
+.edcard-body {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edcard-eyebrow {
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--luxe-champagne, #c8aa76);
+  transition: color 320ms ease;
+  line-height: 1.1;
+}
+
+.edcard:hover .edcard-eyebrow,
+.edcard:focus-visible .edcard-eyebrow {
+  color: var(--luxe-soft-white, #f7f5f2);
+}
+
+.edcard-name {
+  font-family: var(--font-display, 'Playfair Display', 'Cormorant Garamond', Georgia, serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(18px, 1.6vw, 22px);
+  letter-spacing: -0.01em;
+  line-height: 1.18;
+  color: var(--luxe-soft-white, #f7f5f2);
+  /* Two-line clamp keeps card heights tidy across long names. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.edcard-name--hero {
+  font-size: clamp(22px, 2vw, 28px);
+}
+
+.edcard-subline {
+  font-family: var(--font-body, var(--font-sans, Inter, ui-sans-serif, sans-serif));
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--luxe-soft-white-70, rgba(247, 245, 242, 0.7));
+  letter-spacing: 0.01em;
+  /* Single-line subline — keeps the chip row sitting at a predictable y. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edcard-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.edcard-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-family: var(--font-body, var(--font-sans, Inter, ui-sans-serif, sans-serif));
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--luxe-champagne, #c8aa76);
+  background: rgba(200, 170, 118, 0.10);
+  border: 1px solid var(--luxe-hairline, rgba(200, 170, 118, 0.28));
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* ── Price stack — bottom-right ── */
+.edcard-price {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2;
+  text-align: right;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(10, 10, 10, 0.55);
+  border: 1px solid var(--luxe-hairline, rgba(200, 170, 118, 0.28));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.edcard-price-label {
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--luxe-soft-white-70, rgba(247, 245, 242, 0.7));
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.edcard-price-amount {
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--luxe-soft-white, #f7f5f2);
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+/* When a price stack is present, give the body block right padding so the
+   name doesn't run under the price chip. */
+.edcard:has(.edcard-price) .edcard-body {
+  padding-right: clamp(88px, 32%, 120px);
+}
+
+/* Variant tweaks — destination keeps the body airy (eyebrow + name only). */
+.edcard--destination .edcard-body {
+  gap: 10px;
+}
+
+/* Mobile: keep portrait geometry but loosen padding so chips have room. */
+@media (max-width: 480px) {
+  .edcard-body { left: 14px; right: 14px; bottom: 14px; }
+  .edcard-price { right: 14px; bottom: 14px; }
 }
 
 /* Preferred Rates — perks grid */
@@ -6573,6 +6804,21 @@ body:has(.precision-theme) {
 .tcm-card:focus-visible {
   transform: translateY(-4px);
   border-color: rgba(201, 169, 110, 0.45);
+}
+
+/* New per-slot wrapper around an EditorialCard. Holds the snap geometry
+   (72vw mobile, capped at 320px) so the 4:5 portrait card sits perfectly
+   inside the existing track without changing scroll behaviour. */
+.tcm-slot {
+  position: relative;
+  flex: 0 0 72vw;
+  max-width: 320px;
+  scroll-snap-align: start;
+}
+@media (min-width: 768px) {
+  .tcm-slot {
+    flex: 0 0 320px;
+  }
 }
 
 .tcm-img {

@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { CITY_IMAGES, FALLBACK_CITY_IMAGE } from "@/lib/constants";
+import EditorialCard from "./EditorialCard";
 
 type CityTag = "Member Favourite" | "Most Visited";
 
@@ -70,32 +70,25 @@ export default function TopCitiesMobileCarousel() {
         <div ref={trackRef} className="tcm-track">
           {TOP_CITIES.map((c) => {
             const img = CITY_IMAGES[c.slug] ?? FALLBACK_CITY_IMAGE;
+            const chips: string[] = [];
+            if (c.tag) chips.push(c.tag);
+            chips.push(`${c.stays.toLocaleString()} Stays`);
             return (
-              <Link
-                key={c.slug}
-                href={`/city/${c.slug}`}
-                className="tcm-card"
-                aria-label={`${c.name}, ${c.country} — ${c.stays} stays`}
-              >
-                <Image
-                  src={img}
-                  alt={`${c.name}, ${c.country}`}
-                  fill
+              <div key={c.slug} className="tcm-slot">
+                <EditorialCard
+                  href={`/city/${c.slug}`}
+                  imageUrl={img}
+                  imageAlt={`${c.name}, ${c.country}`}
+                  eyebrow={c.country.toUpperCase()}
+                  name={c.name}
+                  subline={c.tag}
+                  chips={chips}
+                  variant="city"
+                  aspectRatio="4 / 5"
                   sizes="(max-width: 640px) 72vw, 320px"
-                  className="tcm-img"
-                  loading="lazy"
-                  decoding="async"
+                  className="tcm-card-edcard"
                 />
-                <div aria-hidden="true" className="tcm-scrim" />
-
-                {c.tag && <div className="tcm-tag">{c.tag}</div>}
-
-                <div className="tcm-content">
-                  <div className="tcm-country">{c.country}</div>
-                  <div className="tcm-city">{c.name}</div>
-                  <div className="tcm-pill">{c.stays.toLocaleString()} Stays</div>
-                </div>
-              </Link>
+              </div>
             );
           })}
         </div>
