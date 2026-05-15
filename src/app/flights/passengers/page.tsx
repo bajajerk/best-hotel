@@ -163,7 +163,7 @@ function PassengersContent() {
 
   if (success) {
     return (
-      <>
+      <div className="luxe">
         <Header />
         <div className="pp-page">
           <div className="success-card">
@@ -200,12 +200,12 @@ function PassengersContent() {
           </div>
         </div>
         <style>{styleBlock}</style>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="luxe">
       <Header />
       <div className="pp-page">
 
@@ -337,7 +337,7 @@ function PassengersContent() {
       </div>
 
       <style>{styleBlock}</style>
-    </>
+    </div>
   );
 }
 
