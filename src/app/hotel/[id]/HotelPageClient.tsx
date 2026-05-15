@@ -340,6 +340,7 @@ function RateResultsStrip({
 }) {
   return (
     <div
+      className="rate-results-strip"
       style={{
         display: "flex",
         flexWrap: "wrap",
@@ -354,6 +355,7 @@ function RateResultsStrip({
     >
       {/* Left: editorial stat line */}
       <div
+        className="rate-results-strip__stats"
         style={{
           display: "flex",
           alignItems: "baseline",
@@ -393,6 +395,7 @@ function RateResultsStrip({
 
       {/* Right: filters */}
       <div
+        className="rate-results-strip__filters"
         style={{
           display: "flex",
           flexWrap: "wrap",
@@ -900,6 +903,7 @@ function HotelSearchUtilityBar({ city }: { city: string }) {
       {/* 1. Location — opens a destination search popover */}
       <div
         ref={locationPopoverRef}
+        className="hotel-search-utilbar__location"
         style={{ position: "relative", flex: 1, minWidth: 0, display: "flex" }}
       >
         <button
@@ -952,7 +956,7 @@ function HotelSearchUtilityBar({ city }: { city: string }) {
       <button
         type="button"
         onClick={() => setDatesOpen(true)}
-        className="hotel-search-utilbar__cell"
+        className="hotel-search-utilbar__cell hotel-search-utilbar__checkin"
         style={cellBase}
         aria-label="Edit check-in date"
       >
@@ -965,7 +969,7 @@ function HotelSearchUtilityBar({ city }: { city: string }) {
       <button
         type="button"
         onClick={() => setDatesOpen(true)}
-        className="hotel-search-utilbar__cell"
+        className="hotel-search-utilbar__cell hotel-search-utilbar__checkout"
         style={cellBase}
         aria-label="Edit check-out date"
       >
@@ -977,7 +981,7 @@ function HotelSearchUtilityBar({ city }: { city: string }) {
       {/* 4. Room — guest/room selector. Click anywhere on the cell triggers
           the GuestRoomPicker dropdown (full row is the click target). */}
       <div
-        className="hotel-search-utilbar__cell"
+        className="hotel-search-utilbar__cell hotel-search-utilbar__guests"
         style={{ ...cellBase, padding: "8px 16px", display: "flex", alignItems: "center" }}
       >
         <GuestRoomPicker variant="dark" compact label="ROOM" />
@@ -1117,6 +1121,7 @@ function RoomCategoryCard({
       >
         {/* ── Left: editorial photograph ── */}
         <div
+          className="room-cat-card-photo"
           style={{
             position: "relative",
             aspectRatio: "5 / 4",
@@ -1169,6 +1174,7 @@ function RoomCategoryCard({
 
         {/* ── Middle: name + amenity chips ── */}
         <div
+          className="room-cat-card-middle"
           style={{
             display: "flex",
             flexDirection: "column",
@@ -1257,6 +1263,7 @@ function RoomCategoryCard({
 
         {/* ── Right: price stack + CTA ── */}
         <div
+          className="room-cat-card-pricecol"
           style={{
             display: "flex",
             flexDirection: "column",
@@ -1282,6 +1289,7 @@ function RoomCategoryCard({
               From
             </div>
             <div
+              className="room-cat-price-amount"
               style={{
                 fontFamily: "var(--font-display)",
                 fontSize: 30,
@@ -1364,7 +1372,7 @@ function RoomCategoryCard({
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
             style={{ overflow: "hidden" }}
           >
-            <div style={{ padding: "0 24px 24px", paddingLeft: 24 }}>
+            <div className="room-cat-card-tray-inner" style={{ padding: "0 24px 24px", paddingLeft: 24 }}>
               {/* hairline divider before rate plans */}
               <div
                 aria-hidden
@@ -1430,7 +1438,7 @@ function RateCard({
       layout
       ref={cardRef}
       onClick={onSelect}
-      className={isHighlighted ? "rate-card-highlight-pulse" : undefined}
+      className={`rate-card${isHighlighted ? " rate-card-highlight-pulse" : ""}`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
@@ -1458,6 +1466,7 @@ function RateCard({
       {/* Top-right pill row: BEST VALUE (when applicable) + Member-rate savings */}
       {(isBestValue || showSavings) && (
         <div
+          className="rate-card__top-pills"
           style={{
             position: "absolute",
             top: 14,
@@ -1513,7 +1522,7 @@ function RateCard({
       )}
 
       {/* ── Left: identity column ── */}
-      <div style={{ minWidth: 0, paddingTop: isBestValue || showSavings ? 28 : 0 }}>
+      <div className={`rate-card__identity${isBestValue || showSavings ? " rate-card__identity-padtop" : ""}`} style={{ minWidth: 0, paddingTop: isBestValue || showSavings ? 28 : 0 }}>
         <p
           style={{
             fontSize: 10.5,
@@ -1586,6 +1595,7 @@ function RateCard({
 
       {/* ── Right: price + CTA stack ── */}
       <div
+        className="rate-card__pricecol"
         style={{
           display: "flex",
           flexDirection: "column",
@@ -1595,7 +1605,7 @@ function RateCard({
           paddingTop: isBestValue || showSavings ? 28 : 0,
         }}
       >
-        <div>
+        <div className="rate-card__price-row">
           {mrpRate && mrpRate > plan.total_price && (
             <div
               style={{
@@ -1611,6 +1621,7 @@ function RateCard({
             </div>
           )}
           <div
+            className="rate-card__price-amount"
             style={{
               fontSize: 26,
               fontWeight: 500,
@@ -1652,7 +1663,7 @@ function RateCard({
             e.stopPropagation();
             onProceed();
           }}
-          className="luxe-btn-gold"
+          className="luxe-btn-gold rate-card__select"
           style={{
             padding: "11px 22px",
             fontSize: 10.5,
@@ -2687,6 +2698,7 @@ export default function HotelPage() {
               Sits ~36px below the floating header so the bar reads as a
               distinct page element rather than an extension of the nav. ── */}
         <div
+          className="hotel-search-bar-wrap"
           style={{
             position: "sticky",
             top: 96,
@@ -2703,6 +2715,7 @@ export default function HotelPage() {
 
         {/* ── 2-col main grid: gallery (65%) | Booking Card (35%) ── */}
         <section
+          className="hotel-section-journey-grid"
           style={{
             background: "#0A0A0A",
             padding: "32px 24px 64px",
@@ -3235,6 +3248,7 @@ export default function HotelPage() {
       <section
         ref={stayRef}
         id="the-stay"
+        className="hotel-section-overview"
         style={{
           padding: "56px 24px 48px",
           scrollMarginTop: 140,
@@ -3513,6 +3527,7 @@ export default function HotelPage() {
       <section
         ref={ratesRef}
         id="rates"
+        className="hotel-section-rates"
         style={{
           padding: "72px 24px 96px",
           borderTop: "1px solid var(--luxe-hairline)",
@@ -4075,6 +4090,7 @@ export default function HotelPage() {
           <section
             ref={mapRef}
             id="map"
+            className="hotel-section-location"
             style={{
               padding: "56px 24px 40px",
               borderTop: "1px solid var(--luxe-hairline)",
@@ -4227,6 +4243,7 @@ export default function HotelPage() {
       <section
         ref={reviewsRef}
         id="reviews"
+        className="hotel-section-reviews"
         style={{
           padding: "72px 24px 80px",
           borderTop: "1px solid var(--luxe-hairline)",
@@ -4455,6 +4472,7 @@ export default function HotelPage() {
 
       {/* ═══════════════════ 10. CLOSING CONCIERGE CTA ═══════════════════ */}
       <section
+        className="hotel-section-concierge"
         style={{
           padding: "80px 24px 100px",
           borderTop: "1px solid var(--luxe-hairline)",
@@ -4733,6 +4751,350 @@ export default function HotelPage() {
           .hotel-bento .bento-tile:nth-child(n+2) {
             grid-column: auto !important;
             grid-row: auto !important;
+          }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           PHONE-FIRST RESPONSIVE (≤ 640px) — Apple/Mr&MrsSmith mobile feel
+           Touch targets ≥ 44px, no horizontal scroll, full-width pills,
+           generous breathing room. Restacks every multi-column section.
+           ═══════════════════════════════════════════════════════════════ */
+        @media (max-width: 640px) {
+          /* ── 1. Container gutters ── */
+          .luxe-container { padding: 0 16px !important; }
+
+          /* ── 2. MMT-style Search Utility Bar — stack as 2 rows ──
+                Row 1: Location (full-width)
+                Row 2: Check-in · Check-out
+                Row 3: Guests (full-width)
+                Search button becomes a full-width pill below */
+          .hotel-search-utilbar {
+            flex-wrap: wrap !important;
+            padding: 6px !important;
+            gap: 0 !important;
+          }
+          .hotel-search-utilbar > .hotel-search-utilbar__divider {
+            display: none !important;
+          }
+          .hotel-search-utilbar .hotel-search-utilbar__cell {
+            min-height: 56px;
+            padding: 10px 14px !important;
+          }
+          /* Location cell — full row */
+          .hotel-search-utilbar__location {
+            flex: 0 0 100% !important;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+          }
+          /* Check-in + Check-out — share a row 50/50 */
+          .hotel-search-utilbar__checkin,
+          .hotel-search-utilbar__checkout {
+            flex: 0 0 50% !important;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+          }
+          .hotel-search-utilbar__checkin {
+            border-right: 1px solid rgba(255,255,255,0.06);
+          }
+          /* Guests cell — full row */
+          .hotel-search-utilbar__guests {
+            flex: 0 0 100% !important;
+          }
+          /* Search button — full-width pill */
+          .hotel-search-utilbar__btn {
+            flex: 0 0 100% !important;
+            margin: 6px 0 0 !important;
+            padding: 14px 22px !important;
+            min-height: 48px;
+          }
+
+          /* ── 3. Above-the-fold journey grid — single column, gallery FIRST,
+                quickbook card BELOW (the sticky desktop sidebar collapses to
+                the existing sticky bottom CTA on phone). ── */
+          .hotel-journey-grid {
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 20px !important;
+          }
+          .hotel-journey-quickbook {
+            position: static !important;
+            top: auto !important;
+          }
+          /* Gallery — restack into a hero photo on top + 2-up grid beneath.
+             Big tap targets, no cramped right-side stack on phone. */
+          .hotel-journey-gallery {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            grid-template-rows: clamp(220px, 52vw, 300px) clamp(110px, 26vw, 150px) !important;
+            height: auto !important;
+            gap: 6px !important;
+          }
+          .hotel-journey-gallery > button:nth-child(1) {
+            grid-column: 1 / -1 !important;
+            grid-row: 1 / 2 !important;
+          }
+          .hotel-journey-gallery > button:nth-child(2) {
+            grid-column: 1 / 2 !important;
+            grid-row: 2 / 3 !important;
+          }
+          .hotel-journey-gallery > button:nth-child(3) {
+            grid-column: 2 / 3 !important;
+            grid-row: 2 / 3 !important;
+          }
+          /* The floating "View all" pill — smaller on phone */
+          .hotel-journey-gallery > button:last-child {
+            bottom: 10px !important;
+            right: 10px !important;
+            padding: 6px 12px !important;
+            font-size: 10px !important;
+          }
+          /* Quickbook card — tighter padding on mobile */
+          .hotel-journey-quickbook > div {
+            padding: 18px !important;
+          }
+          .hotel-journey-quickbook h1 {
+            font-size: clamp(22px, 6vw, 26px) !important;
+          }
+
+          /* ── 4. Sticky tab bar — keep tabs primary, drop dates summary onto
+                its own line so it doesn't crush the tab pills. ── */
+          .hotel-tab-dates {
+            margin-left: 0 !important;
+            width: 100%;
+            font-size: 11px !important;
+            order: 2;
+          }
+
+          /* ── 5. Overview sub-nav — keep scrolling but with a bit of slack ── */
+          .hotel-quicklinks {
+            width: 100% !important;
+            justify-content: flex-start;
+          }
+          .hotel-quicklinks button {
+            padding: 10px 14px !important;
+            min-height: 40px;
+          }
+
+          /* ── 6. About + Hotel Facts — single column ── */
+          .hotel-about-grid {
+            gap: 24px !important;
+          }
+
+          /* ── 7. Plan-your-stay hub — tighter padding ── */
+          .hotel-booking-hub {
+            padding: 18px !important;
+          }
+          .hotel-booking-hub h3 {
+            font-size: 19px !important;
+          }
+          /* HotelDateEditor — stack vertically with full-width touch targets */
+          .hotel-date-editor {
+            flex-direction: column !important;
+            align-items: stretch !important;
+          }
+          .hotel-date-editor > div[style*="background: var(--luxe-hairline)"] {
+            width: 100% !important;
+            height: 1px !important;
+            margin: 0 !important;
+          }
+          .hotel-date-editor > button,
+          .hotel-date-editor > div:not([style*="background: var(--luxe-hairline)"]) {
+            min-height: 56px;
+            padding: 14px 18px !important;
+          }
+
+          /* ── 8. RateResultsStrip — stats on top, filters as a horizontal
+                scroll row below. ── */
+          .rate-results-strip {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 10px !important;
+          }
+          .rate-results-strip__stats {
+            order: 1;
+            justify-content: flex-start;
+          }
+          .rate-results-strip__filters {
+            order: 2;
+            flex-wrap: nowrap !important;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 2px;
+            margin: 0 -16px;
+            padding-left: 16px;
+            padding-right: 16px;
+          }
+          .rate-results-strip__filters::-webkit-scrollbar { display: none; }
+          .rate-results-strip__filters > * {
+            flex: 0 0 auto;
+          }
+
+          /* ── 9. RoomCategoryCard — restack: photo on top, info middle,
+                price+CTA bottom (full-width). ── */
+          .room-cat-card-hit {
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 16px !important;
+            padding: 16px !important;
+          }
+          .room-cat-card-photo {
+            aspect-ratio: 16 / 10 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+          .room-cat-card-middle {
+            min-width: 0 !important;
+            gap: 10px !important;
+          }
+          .room-cat-card-middle h4 {
+            font-size: 20px !important;
+          }
+          .room-cat-card-pricecol {
+            align-items: stretch !important;
+            text-align: left !important;
+            min-width: 0 !important;
+            gap: 12px !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding-top: 12px !important;
+            border-top: 1px solid var(--luxe-hairline) !important;
+          }
+          .room-cat-card-pricecol > div:first-child {
+            text-align: left;
+          }
+          .room-cat-card-pricecol > div:last-child {
+            white-space: nowrap;
+            padding: 11px 16px !important;
+            font-size: 10px !important;
+            min-height: 44px;
+          }
+          .room-cat-card-pricecol .room-cat-price-amount {
+            font-size: 26px !important;
+          }
+          /* Expanded tray padding */
+          .room-cat-card-tray-inner {
+            padding: 0 16px 18px !important;
+          }
+
+          /* ── 10. RateCard — stack identity / price+CTA, full-width Select ── */
+          .rate-card {
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 14px !important;
+            padding: 16px !important;
+          }
+          .rate-card__identity {
+            padding-top: 0 !important;
+          }
+          .rate-card__identity h4 {
+            font-size: 17px !important;
+          }
+          .rate-card__pricecol {
+            align-items: stretch !important;
+            text-align: left !important;
+            padding-top: 12px !important;
+            border-top: 1px solid var(--luxe-hairline);
+          }
+          .rate-card__price-row {
+            display: flex !important;
+            align-items: baseline !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            flex-wrap: wrap;
+          }
+          .rate-card__price-amount {
+            font-size: 24px !important;
+          }
+          .rate-card__select {
+            width: 100% !important;
+            min-height: 48px !important;
+            padding: 13px 22px !important;
+            justify-content: center;
+          }
+          /* Top-right pill row (BEST VALUE / savings) — move inline above */
+          .rate-card__top-pills {
+            position: static !important;
+            margin-bottom: 10px;
+          }
+          .rate-card__identity-padtop {
+            padding-top: 0 !important;
+          }
+
+          /* ── 11. Section heads — Apple-grade clamp() typography ── */
+          .luxe-display {
+            font-size: clamp(22px, 6.5vw, 30px) !important;
+          }
+
+          /* ── 12. Section padding ── */
+          .hotel-section-rates {
+            padding: 40px 16px 80px !important;
+          }
+          .hotel-section-overview {
+            padding: 36px 16px 32px !important;
+          }
+          .hotel-section-location,
+          .hotel-section-reviews {
+            padding: 40px 16px 32px !important;
+          }
+          .hotel-section-concierge {
+            padding: 48px 16px 96px !important;
+          }
+          .hotel-section-journey-grid {
+            padding: 18px 16px 36px !important;
+          }
+          .hotel-search-bar-wrap {
+            padding: 10px 16px !important;
+          }
+
+          /* ── 13. Location grid stays already 1-col below 960; tighten map ── */
+          .hotel-location-map {
+            height: 200px !important;
+          }
+
+          /* ── 14. Reviews — already 1-col below 640; tighten cards ── */
+          .hotel-reviews-grid .luxe-card {
+            padding: 18px !important;
+          }
+
+          /* ── 15. Sticky bottom CTA — full safe-area, slightly taller hit ── */
+          .hotel-bottom-bar {
+            padding: 0 16px !important;
+          }
+          .hotel-bottom-bar > div {
+            height: 64px !important;
+            gap: 12px !important;
+          }
+          .hotel-bottom-bar .luxe-btn-gold {
+            padding: 12px 18px !important;
+            font-size: 10.5px !important;
+            min-height: 44px;
+          }
+
+          /* ── 16. Concierge CTA — stack buttons ── */
+          .hotel-section-concierge .luxe-btn-gold,
+          .hotel-section-concierge .luxe-btn-secondary {
+            width: 100%;
+            min-height: 48px;
+          }
+
+          /* ── 17. Disable layout-heavy framer transitions on mobile to
+                avoid jank on low-end Androids during scroll. ── */
+          @media (prefers-reduced-motion: no-preference) {
+            .room-cat-card-hit { transition: none !important; }
+          }
+        }
+
+        /* Slightly tighter set of rules between 641-768px (small tablet) */
+        @media (min-width: 641px) and (max-width: 768px) {
+          .room-cat-card-hit {
+            grid-template-columns: minmax(180px, 240px) 1fr !important;
+            gap: 18px !important;
+          }
+          .room-cat-card-pricecol {
+            grid-column: 1 / -1 !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            border-top: 1px solid var(--luxe-hairline);
+            padding-top: 14px !important;
+            margin-top: 4px;
           }
         }
       `}</style>
