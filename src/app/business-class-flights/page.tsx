@@ -138,7 +138,7 @@ export default function BusinessClassFlightsPage() {
   };
 
   return (
-    <>
+    <div className="luxe">
       <Header />
       <main style={{ minHeight: "100vh", background: "var(--cream)" }}>
         {/* ── Hero ── */}
@@ -1064,6 +1064,6 @@ export default function BusinessClassFlightsPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
