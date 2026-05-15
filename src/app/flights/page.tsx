@@ -183,7 +183,7 @@ export default function FlightsPage() {
   };
 
   return (
-    <>
+    <div className="luxe">
       <Header />
       <div className="fp-root">
 
@@ -1102,6 +1102,6 @@ export default function FlightsPage() {
           .fp-routes-grid { grid-template-columns: 1fr; }
         }
       `}</style>
-    </>
+    </div>
   );
 }

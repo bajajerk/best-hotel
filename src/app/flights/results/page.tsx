@@ -255,7 +255,7 @@ function ResultsContent() {
   }
 
   return (
-    <>
+    <div className="luxe">
       <Header />
       <div className="results-page">
 
@@ -443,14 +443,14 @@ function ResultsContent() {
 
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
       `}</style>
-    </>
+    </div>
   );
 }
 
 export default function FlightResultsPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="luxe" style={{ minHeight: "100vh", background: "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ fontFamily: "var(--font-body)", color: "var(--ink-light)", fontSize: "14px" }}>Loading…</div>
       </div>
     }>

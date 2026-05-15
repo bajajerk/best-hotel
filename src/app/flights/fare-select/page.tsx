@@ -225,7 +225,7 @@ function FareSelectContent() {
   }
 
   return (
-    <>
+    <div className="luxe">
       <Header />
       <div className="fs-page">
 
@@ -382,7 +382,7 @@ function FareSelectContent() {
           .sticky-btn { padding: 12px 18px; }
         }
       `}</style>
-    </>
+    </div>
   );
 }
 
