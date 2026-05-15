@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
-import Image from "next/image";
+import EditorialCard from "./EditorialCard";
 
 export interface BentoHotel {
   id: string | number;
@@ -192,49 +191,33 @@ export default function EditorsBentoCarousel({ hotels }: { hotels: BentoHotel[] 
                     aria-hidden={!isCurrent}
                   >
                     <div className="ep-bento-grid">
-                      {slide.map((hotel, tileIdx) => (
-                        <Link
-                          key={`${hotel.id}-${slidePos}`}
-                          href={hotel.href}
-                          className={`ep-tile ep-tile--${tileIdx + 1}`}
-                          tabIndex={isCurrent ? 0 : -1}
-                        >
-                          <div className="ep-tile-img-wrap">
-                            <Image
-                              src={hotel.imageUrl}
-                              alt={hotel.name}
-                              fill
-                              sizes={
-                                tileIdx === 0
-                                  ? "(max-width: 1023px) 55vw, 42vw"
-                                  : "(max-width: 1023px) 28vw, 20vw"
-                              }
-                              className="ep-tile-img"
-                              style={{ objectFit: "cover" }}
-                              loading={
-                                (N > 1 ? slidePos === 1 : slidePos === 0) &&
-                                tileIdx < 3
-                                  ? "eager"
-                                  : "lazy"
-                              }
-                              decoding="async"
-                            />
-                          </div>
-                          <div className="ep-tile-scrim" aria-hidden />
-                          <div className="ep-tile-text">
-                            <div className="ep-tile-location">
-                              {hotel.city}&nbsp;&middot;&nbsp;{hotel.country}
-                            </div>
-                            <div
-                              className={`ep-tile-name${
-                                tileIdx === 0 ? " ep-tile-name--hero" : ""
-                              }`}
-                            >
-                              {hotel.name}
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
+                      {slide.map((hotel, tileIdx) => {
+                        const isHero = tileIdx === 0;
+                        const isFirstRealSlide =
+                          (N > 1 ? slidePos === 1 : slidePos === 0);
+                        return (
+                          <EditorialCard
+                            key={`${hotel.id}-${slidePos}`}
+                            href={hotel.href}
+                            imageUrl={hotel.imageUrl}
+                            imageAlt={hotel.name}
+                            eyebrow="EDITOR'S PICK"
+                            name={hotel.name}
+                            subline={`${hotel.city} · ${hotel.country}`}
+                            variant="hotel"
+                            aspectRatio="fill"
+                            hero={isHero}
+                            eager={isFirstRealSlide && tileIdx < 3}
+                            tabIndex={isCurrent ? 0 : -1}
+                            className={`ep-tile ep-tile--${tileIdx + 1}`}
+                            sizes={
+                              isHero
+                                ? "(max-width: 1023px) 55vw, 42vw"
+                                : "(max-width: 1023px) 28vw, 20vw"
+                            }
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -294,27 +277,21 @@ export default function EditorsBentoCarousel({ hotels }: { hotels: BentoHotel[] 
       <div className="ep-mobile">
         <div ref={mobileScrollRef} className="ep-mobile-scroll">
           {hotels.map((hotel, i) => (
-            <Link key={hotel.id} href={hotel.href} className="ep-mobile-card">
-              <div className="ep-tile-img-wrap">
-                <Image
-                  src={hotel.imageUrl}
-                  alt={hotel.name}
-                  fill
-                  sizes="100vw"
-                  className="ep-tile-img"
-                  style={{ objectFit: "cover" }}
-                  loading={i === 0 ? "eager" : "lazy"}
-                  decoding="async"
-                />
-              </div>
-              <div className="ep-tile-scrim" aria-hidden />
-              <div className="ep-tile-text ep-mobile-text">
-                <div className="ep-tile-location">
-                  {hotel.city}&nbsp;&middot;&nbsp;{hotel.country}
-                </div>
-                <div className="ep-tile-name ep-tile-name--hero">{hotel.name}</div>
-              </div>
-            </Link>
+            <div key={hotel.id} className="ep-mobile-slide">
+              <EditorialCard
+                href={hotel.href}
+                imageUrl={hotel.imageUrl}
+                imageAlt={hotel.name}
+                eyebrow="EDITOR'S PICK"
+                name={hotel.name}
+                subline={`${hotel.city} · ${hotel.country}`}
+                variant="hotel"
+                aspectRatio="4 / 5"
+                hero
+                eager={i === 0}
+                sizes="100vw"
+              />
+            </div>
           ))}
         </div>
         <div className="ep-dots" role="tablist" aria-label="Hotel slides">

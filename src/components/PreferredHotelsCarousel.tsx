@@ -1,18 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import type { PreferredHotel } from "@/lib/api";
 import { hotelUrl } from "@/lib/urls";
+import EditorialCard from "./EditorialCard";
 
 const PAGE_SIZE = 3;
 const AUTOPLAY_MS = 4000;
 const TRANSITION_MS = 600;
 const RESUME_DELAY_MS = 2000;
-
-const FALLBACK_BG =
-  "linear-gradient(135deg, rgba(200,170,118,0.32) 0%, rgba(20,18,15,0.92) 100%)";
 
 function safeImg(u: string | null | undefined): string {
   if (!u?.trim()) return "";
@@ -185,51 +181,25 @@ export default function PreferredHotelsCarousel({
                   aria-hidden={!isCurrent}
                 >
                   {page.map((h, idx) => (
-                    <Link
+                    <EditorialCard
                       key={`${h.id}-${pagePos}`}
                       href={hotelUrl(h)}
-                      className="ph-card"
+                      imageUrl={safeImg(h.image_url)}
+                      imageAlt={h.name}
+                      eyebrow="PREFERRED"
+                      name={h.name}
+                      subline={
+                        h.tagline
+                          ? h.tagline
+                          : `${h.city_name} · ${h.country}`
+                      }
+                      chips={h.benefits ?? []}
+                      variant="hotel"
+                      aspectRatio="4 / 5"
+                      eager={pagePos <= 1 && idx === 0}
                       tabIndex={isCurrent ? 0 : -1}
-                    >
-                      <div
-                        className="ph-card-img-wrap"
-                        style={{ background: FALLBACK_BG, backgroundColor: "#1a1a1a" }}
-                      >
-                        <Image
-                          src={safeImg(h.image_url)}
-                          alt={h.name}
-                          fill
-                          sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
-                          className="ph-card-img"
-                          style={{ objectFit: "cover" }}
-                          loading={pagePos <= 1 && idx === 0 ? "eager" : "lazy"}
-                          decoding="async"
-                        />
-                      </div>
-                      <div className="ph-card-body">
-                        <div className="ph-card-eyebrow">
-                          <span className="ph-card-dot" aria-hidden />
-                          {h.city_name}
-                        </div>
-                        {h.tagline && (
-                          <div className="ph-card-tagline">{h.tagline}</div>
-                        )}
-                        <div className="ph-card-name">{h.name}</div>
-                        <div className="ph-card-country">{h.country}</div>
-                        {h.benefits && h.benefits.length > 0 && (
-                          <div className="ph-card-benefits">
-                            {h.benefits.slice(0, 5).map((b, bi) => (
-                              <span key={bi} className="ph-card-benefit">
-                                <span aria-hidden className="ph-benefit-star">
-                                  ★
-                                </span>
-                                {b}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </Link>
+                      sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                    />
                   ))}
                 </div>
               );
@@ -260,46 +230,25 @@ export default function PreferredHotelsCarousel({
       <div className="ph-mobile">
         <div ref={mobileScrollRef} className="ph-mobile-scroll">
           {hotels.map((h, i) => (
-            <Link key={h.id} href={hotelUrl(h)} className="ph-mobile-card">
-              <div
-                className="ph-card-img-wrap"
-                style={{ background: FALLBACK_BG, backgroundColor: "#1a1a1a" }}
-              >
-                <Image
-                  src={safeImg(h.image_url)}
-                  alt={h.name}
-                  fill
-                  sizes="100vw"
-                  className="ph-card-img"
-                  style={{ objectFit: "cover" }}
-                  loading={i === 0 ? "eager" : "lazy"}
-                  decoding="async"
-                />
-              </div>
-              <div className="ph-card-body">
-                <div className="ph-card-eyebrow">
-                  <span className="ph-card-dot" aria-hidden />
-                  {h.city_name}
-                </div>
-                {h.tagline && (
-                  <div className="ph-card-tagline">{h.tagline}</div>
-                )}
-                <div className="ph-card-name">{h.name}</div>
-                <div className="ph-card-country">{h.country}</div>
-                {h.benefits && h.benefits.length > 0 && (
-                  <div className="ph-card-benefits">
-                    {h.benefits.slice(0, 5).map((b, bi) => (
-                      <span key={bi} className="ph-card-benefit">
-                        <span aria-hidden className="ph-benefit-star">
-                          ★
-                        </span>
-                        {b}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </Link>
+            <div key={h.id} className="ph-mobile-slide">
+              <EditorialCard
+                href={hotelUrl(h)}
+                imageUrl={safeImg(h.image_url)}
+                imageAlt={h.name}
+                eyebrow="PREFERRED"
+                name={h.name}
+                subline={
+                  h.tagline
+                    ? h.tagline
+                    : `${h.city_name} · ${h.country}`
+                }
+                chips={h.benefits ?? []}
+                variant="hotel"
+                aspectRatio="4 / 5"
+                eager={i === 0}
+                sizes="100vw"
+              />
+            </div>
           ))}
         </div>
         <div className="ph-indicators" role="tablist">
