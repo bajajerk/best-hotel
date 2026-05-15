@@ -1250,7 +1250,12 @@ main {
   }
 }
 
-/* ── Footer navigation links — animated underline on hover (Aesop/Aman style) ── */
+/* ── Footer link underline animation (kept; colour comes from inline styles) ──
+   The colour rules that used to live here forced every element inside
+   <footer> to navy `#1a3a5c !important`, which was correct when the
+   footer was cream/navy but inverted the new dark-luxe footer into a
+   blue blob. Footer.tsx now sets explicit text + hover colours inline
+   per element, so this rule block only keeps the underline animation. */
 .footer-link,
 .footer-legal-link {
   position: relative;
@@ -1271,39 +1276,12 @@ main {
   transform-origin: left;
   transition: transform 0.2s ease;
 }
-.footer-link { color: #1a3a5c; }
-.footer-legal-link { color: #1a3a5c; }
-.footer-link:hover,
-.footer-legal-link:hover { color: #C9A961; }
 .footer-link:hover::after,
 .footer-legal-link:hover::after { transform: scaleX(1); }
-.footer-link:visited { color: #1a3a5c; }
-.footer-legal-link:visited { color: #1a3a5c; }
 .footer-link:focus-visible,
 .footer-legal-link:focus-visible {
-  outline: 2px solid rgba(26, 58, 92, 0.40);
+  outline: 2px solid rgba(201, 169, 97, 0.40);
   outline-offset: 2px;
-}
-
-/* ── Footer colour hardening — defeats .luxe a { color: inherit } specificity override ──
-   .luxe a has specificity 0,1,1 which beats .footer-link (0,1,0). Using !important on
-   the element-scoped rules guarantees footer links stay navy regardless of wrapper scope. */
-footer a,
-footer a:link,
-footer a:visited {
-  color: #1a3a5c !important;
-  text-decoration: none;
-}
-footer a:hover,
-footer a:focus {
-  color: #C9A961 !important;
-}
-footer p,
-footer span,
-footer h2,
-footer h3,
-footer h4 {
-  color: #1a3a5c !important;
 }
 
 /* ── Price range slider ── */
