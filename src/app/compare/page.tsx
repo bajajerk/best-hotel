@@ -73,7 +73,7 @@ export default function ComparePage() {
   // Not enough hotels to compare
   if (hotels.length < 2) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--cream)" }}>
+      <div className="luxe" style={{ minHeight: "100vh", background: "var(--cream)" }}>
         <Header />
         <div
           style={{
@@ -173,7 +173,7 @@ export default function ComparePage() {
   const colWidth = `${Math.floor(100 / hotels.length)}%`;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--cream)" }}>
+    <div className="luxe" style={{ minHeight: "100vh", background: "var(--cream)" }}>
       <Header />
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "100px 24px 80px" }}>
