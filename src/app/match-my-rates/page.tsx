@@ -332,8 +332,8 @@ export default function MatchMyRatesPage() {
     return (
       <div className="luxe">
         <Header />
-        <main className="min-h-screen flex items-center justify-center" style={{ background: "var(--cream)" }}>
-          <div style={{ color: "var(--ink-mid)" }}>Loading...</div>
+        <main className="min-h-screen flex items-center justify-center" style={{ background: "var(--luxe-black)" }}>
+          <div style={{ color: "var(--luxe-soft-white-70)" }}>Loading...</div>
         </main>
         <Footer />
       </div>
@@ -348,7 +348,7 @@ export default function MatchMyRatesPage() {
           minHeight: "100vh",
           paddingTop: "100px",
           paddingBottom: "80px",
-          background: "var(--cream)",
+          background: "var(--luxe-black)",
         }}
       >
         <div
@@ -364,7 +364,8 @@ export default function MatchMyRatesPage() {
               style={{
                 display: "inline-block",
                 padding: "5px 14px",
-                background: "var(--gold-pale)",
+                background: "var(--luxe-champagne-soft)",
+                border: "1px solid var(--luxe-champagne-line)",
                 borderRadius: 20,
                 marginBottom: 16,
               }}
@@ -375,7 +376,7 @@ export default function MatchMyRatesPage() {
                   fontSize: 10,
                   letterSpacing: 1.5,
                   textTransform: "uppercase",
-                  color: "var(--gold)",
+                  color: "var(--luxe-champagne)",
                   fontWeight: 500,
                 }}
               >
@@ -385,7 +386,7 @@ export default function MatchMyRatesPage() {
             <h1
               className="type-display-2"
               style={{
-                color: "var(--ink)",
+                color: "var(--luxe-soft-white)",
                 marginBottom: 12,
                 fontStyle: "italic",
               }}
@@ -395,7 +396,7 @@ export default function MatchMyRatesPage() {
             <p
               className="type-body-lg"
               style={{
-                color: "var(--ink-light)",
+                color: "var(--luxe-soft-white-70)",
                 maxWidth: 480,
                 margin: "0 auto",
               }}
@@ -445,12 +446,16 @@ export default function MatchMyRatesPage() {
                       fontFamily: "var(--font-body)",
                       background:
                         i <= currentStepIndex
-                          ? "var(--gold)"
-                          : "var(--cream-deep)",
+                          ? "var(--luxe-champagne)"
+                          : "var(--luxe-champagne-soft)",
+                      border:
+                        i <= currentStepIndex
+                          ? "1px solid var(--luxe-champagne)"
+                          : "1px solid var(--luxe-hairline-strong)",
                       color:
                         i <= currentStepIndex
-                          ? "var(--white)"
-                          : "var(--ink-light)",
+                          ? "var(--luxe-black)"
+                          : "var(--luxe-soft-white-50)",
                       transition: "all 0.3s ease",
                     }}
                   >
@@ -477,8 +482,8 @@ export default function MatchMyRatesPage() {
                       fontWeight: i <= currentStepIndex ? 500 : 400,
                       color:
                         i <= currentStepIndex
-                          ? "var(--ink)"
-                          : "var(--ink-light)",
+                          ? "var(--luxe-soft-white)"
+                          : "var(--luxe-soft-white-50)",
                       letterSpacing: 0.3,
                       transition: "all 0.3s ease",
                     }}
@@ -493,8 +498,8 @@ export default function MatchMyRatesPage() {
                       height: 1,
                       background:
                         i < currentStepIndex
-                          ? "var(--gold)"
-                          : "var(--cream-border)",
+                          ? "var(--luxe-champagne)"
+                          : "var(--luxe-hairline-strong)",
                       marginBottom: 20,
                       marginLeft: 8,
                       marginRight: 8,
@@ -614,15 +619,16 @@ function UploadStep({
 }) {
   const inputStyle: React.CSSProperties = {
     width: "100%",
+    minHeight: 44,
     padding: "14px 16px",
-    background: "var(--white)",
-    border: "1px solid var(--cream-border)",
+    background: "var(--luxe-input-bg)",
+    border: "1px solid var(--luxe-hairline-strong)",
     borderRadius: 10,
-    color: "var(--ink)",
+    color: "var(--luxe-soft-white)",
     fontSize: 13,
     fontFamily: "var(--font-body)",
     outline: "none",
-    transition: "border-color 0.2s ease",
+    transition: "border-color 0.2s ease, background 0.2s ease",
   };
   const [datesOpen, setDatesOpen] = useState(false);
 
@@ -654,7 +660,8 @@ function UploadStep({
       <div
         style={{
           display: "flex",
-          background: "var(--cream-deep)",
+          background: "var(--luxe-champagne-soft)",
+          border: "1px solid var(--luxe-hairline-strong)",
           borderRadius: 10,
           padding: 3,
           marginBottom: 28,
@@ -669,12 +676,15 @@ function UploadStep({
             onClick={() => setIsManual(tab.key)}
             style={{
               flex: 1,
+              minHeight: 44,
               padding: "10px 16px",
               borderRadius: 8,
               border: "none",
-              background: isManual === tab.key ? "var(--white)" : "transparent",
+              background: isManual === tab.key ? "var(--luxe-black-2)" : "transparent",
               color:
-                isManual === tab.key ? "var(--ink)" : "var(--ink-light)",
+                isManual === tab.key
+                  ? "var(--luxe-soft-white)"
+                  : "var(--luxe-soft-white-70)",
               fontSize: 13,
               fontWeight: isManual === tab.key ? 500 : 400,
               fontFamily: "var(--font-body)",
@@ -682,7 +692,7 @@ function UploadStep({
               transition: "all 0.2s ease",
               boxShadow:
                 isManual === tab.key
-                  ? "0 1px 3px rgba(0,0,0,0.06)"
+                  ? "0 1px 3px rgba(0,0,0,0.4)"
                   : "none",
             }}
           >
@@ -695,10 +705,10 @@ function UploadStep({
         /* ── Screenshot upload zone ── */
         <div
           style={{
-            background: "var(--white)",
+            background: "var(--luxe-black-2)",
             border: isDragging
-              ? "2px solid var(--gold)"
-              : "2px dashed var(--cream-border)",
+              ? "2px solid var(--luxe-champagne)"
+              : "2px dashed var(--luxe-hairline-strong)",
             borderRadius: 16,
             padding: "48px 24px",
             textAlign: "center",
@@ -715,7 +725,8 @@ function UploadStep({
               width: 56,
               height: 56,
               borderRadius: 16,
-              background: "var(--gold-pale)",
+              background: "var(--luxe-champagne-soft)",
+              border: "1px solid var(--luxe-champagne-line)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -727,7 +738,7 @@ function UploadStep({
               height="24"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="var(--gold)"
+              stroke="var(--luxe-champagne)"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -742,7 +753,7 @@ function UploadStep({
             style={{
               fontSize: 15,
               fontWeight: 500,
-              color: "var(--ink)",
+              color: "var(--luxe-soft-white)",
               marginBottom: 6,
             }}
           >
@@ -751,7 +762,7 @@ function UploadStep({
           <p
             style={{
               fontSize: 13,
-              color: "var(--ink-light)",
+              color: "var(--luxe-soft-white-70)",
               marginBottom: 16,
               fontWeight: 300,
             }}
@@ -779,9 +790,8 @@ function UploadStep({
                 key={ota}
                 style={{
                   fontSize: 11,
-                  color: "var(--ink-light)",
+                  color: "var(--luxe-soft-white-50)",
                   fontWeight: 400,
-                  opacity: 0.7,
                 }}
               >
                 {ota}
@@ -793,8 +803,8 @@ function UploadStep({
         /* ── Manual entry form ── */
         <div
           style={{
-            background: "var(--white)",
-            border: "1px solid var(--cream-border)",
+            background: "var(--luxe-black-2)",
+            border: "1px solid var(--luxe-hairline-strong)",
             borderRadius: 16,
             padding: "28px 24px",
           }}
@@ -812,9 +822,10 @@ function UploadStep({
                 style={{
                   fontSize: 11,
                   fontWeight: 500,
-                  color: "var(--ink-light)",
+                  color: "var(--luxe-champagne)",
+                  fontFamily: "var(--font-mono)",
                   textTransform: "uppercase",
-                  letterSpacing: 0.5,
+                  letterSpacing: 1.2,
                   marginBottom: 6,
                   display: "block",
                 }}
@@ -838,9 +849,10 @@ function UploadStep({
                 style={{
                   fontSize: 11,
                   fontWeight: 500,
-                  color: "var(--ink-light)",
+                  color: "var(--luxe-champagne)",
+                  fontFamily: "var(--font-mono)",
                   textTransform: "uppercase",
-                  letterSpacing: 0.5,
+                  letterSpacing: 1.2,
                   marginBottom: 6,
                   display: "block",
                 }}
@@ -865,9 +877,10 @@ function UploadStep({
                   style={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: "var(--ink-light)",
+                    color: "var(--luxe-champagne)",
+                    fontFamily: "var(--font-mono)",
                     textTransform: "uppercase",
-                    letterSpacing: 0.5,
+                    letterSpacing: 1.2,
                     marginBottom: 6,
                     display: "block",
                   }}
@@ -902,7 +915,7 @@ function UploadStep({
                       right: 12,
                       top: "50%",
                       transform: "translateY(-50%)",
-                      color: "var(--ink-light)",
+                      color: "var(--luxe-champagne)",
                       fontSize: 10,
                       pointerEvents: "none",
                     }}
@@ -917,9 +930,10 @@ function UploadStep({
                   style={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: "var(--ink-light)",
+                    color: "var(--luxe-champagne)",
+                    fontFamily: "var(--font-mono)",
                     textTransform: "uppercase",
-                    letterSpacing: 0.5,
+                    letterSpacing: 1.2,
                     marginBottom: 6,
                     display: "block",
                   }}
@@ -933,7 +947,7 @@ function UploadStep({
                       left: 14,
                       top: "50%",
                       transform: "translateY(-50%)",
-                      color: "var(--ink-light)",
+                      color: "var(--luxe-soft-white-50)",
                       fontSize: 14,
                     }}
                   >
@@ -962,9 +976,10 @@ function UploadStep({
                   style={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: "var(--ink-light)",
+                    color: "var(--luxe-champagne)",
+                    fontFamily: "var(--font-mono)",
                     textTransform: "uppercase",
-                    letterSpacing: 0.5,
+                    letterSpacing: 1.2,
                     marginBottom: 6,
                     display: "block",
                   }}
@@ -974,7 +989,7 @@ function UploadStep({
                 <button
                   type="button"
                   onClick={() => setDatesOpen(true)}
-                  style={{ ...inputStyle, textAlign: "left", cursor: "pointer", color: manualForm.checkIn ? "var(--ink)" : "var(--ink-light)" }}
+                  style={{ ...inputStyle, textAlign: "left", cursor: "pointer", color: manualForm.checkIn ? "var(--luxe-soft-white)" : "var(--luxe-soft-white-50)" }}
                 >
                   {manualForm.checkIn
                     ? new Date(manualForm.checkIn + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -986,9 +1001,10 @@ function UploadStep({
                   style={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: "var(--ink-light)",
+                    color: "var(--luxe-champagne)",
+                    fontFamily: "var(--font-mono)",
                     textTransform: "uppercase",
-                    letterSpacing: 0.5,
+                    letterSpacing: 1.2,
                     marginBottom: 6,
                     display: "block",
                   }}
@@ -998,7 +1014,7 @@ function UploadStep({
                 <button
                   type="button"
                   onClick={() => setDatesOpen(true)}
-                  style={{ ...inputStyle, textAlign: "left", cursor: "pointer", color: manualForm.checkOut ? "var(--ink)" : "var(--ink-light)" }}
+                  style={{ ...inputStyle, textAlign: "left", cursor: "pointer", color: manualForm.checkOut ? "var(--luxe-soft-white)" : "var(--luxe-soft-white-50)" }}
                 >
                   {manualForm.checkOut
                     ? new Date(manualForm.checkOut + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -1006,7 +1022,7 @@ function UploadStep({
                 </button>
               </div>
               <LuxeDatePicker
-                variant="light"
+                variant="dark"
                 checkIn={manualForm.checkIn || null}
                 checkOut={manualForm.checkOut || null}
                 onChange={({ checkIn: ci, checkOut: co }) =>
@@ -1025,9 +1041,10 @@ function UploadStep({
                   style={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: "var(--ink-light)",
+                    color: "var(--luxe-champagne)",
+                    fontFamily: "var(--font-mono)",
                     textTransform: "uppercase",
-                    letterSpacing: 0.5,
+                    letterSpacing: 1.2,
                     marginBottom: 6,
                     display: "block",
                   }}
@@ -1049,9 +1066,10 @@ function UploadStep({
                   style={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: "var(--ink-light)",
+                    color: "var(--luxe-champagne)",
+                    fontFamily: "var(--font-mono)",
                     textTransform: "uppercase",
-                    letterSpacing: 0.5,
+                    letterSpacing: 1.2,
                     marginBottom: 6,
                     display: "block",
                   }}
@@ -1076,19 +1094,23 @@ function UploadStep({
               disabled={!manualForm.hotelName || !manualForm.pricePerNight}
               style={{
                 width: "100%",
+                minHeight: 48,
                 padding: 16,
                 background:
                   manualForm.hotelName && manualForm.pricePerNight
-                    ? "var(--gold)"
-                    : "var(--cream-deep)",
+                    ? "var(--luxe-champagne)"
+                    : "var(--luxe-champagne-soft)",
                 color:
                   manualForm.hotelName && manualForm.pricePerNight
-                    ? "var(--white)"
-                    : "var(--ink-light)",
+                    ? "var(--luxe-black)"
+                    : "var(--luxe-soft-white-50)",
                 fontSize: 14,
                 fontWeight: 500,
                 fontFamily: "var(--font-body)",
-                border: "none",
+                border:
+                  manualForm.hotelName && manualForm.pricePerNight
+                    ? "1px solid var(--luxe-champagne)"
+                    : "1px solid var(--luxe-hairline-strong)",
                 borderRadius: 12,
                 cursor:
                   manualForm.hotelName && manualForm.pricePerNight
@@ -1109,7 +1131,7 @@ function UploadStep({
         <h3
           className="type-heading-3"
           style={{
-            color: "var(--ink)",
+            color: "var(--luxe-soft-white)",
             marginBottom: 28,
             fontStyle: "italic",
           }}
@@ -1131,7 +1153,7 @@ function UploadStep({
                   height="22"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="var(--gold)"
+                  stroke="var(--luxe-champagne)"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -1151,7 +1173,7 @@ function UploadStep({
                   height="22"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="var(--gold)"
+                  stroke="var(--luxe-champagne)"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -1171,7 +1193,7 @@ function UploadStep({
                   height="22"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="var(--gold)"
+                  stroke="var(--luxe-champagne)"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -1187,8 +1209,8 @@ function UploadStep({
             <div
               key={item.title}
               style={{
-                background: "var(--white)",
-                border: "1px solid var(--cream-border)",
+                background: "var(--luxe-black-2)",
+                border: "1px solid var(--luxe-hairline-strong)",
                 borderRadius: 14,
                 padding: "24px 20px",
               }}
@@ -1198,7 +1220,8 @@ function UploadStep({
                   width: 44,
                   height: 44,
                   borderRadius: 12,
-                  background: "var(--gold-pale)",
+                  background: "var(--luxe-champagne-soft)",
+                  border: "1px solid var(--luxe-champagne-line)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1211,7 +1234,7 @@ function UploadStep({
                 style={{
                   fontSize: 14,
                   fontWeight: 500,
-                  color: "var(--ink)",
+                  color: "var(--luxe-soft-white)",
                   marginBottom: 6,
                 }}
               >
@@ -1220,7 +1243,7 @@ function UploadStep({
               <p
                 style={{
                   fontSize: 12,
-                  color: "var(--ink-light)",
+                  color: "var(--luxe-soft-white-70)",
                   fontWeight: 300,
                   lineHeight: 1.5,
                 }}
@@ -1270,7 +1293,7 @@ function UploadStep({
             <span
               style={{
                 fontSize: 12,
-                color: "var(--ink-light)",
+                color: "var(--luxe-soft-white-70)",
                 fontWeight: 400,
               }}
             >
@@ -1316,8 +1339,8 @@ function ExtractingStep({
     >
       <div
         style={{
-          background: "var(--white)",
-          border: "1px solid var(--cream-border)",
+          background: "var(--luxe-black-2)",
+          border: "1px solid var(--luxe-hairline-strong)",
           borderRadius: 20,
           padding: "48px 32px",
           position: "relative",
@@ -1331,7 +1354,7 @@ function ExtractingStep({
               width: 120,
               height: 160,
               borderRadius: 12,
-              border: "1px solid var(--cream-border)",
+              border: "1px solid var(--luxe-hairline-strong)",
               overflow: "hidden",
               margin: "0 auto 24px",
               position: "relative",
@@ -1358,8 +1381,8 @@ function ExtractingStep({
                 right: 0,
                 height: 2,
                 background:
-                  "linear-gradient(90deg, transparent, var(--gold), transparent)",
-                boxShadow: "0 0 12px var(--gold)",
+                  "linear-gradient(90deg, transparent, var(--luxe-champagne), transparent)",
+                boxShadow: "0 0 12px var(--luxe-champagne)",
               }}
             />
           </div>
@@ -1374,7 +1397,8 @@ function ExtractingStep({
               width: 64,
               height: 64,
               borderRadius: "50%",
-              background: "var(--gold-pale)",
+              background: "var(--luxe-champagne-soft)",
+              border: "1px solid var(--luxe-champagne-line)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -1386,7 +1410,7 @@ function ExtractingStep({
               height="28"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="var(--gold)"
+              stroke="var(--luxe-champagne)"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -1400,7 +1424,7 @@ function ExtractingStep({
         <h2
           className="type-display-3"
           style={{
-            color: "var(--ink)",
+            color: "var(--luxe-soft-white)",
             marginBottom: 8,
             fontStyle: "italic",
           }}
@@ -1410,7 +1434,7 @@ function ExtractingStep({
         <p
           style={{
             fontSize: 13,
-            color: "var(--ink-light)",
+            color: "var(--luxe-soft-white-70)",
             fontWeight: 300,
             marginBottom: 32,
           }}
@@ -1453,8 +1477,8 @@ function ExtractingStep({
                     style={{
                       width: 14,
                       height: 14,
-                      border: "2px solid var(--cream-deep)",
-                      borderTopColor: "var(--gold)",
+                      border: "2px solid var(--luxe-hairline-strong)",
+                      borderTopColor: "var(--luxe-champagne)",
                       borderRadius: "50%",
                       flexShrink: 0,
                     }}
@@ -1462,7 +1486,7 @@ function ExtractingStep({
                   <span
                     style={{
                       fontSize: 12,
-                      color: "var(--ink-light)",
+                      color: "var(--luxe-soft-white-70)",
                       fontWeight: 300,
                     }}
                   >
@@ -1497,7 +1521,7 @@ function ExtractingStep({
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                background: "var(--gold)",
+                background: "var(--luxe-champagne)",
               }}
             />
           ))}
@@ -1534,8 +1558,8 @@ function VerifyStep({
     >
       <div
         style={{
-          background: "var(--white)",
-          border: "1px solid var(--cream-border)",
+          background: "var(--luxe-black-2)",
+          border: "1px solid var(--luxe-hairline-strong)",
           borderRadius: 16,
           overflow: "hidden",
         }}
@@ -1544,7 +1568,7 @@ function VerifyStep({
         <div
           style={{
             padding: "20px 24px",
-            borderBottom: "1px solid var(--cream-border)",
+            borderBottom: "1px solid var(--luxe-hairline-strong)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -1588,7 +1612,7 @@ function VerifyStep({
             </div>
             <h3
               className="type-heading-3"
-              style={{ color: "var(--ink)" }}
+              style={{ color: "var(--luxe-soft-white)" }}
             >
               Confirm Details
             </h3>
@@ -1600,7 +1624,7 @@ function VerifyStep({
                 height: 72,
                 borderRadius: 8,
                 overflow: "hidden",
-                border: "1px solid var(--cream-border)",
+                border: "1px solid var(--luxe-hairline-strong)",
                 flexShrink: 0,
               }}
             >
@@ -1701,7 +1725,7 @@ function VerifyStep({
               border: "none",
               cursor: "pointer",
               fontSize: 12,
-              color: "var(--gold)",
+              color: "var(--luxe-champagne)",
               fontFamily: "var(--font-body)",
               fontWeight: 500,
             }}
@@ -1735,11 +1759,12 @@ function VerifyStep({
             onClick={onBack}
             style={{
               flex: "0 0 auto",
+              minHeight: 48,
               padding: "14px 20px",
               background: "transparent",
-              border: "1px solid var(--cream-border)",
+              border: "1px solid var(--luxe-hairline-strong)",
               borderRadius: 12,
-              color: "var(--ink-light)",
+              color: "var(--luxe-soft-white-70)",
               fontSize: 13,
               fontFamily: "var(--font-body)",
               cursor: "pointer",
@@ -1752,13 +1777,14 @@ function VerifyStep({
             onClick={onConfirm}
             style={{
               flex: 1,
+              minHeight: 48,
               padding: "14px 20px",
-              background: "var(--gold)",
-              color: "var(--ink)",
+              background: "var(--luxe-champagne)",
+              color: "var(--luxe-black)",
               fontSize: 14,
               fontWeight: 500,
               fontFamily: "var(--font-body)",
-              border: "none",
+              border: "1px solid var(--luxe-champagne)",
               borderRadius: 12,
               cursor: "pointer",
               transition: "all 0.2s ease",
@@ -1793,11 +1819,12 @@ function DetailRow({
   const [pickerOpen, setPickerOpen] = useState(false);
   const inputBoxStyle: React.CSSProperties = {
     width: "100%",
+    minHeight: 36,
     padding: "8px 12px",
-    background: "var(--cream)",
-    border: "1px solid var(--cream-border)",
+    background: "var(--luxe-input-bg)",
+    border: "1px solid var(--luxe-hairline-strong)",
     borderRadius: 8,
-    color: "var(--ink)",
+    color: "var(--luxe-soft-white)",
     fontSize: 13,
     fontFamily: "var(--font-body)",
     outline: "none",
@@ -1808,9 +1835,10 @@ function DetailRow({
         style={{
           fontSize: 10,
           fontWeight: 500,
-          color: "var(--ink-light)",
+          color: "var(--luxe-champagne)",
+          fontFamily: "var(--font-mono)",
           textTransform: "uppercase",
-          letterSpacing: 0.8,
+          letterSpacing: 1.2,
           marginBottom: 4,
         }}
       >
@@ -1830,7 +1858,7 @@ function DetailRow({
             </button>
             <LuxeDatePicker
               mode="single"
-              variant="light"
+              variant="dark"
               checkIn={rawValue || null}
               onChange={({ checkIn: ci }) => onChange(ci ?? "")}
               open={pickerOpen}
@@ -1852,7 +1880,7 @@ function DetailRow({
           style={{
             fontSize: 14,
             fontWeight: 400,
-            color: "var(--ink)",
+            color: "var(--luxe-soft-white)",
           }}
         >
           {value}
@@ -1926,7 +1954,7 @@ function ResultStep({
         <h2
           className="type-display-2"
           style={{
-            color: "var(--ink)",
+            color: "var(--luxe-soft-white)",
             marginBottom: 4,
             fontStyle: "italic",
           }}
@@ -1936,7 +1964,7 @@ function ResultStep({
             /night
           </span>
         </h2>
-        <p style={{ fontSize: 13, color: "var(--ink-light)", fontWeight: 300 }}>
+        <p style={{ fontSize: 13, color: "var(--luxe-soft-white-70)", fontWeight: 300 }}>
           Our rate vs {result.otaName}
         </p>
       </motion.div>
@@ -2057,8 +2085,8 @@ function ResultStep({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.65, duration: 0.4 }}
         style={{
-          background: "var(--gold-pale)",
-          border: "1px solid rgba(201, 168, 76, 0.25)",
+          background: "var(--luxe-champagne-soft)",
+          border: "1px solid var(--luxe-champagne-line)",
           borderRadius: 12,
           padding: "14px 20px",
           display: "flex",
@@ -2070,7 +2098,7 @@ function ResultStep({
         <span
           style={{
             fontSize: 13,
-            color: "var(--gold)",
+            color: "var(--luxe-champagne)",
             fontStyle: "italic",
             fontFamily: "var(--font-display)",
             fontWeight: 400,
@@ -2082,7 +2110,7 @@ function ResultStep({
           <span
             style={{
               fontSize: 12,
-              color: "var(--ink-light)",
+              color: "var(--luxe-soft-white-50)",
               textDecoration: "line-through",
               marginRight: 10,
             }}
@@ -2093,7 +2121,7 @@ function ResultStep({
             style={{
               fontSize: 18,
               fontWeight: 500,
-              color: "var(--ink)",
+              color: "var(--luxe-soft-white)",
               fontFamily: "var(--font-display)",
             }}
           >
@@ -2108,8 +2136,8 @@ function ResultStep({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, duration: 0.4 }}
         style={{
-          background: "var(--white)",
-          border: "1px solid var(--cream-border)",
+          background: "var(--luxe-black-2)",
+          border: "1px solid var(--luxe-hairline-strong)",
           borderRadius: 14,
           padding: "20px 20px",
           marginBottom: 24,
@@ -2120,7 +2148,7 @@ function ResultStep({
             fontFamily: "var(--font-display)",
             fontSize: 17,
             fontWeight: 400,
-            color: "var(--ink)",
+            color: "var(--luxe-soft-white)",
             marginBottom: 10,
             fontStyle: "italic",
           }}
@@ -2130,7 +2158,7 @@ function ResultStep({
             <span
               style={{
                 fontSize: 13,
-                color: "var(--ink-light)",
+                color: "var(--luxe-soft-white-70)",
                 fontStyle: "normal",
                 fontWeight: 300,
                 marginLeft: 6,
@@ -2146,36 +2174,36 @@ function ResultStep({
             gridTemplateColumns: "1fr 1fr",
             gap: "8px 16px",
             fontSize: 12,
-            color: "var(--ink-light)",
+            color: "var(--luxe-soft-white-70)",
             fontWeight: 300,
             lineHeight: 1.7,
           }}
         >
           <div>
-            <span style={{ color: "var(--ink-light)", opacity: 0.7 }}>
+            <span style={{ color: "var(--luxe-soft-white-50)" }}>
               Room:{" "}
             </span>
-            <span style={{ color: "var(--ink-mid)" }}>{result.roomType}</span>
+            <span style={{ color: "var(--luxe-soft-white)" }}>{result.roomType}</span>
           </div>
           <div>
-            <span style={{ color: "var(--ink-light)", opacity: 0.7 }}>
+            <span style={{ color: "var(--luxe-soft-white-50)" }}>
               Guests:{" "}
             </span>
-            <span style={{ color: "var(--ink-mid)" }}>{result.guests}</span>
+            <span style={{ color: "var(--luxe-soft-white)" }}>{result.guests}</span>
           </div>
           <div>
-            <span style={{ color: "var(--ink-light)", opacity: 0.7 }}>
+            <span style={{ color: "var(--luxe-soft-white-50)" }}>
               Check-in:{" "}
             </span>
-            <span style={{ color: "var(--ink-mid)" }}>
+            <span style={{ color: "var(--luxe-soft-white)" }}>
               {formatDate(result.checkIn)}
             </span>
           </div>
           <div>
-            <span style={{ color: "var(--ink-light)", opacity: 0.7 }}>
+            <span style={{ color: "var(--luxe-soft-white-50)" }}>
               Check-out:{" "}
             </span>
-            <span style={{ color: "var(--ink-mid)" }}>
+            <span style={{ color: "var(--luxe-soft-white)" }}>
               {formatDate(result.checkOut)}
             </span>
           </div>
@@ -2188,7 +2216,7 @@ function ResultStep({
             gap: 16,
             marginTop: 14,
             paddingTop: 14,
-            borderTop: "1px solid var(--cream-border)",
+            borderTop: "1px solid var(--luxe-hairline-strong)",
           }}
         >
           {result.includesBreakfast && (
@@ -2261,13 +2289,14 @@ function ResultStep({
           style={{
             display: "block",
             width: "100%",
+            minHeight: 48,
             padding: 16,
-            background: "var(--gold)",
-            color: "var(--ink)",
+            background: "var(--luxe-champagne)",
+            color: "var(--luxe-black)",
             fontSize: 14,
             fontWeight: 500,
             fontFamily: "var(--font-body)",
-            border: "none",
+            border: "1px solid var(--luxe-champagne)",
             borderRadius: 12,
             cursor: "pointer",
             textAlign: "center",
@@ -2283,12 +2312,13 @@ function ResultStep({
           style={{
             display: "block",
             width: "100%",
+            minHeight: 44,
             padding: 14,
             marginTop: 10,
             background: "transparent",
-            border: "1px solid var(--cream-border)",
+            border: "1px solid var(--luxe-hairline-strong)",
             borderRadius: 12,
-            color: "var(--ink-light)",
+            color: "var(--luxe-soft-white-70)",
             fontSize: 13,
             fontFamily: "var(--font-body)",
             cursor: "pointer",
@@ -2303,7 +2333,7 @@ function ResultStep({
             textAlign: "center",
             marginTop: 14,
             fontSize: 11,
-            color: "var(--ink-light)",
+            color: "var(--luxe-soft-white-50)",
             fontWeight: 300,
             lineHeight: 1.6,
           }}
