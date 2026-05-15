@@ -24,9 +24,9 @@ function sanitizePhoto(url: string | null): string {
 
 function formatCurrency(amount: number, currency?: string | null): string {
   const symbols: Record<string, string> = {
-    USD: "$", EUR: "\u20AC", GBP: "\u00A3", INR: "\u20B9",
-    JPY: "\u00A5", AUD: "A$", SGD: "S$", THB: "\u0E3F",
-    AED: "AED ", MYR: "RM ", IDR: "Rp ", KRW: "\u20A9",
+    USD: "$", EUR: "€", GBP: "£", INR: "₹",
+    JPY: "¥", AUD: "A$", SGD: "S$", THB: "฿",
+    AED: "AED ", MYR: "RM ", IDR: "Rp ", KRW: "₩",
   };
   const sym = currency ? (symbols[currency.toUpperCase()] || `${currency} `) : "$";
   const rounded = Math.round(amount);
@@ -39,6 +39,8 @@ function formatCurrency(amount: number, currency?: string | null): string {
 
 // ---------------------------------------------------------------------------
 // ResultCard — Vertical grid card for the browse/results page
+// Phone-first responsive: image goes full-width on top, info stacks, price
+// row at bottom, CTA stretches as a 44px touch target on small screens.
 // ---------------------------------------------------------------------------
 export default function ResultCard({
   ranked,
@@ -80,15 +82,16 @@ export default function ResultCard({
         delay: 0.04 + (index % 12) * 0.03,
         ease: [0.25, 0.46, 0.45, 0.94],
       }}
+      className="result-card-wrap"
     >
       <Link
         href={hotelUrl(hotel)}
-        className="block group"
+        className="block group result-card-link"
         style={{ textDecoration: "none" }}
         onClick={handleCardClick}
       >
         <div
-          className="card-hover"
+          className="card-hover result-card"
           style={{
             background: "var(--white)",
             border: "1px solid var(--cream-border)",
@@ -99,8 +102,11 @@ export default function ResultCard({
             height: "100%",
           }}
         >
-          {/* Image */}
-          <div style={{ position: "relative", height: 200, overflow: "hidden" }}>
+          {/* Image — full-width on phone, fills aspect-ratio container */}
+          <div
+            className="result-card-image"
+            style={{ position: "relative", overflow: "hidden" }}
+          >
             <img
               src={photo}
               alt={hotel.hotel_name}
@@ -197,21 +203,21 @@ export default function ResultCard({
 
           {/* Content */}
           <div
+            className="result-card-content"
             style={{
-              padding: "16px 18px",
               display: "flex",
               flexDirection: "column",
               flex: 1,
             }}
           >
             <h3
+              className="result-card-title"
               style={{
                 fontFamily: "var(--font-display)",
-                fontSize: 17,
                 fontWeight: 500,
                 fontStyle: "italic",
                 color: "var(--ink)",
-                lineHeight: 1.25,
+                lineHeight: 1.2,
                 marginBottom: 4,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
@@ -224,13 +230,16 @@ export default function ResultCard({
             </h3>
 
             <p
+              className="result-card-location"
               style={{
-                fontSize: 11,
                 color: "var(--ink-light)",
                 marginBottom: 10,
                 display: "flex",
                 alignItems: "center",
                 gap: 4,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               <svg
@@ -242,11 +251,14 @@ export default function ResultCard({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                style={{ flexShrink: 0 }}
               >
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
-              {hotel.city_name}, {hotel.country}
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                {hotel.city_name}, {hotel.country}
+              </span>
             </p>
 
             {/* Rating + reviews */}
@@ -318,6 +330,7 @@ export default function ResultCard({
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                style={{ flexShrink: 0 }}
               >
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
@@ -330,16 +343,18 @@ export default function ResultCard({
 
             {/* Price section */}
             <div
+              className="result-card-price-row"
               style={{
                 borderTop: "1px solid var(--cream-border)",
                 paddingTop: 12,
                 display: "flex",
                 alignItems: "flex-end",
                 justifyContent: "space-between",
+                gap: 8,
               }}
             >
               {hotel.rates_from ? (
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <div
                     style={{
                       fontSize: 9,
@@ -353,13 +368,14 @@ export default function ResultCard({
                   >
                     Voyagr Rate
                   </div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
                     <span
+                      className="result-card-price"
                       style={{
                         fontFamily: "var(--font-display)",
-                        fontSize: 22,
                         fontWeight: 500,
                         color: "var(--our-rate)",
+                        lineHeight: 1,
                       }}
                     >
                       {formatCurrency(hotel.rates_from, hotel.rates_currency)}
@@ -390,6 +406,7 @@ export default function ResultCard({
                   flexDirection: "column",
                   alignItems: "flex-end",
                   gap: 4,
+                  flexShrink: 0,
                 }}
               >
                 {marketRate && hotel.rates_from && (
@@ -412,6 +429,7 @@ export default function ResultCard({
                       fontFamily: "var(--font-mono)",
                       background: "var(--gold-pale)",
                       padding: "2px 8px",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     Save {formatCurrency(savingsAmount, hotel.rates_currency)}/night
@@ -420,29 +438,99 @@ export default function ResultCard({
               </div>
             </div>
 
-            {/* Bottom actions */}
+            {/* Bottom action — full-width, 44px touch target on phone */}
             <div
+              className="result-card-cta"
               style={{
+                marginTop: 12,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "flex-end",
-                marginTop: 10,
+                justifyContent: "center",
+                padding: "11px 14px",
+                border: "1px solid var(--gold)",
+                color: "var(--gold)",
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                fontFamily: "var(--font-body)",
+                background: "transparent",
+                minHeight: 44,
+                transition: "background 0.15s ease, color 0.15s ease",
               }}
             >
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "var(--gold)",
-                  fontWeight: 500,
-                  letterSpacing: "0.04em",
-                }}
-              >
-                View details &rarr;
-              </span>
+              View details &rarr;
             </div>
           </div>
         </div>
       </Link>
+
+      {/* Responsive rules — phone-first */}
+      <style jsx>{`
+        :global(.result-card-link) {
+          display: block;
+          height: 100%;
+        }
+        :global(.result-card) {
+          border-radius: 2px;
+        }
+
+        /* Image: aspect-ratio so it scales fluidly; taller on phone for cinematic feel */
+        :global(.result-card-image) {
+          aspect-ratio: 5 / 4;
+        }
+        @media (min-width: 768px) {
+          :global(.result-card-image) {
+            aspect-ratio: auto;
+            height: 200px;
+          }
+        }
+
+        :global(.result-card-content) {
+          padding: 16px 16px 16px;
+        }
+        @media (min-width: 768px) {
+          :global(.result-card-content) {
+            padding: 16px 18px;
+          }
+        }
+
+        :global(.result-card-title) {
+          font-size: clamp(17px, 4.4vw, 18px);
+        }
+        @media (min-width: 768px) {
+          :global(.result-card-title) {
+            font-size: 17px;
+          }
+        }
+
+        :global(.result-card-location) {
+          font-size: 12px;
+        }
+        @media (min-width: 768px) {
+          :global(.result-card-location) {
+            font-size: 11px;
+          }
+        }
+
+        /* Price typography — bigger on phone where the card commands the screen */
+        :global(.result-card-price) {
+          font-size: clamp(22px, 6vw, 26px);
+        }
+        @media (min-width: 768px) {
+          :global(.result-card-price) {
+            font-size: 22px;
+          }
+        }
+
+        /* Hover affordance only where pointer is precise */
+        @media (hover: hover) {
+          :global(.result-card-cta:hover) {
+            background: var(--gold);
+            color: var(--white);
+          }
+        }
+      `}</style>
     </motion.div>
   );
 }
