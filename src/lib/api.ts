@@ -97,6 +97,32 @@ export async function fetchCuratedCities(continent?: string): Promise<CuratedCit
   return data.results;
 }
 
+/** Any-city search across the full hotels database (not just curated).
+ *  Returns lightweight rows (city / country / countryisocode / city_id).
+ *  Used by DestinationSearch to surface uncurated destinations under a
+ *  "More destinations" section so users can find e.g. Beijing even when
+ *  it isn't part of our editorial curation. */
+export interface AnyCityHit {
+  city: string;
+  city_id: number | null;
+  country: string;
+  countryisocode: string | null;
+}
+
+export async function searchAnyCity(q: string, limit = 8): Promise<AnyCityHit[]> {
+  const trimmed = q.trim();
+  if (!trimmed) return [];
+  const params = new URLSearchParams({ q: trimmed, limit: String(limit) });
+  try {
+    const res = await fetch(`${API_BASE}/api/cities?${params}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.results || []) as AnyCityHit[];
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchCityCurations(citySlug: string, category?: string): Promise<{
   city: CuratedCity;
   curations: {

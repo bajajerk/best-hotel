@@ -3,7 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { fetchCuratedCities, searchHotelsByName, CuratedCity, SearchHotelHit } from "@/lib/api";
+import {
+  fetchCuratedCities,
+  searchHotelsByName,
+  searchAnyCity,
+  CuratedCity,
+  SearchHotelHit,
+  AnyCityHit,
+} from "@/lib/api";
 import { SAMPLE_CITIES } from "@/lib/constants";
 
 // ---------------------------------------------------------------------------
@@ -41,6 +48,7 @@ export default function DestinationSearch({
   const [query, setQuery] = useState(defaultValue);
   const [cities, setCities] = useState<CuratedCity[]>([]);
   const [citySuggestions, setCitySuggestions] = useState<CuratedCity[]>([]);
+  const [anyCitySuggestions, setAnyCitySuggestions] = useState<AnyCityHit[]>([]);
   const [hotelSuggestions, setHotelSuggestions] = useState<HotelSuggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -51,7 +59,8 @@ export default function DestinationSearch({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Total suggestion count for keyboard nav
-  const totalSuggestions = citySuggestions.length + hotelSuggestions.length;
+  const totalSuggestions =
+    citySuggestions.length + anyCitySuggestions.length + hotelSuggestions.length;
 
   // Load cities once
   useEffect(() => {
@@ -91,12 +100,13 @@ export default function DestinationSearch({
       const trimmed = q.trim().toLowerCase();
       if (trimmed.length < 2) {
         setCitySuggestions([]);
+        setAnyCitySuggestions([]);
         setHotelSuggestions([]);
         setIsOpen(false);
         return;
       }
 
-      // Instant: filter cities locally
+      // Instant: filter curated cities locally
       const matched = cities.filter(
         (c) =>
           c.city_name.toLowerCase().includes(trimmed) ||
@@ -106,18 +116,34 @@ export default function DestinationSearch({
       setIsOpen(true);
       setActiveIndex(-1);
 
-      // Async: search hotels via API
+      // Async: search hotels + any-city in parallel.
+      //
+      // The any-city call (/api/cities) surfaces destinations that AREN'T in
+      // our curated list — Beijing, Manila, Bogotá, etc. — so the search bar
+      // doesn't dead-end the moment a user types a city we haven't editorial-
+      // ised yet. Dedup against the curated set (same city_name) so we don't
+      // show the same city twice.
       setLoading(true);
       try {
-        const hotels = await searchHotelsByName(q, 8);
+        const [hotels, anyCities] = await Promise.all([
+          searchHotelsByName(q, 8),
+          searchAnyCity(q, 8),
+        ]);
         const transitPattern = /\b(railway station|train station|bus stop|bus station|bus stand|bus terminal|metro station|airport shuttle|rail station)\b/i;
         setHotelSuggestions(
           (hotels || [])
             .filter((h) => !transitPattern.test(h.hotel_name))
             .slice(0, 8)
         );
+        const curatedNames = new Set(matched.map((c) => c.city_name.toLowerCase()));
+        setAnyCitySuggestions(
+          (anyCities || [])
+            .filter((c) => c.city && !curatedNames.has(c.city.toLowerCase()))
+            .slice(0, 5),
+        );
       } catch {
         setHotelSuggestions([]);
+        setAnyCitySuggestions([]);
       } finally {
         setLoading(false);
       }
@@ -142,6 +168,17 @@ export default function DestinationSearch({
       onSelect("city", city.city_slug, city.city_name);
     } else {
       router.push(`/city/${city.city_slug}`);
+    }
+  };
+
+  /** Uncurated city — no /city/[slug] page exists, route to /search?q=... */
+  const handleSelectAnyCity = (city: AnyCityHit) => {
+    setQuery(city.city);
+    setIsOpen(false);
+    if (onSelect) {
+      onSelect("city", city.city.toLowerCase().replace(/\s+/g, "-"), city.city);
+    } else {
+      router.push(`/search?q=${encodeURIComponent(city.city)}`);
     }
   };
 
@@ -186,8 +223,18 @@ export default function DestinationSearch({
         if (activeIndex >= 0) {
           if (activeIndex < citySuggestions.length) {
             handleSelectCity(citySuggestions[activeIndex]);
+          } else if (
+            activeIndex < citySuggestions.length + anyCitySuggestions.length
+          ) {
+            handleSelectAnyCity(
+              anyCitySuggestions[activeIndex - citySuggestions.length],
+            );
           } else {
-            handleSelectHotel(hotelSuggestions[activeIndex - citySuggestions.length]);
+            handleSelectHotel(
+              hotelSuggestions[
+                activeIndex - citySuggestions.length - anyCitySuggestions.length
+              ],
+            );
           }
         } else {
           const trimmed = query.trim();
@@ -406,8 +453,9 @@ export default function DestinationSearch({
               </>
             )}
 
-            {/* Hotel suggestions */}
-            {hotelSuggestions.length > 0 && (
+            {/* Any-city (uncurated) suggestions — only shown when typing returns
+                a city not in our curated set. Routes to /search?q=<city>. */}
+            {anyCitySuggestions.length > 0 && (
               <>
                 <div style={{
                   ...styles.sectionLabel,
@@ -417,10 +465,75 @@ export default function DestinationSearch({
                   paddingTop: citySuggestions.length > 0 ? "16px" : "10px",
                   marginTop: citySuggestions.length > 0 ? "8px" : 0,
                 }}>
+                  More destinations
+                </div>
+                {anyCitySuggestions.map((city, i) => {
+                  const idx = citySuggestions.length + i;
+                  return (
+                    <div
+                      key={`anycity-${city.city_id ?? city.city}`}
+                      role="option"
+                      aria-selected={activeIndex === idx}
+                      style={styles.item(activeIndex === idx)}
+                      onClick={() => handleSelectAnyCity(city)}
+                      onMouseEnter={() => setActiveIndex(idx)}
+                    >
+                      <div style={{
+                        width: "32px",
+                        height: "32px",
+                        borderRadius: "8px",
+                        background: isDark ? "rgba(245,240,232,0.04)" : "rgba(0, 0, 0, 0.04)",
+                        border: isDark ? "1px solid rgba(245,240,232,0.10)" : "1px solid rgba(0, 0, 0, 0.06)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? "rgba(247,245,242,0.65)" : "rgba(0,0,0,0.55)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="2" y1="12" x2="22" y2="12" />
+                          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        </svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={styles.cityName}>
+                          {highlightMatch(city.city, query)}
+                        </div>
+                        <div style={styles.cityCountry}>
+                          {city.country}
+                        </div>
+                      </div>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isDark ? "var(--luxe-soft-white-50, rgba(247,245,242,0.5))" : "rgba(0, 0, 0, 0.25)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+
+            {/* Hotel suggestions */}
+            {hotelSuggestions.length > 0 && (
+              <>
+                <div style={{
+                  ...styles.sectionLabel,
+                  borderTop:
+                    citySuggestions.length > 0 || anyCitySuggestions.length > 0
+                      ? `1px solid ${isDark ? "rgba(200, 170, 118, 0.12)" : "rgba(0, 0, 0, 0.08)"}`
+                      : "none",
+                  paddingTop:
+                    citySuggestions.length > 0 || anyCitySuggestions.length > 0
+                      ? "16px"
+                      : "10px",
+                  marginTop:
+                    citySuggestions.length > 0 || anyCitySuggestions.length > 0
+                      ? "8px"
+                      : 0,
+                }}>
                   Hotels
                 </div>
                 {hotelSuggestions.map((hotel, i) => {
-                  const idx = citySuggestions.length + i;
+                  const idx = citySuggestions.length + anyCitySuggestions.length + i;
                   return (
                     <div
                       key={hotel.hotel_id}
@@ -496,6 +609,7 @@ export default function DestinationSearch({
             {/* Empty state */}
             {!loading &&
               citySuggestions.length === 0 &&
+              anyCitySuggestions.length === 0 &&
               hotelSuggestions.length === 0 && (
                 <div
                   style={{
