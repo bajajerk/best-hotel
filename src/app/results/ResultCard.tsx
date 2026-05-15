@@ -38,9 +38,32 @@ function formatCurrency(amount: number, currency?: string | null): string {
 }
 
 // ---------------------------------------------------------------------------
-// ResultCard — Vertical grid card for the browse/results page
-// Phone-first responsive: image goes full-width on top, info stacks, price
-// row at bottom, CTA stretches as a 44px touch target on small screens.
+// Inline SVG star — Lucide-style 1.5-stroke, champagne fill.
+// Replaces the Unicode "★" glyphs used previously on the image overlay.
+// ---------------------------------------------------------------------------
+function StarIcon({ size = 11 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ResultCard — Dark luxe vertical card.
+// Solid luxe-black-2 background, champagne hairline top edge (foil line),
+// italic Playfair hotel name, inline-SVG stars, champagne tabular-nums price.
+// Preserves the responsive 5/4 cinematic image and 44px CTA from the
+// mobile pass.
 // ---------------------------------------------------------------------------
 export default function ResultCard({
   ranked,
@@ -62,7 +85,6 @@ export default function ResultCard({
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Store selected hotel in booking flow state
     setHotel(
       hotel.hotel_name,
       sanitizePhoto(hotel.photo1),
@@ -89,152 +111,75 @@ export default function ResultCard({
         style={{ textDecoration: "none" }}
         onClick={handleCardClick}
       >
-        <div
-          className="card-hover result-card"
-          style={{
-            background: "var(--white)",
-            border: "1px solid var(--cream-border)",
-            overflow: "hidden",
-            cursor: "pointer",
-            display: "flex",
-            flexDirection: "column",
-            height: "100%",
-          }}
-        >
-          {/* Image — full-width on phone, fills aspect-ratio container */}
-          <div
-            className="result-card-image"
-            style={{ position: "relative", overflow: "hidden" }}
-          >
+        <div className="result-card">
+          {/* Champagne foil hairline on the top edge */}
+          <span className="result-card-foil" aria-hidden />
+
+          {/* Image — cinematic 5/4 on phone, fixed height on desktop */}
+          <div className="result-card-image">
             <img
               src={photo}
               alt={hotel.hotel_name}
               loading="lazy"
-              className="card-img group-hover:scale-105"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
-                filter: "saturate(0.88)",
-                transition: "transform 0.4s ease",
-              }}
+              className="result-card-img"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = PLACEHOLDER_IMG;
               }}
             />
 
+            {/* Soft bottom vignette to seat the star overlay on dark ground */}
+            <span className="result-card-image-vignette" aria-hidden />
+
             {/* Value badge */}
             {ranked.valueScore >= 75 && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 10,
-                  left: 10,
-                  background:
-                    ranked.valueScore >= 85 ? "#2d6a4f" : "#40916c",
-                  color: "#fff",
-                  fontSize: 9,
-                  fontWeight: 600,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  padding: "4px 8px",
-                  fontFamily: "var(--font-body)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
+              <div className="result-card-value-badge">
                 <svg
                   width="10"
                   height="10"
                   viewBox="0 0 24 24"
-                  fill="none"
+                  fill="currentColor"
                   stroke="currentColor"
-                  strokeWidth="2.5"
+                  strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
                 {ranked.valueScore >= 85 ? "Top Pick" : "Great Value"}
               </div>
             )}
 
-            {/* Save badge intentionally removed — we don't fabricate savings.
-                Re-introduce only when a real MRP source is wired through. */}
+            {/* Save badge intentionally removed — we don't fabricate savings. */}
 
-            {/* Star rating overlay */}
+            {/* Star rating overlay — inline SVG stars on a blurred dark plate */}
             {hotel.star_rating && hotel.star_rating > 0 && (
               <div
-                style={{
-                  position: "absolute",
-                  bottom: 10,
-                  left: 10,
-                  background: "rgba(26, 23, 16, 0.7)",
-                  backdropFilter: "blur(4px)",
-                  color: "var(--gold-light)",
-                  fontSize: 10,
-                  letterSpacing: 1,
-                  padding: "3px 8px",
-                }}
+                className="result-card-stars"
+                style={{ color: "var(--luxe-champagne)" }}
+                aria-label={`${hotel.star_rating} star hotel`}
               >
-                {"★".repeat(hotel.star_rating)}
+                {Array.from({ length: hotel.star_rating }).map((_, i) => (
+                  <StarIcon key={i} size={10} />
+                ))}
               </div>
             )}
           </div>
 
           {/* Content */}
-          <div
-            className="result-card-content"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              flex: 1,
-            }}
-          >
-            <h3
-              className="result-card-title"
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 500,
-                fontStyle: "italic",
-                color: "var(--ink)",
-                lineHeight: 1.2,
-                marginBottom: 4,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-              }}
-            >
-              {hotel.hotel_name}
-            </h3>
+          <div className="result-card-content">
+            <h3 className="result-card-title">{hotel.hotel_name}</h3>
 
-            <p
-              className="result-card-location"
-              style={{
-                color: "var(--ink-light)",
-                marginBottom: 10,
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
+            <p className="result-card-location">
               <svg
                 width="10"
                 height="10"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
+                strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{ flexShrink: 0 }}
+                style={{ flexShrink: 0, opacity: 0.7 }}
               >
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
@@ -245,22 +190,27 @@ export default function ResultCard({
             </p>
 
             {/* Rating + reviews */}
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
               {hotel.rating_average && hotel.rating_average > 0 && (
                 <span
                   style={{
                     fontSize: 10,
-                    padding: "2px 8px",
+                    padding: "3px 8px",
                     background:
                       hotel.rating_average >= 8.5
-                        ? "var(--gold-pale)"
-                        : "var(--cream)",
+                        ? "var(--luxe-champagne-soft)"
+                        : "transparent",
                     color:
                       hotel.rating_average >= 8.5
-                        ? "var(--gold)"
-                        : "var(--ink-mid)",
-                    border: "1px solid var(--cream-border)",
-                    fontFamily: "var(--font-body)",
+                        ? "var(--luxe-champagne)"
+                        : "var(--luxe-soft-white-70)",
+                    border:
+                      hotel.rating_average >= 8.5
+                        ? "1px solid var(--luxe-champagne-line)"
+                        : "1px solid var(--luxe-hairline-strong)",
+                    fontFamily: "var(--font-mono)",
+                    fontVariantNumeric: "tabular-nums",
+                    letterSpacing: "0.04em",
                     fontWeight: 500,
                   }}
                 >
@@ -271,11 +221,13 @@ export default function ResultCard({
                 <span
                   style={{
                     fontSize: 10,
-                    padding: "2px 8px",
-                    background: "var(--cream)",
-                    color: "var(--ink-mid)",
-                    border: "1px solid var(--cream-border)",
-                    fontFamily: "var(--font-body)",
+                    padding: "3px 8px",
+                    background: "transparent",
+                    color: "var(--luxe-soft-white-50)",
+                    border: "1px solid var(--luxe-hairline-strong)",
+                    fontFamily: "var(--font-mono)",
+                    fontVariantNumeric: "tabular-nums",
+                    letterSpacing: "0.04em",
                   }}
                 >
                   {hotel.number_of_reviews.toLocaleString()} reviews
@@ -285,32 +237,20 @@ export default function ResultCard({
 
             {/* Amenities */}
             {hotel.overview && (
-              <div style={{ marginBottom: 10 }}>
+              <div style={{ marginBottom: 12 }}>
                 <AmenityChips overview={hotel.overview} max={3} />
               </div>
             )}
 
-            {/* Instant confirmation badge */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                fontSize: 9,
-                fontWeight: 500,
-                color: "var(--success)",
-                fontFamily: "var(--font-body)",
-                letterSpacing: "0.02em",
-                marginBottom: 12,
-              }}
-            >
+            {/* Instant confirmation badge — desaturated, dark-luxe friendly */}
+            <div className="result-card-instant">
               <svg
                 width="12"
                 height="12"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2.5"
+                strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 style={{ flexShrink: 0 }}
@@ -325,159 +265,278 @@ export default function ResultCard({
             <div style={{ flex: 1 }} />
 
             {/* Price section */}
-            <div
-              className="result-card-price-row"
-              style={{
-                borderTop: "1px solid var(--cream-border)",
-                paddingTop: 12,
-                display: "flex",
-                alignItems: "flex-end",
-                justifyContent: "space-between",
-                gap: 8,
-              }}
-            >
+            <div className="result-card-price-row">
               {hotel.rates_from ? (
                 <div style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 500,
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      color: "var(--gold)",
-                      fontFamily: "var(--font-body)",
-                      marginBottom: 2,
-                    }}
-                  >
-                    Voyagr Rate
-                  </div>
+                  <div className="result-card-price-eyebrow">Voyagr Rate</div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
-                    <span
-                      className="result-card-price"
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontWeight: 500,
-                        color: "var(--our-rate)",
-                        lineHeight: 1,
-                      }}
-                    >
+                    <span className="result-card-price">
                       {formatCurrency(hotel.rates_from, hotel.rates_currency)}
                     </span>
-                    <span style={{ fontSize: 10, color: "var(--ink-light)" }}>
-                      /night
-                    </span>
+                    <span className="result-card-price-pernight">/night</span>
                   </div>
                 </div>
               ) : (
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 500,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "var(--gold)",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  Call for rates
-                </span>
+                <span className="result-card-price-eyebrow">Call for rates</span>
               )}
-
-              {/* Strike-through MRP + Save/night chip removed — both were
-                  computed off a synthetic 1.25x markup. Will return when
-                  hotel.mrp.agoda_rate is in the search payload. */}
             </div>
 
-            {/* Bottom action — full-width, 44px touch target on phone */}
-            <div
-              className="result-card-cta"
-              style={{
-                marginTop: 12,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "11px 14px",
-                border: "1px solid var(--gold)",
-                color: "var(--gold)",
-                fontSize: 11,
-                fontWeight: 600,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                fontFamily: "var(--font-body)",
-                background: "transparent",
-                minHeight: 44,
-                transition: "background 0.15s ease, color 0.15s ease",
-              }}
-            >
+            {/* Bottom action — champagne outline, 44px touch target on phone */}
+            <div className="result-card-cta">
               View details &rarr;
             </div>
           </div>
         </div>
       </Link>
 
-      {/* Responsive rules — phone-first */}
+      {/* Responsive + dark luxe styles */}
       <style jsx>{`
         :global(.result-card-link) {
           display: block;
           height: 100%;
         }
         :global(.result-card) {
+          position: relative;
+          background: var(--luxe-black-2);
+          border: 1px solid var(--luxe-hairline);
+          overflow: hidden;
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
           border-radius: 2px;
+          transition: border-color 0.2s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        @media (hover: hover) {
+          :global(.result-card-link:hover .result-card) {
+            border-color: var(--luxe-champagne-line);
+            transform: translateY(-2px);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+          }
+          :global(.result-card-link:hover .result-card-img) {
+            transform: scale(1.04);
+          }
         }
 
-        /* Image: aspect-ratio so it scales fluidly; taller on phone for cinematic feel */
+        /* Champagne foil hairline on the top edge */
+        :global(.result-card-foil) {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            var(--luxe-champagne) 18%,
+            var(--luxe-champagne) 82%,
+            transparent 100%
+          );
+          opacity: 0.85;
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        /* Image — cinematic 5/4 on phone */
         :global(.result-card-image) {
+          position: relative;
+          overflow: hidden;
+          background: #0a0907;
           aspect-ratio: 5 / 4;
         }
         @media (min-width: 768px) {
           :global(.result-card-image) {
             aspect-ratio: auto;
-            height: 200px;
+            height: 220px;
           }
         }
+        :global(.result-card-img) {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          filter: saturate(0.92) brightness(0.96);
+          transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        :global(.result-card-image-vignette) {
+          position: absolute;
+          inset: auto 0 0 0;
+          height: 38%;
+          background: linear-gradient(
+            to bottom,
+            transparent 0%,
+            rgba(12, 11, 10, 0.55) 100%
+          );
+          pointer-events: none;
+        }
 
+        /* Value badge — dark plate w/ champagne accent */
+        :global(.result-card-value-badge) {
+          position: absolute;
+          top: 12px;
+          left: 12px;
+          background: rgba(12, 11, 10, 0.78);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          color: var(--luxe-champagne);
+          border: 1px solid var(--luxe-champagne-line);
+          font-size: 9.5px;
+          font-weight: 500;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          padding: 5px 9px;
+          font-family: var(--font-mono);
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          z-index: 2;
+        }
+
+        /* Star overlay — inline SVGs on a glass plate */
+        :global(.result-card-stars) {
+          position: absolute;
+          bottom: 12px;
+          left: 12px;
+          display: inline-flex;
+          align-items: center;
+          gap: 2px;
+          padding: 4px 8px;
+          background: rgba(12, 11, 10, 0.55);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          border: 1px solid var(--luxe-champagne-line);
+          z-index: 2;
+        }
+
+        /* Card content */
         :global(.result-card-content) {
-          padding: 16px 16px 16px;
+          padding: 18px 18px 18px;
+          display: flex;
+          flex-direction: column;
+          flex: 1;
         }
         @media (min-width: 768px) {
           :global(.result-card-content) {
-            padding: 16px 18px;
+            padding: 20px 20px 20px;
           }
         }
 
         :global(.result-card-title) {
-          font-size: clamp(17px, 4.4vw, 18px);
+          font-family: var(--font-display);
+          font-style: italic;
+          font-weight: 400;
+          color: var(--luxe-soft-white);
+          line-height: 1.18;
+          margin: 0 0 6px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          font-size: clamp(17px, 4.4vw, 19px);
+          letter-spacing: -0.005em;
         }
         @media (min-width: 768px) {
           :global(.result-card-title) {
-            font-size: 17px;
+            font-size: 18px;
           }
         }
 
         :global(.result-card-location) {
+          color: var(--luxe-soft-white-70);
+          margin: 0 0 12px;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
           font-size: 12px;
+          font-family: var(--font-body);
+          letter-spacing: 0.01em;
         }
         @media (min-width: 768px) {
           :global(.result-card-location) {
-            font-size: 11px;
+            font-size: 11.5px;
           }
         }
 
-        /* Price typography — bigger on phone where the card commands the screen */
+        :global(.result-card-instant) {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 10px;
+          font-weight: 500;
+          color: var(--luxe-champagne);
+          font-family: var(--font-mono);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          margin-bottom: 14px;
+          opacity: 0.85;
+        }
+
+        /* Price row */
+        :global(.result-card-price-row) {
+          border-top: 1px solid var(--luxe-hairline-strong);
+          padding-top: 14px;
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 8px;
+        }
+        :global(.result-card-price-eyebrow) {
+          font-size: 9.5px;
+          font-weight: 500;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: var(--luxe-champagne);
+          font-family: var(--font-mono);
+          margin-bottom: 4px;
+        }
         :global(.result-card-price) {
-          font-size: clamp(22px, 6vw, 26px);
+          font-family: var(--font-display);
+          font-style: italic;
+          font-weight: 400;
+          color: var(--luxe-champagne);
+          line-height: 1;
+          font-variant-numeric: tabular-nums;
+          font-size: clamp(24px, 6.4vw, 28px);
+          letter-spacing: -0.01em;
         }
         @media (min-width: 768px) {
           :global(.result-card-price) {
-            font-size: 22px;
+            font-size: 24px;
           }
         }
+        :global(.result-card-price-pernight) {
+          font-size: 10.5px;
+          color: var(--luxe-soft-white-50);
+          letter-spacing: 0.04em;
+          font-family: var(--font-mono);
+        }
 
-        /* Hover affordance only where pointer is precise */
+        /* CTA */
+        :global(.result-card-cta) {
+          margin-top: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 11px 14px;
+          border: 1px solid var(--luxe-champagne);
+          color: var(--luxe-champagne);
+          font-size: 11px;
+          font-weight: 500;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          font-family: var(--font-mono);
+          background: transparent;
+          min-height: 44px;
+          transition: background 0.18s ease, color 0.18s ease;
+        }
         @media (hover: hover) {
-          :global(.result-card-cta:hover) {
-            background: var(--gold);
-            color: var(--white);
+          :global(.result-card-link:hover .result-card-cta) {
+            background: var(--luxe-champagne);
+            color: var(--luxe-black);
           }
         }
       `}</style>
