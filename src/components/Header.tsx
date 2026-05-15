@@ -18,9 +18,15 @@ import type { User } from "firebase/auth";
    text invisible on the navy bar). Don't var-ify these.
    ──────────────────────────────────────────────────────────── */
 
-const GOLD = "#C9A84C";
-const NAVY = "#0B1B2B";
-const IVORY = "#fdfaf5";
+// Header palette aligned to the dark-luxe ground. Old values were:
+//   GOLD #C9A84C — drifted from --luxe-champagne #c8aa76 used across site
+//   NAVY #0B1B2B — a third theme that competed with the warm-black hero
+//   IVORY #fdfaf5 — a cold white that visibly clashed with --luxe-soft-white
+// Now: champagne matches --luxe-champagne, navy is replaced by --luxe-black-2,
+// ivory is replaced by --luxe-soft-white. Single chrome treatment across pages.
+const GOLD = "#c8aa76";
+const NAVY = "#14120f";
+const IVORY = "#f6f1e4";
 
 export const NAV_LINKS = [
   { label: "Hotels", href: "/search" },
@@ -90,7 +96,7 @@ export default function Header() {
           right: 0,
           zIndex: 100,
           background: precisionMode ? undefined : NAVY,
-          borderBottom: precisionMode ? "none" : "1px solid rgba(201,168,76,0.1)",
+          borderBottom: precisionMode ? "none" : "1px solid rgba(200,170,118,0.1)",
         }}
       >
         <div
@@ -319,7 +325,9 @@ function MobileTabBar({ pathname }: { pathname: string }) {
               flex: 1,
               padding: "6px 0 2px",
               textDecoration: "none",
-              color: active ? GOLD : "var(--ink-light)",
+              // Re-skinned to luxe — was var(--ink-light) on cream, now soft-
+              // white on dark. Active state stays champagne underline.
+              color: active ? GOLD : "rgba(246, 241, 228, 0.7)",
               borderTop: active
                 ? `2px solid ${GOLD}`
                 : "2px solid transparent",
@@ -424,7 +432,7 @@ function AccountChip({
           gap: "8px",
           padding: "4px 10px 4px 4px",
           background: "transparent",
-          border: "1px solid rgba(201,168,76,0.45)",
+          border: "1px solid rgba(200,170,118,0.45)",
           borderRadius: "999px",
           cursor: "pointer",
           color: IVORY,
@@ -485,7 +493,7 @@ function AccountChip({
             right: 0,
             minWidth: "220px",
             background: NAVY,
-            border: "1px solid rgba(201,168,76,0.25)",
+            border: "1px solid rgba(200,170,118,0.25)",
             borderRadius: "10px",
             boxShadow: "0 18px 48px rgba(0,0,0,0.45)",
             padding: "8px",
@@ -563,7 +571,7 @@ function AccountChip({
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLButtonElement).style.background =
-                "rgba(201,168,76,0.10)";
+                "rgba(200,170,118,0.10)";
               (e.currentTarget as HTMLButtonElement).style.color = GOLD;
             }}
             onMouseLeave={(e) => {
@@ -597,7 +605,7 @@ function MenuLink({ href, label }: { href: string; label: string }) {
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLAnchorElement).style.background =
-          "rgba(201,168,76,0.10)";
+          "rgba(200,170,118,0.10)";
         (e.currentTarget as HTMLAnchorElement).style.color = GOLD;
       }}
       onMouseLeave={(e) => {
