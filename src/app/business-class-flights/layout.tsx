@@ -2,31 +2,31 @@ import type { Metadata } from "next";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Business Class Flights — Luxury Travel at Economy Prices",
+  title: "Premium Cabin Fares — Voyagr Club",
   description:
-    "Fly business & first class at up to 70% off with Voyagr Club. Exclusive airline partnerships, preferred airmile rates, and premium seats from India to 30+ global destinations.",
+    "Preferred premium-cabin pricing on the routes Voyagr Club members fly most, negotiated directly with carriers. Business and first class fares from India to 30+ destinations, paired with a concierge.",
   keywords: [
     "business class flights",
-    "cheap business class",
     "first class fares",
+    "premium cabin pricing",
     "luxury flights India",
+    "preferred airmile rates",
     "premium flight booking",
-    "discounted business class",
     "Voyagr Club flights",
   ],
   openGraph: {
-    title: "Business Class Flights — Voyagr Club",
+    title: "Premium Cabin Fares — Voyagr Club",
     description:
-      "Fly business & first class at up to 70% off. Premium seats from India to 30+ global destinations.",
+      "Preferred premium-cabin pricing on the routes our members fly most. Business and first class from India to 30+ destinations, with a concierge who ticketed your last ten trips.",
     url: `${SITE_URL}/business-class-flights`,
     siteName: SITE_NAME,
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Business Class Flights — Voyagr Club",
+    title: "Premium Cabin Fares — Voyagr Club",
     description:
-      "Luxury travel at economy prices. Save up to 70% on business & first class flights.",
+      "Considered fares for considered travellers. Negotiated premium-cabin pricing on the routes we curate.",
   },
   alternates: {
     canonical: `${SITE_URL}/business-class-flights`,

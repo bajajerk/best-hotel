@@ -51,8 +51,8 @@ const FEATURES = [
         <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z" />
       </svg>
     ),
-    title: "Premium Business Class",
-    description: "Save up to 70% on Business & First Class flights worldwide with our exclusive member rates.",
+    title: "Premium Cabin Pricing",
+    description: "Member-only fares in business and first class on the routes our concierge ticketed last year — negotiated directly with airlines.",
   },
   {
     icon: (
@@ -60,8 +60,8 @@ const FEATURES = [
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
     ),
-    title: "Guaranteed Savings",
-    description: "50–70% off regular business class fares on major airlines. If you find it cheaper, we'll match it.",
+    title: "Rate-Match Promise",
+    description: "Found a better fare elsewhere? Send it over — we'll match it within the same fare family or tell you honestly why we can't.",
   },
   {
     icon: (
@@ -132,7 +132,7 @@ export default function BusinessClassFlightsPage() {
 
   const openContactForm = () => {
     window.open(
-      "https://wa.me/919833534627?text=Hi%2C%20I%27m%20interested%20in%20business%20class%20flights%20via%20Mer%20Voyage%20Club",
+      "https://wa.me/919833534627?text=Hi%2C%20I%27m%20interested%20in%20business%20class%20flights%20via%20Voyagr%20Club",
       "_blank",
     );
   };
@@ -192,35 +192,39 @@ export default function BusinessClassFlightsPage() {
                 marginBottom: "16px",
               }}
             >
-              Voyagr Club — Premium Flights
+              Voyagr Club — Premium Cabin Fares
             </p>
             <h1
               style={{
                 fontFamily: "var(--font-display)",
                 fontStyle: "italic",
-                fontWeight: 600,
+                fontWeight: 500,
                 fontSize: "clamp(36px, 6vw, 72px)",
-                lineHeight: 1.1,
+                lineHeight: 1.05,
+                letterSpacing: "-0.02em",
                 color: "var(--white)",
-                maxWidth: "700px",
+                maxWidth: "780px",
                 marginBottom: "20px",
               }}
             >
-              Luxury Travel at{" "}
-              <span style={{ color: "var(--gold)" }}>Economy Prices</span>
+              Considered fares for{" "}
+              <span style={{ color: "var(--gold)" }}>considered travellers</span>.
             </h1>
             <p
               style={{
                 fontFamily: "var(--font-body)",
                 fontSize: "clamp(16px, 2vw, 20px)",
                 color: "rgba(253,250,245,0.8)",
-                maxWidth: "560px",
+                maxWidth: "620px",
                 lineHeight: 1.7,
                 marginBottom: "40px",
               }}
             >
-              Experience business & first class flights at up to 70% off.
-              Fly premium, pay economy.
+              Preferred premium-cabin pricing on the routes our members fly most,
+              negotiated directly with carriers — paired with a concierge who
+              ticketed your last ten trips. No comparison engines. No drip
+              pricing. Just the quiet kind of upgrade you can&rsquo;t book on
+              an OTA.
             </p>
 
             {/* Featured deal cards */}
