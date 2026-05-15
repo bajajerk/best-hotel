@@ -211,6 +211,14 @@ function mealBasisMatchesFilter(mealBasis: string, filter: MealPlanFilter): bool
 const TABS = ["Rates", "The Stay", "Reviews"] as const;
 type TabName = (typeof TABS)[number];
 
+/* Mobile sticky tab bar (≤767px) — adds "Map" pill so phone users can jump
+ * to the location section, which the desktop bar omits because the
+ * right-rail booking card already exposes the map anchor. The mobile bar
+ * mirrors the desktop scroll-spy via a shared IntersectionObserver but
+ * keeps its own active-state to avoid mutating the 3-tab desktop bar. */
+const MOBILE_TABS = ["Rates", "The Stay", "Reviews", "Map"] as const;
+type MobileTabName = (typeof MOBILE_TABS)[number];
+
 /* ────────────────────────── Lightbox ────────────────────────── */
 
 function Lightbox({
@@ -2146,6 +2154,9 @@ export default function HotelPage() {
 
   /* Tabs */
   const [activeTab, setActiveTab] = useState<TabName>("Rates");
+  /* Phone-only sticky tab bar — tracks 4 sections (adds Map) and renders
+   * a separate pill row below 768px. Desktop bar above remains untouched. */
+  const [activeMobileTab, setActiveMobileTab] = useState<MobileTabName>("Rates");
 
   /* Rate plan selection */
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -2529,12 +2540,36 @@ export default function HotelPage() {
     }
   }, [hotel]);
 
-  /* ── Scroll-based active tab detection ── */
+  /* ── Phone-only tab click handler — same behaviour as desktop, but
+   * with an extra "Map" target. Uses HTMLElement to accommodate the
+   * map <section> ref typing. */
+  const handleMobileTabClick = useCallback((tab: MobileTabName) => {
+    setActiveMobileTab(tab);
+    if (hotel) {
+      trackHotelTabClicked({ hotel_id: hotel.id, hotel_name: hotel.hotel_name, tab_name: tab });
+    }
+    const refMap: Record<MobileTabName, React.RefObject<HTMLElement | null>> = {
+      "Rates": ratesRef,
+      "The Stay": stayRef,
+      "Reviews": reviewsRef,
+      "Map": mapRef,
+    };
+    const ref = refMap[tab];
+    if (ref?.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [hotel]);
+
+  /* ── Scroll-based active tab detection ──
+   * Single observer covers both desktop (3 tabs) and mobile (4 tabs incl.
+   * Map). Desktop activeTab is only updated when a TAB-known section
+   * intersects, so the 3-pill bar above remains unaffected by Map. */
   useEffect(() => {
-    const sections: { ref: React.RefObject<HTMLDivElement | null>; tab: TabName }[] = [
+    const sections: { ref: React.RefObject<HTMLElement | null>; tab: MobileTabName }[] = [
       { ref: ratesRef, tab: "Rates" },
       { ref: stayRef, tab: "The Stay" },
       { ref: reviewsRef, tab: "Reviews" },
+      { ref: mapRef, tab: "Map" },
     ];
 
     const observer = new IntersectionObserver(
@@ -2542,7 +2577,12 @@ export default function HotelPage() {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             const match = sections.find((s) => s.ref.current === entry.target);
-            if (match) setActiveTab(match.tab);
+            if (match) {
+              setActiveMobileTab(match.tab);
+              if ((TABS as readonly string[]).includes(match.tab)) {
+                setActiveTab(match.tab as TabName);
+              }
+            }
           }
         }
       },
@@ -3180,9 +3220,9 @@ export default function HotelPage() {
         </section>
       </div>
 
-      {/* ═══════════════════ 2. STICKY TAB BAR ═══════════════════ */}
+      {/* ═══════════════════ 2. STICKY TAB BAR (desktop, ≥768px) ═══════════════════ */}
       <div
-        className="overflow-x-auto"
+        className="hotel-tabs-bar-desktop overflow-x-auto"
         style={{
           position: "sticky",
           top: 60,
@@ -3243,6 +3283,35 @@ export default function HotelPage() {
           )}
         </div>
       </div>
+
+      {/* ═══════════════════ 2b. STICKY MOBILE TAB BAR (phone, ≤767px) ═══════════════════
+          Editorial pill row with 4 anchors: Rates · The Stay · Reviews · Map.
+          Sticks under the global header (top:64) once the hero scrolls off-
+          screen. Horizontally scrolls with snap + edge fade; champagne underline
+          marks the active section, driven by the shared IntersectionObserver. */}
+      <nav
+        className="hotel-mtabs"
+        aria-label="Section navigation"
+        role="tablist"
+      >
+        <div className="hotel-mtabs-track">
+          {MOBILE_TABS.map((tab) => {
+            const isActive = activeMobileTab === tab;
+            return (
+              <button
+                key={tab}
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => handleMobileTabClick(tab)}
+                className={isActive ? "hotel-mtab is-active" : "hotel-mtab"}
+              >
+                <span className="hotel-mtab-label">{tab}</span>
+                <span className="hotel-mtab-underline" aria-hidden="true" />
+              </button>
+            );
+          })}
+        </div>
+      </nav>
 
       {/* ═══════════════════ 4. OVERVIEW (sub-nav + about + particulars + amenities) ═══════════════════ */}
       <section
@@ -5170,6 +5239,100 @@ export default function HotelPage() {
             border-top: 1px solid var(--luxe-hairline);
             padding-top: 14px !important;
             margin-top: 4px;
+          }
+        }
+
+        /* ═══════════════════ Phone-only sticky tab bar ═══════════════════
+           Renders <768px only. Desktop pill bar above is hidden on phone so
+           the two never stack. Sits under the global header at top:64. */
+        .hotel-mtabs {
+          display: none;
+        }
+        @media (max-width: 767px) {
+          .hotel-tabs-bar-desktop {
+            display: none !important;
+          }
+          .hotel-mtabs {
+            display: block;
+            position: sticky;
+            top: 64px;
+            z-index: 40;
+            background: rgba(12, 11, 10, 0.92);
+            border-bottom: 1px solid var(--luxe-hairline);
+            -webkit-backdrop-filter: blur(14px);
+            backdrop-filter: blur(14px);
+            /* Edge fades so off-screen pills hint at scrollability */
+            -webkit-mask-image: linear-gradient(
+              to right,
+              transparent 0,
+              #000 24px,
+              #000 calc(100% - 24px),
+              transparent 100%
+            );
+            mask-image: linear-gradient(
+              to right,
+              transparent 0,
+              #000 24px,
+              #000 calc(100% - 24px),
+              transparent 100%
+            );
+          }
+          .hotel-mtabs-track {
+            display: flex;
+            align-items: stretch;
+            gap: 4px;
+            padding: 6px 20px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-snap-type: x proximity;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+          }
+          .hotel-mtabs-track::-webkit-scrollbar {
+            display: none;
+          }
+          .hotel-mtab {
+            position: relative;
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+            min-height: 44px;
+            padding: 12px 16px 10px;
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            color: var(--luxe-soft-white-50);
+            transition: color 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+          }
+          .hotel-mtab:active {
+            color: var(--luxe-soft-white);
+          }
+          .hotel-mtab.is-active {
+            color: var(--luxe-champagne);
+          }
+          .hotel-mtab-label {
+            display: inline-block;
+            font-family: var(--font-mono), 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            line-height: 1;
+          }
+          .hotel-mtab-underline {
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 4px;
+            height: 1.5px;
+            background: var(--luxe-champagne);
+            transform: scaleX(0);
+            transform-origin: left center;
+            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: none;
+          }
+          .hotel-mtab.is-active .hotel-mtab-underline {
+            transform: scaleX(1);
           }
         }
       `}</style>
