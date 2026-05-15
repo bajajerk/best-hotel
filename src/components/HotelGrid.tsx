@@ -505,19 +505,21 @@ export default function HotelGrid({
   // Merge live rates + rate-plan flags into rows.
   const livePricedResults = useMemo<HotelGridResult[]>(() => {
     if (!batchRates || !batchRates.results) return hotelResults;
-    return hotelResults.map((h) => {
-      const key = h.id ? String(h.id) : "";
-      const r = key ? batchRates.results[key] : undefined;
-      if (!r) return h;
-      const fromPrice = typeof r.from_price === "number" ? r.from_price : null;
-      return {
-        ...h,
-        rates_from: fromPrice,
-        rates_currency: r.currency ?? h.rates_currency ?? "INR",
-        has_refundable: r.has_refundable ?? h.has_refundable,
-        has_breakfast: r.has_breakfast ?? h.has_breakfast,
-      };
-    });
+    return hotelResults
+      .map((h) => {
+        const key = h.id ? String(h.id) : "";
+        const r = key ? batchRates.results[key] : undefined;
+        if (!r) return { ...h, rates_from: null };
+        const fromPrice = typeof r.from_price === "number" ? r.from_price : null;
+        return {
+          ...h,
+          rates_from: fromPrice,
+          rates_currency: r.currency ?? h.rates_currency ?? "INR",
+          has_refundable: r.has_refundable ?? h.has_refundable,
+          has_breakfast: r.has_breakfast ?? h.has_breakfast,
+        };
+      })
+      .filter((h) => h.rates_from != null && h.rates_from > 0);
   }, [hotelResults, batchRates]);
 
   // baseRows = page results after de-dupe + region filter (parent-driven
