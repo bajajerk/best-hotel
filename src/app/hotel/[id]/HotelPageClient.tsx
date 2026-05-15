@@ -3723,9 +3723,84 @@ export default function HotelPage() {
               ) : rates && rates.rates.length === 0 ? (
                 <div
                   className="luxe-card"
-                  style={{ padding: 28, textAlign: "center", borderRadius: 14, color: "var(--luxe-soft-white-70)", fontFamily: "var(--font-body)" }}
+                  style={{
+                    padding: "36px 32px",
+                    textAlign: "center",
+                    borderRadius: 14,
+                    border: "1px solid var(--luxe-hairline-strong)",
+                    fontFamily: "var(--font-body)",
+                  }}
                 >
-                  No rates for these dates — try different dates.
+                  <p
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      fontWeight: 600,
+                      letterSpacing: "0.22em",
+                      textTransform: "uppercase",
+                      color: "var(--luxe-champagne)",
+                      margin: 0,
+                      marginBottom: 10,
+                    }}
+                  >
+                    Nothing worth showing
+                  </p>
+                  <h3
+                    className="luxe-display"
+                    style={{
+                      fontSize: "clamp(20px, 3vw, 24px)",
+                      fontStyle: "italic",
+                      fontWeight: 500,
+                      color: "var(--luxe-soft-white)",
+                      lineHeight: 1.3,
+                      letterSpacing: "-0.01em",
+                      margin: 0,
+                      marginBottom: 10,
+                    }}
+                  >
+                    {hotel?.hotel_name ?? "This hotel"} is closed for these dates.
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: 14,
+                      color: "var(--luxe-soft-white-70)",
+                      lineHeight: 1.65,
+                      maxWidth: 480,
+                      margin: "0 auto",
+                    }}
+                  >
+                    The hotel didn&rsquo;t release inventory we&rsquo;d stand behind for this stay window &mdash; we&rsquo;d rather show you nothing than a rate we don&rsquo;t trust. Try nearby dates above, or ask the concierge to look harder.
+                  </p>
+                  <a
+                    href={conciergeWhatsappLink(
+                      `Hi Voyagr, I'd love a rate for ${hotel?.hotel_name ?? "this hotel"}${hotel?.city ? ` in ${hotel.city}` : ""} for ${booking.checkIn || "the dates I'm looking at"}${booking.checkOut ? `–${booking.checkOut}` : ""}. Can the concierge look harder?`,
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginTop: 22,
+                      padding: "11px 22px",
+                      border: "1px solid var(--luxe-champagne)",
+                      borderRadius: 999,
+                      color: "var(--luxe-champagne)",
+                      fontFamily: "var(--font-body)",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      textDecoration: "none",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Ask the concierge
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </a>
                 </div>
               ) : rates ? (
                 <>
