@@ -4,7 +4,7 @@ import { SITE_URL, SITE_NAME } from "@/lib/seo";
 export const metadata: Metadata = {
   title: "Business Class Flights — Luxury Travel at Economy Prices",
   description:
-    "Fly business & first class at up to 70% off with Mer Voyage Club. Exclusive airline partnerships, preferred airmile rates, and premium seats from India to 30+ global destinations.",
+    "Fly business & first class at up to 70% off with Voyagr Club. Exclusive airline partnerships, preferred airmile rates, and premium seats from India to 30+ global destinations.",
   keywords: [
     "business class flights",
     "cheap business class",
@@ -12,10 +12,10 @@ export const metadata: Metadata = {
     "luxury flights India",
     "premium flight booking",
     "discounted business class",
-    "Mer Voyage Club flights",
+    "Voyagr Club flights",
   ],
   openGraph: {
-    title: "Business Class Flights — Mer Voyage Club",
+    title: "Business Class Flights — Voyagr Club",
     description:
       "Fly business & first class at up to 70% off. Premium seats from India to 30+ global destinations.",
     url: `${SITE_URL}/business-class-flights`,
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Business Class Flights — Mer Voyage Club",
+    title: "Business Class Flights — Voyagr Club",
     description:
       "Luxury travel at economy prices. Save up to 70% on business & first class flights.",
   },

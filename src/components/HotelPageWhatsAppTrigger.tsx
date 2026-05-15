@@ -21,7 +21,7 @@ export default function HotelPageWhatsAppTrigger({ hotelName }: Props) {
   const message = encodeURIComponent(
     `Hi, I'm looking at ${hotelName}. Can you help?`
   );
-  const waLink = `https://wa.me/919876543210?text=${message}`;
+  const waLink = `https://wa.me/919833534627?text=${message}`;
 
   return (
     <div

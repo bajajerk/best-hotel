@@ -206,7 +206,7 @@ export default function Tab2Premium() {
       >
         {/* Call Button */}
         <button
-          onClick={() => window.open("tel:+919876543210")}
+          onClick={() => window.open("tel:+919833534627")}
           className="w-full cursor-pointer"
           style={{
             padding: 16,
@@ -228,7 +228,7 @@ export default function Tab2Premium() {
         <button
           onClick={() =>
             window.open(
-              "https://wa.me/919876543210?text=Hi,%20I%27m%20interested%20in%20premium%20rates"
+              "https://wa.me/919833534627?text=Hi,%20I%27m%20interested%20in%20premium%20rates"
             )
           }
           className="w-full cursor-pointer"

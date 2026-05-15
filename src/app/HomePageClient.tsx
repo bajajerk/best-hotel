@@ -628,7 +628,7 @@ export default function Home({
                   fontFamily: "Georgia, 'Cormorant Garamond', serif",
                   fontSize: 96,
                   lineHeight: 1,
-                  color: "#C9A961",
+                  color: "#c8aa76",
                   opacity: 0.35,
                   userSelect: "none",
                   pointerEvents: "none",
@@ -671,7 +671,7 @@ export default function Home({
                   display: "inline-block",
                   width: 28,
                   height: 1,
-                  background: "#C9A961",
+                  background: "#c8aa76",
                   flexShrink: 0,
                 }}
               />
@@ -703,13 +703,13 @@ export default function Home({
                   }}
                 >
                   {s.base}
-                  <span style={{ color: "#C9A961" }}>{s.accent}</span>
+                  <span style={{ color: "#c8aa76" }}>{s.accent}</span>
                 </div>
                 <div
                   style={{
                     width: 40,
                     height: 1,
-                    background: "#C9A961",
+                    background: "#c8aa76",
                     margin: "8px 0",
                   }}
                 />
@@ -760,7 +760,7 @@ export default function Home({
           </h2>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <a
-              href="https://wa.me/919876543210?text=Hi%2C%20I%27d%20like%20to%20plan%20a%20trip"
+              href="https://wa.me/919833534627?text=Hi%2C%20I%27d%20like%20to%20plan%20a%20trip"
               className="luxe-btn-gold"
               target="_blank"
               rel="noreferrer"

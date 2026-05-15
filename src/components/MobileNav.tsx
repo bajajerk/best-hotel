@@ -54,7 +54,7 @@ const BOTTOM_LINKS = [
 ];
 
 const WHATSAPP_URL =
-  "https://wa.me/919876543210?text=Hi%20Voyagr%2C%20I%27d%20like%20to%20speak%20with%20a%20concierge";
+  "https://wa.me/919833534627?text=Hi%20Voyagr%2C%20I%27d%20like%20to%20speak%20with%20a%20concierge";
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);

@@ -277,7 +277,7 @@ export default function ProfilePage() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     style={s.input}
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 98335 34627"
                   />
                 </div>
                 <div style={s.field}>

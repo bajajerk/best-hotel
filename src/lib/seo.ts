@@ -22,7 +22,7 @@ export function organizationJsonLd() {
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer service",
-      email: "hello@voyagr.com",
+      email: "hello@voyagrclub.com",
       availableLanguage: "English",
     },
     sameAs: [],

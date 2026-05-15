@@ -545,7 +545,7 @@ export default function FlightsPage() {
           font-weight: 700;
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: #C9A961;
+          color: #c8aa76;
           margin-bottom: 16px;
         }
         .fp-headline {
@@ -585,9 +585,9 @@ export default function FlightsPage() {
         .fp-toggle {
           padding: 8px 20px;
           border-radius: 9999px;
-          border: 1px solid #C9A961;
+          border: 1px solid #c8aa76;
           background: transparent;
-          color: #C9A961;
+          color: #c8aa76;
           font-family: var(--font-body);
           font-size: 12px;
           font-weight: 600;
@@ -597,7 +597,7 @@ export default function FlightsPage() {
           transition: all 0.2s;
         }
         .fp-toggle.act {
-          background: #C9A961;
+          background: #c8aa76;
           color: #0a0a0a;
         }
         .fp-toggle:hover:not(.act) {
@@ -641,7 +641,7 @@ export default function FlightsPage() {
           font-weight: 700;
           letter-spacing: 0.18em;
           text-transform: uppercase;
-          color: #C9A961;
+          color: #c8aa76;
           margin-bottom: 4px;
         }
         .fp-field-value {
@@ -709,7 +709,7 @@ export default function FlightsPage() {
           font-family: var(--font-body);
           font-size: 15px;
           outline: none;
-          caret-color: #C9A961;
+          caret-color: #c8aa76;
         }
         .fp-airport-input::placeholder { color: rgba(247,245,242,0.35); }
         .fp-airport-row {
@@ -726,7 +726,7 @@ export default function FlightsPage() {
         .fp-airport-code {
           font-size: 13px;
           font-weight: 700;
-          color: #C9A961;
+          color: #c8aa76;
           min-width: 36px;
           font-family: var(--font-mono);
         }
@@ -785,9 +785,9 @@ export default function FlightsPage() {
           width: 30px;
           height: 30px;
           border-radius: 50%;
-          border: 1px solid #C9A961;
+          border: 1px solid #c8aa76;
           background: transparent;
-          color: #C9A961;
+          color: #c8aa76;
           font-size: 16px;
           cursor: pointer;
           display: flex;
@@ -850,7 +850,7 @@ export default function FlightsPage() {
           font-family: var(--font-body);
         }
         .fpx-done {
-          background: #C9A961;
+          background: #c8aa76;
           color: #0a0a0a;
           padding: 7px 18px;
           border-radius: 6px;
@@ -882,7 +882,7 @@ export default function FlightsPage() {
           font-weight: 700;
           letter-spacing: 0.18em;
           text-transform: uppercase;
-          color: #C9A961;
+          color: #c8aa76;
           font-family: var(--font-body);
         }
         .fp-chips-row {
@@ -903,8 +903,8 @@ export default function FlightsPage() {
           white-space: nowrap;
         }
         .fp-chip:hover {
-          border-color: #C9A961;
-          color: #C9A961;
+          border-color: #c8aa76;
+          color: #c8aa76;
           background: rgba(201,169,97,0.08);
         }
 
@@ -927,7 +927,7 @@ export default function FlightsPage() {
           font-weight: 700;
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: #C9A961;
+          color: #c8aa76;
           margin-bottom: 12px;
           font-family: var(--font-body);
         }
@@ -976,7 +976,7 @@ export default function FlightsPage() {
           position: absolute;
           top: 10px;
           left: 10px;
-          background: #C9A961;
+          background: #c8aa76;
           color: #0a0a0a;
           padding: 3px 10px;
           border-radius: 9999px;
@@ -997,7 +997,7 @@ export default function FlightsPage() {
         }
         .fp-route-price {
           font-size: 14px;
-          color: #C9A961;
+          color: #c8aa76;
           font-weight: 600;
           font-family: var(--font-body);
         }
@@ -1019,7 +1019,7 @@ export default function FlightsPage() {
         .fp-why-num {
           font-family: var(--font-display);
           font-size: 28px;
-          color: #C9A961;
+          color: #c8aa76;
           opacity: 0.55;
           margin-bottom: 16px;
           line-height: 1;
