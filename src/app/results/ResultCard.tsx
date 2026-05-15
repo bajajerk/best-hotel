@@ -53,13 +53,12 @@ export default function ResultCard({
   const router = useRouter();
   const { setHotel } = useBookingFlow();
   const photo = sanitizePhoto(hotel.photo1);
-  const marketRate = hotel.rates_from ? Math.round(hotel.rates_from * 1.25) : null;
-  const savePercent =
-    hotel.rates_from && marketRate
-      ? Math.round(((marketRate - hotel.rates_from) / marketRate) * 100)
-      : null;
-  const savingsAmount =
-    hotel.rates_from && marketRate ? marketRate - hotel.rates_from : null;
+  // No fake MRP. Earlier this card synthesised a 25% markup as the "market
+  // rate" and rendered a Save 20% badge on every card — the exact drip-
+  // pricing pattern /about disavows ("No drip-pricing tricks at checkout").
+  // Until backend wiring surfaces a real Agoda-B2C MRP on /api/hotels/search,
+  // we render only the rates_from price with no comparison. When real MRP
+  // lands, re-introduce the savings UI here keyed off `hotel.mrp.agoda_rate`.
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -162,24 +161,8 @@ export default function ResultCard({
               </div>
             )}
 
-            {/* Save badge */}
-            {savePercent && savePercent > 0 && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 10,
-                  right: 10,
-                  background: "var(--gold-pale)",
-                  color: "var(--success)",
-                  fontSize: 10,
-                  fontWeight: 600,
-                  padding: "4px 10px",
-                  fontFamily: "var(--font-body)",
-                }}
-              >
-                Save {savePercent}%
-              </div>
-            )}
+            {/* Save badge intentionally removed — we don't fabricate savings.
+                Re-introduce only when a real MRP source is wired through. */}
 
             {/* Star rating overlay */}
             {hotel.star_rating && hotel.star_rating > 0 && (
@@ -400,42 +383,9 @@ export default function ResultCard({
                 </span>
               )}
 
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-end",
-                  gap: 4,
-                  flexShrink: 0,
-                }}
-              >
-                {marketRate && hotel.rates_from && (
-                  <span
-                    style={{
-                      fontSize: 11,
-                      textDecoration: "line-through",
-                      color: "var(--market-rate)",
-                    }}
-                  >
-                    {formatCurrency(marketRate, hotel.rates_currency)}
-                  </span>
-                )}
-                {savingsAmount && savingsAmount > 0 && (
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: "var(--success)",
-                      fontFamily: "var(--font-mono)",
-                      background: "var(--gold-pale)",
-                      padding: "2px 8px",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    Save {formatCurrency(savingsAmount, hotel.rates_currency)}/night
-                  </span>
-                )}
-              </div>
+              {/* Strike-through MRP + Save/night chip removed — both were
+                  computed off a synthetic 1.25x markup. Will return when
+                  hotel.mrp.agoda_rate is in the search payload. */}
             </div>
 
             {/* Bottom action — full-width, 44px touch target on phone */}
