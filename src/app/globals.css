@@ -223,7 +223,10 @@ body {
   outline-offset: 2px;
 }
 
-/* ── Mobile bottom tab bar — visible <640px ── */
+/* ── Mobile bottom tab bar — visible <640px ──
+   Re-skinned to dark luxe (was cream rgba(245,240,232,0.96)) — sitting a
+   cream slab at the bottom of a dark hero clashed with everything above
+   it. Now matches the luxe ground. */
 .mobile-tab-bar {
   display: none;
   position: fixed;
@@ -231,10 +234,10 @@ body {
   left: 0;
   right: 0;
   z-index: 100;
-  background: rgba(245, 240, 232, 0.96);
+  background: rgba(20, 18, 15, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid var(--cream-border);
+  border-top: 1px solid rgba(246, 241, 228, 0.08);
   height: 56px;
   align-items: center;
   justify-content: space-around;
