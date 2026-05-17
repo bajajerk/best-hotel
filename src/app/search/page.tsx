@@ -240,7 +240,10 @@ export default function SearchPage() {
   })();
 
   const { checkIn, checkOut } = useBooking();
-  const [query, setQuery] = useState(initialQuery);
+  // inputValue = what the user is typing; committedQuery = what HotelGrid fetches.
+  // Separating them ensures typing alone never triggers a new hotel search.
+  const [inputValue, setInputValue] = useState(initialQuery);
+  const [committedQuery, setCommittedQuery] = useState(initialQuery);
   const [cities, setCities] = useState<CuratedCity[]>([]);
   const [page, setPage] = useState<number>(initialPage);
   const [perPage] = useState<number>(initialPerPage);
@@ -283,12 +286,14 @@ export default function SearchPage() {
     (q: string, options?: { persist?: boolean }) => {
       const trimmed = q.trim();
       if (!trimmed) {
-        setQuery("");
+        setInputValue("");
+        setCommittedQuery("");
         setHasSearched(false);
         setResultInfo({ totalCount: 0, visibleCount: 0 });
         return;
       }
-      setQuery(trimmed);
+      setInputValue(trimmed);
+      setCommittedQuery(trimmed);
       setPage(1);
       setHasSearched(true);
       if (options?.persist) {
@@ -333,14 +338,14 @@ export default function SearchPage() {
     if (newPage === page) return;
     setPage(newPage);
     const params = new URLSearchParams();
-    if (query.trim()) params.set("q", query.trim());
+    if (committedQuery.trim()) params.set("q", committedQuery.trim());
     if (newPage > 1) params.set("page", String(newPage));
     if (perPage !== 20) params.set("per_page", String(perPage));
     router.replace(`/search${params.toString() ? `?${params.toString()}` : ""}`);
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [page, query, perPage, router]);
+  }, [page, committedQuery, perPage, router]);
 
   const clearRecentSearches = () => {
     if (typeof window !== "undefined") {
@@ -349,12 +354,12 @@ export default function SearchPage() {
     }
   };
 
-  // Filter matching cities based on query
-  const matchingCities = query.trim().length >= 2
+  // Filter matching cities based on the committed query (for the curated section below results)
+  const matchingCities = committedQuery.trim().length >= 2
     ? cities.filter(
         (c) =>
-          c.city_name.toLowerCase().includes(query.toLowerCase()) ||
-          c.country.toLowerCase().includes(query.toLowerCase())
+          c.city_name.toLowerCase().includes(committedQuery.toLowerCase()) ||
+          c.country.toLowerCase().includes(committedQuery.toLowerCase())
       )
     : [];
 
@@ -435,7 +440,7 @@ export default function SearchPage() {
                     placeholder="Where are you going?"
                     defaultValue={initialQuery}
                     onValueChange={(val) => {
-                      setQuery(val);
+                      setInputValue(val);
                     }}
                     onSelect={(_type, _value, label) => {
                       const filled = label ?? _value;
@@ -454,10 +459,10 @@ export default function SearchPage() {
               <button
                 type="button"
                 onClick={() => {
-                  if (!query.trim()) return;
-                  commitQuery(query, { persist: true });
+                  if (!inputValue.trim()) return;
+                  commitQuery(inputValue, { persist: true });
                 }}
-                disabled={!query.trim()}
+                disabled={!inputValue.trim()}
                 style={{
                   width: "100%",
                   height: 52,
@@ -470,8 +475,8 @@ export default function SearchPage() {
                   fontWeight: 600,
                   letterSpacing: "0.04em",
                   fontFamily: "var(--font-body)",
-                  cursor: query.trim() ? "pointer" : "not-allowed",
-                  opacity: query.trim() ? 1 : 0.5,
+                  cursor: inputValue.trim() ? "pointer" : "not-allowed",
+                  opacity: inputValue.trim() ? 1 : 0.5,
                   transition: "opacity 0.2s, background 0.2s",
                   display: "flex",
                   alignItems: "center",
@@ -485,7 +490,7 @@ export default function SearchPage() {
             </div>
 
             {/* ── Destination pill strips ── */}
-            {!query.trim() && (
+            {!inputValue.trim() && (
               <div className="usc-pills" style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 14 }}>
                 {recentSearches.length > 0 && (
                   <PillStrip label="Recent">
@@ -583,7 +588,7 @@ export default function SearchPage() {
             }}>
               {(totalCount > 0 ? totalCount : totalResults).toLocaleString()}{" "}
               {(totalCount > 0 ? totalCount : totalResults) === 1 ? "hotel" : "hotels"}{" "}
-              for &ldquo;{query.trim()}&rdquo;
+              for &ldquo;{committedQuery.trim()}&rdquo;
             </span>
           </motion.div>
         )}
@@ -591,7 +596,7 @@ export default function SearchPage() {
         {/* ── Hotel results — paginated cards + live batch-rates (HotelGrid) ── */}
         {hasSearched && (
           <HotelGrid
-            query={query.trim()}
+            query={committedQuery.trim()}
             page={page}
             perPage={perPage}
             onPageChange={handlePageChange}
@@ -753,7 +758,7 @@ export default function SearchPage() {
         )}
 
         {/* Empty state — no search yet */}
-        {!hasSearched && !query.trim() && (
+        {!hasSearched && !committedQuery.trim() && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
