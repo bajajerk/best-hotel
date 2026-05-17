@@ -251,7 +251,7 @@ function ResultsContent() {
       ...(children > 0 ? { children: String(children) } : {}),
       ...(infants > 0 ? { infants: String(infants) } : {}),
     });
-    router.push(`/flights/fare-select?${p}`);
+    router.push(`/flights/booking/fare-select?${p}`);
   }
 
   return (

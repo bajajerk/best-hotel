@@ -744,13 +744,13 @@ export async function reviewFlight(params: {
 }
 
 export interface FlightPassenger {
-  ti: string;        // "Mr" / "Mrs" / "Ms" / "Mstr" / "Miss"
-  fN: string;        // first name
-  lN: string;        // last name
-  dob: string;       // YYYY-MM-DD
+  ti: string;
+  fN: string;
+  lN: string;
+  dob: string;
   pt: "ADULT" | "CHILD" | "INFANT";
-  fF?: string;       // frequent flyer
-  bf?: number;       // bonus field (TripJack — default 0)
+  fF?: string;
+  bf?: number;
 }
 
 export interface FlightDeliveryInfo {
@@ -818,6 +818,146 @@ export async function bookFlight(params: {
   const returnedId = data?.bookingId ?? data?.data?.bookingId ?? bookingId;
   const status = paymentInfos && paymentInfos.length ? 'BOOKED' : 'HOLD';
   return { bookingId: returnedId, status, raw: data };
+}
+
+// ── Flight payment types + functions (MMADPay) ────────────────────────────────
+
+export interface FlightBookingRecord {
+  flight_booking_id: string;
+  status: string;
+  booking_id: string;
+}
+
+export interface PaymentSummary {
+  id: number;
+  merchant_txnid: string;
+  status: string;
+  amount: number;
+  currency: string;
+  intent_url?: string | null;
+  payment_link?: string | null;
+}
+
+export interface FlightUpiPaymentResult {
+  payment: PaymentSummary;
+  intent_url: string | null;
+  qr_image: string | null;
+  gateway_txnid: string | null;
+  flight_booking_id: string;
+}
+
+export interface FlightCardPaymentResult {
+  payment: PaymentSummary;
+  payment_link: string | null;
+  gateway_txnid: string | null;
+  flight_booking_id: string;
+}
+
+export async function createFlightBookingRecord(params: {
+  bookingId: string;
+  passengers: FlightPassenger[];
+  tripType?: string;
+  origin?: string;
+  destination?: string;
+  travelDate?: string;
+  returnDate?: string;
+  totalFare: number;
+  currency?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  priceIds?: string[];
+  fareDetails?: unknown;
+  token?: string | null;
+}): Promise<FlightBookingRecord> {
+  const res = await fetch(`${API_BASE}/api/flight-bookings`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(params.token ? { Authorization: `Bearer ${params.token}` } : {}),
+    },
+    body: JSON.stringify({
+      bookingId: params.bookingId,
+      passengers: params.passengers,
+      tripType: params.tripType ?? "O",
+      origin: params.origin,
+      destination: params.destination,
+      travelDate: params.travelDate,
+      returnDate: params.returnDate,
+      totalFare: params.totalFare,
+      currency: params.currency ?? "INR",
+      contactName: params.contactName,
+      contactEmail: params.contactEmail,
+      contactPhone: params.contactPhone,
+      priceIds: params.priceIds,
+      fareDetails: params.fareDetails,
+    }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(typeof data.error === "string" ? data.error : "Could not create flight booking");
+  return data as FlightBookingRecord;
+}
+
+export async function createFlightUpiPayment(params: {
+  flightBookingId: string;
+  amount: number;
+  channel: "INTENT" | "COLLECT";
+  customerVpa?: string;
+  customerMobile: string;
+  customerName?: string;
+  customerEmail?: string;
+  token?: string | null;
+}): Promise<FlightUpiPaymentResult> {
+  const res = await fetch(`${API_BASE}/api/payments/flight/upi/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(params.token ? { Authorization: `Bearer ${params.token}` } : {}),
+    },
+    body: JSON.stringify({
+      flight_booking_id: params.flightBookingId,
+      amount: params.amount,
+      channel: params.channel,
+      customer_vpa: params.customerVpa,
+      customer_mobile: params.customerMobile,
+      customer_name: params.customerName,
+      customer_email: params.customerEmail,
+    }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(typeof data.error === "string" ? data.error : "Payment initiation failed");
+  return data as FlightUpiPaymentResult;
+}
+
+export async function createFlightCardPayment(params: {
+  flightBookingId: string;
+  amount: number;
+  payMode: "CARD" | "NB";
+  returnUrl: string;
+  customerMobile: string;
+  customerName?: string;
+  customerEmail?: string;
+  token?: string | null;
+}): Promise<FlightCardPaymentResult> {
+  const res = await fetch(`${API_BASE}/api/payments/flight/card/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(params.token ? { Authorization: `Bearer ${params.token}` } : {}),
+    },
+    body: JSON.stringify({
+      flight_booking_id: params.flightBookingId,
+      amount: params.amount,
+      pay_mode: params.payMode,
+      return_url: params.returnUrl,
+      customer_mobile: params.customerMobile,
+      customer_name: params.customerName,
+      customer_email: params.customerEmail,
+    }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(typeof data.error === "string" ? data.error : "Payment initiation failed");
+  return data as FlightCardPaymentResult;
 }
 
 export async function searchFlights(params: {
