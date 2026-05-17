@@ -253,7 +253,6 @@ export default function SearchPage() {
   const [hasSearched, setHasSearched] = useState<boolean>(!!initialQuery);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [regionFilter, setRegionFilter] = useState<string>("All");
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dateBarRef = useRef<DateBarHandle | null>(null);
 
   // Load cities for matching
@@ -437,14 +436,9 @@ export default function SearchPage() {
                     defaultValue={initialQuery}
                     onValueChange={(val) => {
                       setQuery(val);
-                      if (debounceRef.current) clearTimeout(debounceRef.current);
-                      debounceRef.current = setTimeout(() => {
-                        commitQuery(val);
-                      }, 400);
                     }}
                     onSelect={(_type, _value, label) => {
                       const filled = label ?? _value;
-                      if (debounceRef.current) clearTimeout(debounceRef.current);
                       commitQuery(filled, { persist: true });
                       requestAnimationFrame(() => dateBarRef.current?.openCheckIn());
                     }}
@@ -461,7 +455,6 @@ export default function SearchPage() {
                 type="button"
                 onClick={() => {
                   if (!query.trim()) return;
-                  if (debounceRef.current) clearTimeout(debounceRef.current);
                   commitQuery(query, { persist: true });
                 }}
                 disabled={!query.trim()}
